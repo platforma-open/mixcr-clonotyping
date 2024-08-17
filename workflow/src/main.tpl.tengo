@@ -1,0 +1,22 @@
+wf := import("@milaboratory/tengo-sdk:workflow")
+
+maps := import("@milaboratory/tengo-sdk:maps")
+ll := import("@milaboratory/tengo-sdk:ll")
+smart := import("@milaboratory/tengo-sdk:smart")
+file := import("@milaboratory/tengo-sdk:file")
+
+json := import("json")
+
+wf.body(func(args) {
+
+	blockId := wf.blockId().getDataAsJson()
+
+	exports := {}
+
+	return {
+		outputs: {
+			test: "test"
+		},
+		exports: exports
+	}
+})

@@ -1,0 +1,20 @@
+{
+  "name": "@milaboratory/milaboratories.mixcr-clonotyping.test",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Block tests",
+  "type": "module",
+  "scripts": {
+    "test": "vitest"
+  },
+  "files": [],
+  "keywords": [],
+  "dependencies": {
+    "this-block": "workspace:@milaboratory/milaboratories.mixcr-clonotyping@*"
+  },
+  "devDependencies": {
+    "@milaboratory/sdk-test": "catalog:",
+    "vitest": "catalog:",
+    "typescript": "catalog:"
+  }
+}
