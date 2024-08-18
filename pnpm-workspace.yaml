@@ -10,8 +10,8 @@ catalog:
   '@milaboratory/pl-block-tools': ^2.1.5
   '@milaboratory/block-builder': ^1.2.3
 
-  '@milaboratory/sdk-ui': ^0.12.13
-  '@milaboratory/sdk-test': ^1.4.4
+  '@milaboratory/sdk-ui': ^0.12.18
+  '@milaboratory/sdk-test': ^1.4.8
 
   '@milaboratory/tengo-sdk': ^1.0.8
 
@@ -38,3 +38,7 @@ catalog:
   '@ag-grid-community/styles': ^32.1.0
 
   '@changesets/cli': ^2.27.7
+  
+  # other blocks used in tests
+  '@milaboratory/milaboratories.samples-and-data': 1.1.1
+  '@milaboratory/milaboratories.samples-and-data.model': 1.1.0

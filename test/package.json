@@ -10,7 +10,9 @@
   "files": [],
   "keywords": [],
   "dependencies": {
-    "this-block": "workspace:@milaboratory/milaboratories.mixcr-clonotyping@*"
+    "this-block": "workspace:@milaboratory/milaboratories.mixcr-clonotyping@*",
+    "@milaboratory/milaboratories.samples-and-data.model": "catalog:",
+    "@milaboratory/milaboratories.samples-and-data": "catalog:"
   },
   "devDependencies": {
     "@milaboratory/sdk-test": "catalog:",
