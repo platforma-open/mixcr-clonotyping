@@ -8,6 +8,7 @@ import { blockSpec as samplesAndDataBlockSpec } from '@milaboratory/milaboratori
 import { BlockArgs as SamplesAndDataBlockArgs } from '@milaboratory/milaboratories.samples-and-data.model';
 import { blockSpec as myBlockSpec } from 'this-block';
 import { wrapOutputs } from '@milaboratory/sdk-ui';
+import * as tp  from 'node:timers/promises';
 
 blockTest('empty imputs', { timeout: 5000 }, async ({ rawPrj: project, ml, helpers, expect }) => {
   const blockId = await project.addBlock('Block', myBlockSpec);
@@ -22,7 +23,7 @@ blockTest('empty imputs', { timeout: 5000 }, async ({ rawPrj: project, ml, helpe
     await ml.driverKit.blobDriver.getContent(presetsOutput!.handle)
   ).toString();
   const presets = JSON.parse(presetsStr);
-  console.dir(presets, { depth: 5 });
+  expect(presets).length.gt(10);
 });
 
 blockTest(
@@ -82,6 +83,9 @@ blockTest(
       fileImports: { ok: true, value: { [r1Handle]: { done: true }, [r2Handle]: { done: true } } }
     });
 
+    console.dir(await clonotypingBlockState.getFullValue(), { depth: 5 });
+    await tp.setTimeout(2000);
+    console.dir(await clonotypingBlockState.getFullValue(), { depth: 5 });
     const clonotypingStableState1 = await awaitStableState(clonotypingBlockState, 5000);
     expect(clonotypingStableState1.outputs).toMatchObject({
       inputOptions: {

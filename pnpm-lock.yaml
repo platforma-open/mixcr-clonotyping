@@ -37,8 +37,8 @@ catalogs:
       specifier: ^1.0.24
       version: 1.0.24
     '@milaboratory/sdk-test':
-      specifier: ^1.4.8
-      version: 1.4.8
+      specifier: ^1.4.9
+      version: 1.4.9
     '@milaboratory/sdk-ui':
       specifier: ^0.12.18
       version: 0.12.18
@@ -46,8 +46,8 @@ catalogs:
       specifier: ^1.0.33
       version: 1.0.33
     '@milaboratory/tengo-sdk':
-      specifier: ^1.0.8
-      version: 1.0.8
+      specifier: ^1.0.9
+      version: 1.0.9
     '@milaboratory/tengo-template-builder':
       specifier: ^1.10.0
       version: 1.10.0
@@ -80,7 +80,7 @@ catalogs:
       version: 3.23.8
 
 overrides:
-  '@milaboratory/pl-middle-layer': file:/Volumes/Data/Projects/MiLaboratory/platforma/ts-pl-middle-layer/milaboratory-pl-middle-layer-1.9.27.tgz
+  '@milaboratory/pl-middle-layer': file:/Volumes/Data/Projects/MiLaboratory/platforma/ts-pl-middle-layer/milaboratory-pl-middle-layer-1.9.29.tgz
 
 importers:
 
@@ -142,7 +142,7 @@ importers:
     devDependencies:
       '@milaboratory/sdk-test':
         specifier: 'catalog:'
-        version: 1.4.8(@milaboratory/sdk-model@1.3.9)(@types/node@22.0.0)
+        version: 1.4.9(@milaboratory/sdk-model@1.3.9)(@types/node@22.0.0)
       typescript:
         specifier: 'catalog:'
         version: 5.5.4
@@ -206,7 +206,7 @@ importers:
     devDependencies:
       '@milaboratory/tengo-sdk':
         specifier: 'catalog:'
-        version: 1.0.8
+        version: 1.0.9
       '@milaboratory/tengo-template-builder':
         specifier: 'catalog:'
         version: 1.10.0
@@ -823,6 +823,9 @@ packages:
   '@milaboratory/computable@2.1.1':
     resolution: {integrity: sha512-nvxoPHnC7K45XsYxV4FwR8vPwi1AgPzMgsEvqP93KY/PLpPtVhX2U86/tNxTgO4TVACvAQhmkTVRIXuldBZX6A==, tarball: https://npm.pkg.github.com/download/@milaboratory/computable/2.1.1/9c906e34cf6c54d6021493f07d66a011851a5857}
 
+  '@milaboratory/computable@2.1.2':
+    resolution: {integrity: sha512-TfL5KiRqm2G7BpzVUo3nVCWZvbLCNxqmK++4HPACmvgkj/agH6a2AB/2yBbUfhceTxLYZO7GC3UrN7KtXsCC8Q==, tarball: https://npm.pkg.github.com/download/@milaboratory/computable/2.1.2/5bfbcbe117a2b7517d4081c62a49b0804d233d69}
+
   '@milaboratory/helpers@1.5.2':
     resolution: {integrity: sha512-9UUACVZsUHeI4IJiRXNBgzq/3yFRXChJmr4dU8fco92jMd5tp2UziIwh/OzVrmbSMlm7dWWHXJ6dg3EYmD+qdg==, tarball: https://npm.pkg.github.com/download/@milaboratory/helpers/1.5.2/470283b6fc0544519e4c687e9b1aea6fe464300a}
 
@@ -859,16 +862,13 @@ packages:
   '@milaboratory/pl-middle-layer-model@1.2.15':
     resolution: {integrity: sha512-70uluwiMeb9/dSEuxZXA5WGvIvJ9Yon9idhY78PUrfM40v7lSMYR+awbKE4jsUnYfTzwIz5YfQARr0loq47dbA==, tarball: https://npm.pkg.github.com/download/@milaboratory/pl-middle-layer-model/1.2.15/0c706941cfe9d5c107c424c6456844f4896eac41}
 
-  '@milaboratory/pl-middle-layer@file:../../platforma/ts-pl-middle-layer/milaboratory-pl-middle-layer-1.9.27.tgz':
-    resolution: {integrity: sha512-1Pt+HI7l2PhMsJyrEuZgdDCV2qUqufOkBMLsQXjx961yn99XnAAX03lhCXYb892tHK5QI5I/21u3YMSMs8IeDw==, tarball: file:../../platforma/ts-pl-middle-layer/milaboratory-pl-middle-layer-1.9.27.tgz}
-    version: 1.9.27
+  '@milaboratory/pl-middle-layer@file:../../platforma/ts-pl-middle-layer/milaboratory-pl-middle-layer-1.9.29.tgz':
+    resolution: {integrity: sha512-hBOQIlA3EKibAEwIqUQzsTQcmZ/qDImz+rB+3ynxDrPcorpZMBYfJak+JKkAro2B6NSUa3PK32ZhteJ7hDbOdg==, tarball: file:../../platforma/ts-pl-middle-layer/milaboratory-pl-middle-layer-1.9.29.tgz}
+    version: 1.9.29
     hasBin: true
 
-  '@milaboratory/pl-tree@1.3.3':
-    resolution: {integrity: sha512-KQBglW/vWZwCVAg8TzquFgiCXblroE3j5Dcw9WeZGbZJSsne53ZshZuLIm0vSy2aA4RXO5SDnnzUX/6RIBBfXw==, tarball: https://npm.pkg.github.com/download/@milaboratory/pl-tree/1.3.3/cb87c80fafd4b7b7d91ddbac4df50a86c14a79e3}
-
-  '@milaboratory/pl-tree@1.3.4':
-    resolution: {integrity: sha512-cKx1x8lKBh+QfA4cbZnTJ2SRYtdYbgDiVcG17w7MfMiPA97LszN0d/O7EqsL614hi4ekwzKHnFni9IE00mO5mg==, tarball: https://npm.pkg.github.com/download/@milaboratory/pl-tree/1.3.4/f09802d0602c59a1106a7fa7f93691ffe78ce1d7}
+  '@milaboratory/pl-tree@1.3.5':
+    resolution: {integrity: sha512-0mo/8M4oeDYvACOnSVP65uITnifFJL5P0xuQ5jofidWj/N8GnNdlCVYyRl/z6Vi/Q6I6EQAef1kLCgjIZoHG9A==, tarball: https://npm.pkg.github.com/download/@milaboratory/pl-tree/1.3.5/3b10f56779c83f7b04737ad1443589dc80291932}
 
   '@milaboratory/platforma-core@0.1.5':
     resolution: {integrity: sha512-h9BW6SnX7zcNMrc3fl70DJuVUPTm+pn6/buKMZJypp/bV51DwT50FiAhCBklCkttwtngZqKXE0i//1H00V0qNg==, tarball: https://npm.pkg.github.com/download/@milaboratory/platforma-core/0.1.5/cc46c20f983d2c291aec707200e5ff46e082c1a6}
@@ -886,8 +886,8 @@ packages:
   '@milaboratory/sdk-model@1.3.9':
     resolution: {integrity: sha512-ZuJYcbNpbpNEjqBrpp7iY+QpwSIeQcfgP+28MiSctb0PrhHgascC2QvetetFczo6tKJlT2ZvmZ5spdgz0lvgYg==, tarball: https://npm.pkg.github.com/download/@milaboratory/sdk-model/1.3.9/4e3091eb6014b20b67d7609a54c6014a3ad261ea}
 
-  '@milaboratory/sdk-test@1.4.8':
-    resolution: {integrity: sha512-0RVSBKu3KoBEuhlSd18sv6PvVgLyA8XgB5Qsp60EZOyzNQWIc6RG9tr/gEo/Q6HHkGISAnOVzltjaG9LPDl2kg==, tarball: https://npm.pkg.github.com/download/@milaboratory/sdk-test/1.4.8/dee25cc845c2b426767fff3d3b77ee37ba5696ca}
+  '@milaboratory/sdk-test@1.4.9':
+    resolution: {integrity: sha512-gj7a8dd8yCAzTzo4KVw3KSz48DJ7mUYoFw80rA65TuZPXbvNBC+g8mXDuPpRxKyvNUoNNGW9W664RPAssKkCPw==, tarball: https://npm.pkg.github.com/download/@milaboratory/sdk-test/1.4.9/791bcbc0ffa5f184e891b7571617fbef4308934a}
 
   '@milaboratory/sdk-ui@0.12.15':
     resolution: {integrity: sha512-zNH8dpq9B1mOsk60pq3paSEuDI7vUMzCdV9EPn7aPlA/YZ8BH16+pOdW5KYC+3SDCz+xiOzhLzQ4h3P8Tv6H1w==, tarball: https://npm.pkg.github.com/download/@milaboratory/sdk-ui/0.12.15/1195aa1a3cc84d1dc4a934a2cd8c807523941e0b}
@@ -903,8 +903,8 @@ packages:
       '@milaboratory/sdk-ui': ^0.12.10
       vue: ^3.4.31
 
-  '@milaboratory/tengo-sdk@1.0.8':
-    resolution: {integrity: sha512-oqr9bX3DIeFt5QMbj5jvRROLvgAYjA6zpqT2DDuzrWnXyV+uSN/DJ/sSrge8RhWhaElSMX/qc/tOkkVBTQWxnA==, tarball: https://npm.pkg.github.com/download/@milaboratory/tengo-sdk/1.0.8/7a2ab7351d62cc6244e902520c91c37ce0817aa1}
+  '@milaboratory/tengo-sdk@1.0.9':
+    resolution: {integrity: sha512-WgUbI475vL9mlXCsxd9NQ/qKW4u7Jx2vjeTDd2hgwaLgOuQ3Y0cHp4CNse2M+teIdOn11b6EbdDVnmzDd1xdgQ==, tarball: https://npm.pkg.github.com/download/@milaboratory/tengo-sdk/1.0.9/cf6b32fdaf00d885f09ec5489c886ce261676217}
 
   '@milaboratory/tengo-template-builder@1.10.0':
     resolution: {integrity: sha512-JnI4IyG89fvGFNyJBX6HnUINPPceaGEeGP8XrWSrJvsHIQJSdbMJtM1924IdMHuV7ouVIn/88uGrAm/CcijYRw==, tarball: https://npm.pkg.github.com/download/@milaboratory/tengo-template-builder/1.10.0/fbbbb026c68121680aa18b9fe470389a622a4403}
@@ -3821,6 +3821,12 @@ snapshots:
       serialize-error: 11.0.3
       utility-types: 3.11.0
 
+  '@milaboratory/computable@2.1.2':
+    dependencies:
+      '@milaboratory/ts-helpers': 1.0.19
+      serialize-error: 11.0.3
+      utility-types: 3.11.0
+
   '@milaboratory/helpers@1.5.2': {}
 
   '@milaboratory/milaboratories.samples-and-data.model@1.1.0':
@@ -3899,9 +3905,9 @@ snapshots:
   '@milaboratory/pl-drivers@1.2.10':
     dependencies:
       '@grpc/grpc-js': 1.11.1
-      '@milaboratory/computable': 2.1.1
+      '@milaboratory/computable': 2.1.2
       '@milaboratory/pl-client-v2': 2.4.8
-      '@milaboratory/pl-tree': 1.3.4
+      '@milaboratory/pl-tree': 1.3.5
       '@milaboratory/sdk-model': 1.3.9
       '@milaboratory/ts-helpers': 1.0.19
       '@protobuf-ts/grpc-transport': 2.9.4(@grpc/grpc-js@1.11.1)
@@ -3925,15 +3931,15 @@ snapshots:
       utility-types: 3.11.0
       zod: 3.23.8
 
-  '@milaboratory/pl-middle-layer@file:../../platforma/ts-pl-middle-layer/milaboratory-pl-middle-layer-1.9.27.tgz(@milaboratory/sdk-model@1.3.9)':
+  '@milaboratory/pl-middle-layer@file:../../platforma/ts-pl-middle-layer/milaboratory-pl-middle-layer-1.9.29.tgz(@milaboratory/sdk-model@1.3.9)':
     dependencies:
-      '@milaboratory/computable': 2.1.1
+      '@milaboratory/computable': 2.1.2
       '@milaboratory/pframes-node': 0.4.13(@milaboratory/sdk-model@1.3.9)
       '@milaboratory/pl-block-tools': 2.1.5
       '@milaboratory/pl-client-v2': 2.4.8
       '@milaboratory/pl-drivers': 1.2.10
       '@milaboratory/pl-middle-layer-model': 1.2.15
-      '@milaboratory/pl-tree': 1.3.4
+      '@milaboratory/pl-tree': 1.3.5
       '@milaboratory/sdk-ui': 0.12.18
       '@milaboratory/ts-helpers': 1.0.19
       canonicalize: 2.0.0
@@ -3949,20 +3955,9 @@ snapshots:
       - encoding
       - supports-color
 
-  '@milaboratory/pl-tree@1.3.3':
+  '@milaboratory/pl-tree@1.3.5':
     dependencies:
-      '@milaboratory/computable': 2.1.1
-      '@milaboratory/pl-client-v2': 2.4.8
-      '@milaboratory/ts-helpers': 1.0.19
-      denque: 2.1.0
-      utility-types: 3.11.0
-      zod: 3.23.8
-    transitivePeerDependencies:
-      - supports-color
-
-  '@milaboratory/pl-tree@1.3.4':
-    dependencies:
-      '@milaboratory/computable': 2.1.1
+      '@milaboratory/computable': 2.1.2
       '@milaboratory/pl-client-v2': 2.4.8
       '@milaboratory/ts-helpers': 1.0.19
       denque: 2.1.0
@@ -3995,12 +3990,12 @@ snapshots:
     dependencies:
       zod: 3.23.8
 
-  '@milaboratory/sdk-test@1.4.8(@milaboratory/sdk-model@1.3.9)(@types/node@22.0.0)':
+  '@milaboratory/sdk-test@1.4.9(@milaboratory/sdk-model@1.3.9)(@types/node@22.0.0)':
     dependencies:
       '@milaboratory/computable': 2.1.1
       '@milaboratory/pl-client-v2': 2.4.8
-      '@milaboratory/pl-middle-layer': file:../../platforma/ts-pl-middle-layer/milaboratory-pl-middle-layer-1.9.27.tgz(@milaboratory/sdk-model@1.3.9)
-      '@milaboratory/pl-tree': 1.3.3
+      '@milaboratory/pl-middle-layer': file:../../platforma/ts-pl-middle-layer/milaboratory-pl-middle-layer-1.9.29.tgz(@milaboratory/sdk-model@1.3.9)
+      '@milaboratory/pl-tree': 1.3.5
       '@milaboratory/sdk-ui': 0.12.18
       '@milaboratory/ts-helpers': 1.0.19
       vitest: 2.0.5(@types/node@22.0.0)
@@ -4052,7 +4047,7 @@ snapshots:
     optionalDependencies:
       '@rollup/rollup-linux-x64-gnu': 4.9.5
 
-  '@milaboratory/tengo-sdk@1.0.8': {}
+  '@milaboratory/tengo-sdk@1.0.9': {}
 
   '@milaboratory/tengo-template-builder@1.10.0':
     dependencies:
