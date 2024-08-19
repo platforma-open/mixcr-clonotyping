@@ -11,9 +11,9 @@ catalog:
   '@milaboratory/block-builder': ^1.2.3
 
   '@milaboratory/sdk-ui': ^0.12.18
-  '@milaboratory/sdk-test': ^1.4.9
+  '@milaboratory/sdk-test': ^1.4.11
 
-  '@milaboratory/tengo-sdk': ^1.0.9
+  '@milaboratory/tengo-sdk': ^1.0.10
 
   '@milaboratory/platforma-uikit': ^1.0.24
   '@milaboratory/sdk-vue': ^1.0.33
@@ -40,5 +40,5 @@ catalog:
   '@changesets/cli': ^2.27.7
   
   # other blocks used in tests
-  '@milaboratory/milaboratories.samples-and-data': 1.1.1
+  '@milaboratory/milaboratories.samples-and-data': 1.1.2
   '@milaboratory/milaboratories.samples-and-data.model': 1.1.0
