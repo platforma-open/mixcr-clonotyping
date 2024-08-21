@@ -15,8 +15,14 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
     ctx.precalc?.resolve({ field: 'presets', assertFieldType: 'Input' })?.getFileHandle()
   )
 
-  .output('inputOptions', (ctx) =>
-    ctx.resultPool
+  .output('qc', (ctx) =>
+    ctx.outputs?.resolve({ field: 'qc', assertFieldType: 'Input' })?.getDataAsJson()
+  )
+
+  .output('inputOptions', (ctx) => {
+    const spectFromPool = ctx.resultPool
+      .getSpecsFromResultPool();
+    return ctx.resultPool
       .getSpecsFromResultPool()
       .entries.filter((v) => {
         if (!isPColumnSpec(v.obj)) return false;
@@ -37,8 +43,8 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
               v.obj.annotations?.['pl7.app/label'] ?? `unlabelled`
             }`
           } satisfies Option)
-      )
-  )
+      );
+  })
 
   .sections((ctx) => {
     return [{ type: 'link', href: '/', label: 'Settings' }];

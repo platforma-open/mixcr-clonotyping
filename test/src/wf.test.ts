@@ -8,10 +8,10 @@ import { awaitStableState, blockTest } from '@milaboratory/sdk-test';
 import { blockSpec as samplesAndDataBlockSpec } from '@milaboratory/milaboratories.samples-and-data';
 import { BlockArgs as SamplesAndDataBlockArgs } from '@milaboratory/milaboratories.samples-and-data.model';
 import { blockSpec as myBlockSpec } from 'this-block';
-import { InferBlockState, wrapOutputs } from '@milaboratory/sdk-ui';
+import { InferBlockState, fromPlRef, wrapOutputs } from '@milaboratory/sdk-ui';
 import * as tp from 'node:timers/promises';
 
-blockTest('empty imputs', { timeout: 5000 }, async ({ rawPrj: project, ml, helpers, expect }) => {
+blockTest('empty imputs', { timeout: 10000 }, async ({ rawPrj: project, ml, helpers, expect }) => {
   const blockId = await project.addBlock('Block', myBlockSpec);
   await project.runBlock(blockId);
   const stableState = await helpers.awaitBlockDoneAndGetStableBlockState<typeof platforma>(
@@ -106,5 +106,17 @@ blockTest(
     ).toString();
     const presets = JSON.parse(presetsStr);
     expect(presets).length.gt(10);
+
+    const clonotypingStableState1Outputs = wrapOutputs(clonotypingStableState1.outputs);
+
+    await project.setBlockArgs(clonotypingBlockId, {
+      input: clonotypingStableState1Outputs.inputOptions[0].ref,
+      preset: 'milab-human-dna-xcr-7genes-multiplex'
+    } satisfies BlockArgs);
+    await project.runBlock(clonotypingBlockId);
+    const clonotypingStableState2 = await helpers.awaitBlockDoneAndGetStableBlockState(
+      clonotypingBlockId
+    );
+    console.dir(clonotypingStableState2, { depth: 5 });
   }
 );

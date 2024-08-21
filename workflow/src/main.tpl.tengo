@@ -4,20 +4,37 @@ maps := import("@milaboratory/tengo-sdk:maps")
 ll := import("@milaboratory/tengo-sdk:ll")
 smart := import("@milaboratory/tengo-sdk:smart")
 file := import("@milaboratory/tengo-sdk:file")
+llPFrames := import("@milaboratory/tengo-sdk:pframes.ll")
 
 json := import("json")
+
+mixcrAggTpl := ll.importTemplate(":mixcr-analyze")
 
 wf.setPreRun(ll.importTemplate(":prerun"))
 
 wf.body(func(args) {
+	inputRef := args.input
 
-	blockId := wf.blockId().getDataAsJson()
+	preset := args.preset
+
+	input := wf.resolve(inputRef)
+
+	mixcrResults := llPFrames.aggregate(
+			input.getFutureInputField("data"), [1], mixcrAggTpl,
+			["qc"],
+			false,
+			{
+				params: smart.createJsonResource({
+					preset: preset
+				})
+			}
+		)
 
 	exports := {}
 
 	return {
 		outputs: {
-			test: "test"
+			qc: mixcrResults.output("qc")
 		},
 		exports: exports
 	}

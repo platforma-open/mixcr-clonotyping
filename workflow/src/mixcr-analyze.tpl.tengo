@@ -1,0 +1,46 @@
+// mixcr analyze
+
+self := import("@milaboratory/tengo-sdk:tpl")
+pConstants := import("@milaboratory/tengo-sdk:pframes.constants")
+ll := import("@milaboratory/tengo-sdk:ll")
+exec := import("@milaboratory/tengo-sdk:exec")
+
+self.defineOutputs("qc")
+
+self.body(func(inputs) {
+	inputData := inputs[pConstants.VALUE_FIELD_NAME]
+	params := inputs.params
+
+	preset := params.preset
+	fileExtension := params.fileExtension
+
+	inputDataMeta := inputData.getDataAsJson()
+
+	if inputDataMeta.keyLength == 1 {
+		mixcrCmdBuilder := exec.builder().
+						        cmd("mixcr").
+						        arg("analyze").
+								arg(preset)
+
+		for r, inputFile in inputData.inputs() {
+			if (r[0] != 'R' && r[0] != "I") || (r[1] != '1' && r[1] != '2') || len(r) != 2 {
+				ll.panic("malformed read index: %v", r)
+			}
+			fileName := "input_" + r + fileExtension
+			mixcrCmdBuilder.addFile(fileName, inputFile).
+							arg(fileName)
+		}
+
+		mixcrCmdBuilder.arg("result")
+
+		mixcrCmdBuilder.saveFile("result.qc.json")
+
+		mixcrCmd := mixcrCmdBuilder.run()
+
+		return {
+			qc: mixcrCmd.getFile("result.qc.json")
+		}
+	} else {
+		ll.panic("not yet supported")
+	}
+})

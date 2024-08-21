@@ -25,8 +25,8 @@ catalogs:
       specifier: ^1.5.2
       version: 1.5.2
     '@milaboratory/milaboratories.samples-and-data':
-      specifier: 1.1.2
-      version: 1.1.2
+      specifier: 1.1.3
+      version: 1.1.3
     '@milaboratory/milaboratories.samples-and-data.model':
       specifier: 1.1.0
       version: 1.1.0
@@ -46,11 +46,11 @@ catalogs:
       specifier: ^1.0.33
       version: 1.0.33
     '@milaboratory/tengo-sdk':
-      specifier: ^1.0.10
-      version: 1.0.10
+      specifier: ^1.0.14
+      version: 1.0.14
     '@milaboratory/tengo-template-builder':
-      specifier: ^1.10.0
-      version: 1.10.0
+      specifier: ^1.10.1
+      version: 1.10.1
     '@vitejs/plugin-vue':
       specifier: ^5.1.2
       version: 5.1.2
@@ -64,8 +64,8 @@ catalogs:
       specifier: ^3.11.0
       version: 3.11.0
     vite:
-      specifier: ^5.4.1
-      version: 5.4.1
+      specifier: ^5.4.2
+      version: 5.4.2
     vitest:
       specifier: ^2.0.5
       version: 2.0.5
@@ -78,6 +78,9 @@ catalogs:
     zod:
       specifier: ^3.23.8
       version: 3.23.8
+
+overrides:
+  '@milaboratory/pl-middle-layer': file:/Volumes/Data/Projects/MiLaboratory/platforma/ts-pl-middle-layer/milaboratory-pl-middle-layer-1.9.30.tgz
 
 importers:
 
@@ -123,13 +126,13 @@ importers:
         version: 5.5.4
       vite:
         specifier: 'catalog:'
-        version: 5.4.1(@types/node@22.0.0)
+        version: 5.4.2(@types/node@22.0.0)
 
   test:
     dependencies:
       '@milaboratory/milaboratories.samples-and-data':
         specifier: 'catalog:'
-        version: 1.1.2(typescript@5.5.4)
+        version: 1.1.3(typescript@5.5.4)
       '@milaboratory/milaboratories.samples-and-data.model':
         specifier: 'catalog:'
         version: 1.1.0
@@ -188,13 +191,13 @@ importers:
     devDependencies:
       '@vitejs/plugin-vue':
         specifier: 'catalog:'
-        version: 5.1.2(vite@5.4.1(@types/node@22.0.0))(vue@3.4.38(typescript@5.5.4))
+        version: 5.1.2(vite@5.4.2(@types/node@22.0.0))(vue@3.4.38(typescript@5.5.4))
       typescript:
         specifier: 'catalog:'
         version: 5.5.4
       vite:
         specifier: 'catalog:'
-        version: 5.4.1(@types/node@22.0.0)
+        version: 5.4.2(@types/node@22.0.0)
       vue-tsc:
         specifier: 'catalog:'
         version: 2.0.29(typescript@5.5.4)
@@ -203,10 +206,10 @@ importers:
     devDependencies:
       '@milaboratory/tengo-sdk':
         specifier: 'catalog:'
-        version: 1.0.10
+        version: 1.0.14
       '@milaboratory/tengo-template-builder':
         specifier: 'catalog:'
-        version: 1.10.0
+        version: 1.10.1
 
 packages:
 
@@ -829,14 +832,14 @@ packages:
   '@milaboratory/milaboratories.samples-and-data.ui@1.3.0':
     resolution: {integrity: sha512-2JL6NA9GucCX7MykeKuihQfcYlC3zNvpw+/CTpqpYjnG9EOuceIg7og/dqSMSq4abjJNUn9U9UBE7eCEpTMGeA==, tarball: https://npm.pkg.github.com/download/@milaboratory/milaboratories.samples-and-data.ui/1.3.0/fb37c210a13726cc7a8a3908281d949b83efd983}
 
-  '@milaboratory/milaboratories.samples-and-data.workflow@1.3.0':
-    resolution: {integrity: sha512-ww6gNUwRl5Ti3+8nk+ievRZYz4rLOfAaf+d8fYQVOPP4D6urCgme6VJr18C7PBT7W53IDnqffC1qD/BHo1CCqA==, tarball: https://npm.pkg.github.com/download/@milaboratory/milaboratories.samples-and-data.workflow/1.3.0/67eda3a00b36eeb32f7cecf66abfbdf12e9fe5cd}
+  '@milaboratory/milaboratories.samples-and-data.workflow@1.4.0':
+    resolution: {integrity: sha512-ykSvOUdF2c2wu8ysEQRb616gBf4IvaNyEopEwBQYLZt8L9ljN5oBiSLAJ6VdZwbh9t67RatlXigKN4ZcWMWYiQ==, tarball: https://npm.pkg.github.com/download/@milaboratory/milaboratories.samples-and-data.workflow/1.4.0/6df26df085db27c8df52dd1a124f58494af4fe56}
 
-  '@milaboratory/milaboratories.samples-and-data@1.1.2':
-    resolution: {integrity: sha512-kZmJOZFBefMZd+2ibXPvOAVZmFk0EVCxI42HIX8HJ69YcI4fYJp52xjVTEpttn2nmBNnWXfFmlnKEwPJYWFrRA==, tarball: https://npm.pkg.github.com/download/@milaboratory/milaboratories.samples-and-data/1.1.2/40644fced74066f5f673939b24d64ce10fa23213}
+  '@milaboratory/milaboratories.samples-and-data@1.1.3':
+    resolution: {integrity: sha512-hPI/k4BYDr8+h9VZIBXXrhAyl1kBNt6SHC8RQ1m+weARqwG7swS3rLFozQJ4zrYpbpxAkG2s1rJq3d7lLtpX+w==, tarball: https://npm.pkg.github.com/download/@milaboratory/milaboratories.samples-and-data/1.1.3/8d3b5a01eff4e8150cd5369e36b7406d74b76b9c}
 
-  '@milaboratory/pframes-node@0.4.13':
-    resolution: {integrity: sha512-zslqqrBy1vbtiwJDZCLSa5CjYbMgOX/BVAwZFyMsX+1WVmeXy7MFHZA5dHoGWJwk39Ym08ElaqT992YvvYSHTw==, tarball: https://npm.pkg.github.com/download/@milaboratory/pframes-node/0.4.13/608ccb2eace2d203729beef76d9ef1546ce83735}
+  '@milaboratory/pframes-node@0.4.15':
+    resolution: {integrity: sha512-FJOuc7AylExZxKZmaALFPR641q/+ZznVV5zwTU6Nczq9/LIugFCgfm2Y8Cp+PuDFQ/V8jCytM3hYo8fTGkYyaw==, tarball: https://npm.pkg.github.com/download/@milaboratory/pframes-node/0.4.15/0575620a3d9689e957862f1513a7493264c0bc68}
     peerDependencies:
       '@milaboratory/sdk-model': '*'
 
@@ -853,11 +856,12 @@ packages:
   '@milaboratory/pl-middle-layer-model@1.2.11':
     resolution: {integrity: sha512-ibuCRUb5Xh1c12KAp3wx2q7AZJ6t0RweVQ8lMy+qVFVFrYWpnwcUeAbEx/tq3cHIBynWGt7nFltKZx2rJSKhEw==, tarball: https://npm.pkg.github.com/download/@milaboratory/pl-middle-layer-model/1.2.11/cbd8fdb356259942a12b431492a71dcab4cec595}
 
-  '@milaboratory/pl-middle-layer-model@1.2.15':
-    resolution: {integrity: sha512-70uluwiMeb9/dSEuxZXA5WGvIvJ9Yon9idhY78PUrfM40v7lSMYR+awbKE4jsUnYfTzwIz5YfQARr0loq47dbA==, tarball: https://npm.pkg.github.com/download/@milaboratory/pl-middle-layer-model/1.2.15/0c706941cfe9d5c107c424c6456844f4896eac41}
+  '@milaboratory/pl-middle-layer-model@1.2.16':
+    resolution: {integrity: sha512-WT5TKDSOQ/iLUDFF3QW1En/YnbR/J5TZlHY0endrYpxVR40qfLpoOkCrHJki0EXG0j9AWcyTyFSrpxYX7OIkeQ==, tarball: https://npm.pkg.github.com/download/@milaboratory/pl-middle-layer-model/1.2.16/900734158fde8d99b72533ed6b82c3a9b66f4b8c}
 
-  '@milaboratory/pl-middle-layer@1.9.29':
-    resolution: {integrity: sha512-BlZa7AmfOffZXcjiN1h+OVnOSnDtY3wVONOY5sf1NgqNOfVes8Eni7pdVJEL61W888+E1VHF7i3bkzHn+oeyWg==, tarball: https://npm.pkg.github.com/download/@milaboratory/pl-middle-layer/1.9.29/232f248431cd19189c82d0393de36075c4ad8b83}
+  '@milaboratory/pl-middle-layer@file:../../platforma/ts-pl-middle-layer/milaboratory-pl-middle-layer-1.9.30.tgz':
+    resolution: {integrity: sha512-jqG3kpyK7msjnAo7C4+HPD7aaxHj9k+Jqee73+098mg33eeLy30ULM3y+JLSB1GNVSwnQLp2anmRW4g6FK/OZQ==, tarball: file:../../platforma/ts-pl-middle-layer/milaboratory-pl-middle-layer-1.9.30.tgz}
+    version: 1.9.30
     hasBin: true
 
   '@milaboratory/pl-tree@1.3.5':
@@ -896,11 +900,11 @@ packages:
       '@milaboratory/sdk-ui': ^0.12.10
       vue: ^3.4.31
 
-  '@milaboratory/tengo-sdk@1.0.10':
-    resolution: {integrity: sha512-wgTQ4I2Az9JtSjTYavQqVqhnhATsAJlfv+FmPdkMcUBgM8VfeNfQgPFA+Ap5f3r6SQb0LBncblozWlif5A2NTw==, tarball: https://npm.pkg.github.com/download/@milaboratory/tengo-sdk/1.0.10/369ebdd88a966d3cd1a69e7613dec61ed60d92b9}
+  '@milaboratory/tengo-sdk@1.0.14':
+    resolution: {integrity: sha512-4a3XAeL/m/dUq8ntmuOKCQ1LVn2cdhET7IHMOQoHiep3y/Noq7k/oiyCc7Xt75WSSWqfzu855Wq4KEdy6n/vSA==, tarball: https://npm.pkg.github.com/download/@milaboratory/tengo-sdk/1.0.14/f770b2c6c878ab6d3060c599879b36542f3df740}
 
-  '@milaboratory/tengo-template-builder@1.10.0':
-    resolution: {integrity: sha512-JnI4IyG89fvGFNyJBX6HnUINPPceaGEeGP8XrWSrJvsHIQJSdbMJtM1924IdMHuV7ouVIn/88uGrAm/CcijYRw==, tarball: https://npm.pkg.github.com/download/@milaboratory/tengo-template-builder/1.10.0/fbbbb026c68121680aa18b9fe470389a622a4403}
+  '@milaboratory/tengo-template-builder@1.10.1':
+    resolution: {integrity: sha512-Kcto5T7oWx8hkxyWAdYEjCDW1atOk2hSrPjUyDLCR9kKGTtcWterk8axR2aS57s8hF8bBY5Tns2omjctlX9iAg==, tarball: https://npm.pkg.github.com/download/@milaboratory/tengo-template-builder/1.10.1/d2b139ebda04f1851fe80961bc49f63928efbcb8}
     hasBin: true
 
   '@milaboratory/tengo-tester@1.4.0':
@@ -995,8 +999,18 @@ packages:
     cpu: [arm]
     os: [android]
 
+  '@rollup/rollup-android-arm-eabi@4.21.0':
+    resolution: {integrity: sha512-WTWD8PfoSAJ+qL87lE7votj3syLavxunWhzCnx3XFxFiI/BA/r3X7MUM8dVrH8rb2r4AiO8jJsr3ZjdaftmnfA==}
+    cpu: [arm]
+    os: [android]
+
   '@rollup/rollup-android-arm64@4.19.1':
     resolution: {integrity: sha512-thFUbkHteM20BGShD6P08aungq4irbIZKUNbG70LN8RkO7YztcGPiKTTGZS7Kw+x5h8hOXs0i4OaHwFxlpQN6A==}
+    cpu: [arm64]
+    os: [android]
+
+  '@rollup/rollup-android-arm64@4.21.0':
+    resolution: {integrity: sha512-a1sR2zSK1B4eYkiZu17ZUZhmUQcKjk2/j9Me2IDjk1GHW7LB5Z35LEzj9iJch6gtUfsnvZs1ZNyDW2oZSThrkA==}
     cpu: [arm64]
     os: [android]
 
@@ -1005,8 +1019,18 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
+  '@rollup/rollup-darwin-arm64@4.21.0':
+    resolution: {integrity: sha512-zOnKWLgDld/svhKO5PD9ozmL6roy5OQ5T4ThvdYZLpiOhEGY+dp2NwUmxK0Ld91LrbjrvtNAE0ERBwjqhZTRAA==}
+    cpu: [arm64]
+    os: [darwin]
+
   '@rollup/rollup-darwin-x64@4.19.1':
     resolution: {integrity: sha512-4T42heKsnbjkn7ovYiAdDVRRWZLU9Kmhdt6HafZxFcUdpjlBlxj4wDrt1yFWLk7G4+E+8p2C9tcmSu0KA6auGA==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@rollup/rollup-darwin-x64@4.21.0':
+    resolution: {integrity: sha512-7doS8br0xAkg48SKE2QNtMSFPFUlRdw9+votl27MvT46vo44ATBmdZdGysOevNELmZlfd+NEa0UYOA8f01WSrg==}
     cpu: [x64]
     os: [darwin]
 
@@ -1015,8 +1039,18 @@ packages:
     cpu: [arm]
     os: [linux]
 
+  '@rollup/rollup-linux-arm-gnueabihf@4.21.0':
+    resolution: {integrity: sha512-pWJsfQjNWNGsoCq53KjMtwdJDmh/6NubwQcz52aEwLEuvx08bzcy6tOUuawAOncPnxz/3siRtd8hiQ32G1y8VA==}
+    cpu: [arm]
+    os: [linux]
+
   '@rollup/rollup-linux-arm-musleabihf@4.19.1':
     resolution: {integrity: sha512-DZNLwIY4ftPSRVkJEaxYkq7u2zel7aah57HESuNkUnz+3bZHxwkCUkrfS2IWC1sxK6F2QNIR0Qr/YXw7nkF3Pw==}
+    cpu: [arm]
+    os: [linux]
+
+  '@rollup/rollup-linux-arm-musleabihf@4.21.0':
+    resolution: {integrity: sha512-efRIANsz3UHZrnZXuEvxS9LoCOWMGD1rweciD6uJQIx2myN3a8Im1FafZBzh7zk1RJ6oKcR16dU3UPldaKd83w==}
     cpu: [arm]
     os: [linux]
 
@@ -1025,8 +1059,18 @@ packages:
     cpu: [arm64]
     os: [linux]
 
+  '@rollup/rollup-linux-arm64-gnu@4.21.0':
+    resolution: {integrity: sha512-ZrPhydkTVhyeGTW94WJ8pnl1uroqVHM3j3hjdquwAcWnmivjAwOYjTEAuEDeJvGX7xv3Z9GAvrBkEzCgHq9U1w==}
+    cpu: [arm64]
+    os: [linux]
+
   '@rollup/rollup-linux-arm64-musl@4.19.1':
     resolution: {integrity: sha512-89tFWqxfxLLHkAthAcrTs9etAoBFRduNfWdl2xUs/yLV+7XDrJ5yuXMHptNqf1Zw0UCA3cAutkAiAokYCkaPtw==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@rollup/rollup-linux-arm64-musl@4.21.0':
+    resolution: {integrity: sha512-cfaupqd+UEFeURmqNP2eEvXqgbSox/LHOyN9/d2pSdV8xTrjdg3NgOFJCtc1vQ/jEke1qD0IejbBfxleBPHnPw==}
     cpu: [arm64]
     os: [linux]
 
@@ -1035,8 +1079,18 @@ packages:
     cpu: [ppc64]
     os: [linux]
 
+  '@rollup/rollup-linux-powerpc64le-gnu@4.21.0':
+    resolution: {integrity: sha512-ZKPan1/RvAhrUylwBXC9t7B2hXdpb/ufeu22pG2psV7RN8roOfGurEghw1ySmX/CmDDHNTDDjY3lo9hRlgtaHg==}
+    cpu: [ppc64]
+    os: [linux]
+
   '@rollup/rollup-linux-riscv64-gnu@4.19.1':
     resolution: {integrity: sha512-/1BmHYh+iz0cNCP0oHCuF8CSiNj0JOGf0jRlSo3L/FAyZyG2rGBuKpkZVH9YF+x58r1jgWxvm1aRg3DHrLDt6A==}
+    cpu: [riscv64]
+    os: [linux]
+
+  '@rollup/rollup-linux-riscv64-gnu@4.21.0':
+    resolution: {integrity: sha512-H1eRaCwd5E8eS8leiS+o/NqMdljkcb1d6r2h4fKSsCXQilLKArq6WS7XBLDu80Yz+nMqHVFDquwcVrQmGr28rg==}
     cpu: [riscv64]
     os: [linux]
 
@@ -1045,8 +1099,18 @@ packages:
     cpu: [s390x]
     os: [linux]
 
+  '@rollup/rollup-linux-s390x-gnu@4.21.0':
+    resolution: {integrity: sha512-zJ4hA+3b5tu8u7L58CCSI0A9N1vkfwPhWd/puGXwtZlsB5bTkwDNW/+JCU84+3QYmKpLi+XvHdmrlwUwDA6kqw==}
+    cpu: [s390x]
+    os: [linux]
+
   '@rollup/rollup-linux-x64-gnu@4.19.1':
     resolution: {integrity: sha512-XUXeI9eM8rMP8aGvii/aOOiMvTs7xlCosq9xCjcqI9+5hBxtjDpD+7Abm1ZhVIFE1J2h2VIg0t2DX/gjespC2Q==}
+    cpu: [x64]
+    os: [linux]
+
+  '@rollup/rollup-linux-x64-gnu@4.21.0':
+    resolution: {integrity: sha512-e2hrvElFIh6kW/UNBQK/kzqMNY5mO+67YtEh9OA65RM5IJXYTWiXjX6fjIiPaqOkBthYF1EqgiZ6OXKcQsM0hg==}
     cpu: [x64]
     os: [linux]
 
@@ -1060,8 +1124,18 @@ packages:
     cpu: [x64]
     os: [linux]
 
+  '@rollup/rollup-linux-x64-musl@4.21.0':
+    resolution: {integrity: sha512-1vvmgDdUSebVGXWX2lIcgRebqfQSff0hMEkLJyakQ9JQUbLDkEaMsPTLOmyccyC6IJ/l3FZuJbmrBw/u0A0uCQ==}
+    cpu: [x64]
+    os: [linux]
+
   '@rollup/rollup-win32-arm64-msvc@4.19.1':
     resolution: {integrity: sha512-88brja2vldW/76jWATlBqHEoGjJLRnP0WOEKAUbMcXaAZnemNhlAHSyj4jIwMoP2T750LE9lblvD4e2jXleZsA==}
+    cpu: [arm64]
+    os: [win32]
+
+  '@rollup/rollup-win32-arm64-msvc@4.21.0':
+    resolution: {integrity: sha512-s5oFkZ/hFcrlAyBTONFY1TWndfyre1wOMwU+6KCpm/iatybvrRgmZVM+vCFwxmC5ZhdlgfE0N4XorsDpi7/4XQ==}
     cpu: [arm64]
     os: [win32]
 
@@ -1070,8 +1144,18 @@ packages:
     cpu: [ia32]
     os: [win32]
 
+  '@rollup/rollup-win32-ia32-msvc@4.21.0':
+    resolution: {integrity: sha512-G9+TEqRnAA6nbpqyUqgTiopmnfgnMkR3kMukFBDsiyy23LZvUCpiUwjTRx6ezYCjJODXrh52rBR9oXvm+Fp5wg==}
+    cpu: [ia32]
+    os: [win32]
+
   '@rollup/rollup-win32-x64-msvc@4.19.1':
     resolution: {integrity: sha512-2bIrL28PcK3YCqD9anGxDxamxdiJAxA+l7fWIwM5o8UqNy1t3d1NdAweO2XhA0KTDJ5aH1FsuiT5+7VhtHliXg==}
+    cpu: [x64]
+    os: [win32]
+
+  '@rollup/rollup-win32-x64-msvc@4.21.0':
+    resolution: {integrity: sha512-2jsCDZwtQvRhejHLfZ1JY6w6kEuEtfF9nzYsZxzSlNVKDX+DpsDJ+Rbjkm74nvg2rdx0gwBS+IMdvwJuq3S9pQ==}
     cpu: [x64]
     os: [win32]
 
@@ -2384,6 +2468,11 @@ packages:
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
+  rollup@4.21.0:
+    resolution: {integrity: sha512-vo+S/lfA2lMS7rZ2Qoubi6I5hwZwzXeUIctILZLbHI+laNtvhhOIon2S1JksA5UEDQ7l3vberd0fxK44lTYjbQ==}
+    engines: {node: '>=18.0.0', npm: '>=8.0.0'}
+    hasBin: true
+
   run-parallel@1.2.0:
     resolution: {integrity: sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA==}
 
@@ -2653,6 +2742,10 @@ packages:
     resolution: {integrity: sha512-HR3W/bMGPSr90i8AAp2C4DM3wChFdJPLrWYpIS++LxS8K+W535qftjt+4MyjNYHeWabMj1nvtmLIi7l++iq91A==}
     engines: {node: '>=18.17'}
 
+  undici@6.19.8:
+    resolution: {integrity: sha512-U8uCCl2x9TK3WANvmBavymRzxbfFYG+tAu+fgx3zxQy3qdagQqBLwJVrdyO1TBfUXvfKveMKJZhpvUYoOjM+4g==}
+    engines: {node: '>=18.17'}
+
   universalify@0.1.2:
     resolution: {integrity: sha512-rBJeI5CXAlmy1pV+617WB9J63U6XcazHHF2f2dbJix4XzpUF0RS3Zbj0FGIOCAva5P/d/GBOYaACQ1w+0azUkg==}
     engines: {node: '>= 4.0.0'}
@@ -2706,6 +2799,37 @@ packages:
 
   vite@5.4.1:
     resolution: {integrity: sha512-1oE6yuNXssjrZdblI9AfBbHCC41nnyoVoEZxQnID6yvQZAFBzxxkqoFLtHUMkYunL8hwOLEjgTuxpkRxvba3kA==}
+    engines: {node: ^18.0.0 || >=20.0.0}
+    hasBin: true
+    peerDependencies:
+      '@types/node': ^18.0.0 || >=20.0.0
+      less: '*'
+      lightningcss: ^1.21.0
+      sass: '*'
+      sass-embedded: '*'
+      stylus: '*'
+      sugarss: '*'
+      terser: ^5.4.0
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+      less:
+        optional: true
+      lightningcss:
+        optional: true
+      sass:
+        optional: true
+      sass-embedded:
+        optional: true
+      stylus:
+        optional: true
+      sugarss:
+        optional: true
+      terser:
+        optional: true
+
+  vite@5.4.2:
+    resolution: {integrity: sha512-dDrQTRHp5C1fTFzcSaMxjk6vdpKvT+2/mIdE07Gw2ykehT49O0z/VHS3zZ8iV/Gh8BJJKHWOe5RjaNrW5xf/GA==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
     peerDependencies:
@@ -3838,21 +3962,21 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@milaboratory/milaboratories.samples-and-data.workflow@1.3.0': {}
+  '@milaboratory/milaboratories.samples-and-data.workflow@1.4.0': {}
 
-  '@milaboratory/milaboratories.samples-and-data@1.1.2(typescript@5.5.4)':
+  '@milaboratory/milaboratories.samples-and-data@1.1.3(typescript@5.5.4)':
     dependencies:
       '@milaboratory/milaboratories.samples-and-data.model': 1.1.0
       '@milaboratory/milaboratories.samples-and-data.ui': 1.3.0(typescript@5.5.4)
-      '@milaboratory/milaboratories.samples-and-data.workflow': 1.3.0
+      '@milaboratory/milaboratories.samples-and-data.workflow': 1.4.0
       '@milaboratory/sdk-ui': 0.12.18
     transitivePeerDependencies:
       - typescript
 
-  '@milaboratory/pframes-node@0.4.13(@milaboratory/sdk-model@1.3.9)':
+  '@milaboratory/pframes-node@0.4.15(@milaboratory/sdk-model@1.3.9)':
     dependencies:
       '@mapbox/node-pre-gyp': 1.0.11
-      '@milaboratory/pl-middle-layer-model': 1.2.15
+      '@milaboratory/pl-middle-layer-model': 1.2.16
       '@milaboratory/sdk-model': 1.3.9
     transitivePeerDependencies:
       - encoding
@@ -3901,7 +4025,7 @@ snapshots:
       '@protobuf-ts/plugin': 2.9.4
       denque: 2.1.0
       tar-fs: 3.0.6
-      undici: 6.19.7
+      undici: 6.19.8
       zod: 3.23.8
     transitivePeerDependencies:
       - supports-color
@@ -3912,27 +4036,27 @@ snapshots:
       utility-types: 3.11.0
       zod: 3.23.8
 
-  '@milaboratory/pl-middle-layer-model@1.2.15':
+  '@milaboratory/pl-middle-layer-model@1.2.16':
     dependencies:
       '@milaboratory/sdk-model': 1.3.9
       utility-types: 3.11.0
       zod: 3.23.8
 
-  '@milaboratory/pl-middle-layer@1.9.29(@milaboratory/sdk-model@1.3.9)':
+  '@milaboratory/pl-middle-layer@file:../../platforma/ts-pl-middle-layer/milaboratory-pl-middle-layer-1.9.30.tgz(@milaboratory/sdk-model@1.3.9)':
     dependencies:
       '@milaboratory/computable': 2.1.2
-      '@milaboratory/pframes-node': 0.4.13(@milaboratory/sdk-model@1.3.9)
+      '@milaboratory/pframes-node': 0.4.15(@milaboratory/sdk-model@1.3.9)
       '@milaboratory/pl-block-tools': 2.1.5
       '@milaboratory/pl-client-v2': 2.4.8
       '@milaboratory/pl-drivers': 1.2.10
-      '@milaboratory/pl-middle-layer-model': 1.2.15
+      '@milaboratory/pl-middle-layer-model': 1.2.16
       '@milaboratory/pl-tree': 1.3.5
       '@milaboratory/sdk-ui': 0.12.18
       '@milaboratory/ts-helpers': 1.0.19
       canonicalize: 2.0.0
       denque: 2.1.0
       quickjs-emscripten: 0.29.2
-      undici: 6.19.7
+      undici: 6.19.8
       utility-types: 3.11.0
       yaml: 2.5.0
       zod: 3.23.8
@@ -3981,7 +4105,7 @@ snapshots:
     dependencies:
       '@milaboratory/computable': 2.1.2
       '@milaboratory/pl-client-v2': 2.4.8
-      '@milaboratory/pl-middle-layer': 1.9.29(@milaboratory/sdk-model@1.3.9)
+      '@milaboratory/pl-middle-layer': file:../../platforma/ts-pl-middle-layer/milaboratory-pl-middle-layer-1.9.30.tgz(@milaboratory/sdk-model@1.3.9)
       '@milaboratory/pl-tree': 1.3.5
       '@milaboratory/sdk-ui': 0.12.18
       '@milaboratory/ts-helpers': 1.0.19
@@ -4025,9 +4149,9 @@ snapshots:
     optionalDependencies:
       '@rollup/rollup-linux-x64-gnu': 4.9.5
 
-  '@milaboratory/tengo-sdk@1.0.10': {}
+  '@milaboratory/tengo-sdk@1.0.14': {}
 
-  '@milaboratory/tengo-template-builder@1.10.0':
+  '@milaboratory/tengo-template-builder@1.10.1':
     dependencies:
       '@milaboratory/tengo-tester': 1.4.0
       '@oclif/core': 3.27.0
@@ -4164,37 +4288,73 @@ snapshots:
   '@rollup/rollup-android-arm-eabi@4.19.1':
     optional: true
 
+  '@rollup/rollup-android-arm-eabi@4.21.0':
+    optional: true
+
   '@rollup/rollup-android-arm64@4.19.1':
+    optional: true
+
+  '@rollup/rollup-android-arm64@4.21.0':
     optional: true
 
   '@rollup/rollup-darwin-arm64@4.19.1':
     optional: true
 
+  '@rollup/rollup-darwin-arm64@4.21.0':
+    optional: true
+
   '@rollup/rollup-darwin-x64@4.19.1':
+    optional: true
+
+  '@rollup/rollup-darwin-x64@4.21.0':
     optional: true
 
   '@rollup/rollup-linux-arm-gnueabihf@4.19.1':
     optional: true
 
+  '@rollup/rollup-linux-arm-gnueabihf@4.21.0':
+    optional: true
+
   '@rollup/rollup-linux-arm-musleabihf@4.19.1':
+    optional: true
+
+  '@rollup/rollup-linux-arm-musleabihf@4.21.0':
     optional: true
 
   '@rollup/rollup-linux-arm64-gnu@4.19.1':
     optional: true
 
+  '@rollup/rollup-linux-arm64-gnu@4.21.0':
+    optional: true
+
   '@rollup/rollup-linux-arm64-musl@4.19.1':
+    optional: true
+
+  '@rollup/rollup-linux-arm64-musl@4.21.0':
     optional: true
 
   '@rollup/rollup-linux-powerpc64le-gnu@4.19.1':
     optional: true
 
+  '@rollup/rollup-linux-powerpc64le-gnu@4.21.0':
+    optional: true
+
   '@rollup/rollup-linux-riscv64-gnu@4.19.1':
+    optional: true
+
+  '@rollup/rollup-linux-riscv64-gnu@4.21.0':
     optional: true
 
   '@rollup/rollup-linux-s390x-gnu@4.19.1':
     optional: true
 
+  '@rollup/rollup-linux-s390x-gnu@4.21.0':
+    optional: true
+
   '@rollup/rollup-linux-x64-gnu@4.19.1':
+    optional: true
+
+  '@rollup/rollup-linux-x64-gnu@4.21.0':
     optional: true
 
   '@rollup/rollup-linux-x64-gnu@4.9.5':
@@ -4203,13 +4363,25 @@ snapshots:
   '@rollup/rollup-linux-x64-musl@4.19.1':
     optional: true
 
+  '@rollup/rollup-linux-x64-musl@4.21.0':
+    optional: true
+
   '@rollup/rollup-win32-arm64-msvc@4.19.1':
+    optional: true
+
+  '@rollup/rollup-win32-arm64-msvc@4.21.0':
     optional: true
 
   '@rollup/rollup-win32-ia32-msvc@4.19.1':
     optional: true
 
+  '@rollup/rollup-win32-ia32-msvc@4.21.0':
+    optional: true
+
   '@rollup/rollup-win32-x64-msvc@4.19.1':
+    optional: true
+
+  '@rollup/rollup-win32-x64-msvc@4.21.0':
     optional: true
 
   '@smithy/abort-controller@3.1.1':
@@ -4557,9 +4729,9 @@ snapshots:
 
   '@types/triple-beam@1.3.5': {}
 
-  '@vitejs/plugin-vue@5.1.2(vite@5.4.1(@types/node@22.0.0))(vue@3.4.38(typescript@5.5.4))':
+  '@vitejs/plugin-vue@5.1.2(vite@5.4.2(@types/node@22.0.0))(vue@3.4.38(typescript@5.5.4))':
     dependencies:
-      vite: 5.4.1(@types/node@22.0.0)
+      vite: 5.4.2(@types/node@22.0.0)
       vue: 3.4.38(typescript@5.5.4)
 
   '@vitest/expect@2.0.5':
@@ -5688,6 +5860,28 @@ snapshots:
       '@rollup/rollup-win32-x64-msvc': 4.19.1
       fsevents: 2.3.3
 
+  rollup@4.21.0:
+    dependencies:
+      '@types/estree': 1.0.5
+    optionalDependencies:
+      '@rollup/rollup-android-arm-eabi': 4.21.0
+      '@rollup/rollup-android-arm64': 4.21.0
+      '@rollup/rollup-darwin-arm64': 4.21.0
+      '@rollup/rollup-darwin-x64': 4.21.0
+      '@rollup/rollup-linux-arm-gnueabihf': 4.21.0
+      '@rollup/rollup-linux-arm-musleabihf': 4.21.0
+      '@rollup/rollup-linux-arm64-gnu': 4.21.0
+      '@rollup/rollup-linux-arm64-musl': 4.21.0
+      '@rollup/rollup-linux-powerpc64le-gnu': 4.21.0
+      '@rollup/rollup-linux-riscv64-gnu': 4.21.0
+      '@rollup/rollup-linux-s390x-gnu': 4.21.0
+      '@rollup/rollup-linux-x64-gnu': 4.21.0
+      '@rollup/rollup-linux-x64-musl': 4.21.0
+      '@rollup/rollup-win32-arm64-msvc': 4.21.0
+      '@rollup/rollup-win32-ia32-msvc': 4.21.0
+      '@rollup/rollup-win32-x64-msvc': 4.21.0
+      fsevents: 2.3.3
+
   run-parallel@1.2.0:
     dependencies:
       queue-microtask: 1.2.3
@@ -5942,6 +6136,8 @@ snapshots:
 
   undici@6.19.7: {}
 
+  undici@6.19.8: {}
+
   universalify@0.1.2: {}
 
   util-deprecate@1.0.2: {}
@@ -5956,7 +6152,7 @@ snapshots:
       debug: 4.3.6(supports-color@8.1.1)
       pathe: 1.1.2
       tinyrainbow: 1.2.0
-      vite: 5.4.0(@types/node@22.0.0)
+      vite: 5.4.1(@types/node@22.0.0)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -5982,6 +6178,15 @@ snapshots:
       esbuild: 0.21.5
       postcss: 8.4.41
       rollup: 4.19.1
+    optionalDependencies:
+      '@types/node': 22.0.0
+      fsevents: 2.3.3
+
+  vite@5.4.2(@types/node@22.0.0):
+    dependencies:
+      esbuild: 0.21.5
+      postcss: 8.4.41
+      rollup: 4.21.0
     optionalDependencies:
       '@types/node': 22.0.0
       fsevents: 2.3.3

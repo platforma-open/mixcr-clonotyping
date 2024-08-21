@@ -42,11 +42,10 @@
     "@milaboratory/pl-block-tools": "catalog:",
     "@changesets/cli": "catalog:"
   },
-  "//": {
-    "pnpm": {
-      "overrides": {
-        "@milaboratory/pl-middle-layer": "file:/Volumes/Data/Projects/MiLaboratory/platforma/ts-pl-middle-layer/milaboratory-pl-middle-layer-1.9.29.tgz"
-      }
+  "//": {},
+  "pnpm": {
+    "overrides": {
+      "@milaboratory/pl-middle-layer": "file:/Volumes/Data/Projects/MiLaboratory/platforma/ts-pl-middle-layer/milaboratory-pl-middle-layer-1.9.30.tgz"
     }
   }
 }
