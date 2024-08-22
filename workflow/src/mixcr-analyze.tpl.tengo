@@ -5,6 +5,8 @@ pConstants := import("@milaboratory/tengo-sdk:pframes.constants")
 ll := import("@milaboratory/tengo-sdk:ll")
 exec := import("@milaboratory/tengo-sdk:exec")
 
+json := import("json")
+
 self.defineOutputs("qc")
 
 self.body(func(inputs) {
@@ -18,15 +20,18 @@ self.body(func(inputs) {
 
 	if inputDataMeta.keyLength == 1 {
 		mixcrCmdBuilder := exec.builder().
+								printErrStreamToStdout().
 						        cmd("mixcr").
 						        arg("analyze").
 								arg(preset)
 
-		for r, inputFile in inputData.inputs() {
+		for sKey, inputFile in inputData.inputs() {
+			key := json.decode(sKey)
+			r := key[0]
 			if (r[0] != 'R' && r[0] != "I") || (r[1] != '1' && r[1] != '2') || len(r) != 2 {
 				ll.panic("malformed read index: %v", r)
 			}
-			fileName := "input_" + r + fileExtension
+			fileName := "input_" + r + "." + fileExtension
 			mixcrCmdBuilder.addFile(fileName, inputFile).
 							arg(fileName)
 		}

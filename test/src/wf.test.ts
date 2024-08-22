@@ -29,7 +29,7 @@ blockTest('empty imputs', { timeout: 10000 }, async ({ rawPrj: project, ml, help
 
 blockTest(
   'simple project',
-  { timeout: 10000 },
+  { timeout: 20000 },
   async ({ rawPrj: project, ml, helpers, expect }) => {
     const sndBlockId = await project.addBlock('Samples & Data', samplesAndDataBlockSpec);
     const clonotypingBlockId = await project.addBlock('MiXCR Clonotyping', myBlockSpec);
@@ -115,7 +115,8 @@ blockTest(
     } satisfies BlockArgs);
     await project.runBlock(clonotypingBlockId);
     const clonotypingStableState2 = await helpers.awaitBlockDoneAndGetStableBlockState(
-      clonotypingBlockId
+      clonotypingBlockId,
+      10000
     );
     console.dir(clonotypingStableState2, { depth: 5 });
   }

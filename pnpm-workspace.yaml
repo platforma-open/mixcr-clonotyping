@@ -11,11 +11,11 @@ catalog:
   '@milaboratory/block-builder': ^1.2.3
 
   '@milaboratory/sdk-ui': ^0.12.18
-  '@milaboratory/sdk-test': ^1.4.11
+  '@milaboratory/sdk-test': ^1.4.12
 
-  '@milaboratory/tengo-sdk': ^1.0.14
+  '@milaboratory/tengo-sdk': ^1.0.15
 
-  '@milaboratory/platforma-uikit': ^1.0.24
+  '@milaboratory/platforma-uikit': ^1.0.25
   '@milaboratory/sdk-vue': ^1.0.33
   '@milaboratory/helpers': ^1.5.2
 

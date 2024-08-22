@@ -1,5 +1,7 @@
 wf := import("@milaboratory/tengo-sdk:workflow")
 
+render := import("@milaboratory/tengo-sdk:render")
+
 maps := import("@milaboratory/tengo-sdk:maps")
 ll := import("@milaboratory/tengo-sdk:ll")
 smart := import("@milaboratory/tengo-sdk:smart")
@@ -8,7 +10,7 @@ llPFrames := import("@milaboratory/tengo-sdk:pframes.ll")
 
 json := import("json")
 
-mixcrAggTpl := ll.importTemplate(":mixcr-analyze")
+runMixcrTpl := ll.importTemplate(":run-mixcr")
 
 wf.setPreRun(ll.importTemplate(":prerun"))
 
@@ -19,22 +21,19 @@ wf.body(func(args) {
 
 	input := wf.resolve(inputRef)
 
-	mixcrResults := llPFrames.aggregate(
-			input.getFutureInputField("data"), [1], mixcrAggTpl,
-			["qc"],
-			false,
-			{
-				params: smart.createJsonResource({
-					preset: preset
-				})
-			}
-		)
+	runMixcr := render.createEphemeral(runMixcrTpl, {
+		params: smart.createJsonResource({
+			preset: preset
+		}),
+		inputSpec: input.getFutureInputField("spec"),
+		inputData: input.getFutureInputField("data")
+	})
 
 	exports := {}
 
 	return {
 		outputs: {
-			qc: mixcrResults.output("qc")
+			qc: runMixcr.output("qc")
 		},
 		exports: exports
 	}

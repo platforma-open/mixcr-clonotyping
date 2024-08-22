@@ -28,7 +28,7 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
         if (!isPColumnSpec(v.obj)) return false;
         const domain = v.obj.domain;
         return (
-          v.obj.name === 'pl7.app/data/sequencing' &&
+          v.obj.name === 'pl7.app/sequencing/data' &&
           ((v.obj.valueType as string) === 'blob' || (v.obj.valueType as string) === 'file') &&
           domain !== undefined &&
           (domain['pl7.app/fileExtension'] === 'fastq' ||
