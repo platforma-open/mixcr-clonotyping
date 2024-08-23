@@ -11,10 +11,21 @@ self.defineOutputs("qc")
 
 self.body(func(inputs) {
 	inputData := inputs[pConstants.VALUE_FIELD_NAME]
-	params := inputs.params
 
+	params := inputs.params
 	preset := params.preset
 	fileExtension := params.fileExtension
+
+	presetContent := inputs.presetContent.getDataAsJson()
+	pfconvParams := inputs.pfconvParams // already in JSON
+
+	if !is_map(presetContent) {
+		ll.panic("malformed presetContent %v", presetContent)
+	}
+
+	if !is_map(pfconvParams) {
+		ll.panic("malformed pfconvParams %v", pfconvParams)
+	}
 
 	inputDataMeta := inputData.getDataAsJson()
 

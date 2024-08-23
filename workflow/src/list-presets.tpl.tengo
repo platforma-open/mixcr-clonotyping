@@ -1,0 +1,22 @@
+// list presets
+
+self := import("@milaboratory/tengo-sdk:tpl")
+ll := import("@milaboratory/tengo-sdk:ll")
+exec := import("@milaboratory/tengo-sdk:exec")
+file := import("@milaboratory/tengo-sdk:file")
+
+self.defineOutputs("presets")
+
+self.body(func(inputs) {
+	listPresets := exec.builder().
+						cmd("mixcr").
+						arg("listPresetSpecificationsForUI").
+						arg("presets.json").
+						inUiQueue().
+						saveFile("presets.json").
+						run()
+
+	return {
+		presets: file.exportFile(listPresets.getFile("presets.json"))
+	}
+})

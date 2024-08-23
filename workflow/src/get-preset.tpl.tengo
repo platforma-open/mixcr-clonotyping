@@ -1,0 +1,31 @@
+// get preset
+
+self := import("@milaboratory/tengo-sdk:tpl")
+ll := import("@milaboratory/tengo-sdk:ll")
+exec := import("@milaboratory/tengo-sdk:exec")
+
+self.defineOutputs("preset")
+
+self.body(func(inputs) {
+	preset := inputs.preset
+
+	if !is_string(preset) {
+		ll.panic("preset is not string: %v", preset)
+	}
+
+	mixcrCmd := exec.builder().
+					printErrStreamToStdout().
+					cmd("mixcr").
+					arg("exportPreset").
+					arg("--preset-name").
+					arg(preset).
+					arg("preset.json").
+					saveFileContent("preset.json").
+					run()
+
+	presetContent := mixcrCmd.getFileContent("preset.json")
+
+	return {
+		preset: presetContent
+	}
+})

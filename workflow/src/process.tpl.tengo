@@ -1,4 +1,4 @@
-// run-mixcr
+// process
 
 self := import("@milaboratory/tengo-sdk:tpl")
 
@@ -9,7 +9,7 @@ llPFrames := import("@milaboratory/tengo-sdk:pframes.ll")
 
 json := import("json")
 
-mixcrAggTpl := ll.importTemplate(":mixcr-analyze")
+mixcrAnalyzeTpl := ll.importTemplate(":mixcr-analyze")
 
 self.awaitState("InputsLocked")
 self.awaitState("params", "ResourceReady")
@@ -20,17 +20,30 @@ self.body(func(inputs) {
 	preset := params.preset
 	inputSpec := self.rawInputs().inputSpec.getValue().getDataAsJson()
 
+	presetContent := self.rawInputs().presetContent
+	pfconvParams := self.rawInputs().pfconvParams
+
+	if is_undefined(presetContent) {
+		ll.panic("no presetContent")
+	}
+
+	if is_undefined(pfconvParams) {
+		ll.panic("no pfconvParams")
+	}
+
 	fileExtension := inputSpec.domain["pl7.app/fileExtension"]
 
 	mixcrResults := llPFrames.aggregate(
-			self.rawInputs().inputData, [1], mixcrAggTpl,
+			self.rawInputs().inputData, [1], mixcrAnalyzeTpl,
 			["qc"],
 			false,
 			{
 				params: smart.createJsonResource({
 					preset: preset,
 					fileExtension: fileExtension
-				})
+				}),
+				presetContent: presetContent,
+				pfconvParams: pfconvParams
 			}
 		)
 

@@ -15,6 +15,10 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
     ctx.precalc?.resolve({ field: 'presets', assertFieldType: 'Input' })?.getFileHandle()
   )
 
+  .output('preset', (ctx) =>
+    ctx.precalc?.resolve({ field: 'preset', assertFieldType: 'Input' })?.getDataAsString()
+  )
+
   .output('qc', (ctx) =>
     ctx.outputs?.resolve({ field: 'qc', assertFieldType: 'Input' })?.getDataAsJson()
   )

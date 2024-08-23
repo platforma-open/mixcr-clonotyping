@@ -1,22 +1,28 @@
+// pre-run
+
 wf := import("@milaboratory/tengo-sdk:workflow")
-exec := import("@milaboratory/tengo-sdk:exec")
-file := import("@milaboratory/tengo-sdk:file")
+render := import("@milaboratory/tengo-sdk:render")
+ll := import("@milaboratory/tengo-sdk:ll")
+
+listPresetsTpl := ll.importTemplate(":list-presets")
+getPresetTpl := ll.importTemplate(":get-preset")
 
 wf.body(func(args) {
 
-	listPresets := exec.builder().
-						cmd("mixcr").
-						arg("listPresetSpecificationsForUI").
-						arg("presets.json").
-						inUiQueue().
-						cache(24 * 60 * 60 * 1000).
-						saveFile("presets.json").
-						run()
+	outputs := {}
+
+	listPresets := render.create(listPresetsTpl, {})
+	outputs.presets = listPresets.output("presets", 24 * 60 * 60 * 1000)
+
+	if is_string(args.preset) {
+		getPreset := render.create(getPresetTpl, {
+			preset: args.preset
+		})
+		outputs.preset = getPreset.output("preset", 24 * 60 * 60 * 1000)
+	}
 
 	return {
-		outputs: {
-			presets: file.exportFile(listPresets.getFile("presets.json"))
-		},
+		outputs: outputs,
 		exports: {}
 	}
 })

@@ -13,11 +13,10 @@ import * as tp from 'node:timers/promises';
 
 blockTest('empty imputs', { timeout: 10000 }, async ({ rawPrj: project, ml, helpers, expect }) => {
   const blockId = await project.addBlock('Block', myBlockSpec);
-  await project.runBlock(blockId);
-  const stableState = await helpers.awaitBlockDoneAndGetStableBlockState<typeof platforma>(
-    blockId,
+  const stableState = await awaitStableState(
+    project.getBlockState(blockId),
     5000
-  );
+  ) as InferBlockState<typeof platforma>;
   expect(stableState.outputs).toMatchObject({ inputOptions: { ok: true, value: [] } });
   const presetsOutput = wrapOutputs(stableState.outputs).presets;
   const presetsStr = Buffer.from(
@@ -26,6 +25,22 @@ blockTest('empty imputs', { timeout: 10000 }, async ({ rawPrj: project, ml, help
   const presets = JSON.parse(presetsStr);
   expect(presets).length.gt(10);
 });
+
+blockTest(
+  'preset content',
+  { timeout: 10000 },
+  async ({ rawPrj: project, ml, helpers, expect }) => {
+    const blockId = await project.addBlock('Block', myBlockSpec);
+    await project.setBlockArgs(blockId, {
+      preset: 'milab-human-dna-xcr-7genes-multiplex'
+    } satisfies BlockArgs);
+    const stableState = await awaitStableState(
+      project.getBlockState(blockId),
+      5000
+    ) as InferBlockState<typeof platforma>;
+    expect(stableState.outputs).toMatchObject({ preset: { ok: true } });
+  }
+);
 
 blockTest(
   'simple project',

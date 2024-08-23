@@ -1,0 +1,16 @@
+// calculate-pfconv-params
+
+self := import("@milaboratory/tengo-sdk:tpl")
+
+pvconfParams := import(":pfconv_params")
+
+self.defineOutputs("params")
+
+self.body(func(inputs) {
+	// preset content
+	preset := inputs.preset
+
+	return {
+		params: pvconfParams
+	}
+})

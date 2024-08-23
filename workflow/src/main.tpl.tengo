@@ -7,10 +7,13 @@ ll := import("@milaboratory/tengo-sdk:ll")
 smart := import("@milaboratory/tengo-sdk:smart")
 file := import("@milaboratory/tengo-sdk:file")
 llPFrames := import("@milaboratory/tengo-sdk:pframes.ll")
+exec := import("@milaboratory/tengo-sdk:exec")
 
 json := import("json")
 
-runMixcrTpl := ll.importTemplate(":run-mixcr")
+getPresetTpl := ll.importTemplate(":get-preset")
+calculatePfconvParamsTpl := ll.importTemplate(":calculate-pfconv-params")
+processTpl := ll.importTemplate(":process")
 
 wf.setPreRun(ll.importTemplate(":prerun"))
 
@@ -21,10 +24,22 @@ wf.body(func(args) {
 
 	input := wf.resolve(inputRef)
 
-	runMixcr := render.createEphemeral(runMixcrTpl, {
+	getPreset := render.create(getPresetTpl, {
+		preset: args.preset
+	})
+	presetContent := getPreset.output("preset", 24 * 60 * 60 * 1000)
+
+	calculatePfconvParams := render.create(calculatePfconvParamsTpl, {
+		preset: presetContent
+	})
+	pfconvParams := calculatePfconvParams.output("params", 24 * 60 * 60 * 1000)
+
+	runMixcr := render.createEphemeral(processTpl, {
 		params: smart.createJsonResource({
 			preset: preset
 		}),
+		presetContent: presetContent,
+		pfconvParams: pfconvParams,
 		inputSpec: input.getFutureInputField("spec"),
 		inputData: input.getFutureInputField("data")
 	})
