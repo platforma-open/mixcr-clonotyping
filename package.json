@@ -51,8 +51,14 @@
     "pnpm1": {
       "overrides": {
         "@milaboratory/pl-middle-layer": "1.9.30",
-        "@milaboratory/tengo-sdk": "file:/Volumes/Data/Projects/MiLaboratory/blocks-beta/tengo-sdk"
+        "@milaboratory/tengo-sdk": "file:/Volumes/Data/Projects/MiLaboratory/blocks-beta/tengo-sdk/milaboratory-tengo-sdk-1.0.14.tgz",
+        "@milaboratory/tengo-template-builder": "file:/Volumes/Data/Projects/MiLaboratory/blocks-beta/tengo-template-builder"
       }
+    }
+  },
+  "pnpm": {
+    "overrides": {
+      "@milaboratory/tengo-sdk": "file:/Volumes/Data/Projects/MiLaboratory/blocks-beta/tengo-sdk"
     }
   }
 }

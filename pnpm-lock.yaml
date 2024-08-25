@@ -37,20 +37,17 @@ catalogs:
       specifier: ^1.0.25
       version: 1.0.25
     '@milaboratory/sdk-test':
-      specifier: ^1.4.12
-      version: 1.4.12
+      specifier: ^1.4.13
+      version: 1.4.13
     '@milaboratory/sdk-ui':
       specifier: ^0.12.18
       version: 0.12.18
     '@milaboratory/sdk-vue':
       specifier: ^1.0.33
       version: 1.0.33
-    '@milaboratory/tengo-sdk':
-      specifier: ^1.0.15
-      version: 1.0.15
     '@milaboratory/tengo-template-builder':
-      specifier: ^1.10.1
-      version: 1.10.1
+      specifier: ^1.11.1
+      version: 1.11.1
     '@vitejs/plugin-vue':
       specifier: ^5.1.2
       version: 5.1.2
@@ -78,6 +75,9 @@ catalogs:
     zod:
       specifier: ^3.23.8
       version: 3.23.8
+
+overrides:
+  '@milaboratory/tengo-sdk': file:/Volumes/Data/Projects/MiLaboratory/blocks-beta/tengo-sdk
 
 importers:
 
@@ -139,7 +139,7 @@ importers:
     devDependencies:
       '@milaboratory/sdk-test':
         specifier: 'catalog:'
-        version: 1.4.12(@milaboratory/sdk-model@1.3.9)(@types/node@22.0.0)
+        version: 1.4.13(@milaboratory/sdk-model@1.3.9)(@types/node@22.0.0)
       typescript:
         specifier: 'catalog:'
         version: 5.5.4
@@ -202,11 +202,11 @@ importers:
   workflow:
     devDependencies:
       '@milaboratory/tengo-sdk':
-        specifier: 'catalog:'
-        version: 1.0.15
+        specifier: file:/Volumes/Data/Projects/MiLaboratory/blocks-beta/tengo-sdk
+        version: file:../tengo-sdk
       '@milaboratory/tengo-template-builder':
         specifier: 'catalog:'
-        version: 1.10.1
+        version: 1.11.1
 
 packages:
 
@@ -844,8 +844,8 @@ packages:
     resolution: {integrity: sha512-8F28MkHQO0u9YHsmTmocWd6tQH9yyCBpoGNQh3vCHkxsQXKoj9H1zjyxyK4b/eHRFKxH4lcTRk7EgzfUFRqwKQ==, tarball: https://npm.pkg.github.com/download/@milaboratory/pl-block-tools/2.1.5/a0c97d8f6dbd01d724330e8ccd1c80d2e00cc39a}
     hasBin: true
 
-  '@milaboratory/pl-client-v2@2.4.8':
-    resolution: {integrity: sha512-JKUbh0Qcn5ucuMrcnAUY+kx0O+FEwiXh/YhznmZqTwh9NF/ybyirOkYPnR6VKadLU1l6l+9fb5vrVzqPbCPgIA==, tarball: https://npm.pkg.github.com/download/@milaboratory/pl-client-v2/2.4.8/7e136ebcb0b906b4ad813f1a765e5a4e17654eb3}
+  '@milaboratory/pl-client-v2@2.4.9':
+    resolution: {integrity: sha512-TO8X7cyGs5R4ZUS1ahRpAC59/tUKPWqdfrDg8E/JH/VWwnbVowiXIJehlgbliMWa/X87XxXFsW5Q5MVkXrM1Ew==, tarball: https://npm.pkg.github.com/download/@milaboratory/pl-client-v2/2.4.9/7c7135ad01e692f10a2e66b44bda234daf12c31a}
 
   '@milaboratory/pl-drivers@1.2.10':
     resolution: {integrity: sha512-LDGrsmWEuBBLZ6rDwQjx2iGW3P1rYGkp4oXv2kjfGJqJ6Of+Zw8FUWtgGh7cTaGPEKcYk4OWjEXLdUdPXnmr1Q==, tarball: https://npm.pkg.github.com/download/@milaboratory/pl-drivers/1.2.10/206df6696c78d6ad3ba4bd2ba3fd90e74cca4f46}
@@ -883,8 +883,8 @@ packages:
   '@milaboratory/sdk-model@1.3.9':
     resolution: {integrity: sha512-ZuJYcbNpbpNEjqBrpp7iY+QpwSIeQcfgP+28MiSctb0PrhHgascC2QvetetFczo6tKJlT2ZvmZ5spdgz0lvgYg==, tarball: https://npm.pkg.github.com/download/@milaboratory/sdk-model/1.3.9/4e3091eb6014b20b67d7609a54c6014a3ad261ea}
 
-  '@milaboratory/sdk-test@1.4.12':
-    resolution: {integrity: sha512-D/Yi/85qhvHI9vGpMFPvryjgRvFCEvSZbKKQUXRez1LpzD+q770uveym+G+tl971sEOUtY0R6tXkeR+fMU+BFQ==, tarball: https://npm.pkg.github.com/download/@milaboratory/sdk-test/1.4.12/4e8855fce6fdbc4b6618b6d342f459bef8c866fa}
+  '@milaboratory/sdk-test@1.4.13':
+    resolution: {integrity: sha512-TJmj4c5MF2+5B7XKC9492Uxhwdu8BO3UhmUcBAj7YOeoUngWIyj9EBz7E+9HlCoE41v1kvhJd8v5PLZ4NTxygg==, tarball: https://npm.pkg.github.com/download/@milaboratory/sdk-test/1.4.13/1538cc9b06e931e40b637ceebadd7c686ebbf464}
 
   '@milaboratory/sdk-ui@0.12.15':
     resolution: {integrity: sha512-zNH8dpq9B1mOsk60pq3paSEuDI7vUMzCdV9EPn7aPlA/YZ8BH16+pOdW5KYC+3SDCz+xiOzhLzQ4h3P8Tv6H1w==, tarball: https://npm.pkg.github.com/download/@milaboratory/sdk-ui/0.12.15/1195aa1a3cc84d1dc4a934a2cd8c807523941e0b}
@@ -900,15 +900,15 @@ packages:
       '@milaboratory/sdk-ui': ^0.12.10
       vue: ^3.4.31
 
-  '@milaboratory/tengo-sdk@1.0.15':
-    resolution: {integrity: sha512-omlpJCA/3MsUytPpeBRFlOyD3bSgMiV4W7tFlVGsEsEhDXCqVU9S6SXMQs6adloI87qXbaaq72gNvkz7/MVEfg==, tarball: https://npm.pkg.github.com/download/@milaboratory/tengo-sdk/1.0.15/6682caa4b60434c9ce0921d069eab73d05f4f2da}
+  '@milaboratory/tengo-sdk@file:../tengo-sdk':
+    resolution: {directory: ../tengo-sdk, type: directory}
 
-  '@milaboratory/tengo-template-builder@1.10.1':
-    resolution: {integrity: sha512-Kcto5T7oWx8hkxyWAdYEjCDW1atOk2hSrPjUyDLCR9kKGTtcWterk8axR2aS57s8hF8bBY5Tns2omjctlX9iAg==, tarball: https://npm.pkg.github.com/download/@milaboratory/tengo-template-builder/1.10.1/d2b139ebda04f1851fe80961bc49f63928efbcb8}
+  '@milaboratory/tengo-template-builder@1.11.1':
+    resolution: {integrity: sha512-Z6/C85vUUBO44Utsre2/TbRbNwaMsOa9l4AXUryb9vtvh4gcnHbr2wwLzv1iZ7mBeHVyk7iLk7vTLtbmooovvw==, tarball: https://npm.pkg.github.com/download/@milaboratory/tengo-template-builder/1.11.1/fec79d77cc7882eb05037c308252d3595a36d1c1}
     hasBin: true
 
-  '@milaboratory/tengo-tester@1.4.0':
-    resolution: {integrity: sha512-mwcHT0l/KGKMQBeTTcL6h4/ar9M/IeCDTqeI6d/ugMf7TzUCMGrTXpmNgugJzfLXPVrGZuGYLxq4haq7Ikkvbw==, tarball: https://npm.pkg.github.com/download/@milaboratory/tengo-tester/1.4.0/2395c0a29afe16db9abd7f576cfb3e87f1fcd9c8}
+  '@milaboratory/tengo-tester@1.4.1':
+    resolution: {integrity: sha512-6o6j9cJTFdolhwjpKEtvDWygbzLF74tgdr+LO+2G7bwHtaS44KC1o6l2m7lG36tT6keRnAgW5D8QZ6pbthunkQ==, tarball: https://npm.pkg.github.com/download/@milaboratory/tengo-tester/1.4.1/1ee4ff83fccd5a7dc6ad450d4109a57608f5220e}
     os: [darwin, linux, win32]
     hasBin: true
 
@@ -2943,8 +2943,8 @@ packages:
     resolution: {integrity: sha512-wQCXXVgfv/wUPOfb2x0ruxzwkcZfxcktz6JIMUaPLmcNhO4bZTwA/WtDWK74xV3F2dKu8YadrFv0qhwYjVEwhA==}
     engines: {node: '>= 12.0.0'}
 
-  winston@3.13.1:
-    resolution: {integrity: sha512-SvZit7VFNvXRzbqGHsv5KSmgbEYR5EiQfDAL9gxYkRqa934Hnk++zze0wANKtMHcy/gI4W/3xmSDwlhf865WGw==}
+  winston@3.14.2:
+    resolution: {integrity: sha512-CO8cdpBB2yqzEf8v895L+GNKYJiEq8eKlHU38af3snQBQ+sdAIUepjMSguOIJC7ICbzm0ZI+Af2If4vIJrtmOg==}
     engines: {node: '>= 12.0.0'}
 
   wordwrap@1.0.0:
@@ -3994,7 +3994,7 @@ snapshots:
     transitivePeerDependencies:
       - aws-crt
 
-  '@milaboratory/pl-client-v2@2.4.8':
+  '@milaboratory/pl-client-v2@2.4.9':
     dependencies:
       '@grpc/grpc-js': 1.11.1
       '@milaboratory/ts-helpers': 1.0.19
@@ -4013,7 +4013,7 @@ snapshots:
     dependencies:
       '@grpc/grpc-js': 1.11.1
       '@milaboratory/computable': 2.1.2
-      '@milaboratory/pl-client-v2': 2.4.8
+      '@milaboratory/pl-client-v2': 2.4.9
       '@milaboratory/pl-tree': 1.3.5
       '@milaboratory/sdk-model': 1.3.9
       '@milaboratory/ts-helpers': 1.0.19
@@ -4043,7 +4043,7 @@ snapshots:
       '@milaboratory/computable': 2.1.2
       '@milaboratory/pframes-node': 0.4.15(@milaboratory/sdk-model@1.3.9)
       '@milaboratory/pl-block-tools': 2.1.5
-      '@milaboratory/pl-client-v2': 2.4.8
+      '@milaboratory/pl-client-v2': 2.4.9
       '@milaboratory/pl-drivers': 1.2.10
       '@milaboratory/pl-middle-layer-model': 1.2.16
       '@milaboratory/pl-tree': 1.3.5
@@ -4065,7 +4065,7 @@ snapshots:
   '@milaboratory/pl-tree@1.3.5':
     dependencies:
       '@milaboratory/computable': 2.1.2
-      '@milaboratory/pl-client-v2': 2.4.8
+      '@milaboratory/pl-client-v2': 2.4.9
       '@milaboratory/ts-helpers': 1.0.19
       denque: 2.1.0
       utility-types: 3.11.0
@@ -4109,10 +4109,10 @@ snapshots:
     dependencies:
       zod: 3.23.8
 
-  '@milaboratory/sdk-test@1.4.12(@milaboratory/sdk-model@1.3.9)(@types/node@22.0.0)':
+  '@milaboratory/sdk-test@1.4.13(@milaboratory/sdk-model@1.3.9)(@types/node@22.0.0)':
     dependencies:
       '@milaboratory/computable': 2.1.2
-      '@milaboratory/pl-client-v2': 2.4.8
+      '@milaboratory/pl-client-v2': 2.4.9
       '@milaboratory/pl-middle-layer': 1.9.30(@milaboratory/sdk-model@1.3.9)
       '@milaboratory/pl-tree': 1.3.5
       '@milaboratory/sdk-ui': 0.12.18
@@ -4166,16 +4166,16 @@ snapshots:
     optionalDependencies:
       '@rollup/rollup-linux-x64-gnu': 4.9.5
 
-  '@milaboratory/tengo-sdk@1.0.15': {}
+  '@milaboratory/tengo-sdk@file:../tengo-sdk': {}
 
-  '@milaboratory/tengo-template-builder@1.10.1':
+  '@milaboratory/tengo-template-builder@1.11.1':
     dependencies:
-      '@milaboratory/tengo-tester': 1.4.0
+      '@milaboratory/tengo-tester': 1.4.1
       '@oclif/core': 3.27.0
       canonicalize: 2.0.0
-      winston: 3.13.1
+      winston: 3.14.2
 
-  '@milaboratory/tengo-tester@1.4.0': {}
+  '@milaboratory/tengo-tester@1.4.1': {}
 
   '@milaboratory/ts-helpers-oclif@1.1.0':
     dependencies:
@@ -6310,7 +6310,7 @@ snapshots:
       readable-stream: 3.6.2
       triple-beam: 1.4.1
 
-  winston@3.13.1:
+  winston@3.14.2:
     dependencies:
       '@colors/colors': 1.6.0
       '@dabh/diagnostics': 2.0.3

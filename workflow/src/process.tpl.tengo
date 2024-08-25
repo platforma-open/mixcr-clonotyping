@@ -35,7 +35,10 @@ self.body(func(inputs) {
 
 	mixcrResults := llPFrames.aggregate(
 			self.rawInputs().inputData, [1], mixcrAnalyzeTpl,
-			["qc"],
+			[{
+				type: "Resource",
+				name: "qc"
+			}],
 			false,
 			{
 				params: smart.createJsonResource({

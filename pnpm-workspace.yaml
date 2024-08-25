@@ -6,12 +6,12 @@ packages:
   - test
 
 catalog:
-  '@milaboratory/tengo-template-builder': ^1.10.1
+  '@milaboratory/tengo-template-builder': ^1.11.1
   '@milaboratory/pl-block-tools': ^2.1.5
   '@milaboratory/block-builder': ^1.2.3
 
   '@milaboratory/sdk-ui': ^0.12.18
-  '@milaboratory/sdk-test': ^1.4.12
+  '@milaboratory/sdk-test': ^1.4.13
 
   '@milaboratory/tengo-sdk': ^1.0.15
 
