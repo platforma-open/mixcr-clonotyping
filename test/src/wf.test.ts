@@ -133,6 +133,7 @@ blockTest(
       clonotypingBlockId,
       10000
     );
+    
     console.dir(clonotypingStableState2, { depth: 5 });
   }
 );
