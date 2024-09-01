@@ -4,18 +4,20 @@ render := import("@milaboratory/tengo-sdk:render")
 
 maps := import("@milaboratory/tengo-sdk:maps")
 ll := import("@milaboratory/tengo-sdk:ll")
+assets := import("@milaboratory/tengo-sdk:assets")
 smart := import("@milaboratory/tengo-sdk:smart")
 file := import("@milaboratory/tengo-sdk:file")
 llPFrames := import("@milaboratory/tengo-sdk:pframes.ll")
+pframes := import("@milaboratory/tengo-sdk:pframes")
 exec := import("@milaboratory/tengo-sdk:exec")
 
 json := import("json")
 
-getPresetTpl := ll.importTemplate(":get-preset")
-calculatePfconvParamsTpl := ll.importTemplate(":calculate-pfconv-params")
-processTpl := ll.importTemplate(":process")
+getPresetTpl := assets.importTemplate(":get-preset")
+calculatePfconvParamsTpl := assets.importTemplate(":calculate-pfconv-params")
+processTpl := assets.importTemplate(":process")
 
-wf.setPreRun(ll.importTemplate(":prerun"))
+wf.setPreRun(assets.importTemplate(":prerun"))
 
 wf.body(func(args) {
 	inputRef := args.input
@@ -44,12 +46,25 @@ wf.body(func(args) {
 		inputData: input.getFutureInputField("data")
 	})
 
-	exports := {}
+	exports := {
+		qc: {
+			spec: runMixcr.output("qc.spec"),
+			data: runMixcr.output("qc.data")
+		},
+		reports: {
+			spec: runMixcr.output("reports.spec"),
+			data: runMixcr.output("reports.data")
+		}
+	}
+
+	outputs := {
+		qc: pframes.exportColumnData(runMixcr.output("qc.data")),
+		reports: pframes.exportColumnData(runMixcr.output("reports.data")),
+		clones: pframes.exportFrame(runMixcr.output("clones"))
+	}
 
 	return {
-		outputs: {
-			qc: runMixcr.output("qc")
-		},
+		outputs: outputs,
 		exports: exports
 	}
 })

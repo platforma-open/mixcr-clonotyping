@@ -54,11 +54,16 @@
         "@milaboratory/tengo-sdk": "file:/Volumes/Data/Projects/MiLaboratory/blocks-beta/tengo-sdk/milaboratory-tengo-sdk-1.0.14.tgz",
         "@milaboratory/tengo-template-builder": "file:/Volumes/Data/Projects/MiLaboratory/blocks-beta/tengo-template-builder"
       }
+    },
+    "pnpm2": {
+      "overrides": {
+        "@milaboratory/tengo-sdk": "file:/Volumes/Data/Projects/MiLaboratory/blocks-beta/tengo-sdk",
+        "@milaboratory/pl-middle-layer": "file:/Volumes/Data/Projects/MiLaboratory/platforma/ts-pl-middle-layer",
+        "@milaboratory/sdk-ui": "file:/Volumes/Data/Projects/MiLaboratory/platforma/ts-sdk-ui"
+      }
     }
   },
   "pnpm": {
-    "overrides": {
-      "@milaboratory/tengo-sdk": "file:/Volumes/Data/Projects/MiLaboratory/blocks-beta/tengo-sdk"
-    }
+    "overrides": {}
   }
 }

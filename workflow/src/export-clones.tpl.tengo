@@ -1,0 +1,42 @@
+// export clones
+
+self := import("@milaboratory/tengo-sdk:tpl")
+smart := import("@milaboratory/tengo-sdk:smart")
+ll := import("@milaboratory/tengo-sdk:ll")
+xsv := import("@milaboratory/tengo-sdk:pframes.xsv")
+pConstants := import("@milaboratory/tengo-sdk:pframes.constants")
+
+text := import("text")
+json := import("json")
+
+self.defineOutputs("result")
+
+FILE_NAME_PREFIX := "result.clones_"
+FILE_NAME_SUFFIX := ".tsv"
+FILE_NAME_PREFIX_LEN := len(FILE_NAME_PREFIX)
+FILE_NAME_SUFFIX_LEN := len(FILE_NAME_SUFFIX)
+
+self.body(func(inputs) {
+	pfconvParams := inputs.pfconvParams
+	data := self.rawInputs().data.getValue()
+
+	csvMap := smart.structBuilder(
+		pConstants.RTYPE_P_COLUMN_DATA_RESOURCE_MAP,
+	    json.encode({ keyLength: 1 })
+	)
+
+	for fileName, file in data.inputs() {
+		if !text.has_prefix(fileName, FILE_NAME_PREFIX) || !text.has_suffix(fileName, FILE_NAME_SUFFIX) {
+			ll.panic("unedxpected file name: %v", fileName)
+		}
+		chain := fileName[FILE_NAME_PREFIX_LEN:(len(fileName) - FILE_NAME_SUFFIX_LEN)]
+		csvMap.createInputField(json.encode([chain])).set(file)
+	}
+	csvMap = csvMap.lockAndBuild()
+
+	resultData := xsv.importFileMap(csvMap, "tsv", pfconvParams, { dataOnly: true })
+
+	return {
+		result: resultData
+	}
+})

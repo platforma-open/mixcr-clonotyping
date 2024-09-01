@@ -5,10 +5,14 @@ pConstants := import("@milaboratory/tengo-sdk:pframes.constants")
 ll := import("@milaboratory/tengo-sdk:ll")
 exec := import("@milaboratory/tengo-sdk:exec")
 smart := import("@milaboratory/tengo-sdk:smart")
+assets := import("@milaboratory/tengo-sdk:assets")
+render := import("@milaboratory/tengo-sdk:render")
 
 json := import("json")
 
-self.defineOutputs("qc")
+exportClonesTpl := assets.importTemplate(":export-clones")
+
+self.defineOutputs("qc", "reports", "clones")
 
 self.body(func(inputs) {
 	inputData := inputs[pConstants.VALUE_FIELD_NAME]
@@ -18,7 +22,7 @@ self.body(func(inputs) {
 	fileExtension := params.fileExtension
 	reports := params.reports
 
-	presetContent := inputs.presetContent.getDataAsJson()
+	presetContent := inputs.presetContent // already in JSON
 	pfconvParams := inputs.pfconvParams // already in JSON
 
 	if !is_map(presetContent) {
@@ -58,21 +62,39 @@ self.body(func(inputs) {
 			mixcrCmdBuilder.saveFile(report.fileTxt)
 		}
 
+		mixcrCmdBuilder.saveFileSet("clones", "^result\\.clones_[A-Z0-9]+\\.tsv$")
+
 		mixcrCmd := mixcrCmdBuilder.run()
 
 		reportsMap := smart.structBuilder(
 			pConstants.RTYPE_P_COLUMN_DATA_RESOURCE_MAP,
-			json.encode({ keyLength: groupKeyLength })
+			json.encode({ keyLength: 2 })
 		)
 		for report in reports {
-			reportsMap.createInputField(json.encode([report.id, "json"])).set(mixcrCmd.saveFile(report.fileJson))
-			reportsMap.createInputField(json.encode([report.id, "txt"])).set(mixcrCmd.saveFile(report.fileTxt))
+			reportsMap.createInputField(json.encode([report.id, "json"])).set(mixcrCmd.getFile(report.fileJson))
+			reportsMap.createInputField(json.encode([report.id, "txt"])).set(mixcrCmd.getFile(report.fileTxt))
 		}
 
-		return {
+		// converting clone tables to p columns
+		clones := render.create(exportClonesTpl, {
+			data: mixcrCmd.getFileSet("clones"),
+			pfconvParams: pfconvParams
+		}).output("result", 24 * 60 * 60 * 1000)
+
+		result := {
 			qc: mixcrCmd.getFile("result.qc.json"),
-			reports: reportsMap.lockAndBuild()
+			reports: reportsMap.lockAndBuild(),
+			clones: clones
 		}
+
+		// cloneColumns := smart.mapBuilder()
+
+		// for cloneColumn in pfconvParams.columns {
+		// 	cloneColumns.add(cloneColumn.id, )
+		// 	result["clones/" + cloneColumn.id] = clones.getFutureInputField(cloneColumn.id)
+		// }
+
+		return result
 	} else {
 		ll.panic("not yet supported")
 	}

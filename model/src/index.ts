@@ -6,26 +6,40 @@ import {
   type InferOutputsType
 } from '@milaboratory/sdk-ui';
 import { BlockArgs, BlockArgsValid } from './args';
+import { parseResourceMap } from './helpers';
 
 export const platforma = BlockModel.create<BlockArgs>('Heavy')
 
   .initialArgs({})
 
   .output('presets', (ctx) =>
-    ctx.precalc?.resolve({ field: 'presets', assertFieldType: 'Input' })?.getFileHandle()
+    ctx.prerun?.resolve({ field: 'presets', assertFieldType: 'Input' })?.getFileHandle()
   )
 
   .output('preset', (ctx) =>
-    ctx.precalc?.resolve({ field: 'preset', assertFieldType: 'Input' })?.getDataAsString()
+    ctx.prerun?.resolve({ field: 'preset', assertFieldType: 'Input' })?.getDataAsString()
   )
 
   .output('qc', (ctx) =>
-    ctx.outputs?.resolve({ field: 'qc', assertFieldType: 'Input' })?.getDataAsJson()
+    parseResourceMap(ctx.outputs?.resolve({ field: 'qc', assertFieldType: 'Input' }), (acc) =>
+      acc.getRemoteFileHandle()
+    )
+  )
+
+  .output('reports', (ctx) =>
+    parseResourceMap(ctx.outputs?.resolve({ field: 'reports', assertFieldType: 'Input' }), (acc) =>
+      acc.getRemoteFileHandle()
+    )
+  )
+
+  .output('clones', (ctx) =>
+    parseResourceMap(ctx.outputs?.resolve({ field: 'clones', assertFieldType: 'Input' }), (acc) =>
+      acc.listInputFields()
+    )
   )
 
   .output('inputOptions', (ctx) => {
-    const spectFromPool = ctx.resultPool
-      .getSpecsFromResultPool();
+    const spectFromPool = ctx.resultPool.getSpecsFromResultPool();
     return ctx.resultPool
       .getSpecsFromResultPool()
       .entries.filter((v) => {
@@ -33,7 +47,7 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
         const domain = v.obj.domain;
         return (
           v.obj.name === 'pl7.app/sequencing/data' &&
-          ((v.obj.valueType as string) === 'blob' || (v.obj.valueType as string) === 'file') &&
+          (v.obj.valueType as string) === 'File' &&
           domain !== undefined &&
           (domain['pl7.app/fileExtension'] === 'fastq' ||
             domain['pl7.app/fileExtension'] === 'fastq.gz')

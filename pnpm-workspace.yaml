@@ -6,21 +6,21 @@ packages:
   - test
 
 catalog:
-  '@milaboratory/tengo-template-builder': ^1.11.1
+  '@milaboratory/tengo-template-builder': ^1.13.0
   '@milaboratory/pl-block-tools': ^2.1.5
   '@milaboratory/block-builder': ^1.2.3
 
-  '@milaboratory/sdk-ui': ^0.12.18
-  '@milaboratory/sdk-test': ^1.4.13
+  '@milaboratory/sdk-ui': ^0.12.21
+  '@milaboratory/sdk-test': ^1.5.1
 
-  '@milaboratory/tengo-sdk': ^1.0.15
+  '@milaboratory/tengo-sdk': ^1.1.6
 
-  '@milaboratory/platforma-uikit': ^1.0.25
-  '@milaboratory/sdk-vue': ^1.0.33
+  '@milaboratory/platforma-uikit': ^1.0.30
+  '@milaboratory/sdk-vue': ^1.0.40
   '@milaboratory/helpers': ^1.5.2
 
   'vue': ^3.4.38
-  'vue-tsc': ^2.0.29
+  'vue-tsc': ^2.1.2
 
   'zod': ^3.23.8
   'utility-types': ^3.11.0
@@ -30,7 +30,7 @@ catalog:
 
   'vite': ^5.4.2
   'vitest': ^2.0.5
-  '@vitejs/plugin-vue': ^5.1.2
+  '@vitejs/plugin-vue': ^5.1.3
 
   '@ag-grid-community/core': ^32.1.0
   '@ag-grid-community/client-side-row-model': ^32.1.0
@@ -40,5 +40,6 @@ catalog:
   '@changesets/cli': ^2.27.7
   
   # other blocks used in tests
-  '@milaboratory/milaboratories.samples-and-data': 1.1.3
-  '@milaboratory/milaboratories.samples-and-data.model': 1.1.0
+
+  '@milaboratory/milaboratories.samples-and-data': 1.1.5
+  '@milaboratory/milaboratories.samples-and-data.model': 1.1.1

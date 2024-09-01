@@ -11,6 +11,28 @@ self.body(func(inputs) {
 	preset := inputs.preset
 
 	return {
-		params: pvconfParams
+		params: {
+			"axes": [{
+				"column": "cloneId",
+				"spec": {
+					"name": "pl7.app/vdj/cloneId",
+					"type": "Long"
+				}
+			}],
+			"columns": [{
+				"column": "readCount",
+				"id": "read-count",
+				"allowNA": false,
+				"spec": {
+					"name": "pl7.app/vdj/readCount",
+					"valueType": "Long",
+					"annotations": {
+						"pl7.app/label": "Number Of Reads"
+					}
+				}
+			}],
+			"storageFormat": "Binary",
+  			"partitionKeyLength": 0
+		}
 	}
 })

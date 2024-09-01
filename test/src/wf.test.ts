@@ -13,10 +13,10 @@ import * as tp from 'node:timers/promises';
 
 blockTest('empty imputs', { timeout: 10000 }, async ({ rawPrj: project, ml, helpers, expect }) => {
   const blockId = await project.addBlock('Block', myBlockSpec);
-  const stableState = await awaitStableState(
+  const stableState = (await awaitStableState(
     project.getBlockState(blockId),
     5000
-  ) as InferBlockState<typeof platforma>;
+  )) as InferBlockState<typeof platforma>;
   expect(stableState.outputs).toMatchObject({ inputOptions: { ok: true, value: [] } });
   const presetsOutput = wrapOutputs(stableState.outputs).presets;
   const presetsStr = Buffer.from(
@@ -34,10 +34,10 @@ blockTest(
     await project.setBlockArgs(blockId, {
       preset: 'milab-human-dna-xcr-7genes-multiplex'
     } satisfies BlockArgs);
-    const stableState = await awaitStableState(
+    const stableState = (await awaitStableState(
       project.getBlockState(blockId),
       5000
-    ) as InferBlockState<typeof platforma>;
+    )) as InferBlockState<typeof platforma>;
     expect(stableState.outputs).toMatchObject({ preset: { ok: true } });
   }
 );
@@ -129,11 +129,32 @@ blockTest(
       preset: 'milab-human-dna-xcr-7genes-multiplex'
     } satisfies BlockArgs);
     await project.runBlock(clonotypingBlockId);
-    const clonotypingStableState2 = await helpers.awaitBlockDoneAndGetStableBlockState(
+    const clonotypingStableState2 = (await helpers.awaitBlockDoneAndGetStableBlockState(
       clonotypingBlockId,
       10000
+    )) as InferBlockState<typeof platforma>;
+    const outputs2 = wrapOutputs<BlockOutputs>(clonotypingStableState2.outputs);
+
+    console.dir(clonotypingStableState2, { depth: 8 });
+
+    expect(outputs2.reports.isComplete).toEqual(true);
+
+    const alignJsonReportEntry = outputs2.reports.data.find(
+      (e) => e.key[1] === 'align' && e.key[2] === 'json'
     );
-    
-    console.dir(clonotypingStableState2, { depth: 5 });
+
+    expect(alignJsonReportEntry).toBeDefined();
+
+    const alignJsonReport = JSON.parse(
+      Buffer.from(
+        await ml.driverKit.blobDriver.getContent(alignJsonReportEntry!.value!.handle)
+      ).toString('utf8')
+    );
+
+    expect(alignJsonReport.aligned).greaterThan(2);
+
+    // console.dir(alignJsonReport, { depth: 5 });
+
+    console.dir(clonotypingStableState2, { depth: 8 });
   }
 );

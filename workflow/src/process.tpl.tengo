@@ -3,25 +3,34 @@
 self := import("@milaboratory/tengo-sdk:tpl")
 
 ll := import("@milaboratory/tengo-sdk:ll")
+assets := import("@milaboratory/tengo-sdk:assets")
 smart := import("@milaboratory/tengo-sdk:smart")
 file := import("@milaboratory/tengo-sdk:file")
 llPFrames := import("@milaboratory/tengo-sdk:pframes.ll")
+pUtil := import("@milaboratory/tengo-sdk:pframes.util")
+pConstants := import("@milaboratory/tengo-sdk:pframes.constants")
 
 json := import("json")
 
-mixcrAnalyzeTpl := ll.importTemplate(":mixcr-analyze")
+mixcrAnalyzeTpl := assets.importTemplate(":mixcr-analyze")
 
 self.awaitState("InputsLocked")
 self.awaitState("params", "ResourceReady")
 self.awaitState("inputSpec", "ResourceReady")
+self.awaitState("presetContent", "ResourceReady")
+self.awaitState("pfconvParams", "ResourceReady")
 
 self.body(func(inputs) {
 	params := inputs.params
 	preset := params.preset
 	inputSpec := self.rawInputs().inputSpec.getValue().getDataAsJson()
 
-	presetContent := self.rawInputs().presetContent
-	pfconvParams := self.rawInputs().pfconvParams
+	presetContent := self.rawInputs().presetContent.getValue().getDataAsJson()
+	pfconvParams := self.rawInputs().pfconvParams.getValue().getDataAsJson()
+
+	decomposition := pUtil.decomposePfconvCfg(pfconvParams)
+	purifiedPfconvCfg := decomposition.purifiedCfg
+	cloneColumnsSpec := decomposition.columnsSpec
 
 	reports := []
 
@@ -29,7 +38,7 @@ self.body(func(inputs) {
 		if step == "align" || step == "assemble" {
 			reports = append(reports, {
 				id: step,
-				fileJson: "result." + step + ".report.json"
+				fileJson: "result." + step + ".report.json",
 				fileTxt: "result." + step + ".report.txt"
 			})
 		}
@@ -46,16 +55,30 @@ self.body(func(inputs) {
 
 	fileExtension := inputSpec.domain["pl7.app/fileExtension"]
 
+	aggregationTargets := [{
+			type: "Resource",
+			name: "qc"
+		}, {
+			type: "ResourceMap",
+			name: "reports",
+			keyLength: 2 // [reportType, reportFormat]
+		}]
+
+	ll.assert(purifiedPfconvCfg.partitionKeyLength == 0, "unexpected pertition length")
+	ll.assert(purifiedPfconvCfg.storageFormat == "Binary", "unexpected format")
+	for columnCfg in purifiedPfconvCfg.columns {
+		aggCfg := {
+			type: "BinaryPartitioned",
+			name: "clones/" + columnCfg.id,
+			path: ["clones", columnCfg.id],
+			partitionKeyLength: 1 // [chain]
+		}
+		aggregationTargets = append(aggregationTargets, aggCfg)
+	}
+
 	mixcrResults := llPFrames.aggregate(
 			self.rawInputs().inputData, [1], mixcrAnalyzeTpl,
-			[{
-				type: "Resource",
-				name: "qc"
-			}, {
-				type: "ResourceMap",
-				name: "reports",
-				keyLength: 2 // [reportType, reportFormat]
-			}],
+			aggregationTargets,
 			false,
 			{
 				params: smart.createJsonResource({
@@ -64,11 +87,54 @@ self.body(func(inputs) {
 					reports: reports
 				}),
 				presetContent: presetContent,
-				pfconvParams: pfconvParams
+				pfconvParams: purifiedPfconvCfg
 			}
 		)
 
+	clones := smart.structBuilder(pConstants.RTYPE_P_FRAME)
+	for columnId, columnSpec in cloneColumnsSpec {
+		clones.createInputField(columnId + ".spec").setJson(columnSpec)
+		clones.createInputField(columnId + ".data").set(mixcrResults.output("clones/" + columnId))
+	}
+
 	return {
-		qc: mixcrResults.output("qc")
+		"qc.spec": {
+			kind: "PColumn",
+			name: "mixcr.com/qc",
+			valueType: "File",
+			axesSpec: [
+				inputSpec.axesSpec[0]
+			]
+		},
+		"qc.data": mixcrResults.output("qc"),
+
+		"reports.spec": {
+			kind: "PColumn",
+			name: "mixcr.com/report",
+			valueType: "File",
+			axesSpec: [
+				inputSpec.axesSpec[0],
+				{
+					type: "String",
+					name: "mixcr.com/report/source",
+					annotations: {
+						"pl7.app/label": "Source MiXCR stage"
+					}
+				},
+				{
+					type: "String",
+					name: "mixcr.com/report/format",
+					annotations: {
+						"pl7.app/label": "Report format"
+					},
+					domain: {
+						"pl7.app/dense": json.encode(["json", "txt"])
+					}
+				}
+			]
+		},
+		"reports.data": mixcrResults.output("reports"),
+
+		"clones": clones.lockAndBuild()
 	}
 })
