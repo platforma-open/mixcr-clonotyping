@@ -2,6 +2,7 @@ import {
   BlockModel,
   InferHrefType,
   Option,
+  isPColumn,
   isPColumnSpec,
   type InferOutputsType
 } from '@milaboratory/sdk-ui';
@@ -32,11 +33,21 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
     )
   )
 
-  .output('clones', (ctx) =>
-    parseResourceMap(ctx.outputs?.resolve({ field: 'clones', assertFieldType: 'Input' }), (acc) =>
-      acc.listInputFields()
-    )
-  )
+  .output('clones', (ctx) => {
+    // const collection = ctx.outputs
+    //   ?.resolve({ field: 'clones', assertFieldType: 'Input' })
+    //   ?.parsePObjectCollection();
+    // if (collection === undefined) return undefined;
+    // // if (collection === undefined || !collection.isComplete) return undefined;
+    // const pColumns = Object.entries(collection)
+    //   .map(([id, obj]) => obj)
+    //   .filter(isPColumn);
+    // return ctx.createPFrame(pColumns);
+    // parseResourceMap(ctx.outputs?.resolve({ field: 'clones', assertFieldType: 'Input' }), (acc) =>
+    //   acc.listInputFields()
+    // )
+    return ctx.outputs?.resolve({ field: 'clones', assertFieldType: 'Input' })?.listInputFields();
+  })
 
   .output('inputOptions', (ctx) => {
     const spectFromPool = ctx.resultPool.getSpecsFromResultPool();

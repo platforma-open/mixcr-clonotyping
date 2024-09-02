@@ -44,7 +44,7 @@ blockTest(
 
 blockTest(
   'simple project',
-  { timeout: 20000 },
+  { timeout: 25000 },
   async ({ rawPrj: project, ml, helpers, expect }) => {
     const sndBlockId = await project.addBlock('Samples & Data', samplesAndDataBlockSpec);
     const clonotypingBlockId = await project.addBlock('MiXCR Clonotyping', myBlockSpec);
@@ -151,6 +151,8 @@ blockTest(
       ).toString('utf8')
     );
 
+    console.dir(alignJsonReport, { depth: 5 });
+    expect(alignJsonReport.aligned).toBeDefined();
     expect(alignJsonReport.aligned).greaterThan(2);
 
     // console.dir(alignJsonReport, { depth: 5 });

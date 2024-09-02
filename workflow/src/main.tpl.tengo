@@ -54,7 +54,8 @@ wf.body(func(args) {
 		reports: {
 			spec: runMixcr.output("reports.spec"),
 			data: runMixcr.output("reports.data")
-		}
+		},
+		clonse: runMixcr.output("clones")
 	}
 
 	outputs := {

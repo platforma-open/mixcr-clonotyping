@@ -13,14 +13,14 @@ catalog:
   '@milaboratory/sdk-ui': ^0.12.21
   '@milaboratory/sdk-test': ^1.5.1
 
-  '@milaboratory/tengo-sdk': ^1.1.6
+  '@milaboratory/tengo-sdk': ^1.1.7
 
-  '@milaboratory/platforma-uikit': ^1.0.30
-  '@milaboratory/sdk-vue': ^1.0.40
-  '@milaboratory/helpers': ^1.5.2
+  '@milaboratory/platforma-uikit': ^1.0.33
+  '@milaboratory/sdk-vue': ^1.0.42
+  '@milaboratory/helpers': ^1.5.3
 
   'vue': ^3.4.38
-  'vue-tsc': ^2.1.2
+  'vue-tsc': ^2.1.4
 
   'zod': ^3.23.8
   'utility-types': ^3.11.0
