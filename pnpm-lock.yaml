@@ -37,8 +37,8 @@ catalogs:
       specifier: ^1.0.33
       version: 1.0.33
     '@milaboratory/sdk-test':
-      specifier: ^1.5.1
-      version: 1.5.1
+      specifier: ^1.5.2
+      version: 1.5.2
     '@milaboratory/sdk-ui':
       specifier: ^0.12.21
       version: 0.12.21
@@ -139,7 +139,7 @@ importers:
     devDependencies:
       '@milaboratory/sdk-test':
         specifier: 'catalog:'
-        version: 1.5.1(@milaboratory/sdk-model@1.3.9)(@types/node@22.0.0)
+        version: 1.5.2(@milaboratory/sdk-model@1.3.9)(@types/node@22.0.0)
       typescript:
         specifier: 'catalog:'
         version: 5.5.4
@@ -203,7 +203,7 @@ importers:
     devDependencies:
       '@milaboratory/sdk-test':
         specifier: 'catalog:'
-        version: 1.5.1(@milaboratory/sdk-model@1.3.9)(@types/node@22.0.0)
+        version: 1.5.2(@milaboratory/sdk-model@1.3.9)(@types/node@22.0.0)
       '@milaboratory/tengo-sdk':
         specifier: 'catalog:'
         version: 1.1.7
@@ -892,8 +892,8 @@ packages:
   '@milaboratory/sdk-model@1.3.9':
     resolution: {integrity: sha512-ZuJYcbNpbpNEjqBrpp7iY+QpwSIeQcfgP+28MiSctb0PrhHgascC2QvetetFczo6tKJlT2ZvmZ5spdgz0lvgYg==, tarball: https://npm.pkg.github.com/download/@milaboratory/sdk-model/1.3.9/4e3091eb6014b20b67d7609a54c6014a3ad261ea}
 
-  '@milaboratory/sdk-test@1.5.1':
-    resolution: {integrity: sha512-brsi01p2qYte7wXmEHIDbou7acN+YX8enEqq6T6JEJQLL7iA7vi5ch33hPnfKtQs3PlPk0wRYXLfBe9Knn3+BQ==, tarball: https://npm.pkg.github.com/download/@milaboratory/sdk-test/1.5.1/0f9c5e98b75423472b0e3aae7b6fb7e031d4f84c}
+  '@milaboratory/sdk-test@1.5.2':
+    resolution: {integrity: sha512-rbVX/+vNDd1QSrTI6ncTniguhPeqbTtTcLEEa+hsxDk/WQ2o0LuBhHENH/fxR39vEJxdCPyX3jfsqmTRA53FmA==, tarball: https://npm.pkg.github.com/download/@milaboratory/sdk-test/1.5.2/a792f39299128afdcb9a872395cc3490dd9589c1}
 
   '@milaboratory/sdk-ui@0.12.21':
     resolution: {integrity: sha512-wQnaHRIUcV3IWnMDUiRVRBPIFDzoyZvIQLBMD6hYZdMK0uj4+Q1rPyq+E+8ZEgNv84uvI8F18pEpNt6EXpZihA==, tarball: https://npm.pkg.github.com/download/@milaboratory/sdk-ui/0.12.21/e3a89013847aa6039ddee63d8d0656f8acf601ae}
@@ -4051,7 +4051,7 @@ snapshots:
     dependencies:
       zod: 3.23.8
 
-  '@milaboratory/sdk-test@1.5.1(@milaboratory/sdk-model@1.3.9)(@types/node@22.0.0)':
+  '@milaboratory/sdk-test@1.5.2(@milaboratory/sdk-model@1.3.9)(@types/node@22.0.0)':
     dependencies:
       '@milaboratory/computable': 2.1.2
       '@milaboratory/pl-client-v2': 2.4.10

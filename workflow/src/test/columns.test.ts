@@ -1,5 +1,4 @@
-import { awaitStableState, tplTest } from '@milaboratory/sdk-test';
-import { Pl } from '@milaboratory/pl-middle-layer';
+import { awaitStableState, tplTest, ML } from '@milaboratory/sdk-test';
 import { ExpectStatic } from 'vitest';
 
 type TestCase = {
@@ -24,7 +23,7 @@ tplTest.for(testCases)(
     const resultC = (
       await helper.renderTemplate(true, 'test.columns.test', ['conf'], (tx) => {
         return {
-          presetName: tx.createValue(Pl.JsonObject, JSON.stringify(presetName))
+          presetName: tx.createValue(ML.Pl.JsonObject, JSON.stringify(presetName))
         };
       })
     ).computeOutput('conf', (c) => c?.getDataAsJson());
