@@ -1,0 +1,26 @@
+// columns-test
+
+self := import("@milaboratory/tengo-sdk:tpl")
+assets := import("@milaboratory/tengo-sdk:assets")
+render := import("@milaboratory/tengo-sdk:render")
+
+getPresetTpl := assets.importTemplate(":get-preset")
+calculateColumnsParamsTpl := assets.importTemplate(":calculate-pfconv-params")
+
+self.defineOutputs("conf")
+
+self.body(func(inputs) {
+	presetName := inputs.presetName
+
+	preset := render.create(getPresetTpl, {
+		preset: presetName
+	}).output("preset")
+
+	pfconvConfig := render.create(calculateColumnsParamsTpl, {
+		preset: preset
+	}).output("params")
+
+	return {
+		conf: pfconvConfig
+	}
+})

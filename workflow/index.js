@@ -6,5 +6,6 @@ module.exports = { Templates: {
   'mixcr-analyze': { type: 'from-file', path: require.resolve('./dist/tengo/tpl/mixcr-analyze.plj.gz') },
   'prerun': { type: 'from-file', path: require.resolve('./dist/tengo/tpl/prerun.plj.gz') },
   'process': { type: 'from-file', path: require.resolve('./dist/tengo/tpl/process.plj.gz') },
+  'test.columns.test': { type: 'from-file', path: require.resolve('./dist/tengo/tpl/test.columns.test.plj.gz') },
   'main': { type: 'from-file', path: require.resolve('./dist/tengo/tpl/main.plj.gz') }
 }}
