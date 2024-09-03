@@ -11,11 +11,11 @@ catalog:
   '@milaboratory/block-builder': ^1.2.3
 
   '@milaboratory/sdk-ui': ^0.12.21
-  '@milaboratory/sdk-test': ^1.5.2
+  '@milaboratory/sdk-test': ^1.5.4
 
-  '@milaboratory/tengo-sdk': ^1.1.7
+  '@milaboratory/tengo-sdk': ^1.1.8
 
-  '@milaboratory/platforma-uikit': ^1.0.33
+  '@milaboratory/platforma-uikit': ^1.1.0
   '@milaboratory/sdk-vue': ^1.0.42
   '@milaboratory/helpers': ^1.5.3
 
@@ -28,7 +28,7 @@ catalog:
   'typescript': ^5.5.4
   'tsup': ~8.1.2
 
-  'vite': ^5.4.2
+  'vite': ^5.4.3
   'vitest': ^2.0.5
   '@vitejs/plugin-vue': ^5.1.3
 
