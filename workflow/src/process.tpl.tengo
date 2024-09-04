@@ -28,7 +28,13 @@ self.body(func(inputs) {
 	presetContent := self.rawInputs().presetContent.getValue().getDataAsJson()
 	pfconvParams := self.rawInputs().pfconvParams.getValue().getDataAsJson()
 
-	decomposition := pUtil.decomposePfconvCfg(pfconvParams)
+	decomposition := pUtil.decomposePfconvCfg(pfconvParams, { additionalAxesSpec: [
+			inputSpec.axesSpec[0],
+			{
+				"name": "pl7.app/vdj/chain",
+				"type": "String"
+			}
+		] })
 	purifiedPfconvCfg := decomposition.purifiedCfg
 	cloneColumnsSpec := decomposition.columnsSpec
 

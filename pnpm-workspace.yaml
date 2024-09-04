@@ -11,9 +11,9 @@ catalog:
   '@milaboratory/block-builder': ^1.2.3
 
   '@milaboratory/sdk-ui': ^0.12.21
-  '@milaboratory/sdk-test': ^1.5.4
+  '@milaboratory/sdk-test': ^1.5.5
 
-  '@milaboratory/tengo-sdk': ^1.1.8
+  '@milaboratory/tengo-sdk': ~1.1.8
 
   '@milaboratory/platforma-uikit': ^1.1.0
   '@milaboratory/sdk-vue': ^1.0.42
@@ -39,7 +39,7 @@ catalog:
   '@ag-grid-community/vue3': ^32.1.0
   '@ag-grid-community/styles': ^32.1.0
 
-  '@changesets/cli': ^2.27.7
+  '@changesets/cli': ^2.27.8
   
   # other blocks used in tests
 

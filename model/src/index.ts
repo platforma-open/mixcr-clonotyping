@@ -35,6 +35,22 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
     )
   )
 
+  .output('clonesSpec', (ctx) => {
+    const collection = ctx.outputs
+      ?.resolve({ field: 'clones', assertFieldType: 'Input' })
+      ?.parsePObjectCollection();
+    if (collection === undefined) return undefined;
+    // if (collection === undefined || !collection.isComplete) return undefined;
+    const pColumns = Object.entries(collection)
+      .map(([id, obj]) => obj)
+      .filter(isPColumn);
+    return pColumns.map((obj) => obj.spec);
+    // parseResourceMap(ctx.outputs?.resolve({ field: 'clones', assertFieldType: 'Input' }), (acc) =>
+    //   acc.listInputFields()
+    // )
+    // return ctx.outputs?.resolve({ field: 'clones', assertFieldType: 'Input' })?.listInputFields();
+  })
+
   .output('clones', (ctx) => {
     const collection = ctx.outputs
       ?.resolve({ field: 'clones', assertFieldType: 'Input' })

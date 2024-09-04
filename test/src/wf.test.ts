@@ -157,6 +157,13 @@ blockTest(
 
     // console.dir(alignJsonReport, { depth: 5 });
 
-    console.dir(clonotypingStableState2, { depth: 8 });
+    const clonesPfHandle = wrapOutputs(clonotypingStableState2.outputs).clones!;
+
+    const clonesPfColumnList = await ml.driverKit.pFrameDriver.listColumns(clonesPfHandle);
+
+    console.log(clonesPfColumnList)
+    expect(clonesPfColumnList).length.to.greaterThanOrEqual(1);
+
+    // console.dir(clonotypingStableState2, { depth: 8 });
   }
 );
