@@ -32,6 +32,8 @@ catalog:
   'vitest': ^2.0.5
   '@vitejs/plugin-vue': ^5.1.3
 
+  '@vueuse/core': ^11.0.3
+
   '@ag-grid-community/core': ^32.1.0
   '@ag-grid-community/client-side-row-model': ^32.1.0
   '@ag-grid-community/vue3': ^32.1.0

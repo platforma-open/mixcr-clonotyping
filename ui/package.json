@@ -20,6 +20,7 @@
     "@milaboratory/sdk-vue": "catalog:",
     "utility-types": "catalog:",
     "vue": "catalog:",
+    "@vueuse/core": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
