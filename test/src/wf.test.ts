@@ -115,11 +115,7 @@ blockTest(
       }
     });
 
-    const presetsOutput = wrapOutputs<BlockOutputs>(clonotypingStableState1.outputs).presets;
-    const presetsStr = Buffer.from(
-      await ml.driverKit.blobDriver.getContent(presetsOutput!.handle)
-    ).toString();
-    const presets = JSON.parse(presetsStr);
+    const presets = wrapOutputs<BlockOutputs>(clonotypingStableState1.outputs).presets;
     expect(presets).length.gt(10);
 
     const clonotypingStableState1Outputs = wrapOutputs(clonotypingStableState1.outputs);
@@ -128,19 +124,30 @@ blockTest(
       input: clonotypingStableState1Outputs.inputOptions[0].ref,
       preset: 'milab-human-dna-xcr-7genes-multiplex'
     } satisfies BlockArgs);
+
+    const clonotypingStableState2 = (await awaitStableState(
+      project.getBlockState(clonotypingBlockId),
+      10000
+    )) as InferBlockState<typeof platforma>;
+
+    const outputs2 = wrapOutputs<BlockOutputs>(clonotypingStableState2.outputs);
+    console.dir(outputs2.sampleLabels, { depth: 5 });
+    console.log(JSON.stringify([sample1Id]));
+    expect(outputs2.sampleLabels[JSON.stringify([sample1Id])]).toBeDefined();
+
     await project.runBlock(clonotypingBlockId);
-    const clonotypingStableState2 = (await helpers.awaitBlockDoneAndGetStableBlockState(
+    const clonotypingStableState3 = (await helpers.awaitBlockDoneAndGetStableBlockState(
       clonotypingBlockId,
       10000
     )) as InferBlockState<typeof platforma>;
-    const outputs2 = wrapOutputs<BlockOutputs>(clonotypingStableState2.outputs);
+    const outputs3 = wrapOutputs<BlockOutputs>(clonotypingStableState3.outputs);
 
-    console.dir(clonotypingStableState2, { depth: 8 });
+    // console.dir(clonotypingStableState3, { depth: 8 });
 
-    expect(outputs2.reports.isComplete).toEqual(true);
+    expect(outputs3.reports.isComplete).toEqual(true);
 
-    const alignJsonReportEntry = outputs2.reports.data.find(
-      (e) => e.key[1] === 'align' && e.key[2] === 'json'
+    const alignJsonReportEntry = outputs3.reports.data.find(
+      (e: any) => e.key[1] === 'align' && e.key[2] === 'json'
     );
 
     expect(alignJsonReportEntry).toBeDefined();
@@ -157,13 +164,13 @@ blockTest(
 
     // console.dir(alignJsonReport, { depth: 5 });
 
-    const clonesPfHandle = wrapOutputs(clonotypingStableState2.outputs).clones!;
+    const clonesPfHandle = wrapOutputs(clonotypingStableState3.outputs).clones!;
 
     const clonesPfColumnList = await ml.driverKit.pFrameDriver.listColumns(clonesPfHandle);
 
-    console.log(clonesPfColumnList)
+    console.log(clonesPfColumnList);
     expect(clonesPfColumnList).length.to.greaterThanOrEqual(1);
 
-    console.dir(clonotypingStableState2, { depth: 8 });
+    // console.dir(clonotypingStableState3, { depth: 8 });
   }
 );

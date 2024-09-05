@@ -65,6 +65,8 @@
     }
   },
   "pnpm": {
-    "overrides": {}
+    "overrides": {
+      "@milaboratory/milaboratories.samples-and-data.workflow": "file:/Volumes/Data/Projects/MiLaboratory/blocks-beta/block-samples-and-data/workflow"
+    }
   }
 }

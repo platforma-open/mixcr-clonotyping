@@ -9,7 +9,7 @@ export default defineConfig({
       fileName: (format) => `my-lib.${format}.js`
     },
     minify: false,
-    // sourcemap: true,
+    sourcemap: true,
     rollupOptions: {
       output: {
         format: 'iife',

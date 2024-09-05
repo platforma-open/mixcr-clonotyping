@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const MiXCRStage = z.union([
+const MiXCRStage = z.union([
   z.literal('parse'),
   z.literal('refineTags'),
   z.literal('consensus'),
@@ -18,12 +18,12 @@ export const MiXCRStage = z.union([
   z.literal('findAlleles'),
   z.literal('findShmTrees')
 ]);
-export type MiXCRStage = z.infer<typeof MiXCRStage>;
+type MiXCRStage = z.infer<typeof MiXCRStage>;
 
-export const SupportedMiXCRFlags = z.literal('species');
-export type SupportedMiXCRFlags = z.infer<typeof SupportedMiXCRFlags>;
+const SupportedMiXCRFlags = z.literal('species');
+type SupportedMiXCRFlags = z.infer<typeof SupportedMiXCRFlags>;
 
-export const SupportedPresetOverview = z.object({
+const SupportedPresetOverview = z.object({
   vendor: z.string().nullable(),
   label: z.string(),
   presetName: z.string(),
@@ -31,7 +31,7 @@ export const SupportedPresetOverview = z.object({
   analysisStages: z.array(MiXCRStage),
   reportTypes: z.array(MiXCRStage)
 });
-export type SupportedPresetOverview = z.infer<typeof SupportedPresetOverview>;
+type SupportedPresetOverview = z.infer<typeof SupportedPresetOverview>;
 
 export const SupportedPresetList = z.array(z.unknown()).transform((presets) =>
   presets

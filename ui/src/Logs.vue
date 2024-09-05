@@ -1,12 +1,5 @@
-<script setup lang="ts">
-import '@ag-grid-community/styles/ag-grid.css';
-import '@ag-grid-community/styles/ag-theme-quartz.css';
-
-import { platforma } from '@milaboratory/milaboratories.mixcr-clonotyping.model';
+<!-- <script setup lang="ts">
 import { useApp } from './app';
-import { PlDropdown } from '@milaboratory/platforma-uikit';
-import { computed, watch } from 'vue';
-import { asyncComputed } from '@vueuse/core';
 
 const app = useApp();
 
@@ -77,4 +70,4 @@ button {
   max-width: 100%;
   gap: 24px;
 }
-</style>
+</style> -->

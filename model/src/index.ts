@@ -2,6 +2,7 @@ import {
   BlockModel,
   InferHrefType,
   Option,
+  Ref,
   isPColumn,
   isPColumnSpec,
   type InferOutputsType
@@ -16,9 +17,10 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
   .initialArgs({})
 
   .output('presets', (ctx) =>
-    SupportedPresetList.parse(
-      ctx.prerun?.resolve({ field: 'presets', assertFieldType: 'Input' })?.getFileContentAsJson()
-    )
+    ctx.prerun
+      ?.resolve({ field: 'presets', assertFieldType: 'Input' })
+      ?.getFileContentAsJson()
+      .mapDefined((c) => SupportedPresetList.parse(c))
   )
 
   .output('preset', (ctx) =>
@@ -89,6 +91,40 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
             }`
           } satisfies Option)
       );
+  })
+
+  .output('sampleLabels', (ctx) => {
+    const inputRef = ctx.args.input;
+    if (inputRef === undefined) return undefined;
+    // @todo implement getSpecByRef method
+    const inputSpec = ctx.resultPool
+      .getSpecsFromResultPool()
+      .entries.find(
+        (obj) => obj.ref.blockId === inputRef.blockId && obj.ref.name === inputRef.name
+      )?.obj;
+    if (inputSpec === undefined || !isPColumnSpec(inputSpec)) return undefined;
+    const sampleAxisSpec = inputSpec.axesSpec[0];
+
+    // @todo implement get by spec
+    const sampleLabelsObj = ctx.resultPool.getDataFromResultPool().entries.find((f) => {
+      const spec = f.obj.spec;
+      if (!isPColumnSpec(spec)) return false;
+      if (spec.name !== 'pl7.app/label' || spec.axesSpec.length !== 1) return false;
+      const axisSpec = spec.axesSpec[0];
+      if (axisSpec.name !== sampleAxisSpec.name) return false;
+      if (sampleAxisSpec.domain === undefined || Object.keys(sampleAxisSpec.domain).length === 0)
+        return true;
+      if (axisSpec.domain === undefined) return false;
+      for (const [domainName, domainValue] of Object.entries(sampleAxisSpec.domain))
+        if (axisSpec.domain[domainName] !== domainValue) return false;
+      return true;
+    });
+
+    if (sampleLabelsObj === undefined) return undefined;
+
+    // if (sampleLabelsObj.obj.data.resourceType.name !== 'PColumn/Json') return undefined;
+
+    return sampleLabelsObj.obj.data.getDataAsJson();
   })
 
   .sections((ctx) => {
