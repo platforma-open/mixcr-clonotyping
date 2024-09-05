@@ -23,11 +23,15 @@ wf.body(func(args) {
 	inputRef := args.input
 
 	preset := args.preset
+	species := args.species
 
 	input := wf.resolve(inputRef)
 
 	getPreset := render.create(getPresetTpl, {
-		preset: args.preset
+		request: {
+			presetName: preset,
+			species: species
+		}
 	})
 	presetContent := getPreset.output("preset", 24 * 60 * 60 * 1000)
 
@@ -38,7 +42,8 @@ wf.body(func(args) {
 
 	runMixcr := render.createEphemeral(processTpl, {
 		params: smart.createJsonResource({
-			preset: preset
+			preset: preset,
+			species: species
 		}),
 		presetContent: presetContent,
 		pfconvParams: pfconvParams,
@@ -55,12 +60,13 @@ wf.body(func(args) {
 			spec: runMixcr.output("reports.spec"),
 			data: runMixcr.output("reports.data")
 		},
-		clonse: runMixcr.output("clones")
+		clones: runMixcr.output("clones")
 	}
 
 	outputs := {
 		qc: pframes.exportColumnData(runMixcr.output("qc.data")),
 		reports: pframes.exportColumnData(runMixcr.output("reports.data")),
+		logs: runMixcr.output("logs.data"),
 		clones: pframes.exportFrame(runMixcr.output("clones"))
 	}
 

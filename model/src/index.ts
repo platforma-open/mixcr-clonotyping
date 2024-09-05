@@ -8,13 +8,17 @@ import {
 } from '@milaboratory/sdk-ui';
 import { BlockArgs, BlockArgsValid } from './args';
 import { parseResourceMap } from './helpers';
+import { ProgressPrefix } from './logs';
+import { SupportedPresetList } from './preset';
 
 export const platforma = BlockModel.create<BlockArgs>('Heavy')
 
   .initialArgs({})
 
   .output('presets', (ctx) =>
-    ctx.prerun?.resolve({ field: 'presets', assertFieldType: 'Input' })?.getFileHandle()
+    SupportedPresetList.parse(
+      ctx.prerun?.resolve({ field: 'presets', assertFieldType: 'Input' })?.getFileContentAsJson()
+    )
   )
 
   .output('preset', (ctx) =>
@@ -35,20 +39,18 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
     )
   )
 
-  .output('clonesSpec', (ctx) => {
-    const collection = ctx.outputs
-      ?.resolve({ field: 'clones', assertFieldType: 'Input' })
-      ?.parsePObjectCollection();
-    if (collection === undefined) return undefined;
-    // if (collection === undefined || !collection.isComplete) return undefined;
-    const pColumns = Object.entries(collection)
-      .map(([id, obj]) => obj)
-      .filter(isPColumn);
-    return pColumns.map((obj) => obj.spec);
-    // parseResourceMap(ctx.outputs?.resolve({ field: 'clones', assertFieldType: 'Input' }), (acc) =>
-    //   acc.listInputFields()
-    // )
-    // return ctx.outputs?.resolve({ field: 'clones', assertFieldType: 'Input' })?.listInputFields();
+  .output('logs', (ctx) => {
+    return parseResourceMap(
+      ctx.outputs?.resolve({ field: 'logs', assertFieldType: 'Input' }),
+      (acc) => acc.getLogHandle()
+    );
+  })
+
+  .output('progress', (ctx) => {
+    return parseResourceMap(
+      ctx.outputs?.resolve({ field: 'logs', assertFieldType: 'Input' }),
+      (acc) => acc.getProgressLog(ProgressPrefix)
+    );
   })
 
   .output('clones', (ctx) => {
@@ -61,10 +63,6 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
       .map(([id, obj]) => obj)
       .filter(isPColumn);
     return ctx.createPFrame(pColumns);
-    // parseResourceMap(ctx.outputs?.resolve({ field: 'clones', assertFieldType: 'Input' }), (acc) =>
-    //   acc.listInputFields()
-    // )
-    // return ctx.outputs?.resolve({ field: 'clones', assertFieldType: 'Input' })?.listInputFields();
   })
 
   .output('inputOptions', (ctx) => {

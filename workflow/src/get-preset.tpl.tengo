@@ -4,24 +4,35 @@ self := import("@milaboratory/tengo-sdk:tpl")
 ll := import("@milaboratory/tengo-sdk:ll")
 exec := import("@milaboratory/tengo-sdk:exec")
 
+self.validateInputs({
+	"__options__,closed": "",
+	"request": {
+		"__options__,closed": "",
+		"presetName": "string",
+		"species,omitempty": "string"
+	}
+})
+
 self.defineOutputs("preset")
 
 self.body(func(inputs) {
-	preset := inputs.preset
+	presetName := inputs.request.presetName
+	species := inputs.request.species
 
-	if !is_string(preset) {
-		ll.panic("preset is not string: %v", preset)
+	mixcrCmdBuilder := exec.builder().
+						printErrStreamToStdout().
+						cmd("mixcr").
+						arg("exportPreset").
+						arg("--preset-name").
+						arg(presetName)
+
+	if !is_undefined(species) {
+		mixcrCmdBuilder.arg("--species").arg(species)
 	}
 
-	mixcrCmd := exec.builder().
-					printErrStreamToStdout().
-					cmd("mixcr").
-					arg("exportPreset").
-					arg("--preset-name").
-					arg(preset).
-					arg("preset.json").
-					saveFileContent("preset.json").
-					run()
+	mixcrCmd := mixcrCmdBuilder.arg("preset.json").
+						saveFileContent("preset.json").
+						run()
 
 	presetContent := mixcrCmd.getFileContent("preset.json")
 

@@ -12,13 +12,16 @@ json := import("json")
 
 exportClonesTpl := assets.importTemplate(":export-clones")
 
-self.defineOutputs("qc", "reports", "clones")
+self.defineOutputs("qc", "reports", "clones", "log")
+
+progressPrefix := "[==PROGRESS==]"
 
 self.body(func(inputs) {
 	inputData := inputs[pConstants.VALUE_FIELD_NAME]
 
 	params := inputs.params
 	preset := params.preset
+	species := params.species
 	fileExtension := params.fileExtension
 	reports := params.reports
 
@@ -37,10 +40,16 @@ self.body(func(inputs) {
 
 	if inputDataMeta.keyLength == 1 {
 		mixcrCmdBuilder := exec.builder().
-								printErrStreamToStdout().
-						        cmd("mixcr").
-						        arg("analyze").
-								arg(preset)
+							printErrStreamToStdout().
+							env("MI_PROGRESS_PREFIX", progressPrefix).
+							cmd("mixcr").
+							arg("analyze")
+
+		if !is_undefined(species) {
+			mixcrCmdBuilder.arg("--species").arg(species)
+		}
+
+		mixcrCmdBuilder.arg(preset)
 
 		// The following code is split into two loops to maintain correct file index ordering (R1, R2, ...)
 
@@ -94,16 +103,10 @@ self.body(func(inputs) {
 
 		result := {
 			qc: mixcrCmd.getFile("result.qc.json"),
+			log: mixcrCmd.getStdoutStream(),
 			reports: reportsMap.lockAndBuild(),
 			clones: clones
 		}
-
-		// cloneColumns := smart.mapBuilder()
-
-		// for cloneColumn in pfconvParams.columns {
-		// 	cloneColumns.add(cloneColumn.id, )
-		// 	result["clones/" + cloneColumn.id] = clones.getFutureInputField(cloneColumn.id)
-		// }
 
 		return result
 	} else {

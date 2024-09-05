@@ -21,18 +21,22 @@ const inputOptions = computed(() =>
 
 const args = app.createArgsModel();
 
-const presets = asyncComputed(async () => {
-  const presetsFile = app.getOutputFieldOkOptional("presets")
-  if (presetsFile === undefined)
-    return undefined;
-  return JSON.parse(new TextDecoder().decode(await platforma.blobDriver.getContent(presetsFile.handle)))
-})
+// const presets = asyncComputed(async () => {
+//   const presetsFile = app.getOutputFieldOkOptional("presets")
+//   if (presetsFile === undefined)
+//     return undefined;
+//   return JSON.parse(new TextDecoder().decode(await platforma.blobDriver.getContent(presetsFile.handle)))
+// })
+
+const presets = computed(() => app.getOutputFieldOkOptional("presets"))
 
 const presetOptions = computed(() => {
-  return presets.value?.map((preset: any) => ({ text: `${preset.label}${preset.vendor ? ' - ' + preset.vendor : ''}`, value: preset.presetName }))
+  return presets.value?.map(preset => ({ text: `${preset.label}${preset.vendor ? ' - ' + preset.vendor : ''}`, value: preset.presetName }))
 })
 
-const preset = computed(() => app.args.preset === undefined ? undefined : presets.value?.find((p: any) => p.presetName === app.args.preset))
+const preset = computed(() => app.args.preset === undefined ? undefined : presets.value?.find(p => p.presetName === app.args.preset))
+
+const needSpecies = computed(() => app.args.preset === undefined ? undefined : presets.value?.find(p => p.presetName === app.args.preset))
 
 </script>
 

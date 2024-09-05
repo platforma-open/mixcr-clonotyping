@@ -164,6 +164,6 @@ blockTest(
     console.log(clonesPfColumnList)
     expect(clonesPfColumnList).length.to.greaterThanOrEqual(1);
 
-    // console.dir(clonotypingStableState2, { depth: 8 });
+    console.dir(clonotypingStableState2, { depth: 8 });
   }
 );

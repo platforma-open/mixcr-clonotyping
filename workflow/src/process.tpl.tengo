@@ -65,6 +65,9 @@ self.body(func(inputs) {
 			type: "Resource",
 			name: "qc"
 		}, {
+			type: "Resource",
+			name: "log"
+		}, {
 			type: "ResourceMap",
 			name: "reports",
 			keyLength: 2 // [reportType, reportFormat]
@@ -113,6 +116,16 @@ self.body(func(inputs) {
 			]
 		},
 		"qc.data": mixcrResults.output("qc"),
+
+		"logs.spec": {
+			kind: "PColumn",
+			name: "pl7.app/log",
+			valueType: "Log",
+			axesSpec: [
+				inputSpec.axesSpec[0]
+			]
+		},
+		"logs.data": mixcrResults.output("log"),
 
 		"reports.spec": {
 			kind: "PColumn",
