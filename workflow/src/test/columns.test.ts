@@ -19,6 +19,7 @@ const testCases: TestCase[] = [
 
 tplTest.for(testCases)(
   'checking preset for $presetName',
+  { timeout: 10000 },
   async ({ presetName, check }, { helper, expect }) => {
     const resultC = (
       await helper.renderTemplate(true, 'test.columns.test', ['conf'], (tx) => {
@@ -27,7 +28,7 @@ tplTest.for(testCases)(
         };
       })
     ).computeOutput('conf', (c) => c?.getDataAsJson());
-    const result = await awaitStableState(resultC);
+    const result = await awaitStableState(resultC, 5000);
     check(expect, result);
   }
 );

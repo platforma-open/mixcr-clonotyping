@@ -1,36 +1,96 @@
 // calculate-pfconv-params
-
 self := import("@milaboratory/tengo-sdk:tpl")
 
 pvconfParams := import(":pfconv_params")
 
+json := import("json")
+
 self.defineOutputs("params")
 
 self.body(func(inputs) {
-	// preset content
-	preset := inputs.preset
+	
+	// filter function
+	filter := func(list, predicate) {
+    	result := []
+    	for item in list {
+        	if predicate(item) {
+            	result = append(result, item)
+        	}
+    	}
+    	return result
+	}
+	// function reproduce "If item in list" 
+	contains := func(list, item) {
+    	for i in list {
+        	if i == item {
+            	return true
+        	}
+    	}
+    	return false
+	}
+
+	fieldsToColumns := {
+    	"-cloneId": "cloneId",
+    	"-cellGroup": "cellGroup",
+    	"-tags": "tagValueCELL",
+    	"-readCount": "readCount",
+    	"-readFraction": "readFraction",
+    	"-uniqueTagCount": "uniqueMoleculeCount",
+    	"-uniqueTagFraction": "uniqueMoleculeFraction",
+    	"-targetSequences": "targetSequences",
+    	"-targetQualities": "targetQualities",
+    	"-vHitsWithScore": "allVHitsWithScore",
+    	"-dHitsWithScore": "allDHitsWithScore",
+    	"-jHitsWithScore": "allJHitsWithScore",
+    	"-cHitsWithScore": "allCHitsWithScore",
+    	"-vAlignments": "allVAlignments",
+    	"-dAlignments": "allDAlignments",
+    	"-jAlignments": "allJAlignments",
+    	"-cAlignments": "allCAlignments",
+    	"-topChains": "topChains",
+    	"-isotype": "isotype"
+		}
+
+	fieldsToSkip := [
+    	"-allNFeaturesWithMinQuality",
+   		"-allAAFeatures",
+    	"-defaultAnchorPoints",
+    	"-vAlignments",
+    	"-dAlignments",
+    	"-jAlignments",
+    	"-cAlignments"
+		]
+	// get preset data
+	preset := inputs.preset.getDataAsJson()
+	// filter columns by fieldToSkip
+	columnsList := []
+	for field in preset.exportClones.fields {
+		if len(field)==1 {
+			if !(contains(fieldsToSkip, field.field)) {
+				columnsList = append(columnsList, fieldsToColumns[field.field])
+			}
+		}
+	}
+	// filter pvconfParams by column name and get a list of fields from it
+	columns := []
+	for col in columnsList {
+		getColumn := filter(pvconfParams.columns, func(item) { return item.column == col })
+		columns += getColumn
+	}
+	// create axes fields
+	axes := []
+	pipeline := preset.pipeline
+	filtered := filter(pipeline, func(item) { return item == "assembleCells" })
+	if len(filtered) > 0 {
+    	axes = pvconfParams.axes
+	} else {
+    	axes = filter(pvconfParams.axes, func(item) { return item.column == "cloneId" }) 
+	}
 
 	return {
 		params: {
-			"axes": [{
-				"column": "cloneId",
-				"spec": {
-					"name": "pl7.app/vdj/cloneId",
-					"type": "Long"
-				}
-			}],
-			"columns": [{
-				"column": "readCount",
-				"id": "read-count",
-				"allowNA": false,
-				"spec": {
-					"name": "pl7.app/vdj/readCount",
-					"valueType": "Long",
-					"annotations": {
-						"pl7.app/label": "Number Of Reads"
-					}
-				}
-			}],
+			"axes": axes,
+			"columns": columns,
 			"storageFormat": "Binary",
   			"partitionKeyLength": 0
 		}
