@@ -1,10 +1,10 @@
-// get preset
+// get preset specs
 
 self := import("@milaboratory/tengo-sdk:tpl")
 ll := import("@milaboratory/tengo-sdk:ll")
 exec := import("@milaboratory/tengo-sdk:exec")
 
-self.defineOutputs("preset")
+self.defineOutputs("specs")
 
 self.body(func(inputs) {
 	preset := inputs.preset
@@ -21,21 +21,24 @@ self.body(func(inputs) {
 					arg(preset).
 					arg("--species").
 					arg("hs").
-					arg("--append-export-clones-field").
-					arg("-vHit").
-					arg("--append-export-clones-field").
-					arg("-dHit").
-					arg("--append-export-clones-field").
-					arg("-jHit").
-					arg("--append-export-clones-field").
-					arg("-cHit").
 					arg("preset.json").
-					saveFileContent("preset.json").
+					saveFile("preset.json").
 					run()
 
-	presetContent := mixcrCmd.getFileContent("preset.json")
+	specCmd := exec.builder().
+					printErrStreamToStdout().
+					cmd("mixcr").
+					arg("presetSpecificationsForBack").
+					arg("preset.json").
+					arg("spec.json").
+					saveFileContent("spec.json").
+					addFile("preset.json", mixcrCmd.getFile("preset.json")).
+					run()
+
+
+	specContent := specCmd.getFileContent("spec.json")
 
 	return {
-		preset: presetContent
+		specs: specContent
 	}
 })

@@ -19,72 +19,63 @@ self.body(func(inputs) {
     	}
     	return result
 	}
-	// function reproduce "If item in list" 
-	contains := func(list, item) {
-    	for i in list {
-        	if i == item {
-            	return true
-        	}
-    	}
-    	return false
-	}
 
 	fieldsToColumns := {
-    	"-cloneId": "cloneId",
     	"-cellGroup": "cellGroup",
-    	"-tags": "tagValueCELL",
-    	"-readCount": "readCount",
-    	"-readFraction": "readFraction",
-    	"-uniqueTagCount": "uniqueMoleculeCount",
-    	"-uniqueTagFraction": "uniqueMoleculeFraction",
-    	"-targetSequences": "targetSequences",
-    	"-targetQualities": "targetQualities",
-    	"-vHitsWithScore": "allVHitsWithScore",
-    	"-dHitsWithScore": "allDHitsWithScore",
-    	"-jHitsWithScore": "allJHitsWithScore",
-    	"-cHitsWithScore": "allCHitsWithScore",
-    	"-vAlignments": "allVAlignments",
-    	"-dAlignments": "allDAlignments",
-    	"-jAlignments": "allJAlignments",
-    	"-cAlignments": "allCAlignments",
-    	"-topChains": "topChains",
-    	"-isotype": "isotype"
+		"-topChains": "topChains",
+    	"-isotype": "isotype",
+    	"-vHit": "bestVHit",
+    	"-dHit": "bestDHit",
+    	"-jHit": "bestJHit",
+    	"-cHit": "bestCHit"
 		}
 
-	fieldsToSkip := [
-    	"-allNFeaturesWithMinQuality",
-   		"-allAAFeatures",
-    	"-defaultAnchorPoints",
-    	"-vAlignments",
-    	"-dAlignments",
-    	"-jAlignments",
-    	"-cAlignments"
-		]
-	// get preset data
+	// get specs and preset data
+	specs := inputs.specs.getDataAsJson()
 	preset := inputs.preset.getDataAsJson()
-	// filter columns by fieldToSkip
+	//if using readCount or umiCount
 	columnsList := []
+	columnsOrder := []
+	if len(specs.umiTags) == 0 {
+		columnsList += ["readCount", "readFraction"]
+	} else {
+		columnsList += ["uniqueMoleculeCount", "uniqueMoleculeFraction"]
+	}
+
+	// check if imputed or not and filter columns by fieldsToColumns
+	imputed := undefined
 	for field in preset.exportClones.fields {
-		if len(field)==1 {
-			if !(contains(fieldsToSkip, field.field)) {
-				columnsList = append(columnsList, fieldsToColumns[field.field])
-			}
+		if field.field == "-allAAFeaturesImputed" {
+			imputed = true
+		} else if field.field == "-allAAFeatures" {
+			imputed = false
+		} else if !is_undefined(fieldsToColumns[field.field]) {
+			columnsList = append(columnsList, fieldsToColumns[field.field])
+		}			
+	}
+
+	// add columns with sequences
+	for feature in specs.coveredFeaturesOnExport {
+		if imputed {
+			columnsList += ["nSeqImputed"+feature, "minQual"+feature, "aaSeqImputed"+feature]
+		} else {
+			columnsList += ["nSeq"+feature, "minQual"+feature, "aaSeq"+feature]
 		}
 	}
+
 	// filter pvconfParams by column name and get a list of fields from it
 	columns := []
 	for col in columnsList {
-		getColumn := filter(pvconfParams.columns, func(item) { return item.column == col })
+		getColumn := filter(pvconfParams.columns, func(item) { return item.column ==  col})
 		columns += getColumn
 	}
+
 	// create axes fields
 	axes := []
-	pipeline := preset.pipeline
-	filtered := filter(pipeline, func(item) { return item == "assembleCells" })
-	if len(filtered) > 0 {
-    	axes = pvconfParams.axes
+	if len(specs.cellTags) == 0 {
+		axes = filter(pvconfParams.axes, func(item) { return item.column == "cloneId" }) 
 	} else {
-    	axes = filter(pvconfParams.axes, func(item) { return item.column == "cloneId" }) 
+		axes = pvconfParams.axes
 	}
 
 	return {

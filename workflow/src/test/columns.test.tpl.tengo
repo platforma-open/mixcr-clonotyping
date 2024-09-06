@@ -5,6 +5,7 @@ assets := import("@milaboratory/tengo-sdk:assets")
 render := import("@milaboratory/tengo-sdk:render")
 
 getPresetTpl := assets.importTemplate(":get-preset")
+getPresetSpecTpl := assets.importTemplate(":get-preset-spec")
 calculateColumnsParamsTpl := assets.importTemplate(":calculate-pfconv-params")
 
 self.defineOutputs("conf")
@@ -16,8 +17,13 @@ self.body(func(inputs) {
 		preset: presetName
 	}).output("preset")
 
+	specs := render.create(getPresetSpecTpl, {
+		preset: presetName
+	}).output("specs")
+
 	pfconvConfig := render.create(calculateColumnsParamsTpl, {
-		preset: preset
+		preset: preset,
+		specs: specs
 	}).output("params")
 
 	return {
