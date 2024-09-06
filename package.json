@@ -60,13 +60,12 @@
         "@milaboratory/tengo-sdk": "file:/Volumes/Data/Projects/MiLaboratory/blocks-beta/tengo-sdk",
         "@milaboratory/pl-middle-layer": "file:/Volumes/Data/Projects/MiLaboratory/platforma/ts-pl-middle-layer",
         "@milaboratory/sdk-ui": "file:/Volumes/Data/Projects/MiLaboratory/platforma/ts-sdk-ui",
-        "@milaboratory/sdk-test": "file:/Volumes/Data/Projects/MiLaboratory/platforma/ts-sdk-test"
+        "@milaboratory/sdk-test": "file:/Volumes/Data/Projects/MiLaboratory/platforma/ts-sdk-test",
+        "@milaboratory/milaboratories.samples-and-data.workflow": "file:/Volumes/Data/Projects/MiLaboratory/blocks-beta/block-samples-and-data/workflow"
       }
     }
   },
   "pnpm": {
-    "overrides": {
-      "@milaboratory/milaboratories.samples-and-data.workflow": "file:/Volumes/Data/Projects/MiLaboratory/blocks-beta/block-samples-and-data/workflow"
-    }
+    "overrides": {}
   }
 }

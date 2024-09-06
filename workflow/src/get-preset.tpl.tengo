@@ -3,6 +3,7 @@
 self := import("@milaboratory/tengo-sdk:tpl")
 ll := import("@milaboratory/tengo-sdk:ll")
 exec := import("@milaboratory/tengo-sdk:exec")
+assets := import("@milaboratory/tengo-sdk:assets")
 
 self.validateInputs({
 	"__options__,closed": "",
@@ -13,6 +14,8 @@ self.validateInputs({
 	}
 })
 
+mixcrSw := assets.importSoftware("@milaboratory/mixcr:main")
+
 self.defineOutputs("preset")
 
 self.body(func(inputs) {
@@ -20,8 +23,8 @@ self.body(func(inputs) {
 	species := inputs.request.species
 
 	mixcrCmdBuilder := exec.builder().
+						software(mixcrSw).
 						printErrStreamToStdout().
-						cmd("mixcr").
 						arg("exportPreset").
 						arg("--preset-name").
 						arg(presetName)

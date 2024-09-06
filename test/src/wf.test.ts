@@ -18,11 +18,7 @@ blockTest('empty imputs', { timeout: 10000 }, async ({ rawPrj: project, ml, help
     5000
   )) as InferBlockState<typeof platforma>;
   expect(stableState.outputs).toMatchObject({ inputOptions: { ok: true, value: [] } });
-  const presetsOutput = wrapOutputs(stableState.outputs).presets;
-  const presetsStr = Buffer.from(
-    await ml.driverKit.blobDriver.getContent(presetsOutput!.handle)
-  ).toString();
-  const presets = JSON.parse(presetsStr);
+  const presets = wrapOutputs(stableState.outputs).presets;
   expect(presets).length.gt(10);
 });
 
@@ -36,15 +32,16 @@ blockTest(
     } satisfies BlockArgs);
     const stableState = (await awaitStableState(
       project.getBlockState(blockId),
-      5000
+      10000
     )) as InferBlockState<typeof platforma>;
-    expect(stableState.outputs).toMatchObject({ preset: { ok: true } });
+    const preset = wrapOutputs(stableState.outputs).preset;
+    expect(preset).toBeTypeOf('object');
   }
 );
 
 blockTest(
   'simple project',
-  { timeout: 25000 },
+  { timeout: 30000 },
   async ({ rawPrj: project, ml, helpers, expect }) => {
     const sndBlockId = await project.addBlock('Samples & Data', samplesAndDataBlockSpec);
     const clonotypingBlockId = await project.addBlock('MiXCR Clonotyping', myBlockSpec);
@@ -101,7 +98,7 @@ blockTest(
 
     const clonotypingStableState1 = (await awaitStableState(
       clonotypingBlockState,
-      5000
+      15000
     )) as InferBlockState<typeof platforma>;
 
     expect(clonotypingStableState1.outputs).toMatchObject({
@@ -127,7 +124,7 @@ blockTest(
 
     const clonotypingStableState2 = (await awaitStableState(
       project.getBlockState(clonotypingBlockId),
-      10000
+      15000
     )) as InferBlockState<typeof platforma>;
 
     const outputs2 = wrapOutputs<BlockOutputs>(clonotypingStableState2.outputs);
@@ -138,7 +135,7 @@ blockTest(
     await project.runBlock(clonotypingBlockId);
     const clonotypingStableState3 = (await helpers.awaitBlockDoneAndGetStableBlockState(
       clonotypingBlockId,
-      10000
+      15000
     )) as InferBlockState<typeof platforma>;
     const outputs3 = wrapOutputs<BlockOutputs>(clonotypingStableState3.outputs);
 

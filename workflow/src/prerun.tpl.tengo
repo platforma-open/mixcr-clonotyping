@@ -17,7 +17,10 @@ wf.body(func(args) {
 
 	if !is_undefined(args.preset) {
 		getPreset := render.create(getPresetTpl, {
-			preset: args.preset
+			request: {
+				presetName: args.preset,
+				species: args.species
+			}
 		})
 		outputs.preset = getPreset.output("preset", 24 * 60 * 60 * 1000)
 	}
