@@ -24,11 +24,11 @@ self.body(func(inputs) {
 	species := inputs.request.species
 
 	mixcrExportPresetCmdBuilder := exec.builder().
-						software(mixcrSw).
-						printErrStreamToStdout().
-						arg("exportPreset").
-						arg("--preset-name").
-						arg(presetName)
+		software(mixcrSw).
+		printErrStreamToStdout().
+		arg("exportPreset").
+		arg("--preset-name").
+		arg(presetName)
 
 	mixcr.addAdditionalColumnArgs(mixcrExportPresetCmdBuilder)
 
@@ -37,21 +37,21 @@ self.body(func(inputs) {
 	}
 
 	mixcrExportPresetCmd := mixcrExportPresetCmdBuilder.arg("preset.json").
-						saveFileContent("preset.json").
-						saveFile("preset.json").
-						run()
+		saveFileContent("preset.json").
+		saveFile("preset.json").
+		run()
 
 	presetContent := mixcrExportPresetCmd.getFileContent("preset.json")
 
 	mixcrForBackCmd := exec.builder().
-						software(mixcrSw).
-						printErrStreamToStdout().
-						arg("presetSpecificationsForBack").
-						addFile("preset.yaml", mixcrExportPresetCmd.getFile("preset.json")).
-						arg("preset.yaml").
-						arg("presetForBack.json").
-						saveFileContent("presetForBack.json").
-						run()
+		software(mixcrSw).
+		printErrStreamToStdout().
+		arg("presetSpecificationsForBack").
+		addFile("preset.yaml", mixcrExportPresetCmd.getFile("preset.json")).
+		arg("preset.yaml").
+		arg("presetForBack.json").
+		saveFileContent("presetForBack.json").
+		run()
 
 	presetSpecForBackContent := mixcrForBackCmd.getFileContent("presetForBack.json")
 

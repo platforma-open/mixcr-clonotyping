@@ -22,7 +22,7 @@ self.body(func(inputs) {
 
 	csvMap := smart.structBuilder(
 		pConstants.RTYPE_P_COLUMN_DATA_RESOURCE_MAP,
-	    json.encode({ keyLength: 1 })
+		json.encode({ keyLength: 1 })
 	)
 
 	for fileName, file in data.inputs() {

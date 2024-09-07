@@ -29,11 +29,11 @@ self.body(func(inputs) {
 	pfconvParams := self.rawInputs().pfconvParams.getValue().getDataAsJson()
 
 	decomposition := pUtil.decomposePfconvCfg(pfconvParams, { additionalAxesSpec: [
-			inputSpec.axesSpec[0],
-			{
-				"name": "pl7.app/vdj/chain",
-				"type": "String"
-			}
+		inputSpec.axesSpec[0],
+		{
+			"name": "pl7.app/vdj/chain",
+			"type": "String"
+		}
 		] })
 	purifiedPfconvCfg := decomposition.purifiedCfg
 	cloneColumnsSpec := decomposition.columnsSpec
@@ -62,19 +62,19 @@ self.body(func(inputs) {
 	fileExtension := inputSpec.domain["pl7.app/fileExtension"]
 
 	aggregationTargets := [{
-			type: "Resource",
-			name: "qc"
-		}, {
-			type: "Resource",
-			name: "log"
-		}, {
-			type: "Resource",
-			name: "clns"
-		}, {
-			type: "ResourceMap",
-			name: "reports",
-			keyLength: 2 // [reportType, reportFormat]
-		}]
+		type: "Resource",
+		name: "qc"
+	}, {
+		type: "Resource",
+		name: "log"
+	}, {
+		type: "Resource",
+		name: "clns"
+	}, {
+		type: "ResourceMap",
+		name: "reports",
+		keyLength: 2 // [reportType, reportFormat]
+	}]
 
 	ll.assert(purifiedPfconvCfg.partitionKeyLength == 0, "unexpected pertition length")
 	ll.assert(purifiedPfconvCfg.storageFormat == "Binary", "unexpected format")
@@ -89,19 +89,19 @@ self.body(func(inputs) {
 	}
 
 	mixcrResults := llPFrames.aggregate(
-			self.rawInputs().inputData, [1], mixcrAnalyzeTpl,
-			aggregationTargets,
-			false,
-			{
-				params: smart.createJsonResource({
-					preset: preset,
-					fileExtension: fileExtension,
-					reports: reports
-				}),
-				presetContent: presetContent,
-				pfconvParams: purifiedPfconvCfg
-			}
-		)
+		self.rawInputs().inputData, [1], mixcrAnalyzeTpl,
+		aggregationTargets,
+		false,
+		{
+			params: smart.createJsonResource({
+				preset: preset,
+				fileExtension: fileExtension,
+				reports: reports
+			}),
+			presetContent: presetContent,
+			pfconvParams: purifiedPfconvCfg
+		}
+	)
 
 	clones := smart.structBuilder(pConstants.RTYPE_P_FRAME)
 	for columnId, columnSpec in cloneColumnsSpec {
@@ -116,7 +116,7 @@ self.body(func(inputs) {
 			valueType: "File",
 			axesSpec: [
 				inputSpec.axesSpec[0]
-			]
+				]
 		},
 		"qc.data": mixcrResults.output("qc"),
 
@@ -126,7 +126,7 @@ self.body(func(inputs) {
 			valueType: "Log",
 			axesSpec: [
 				inputSpec.axesSpec[0]
-			]
+				]
 		},
 		"logs.data": mixcrResults.output("log"),
 
@@ -153,7 +153,7 @@ self.body(func(inputs) {
 						"pl7.app/dense": json.encode(["json", "txt"])
 					}
 				}
-			]
+				]
 		},
 		"reports.data": mixcrResults.output("reports"),
 

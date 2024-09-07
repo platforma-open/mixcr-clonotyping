@@ -54,10 +54,10 @@ self.body(func(inputs) {
 
 	if inputDataMeta.keyLength == 1 {
 		mixcrCmdBuilder := exec.builder().
-							printErrStreamToStdout().
-							env("MI_PROGRESS_PREFIX", progressPrefix).
-							software(mixcrSw).
-							arg("analyze")
+			printErrStreamToStdout().
+			env("MI_PROGRESS_PREFIX", progressPrefix).
+			software(mixcrSw).
+			arg("analyze")
 
 		mixcr.addAdditionalColumnArgs(mixcrCmdBuilder)
 
@@ -86,7 +86,7 @@ self.body(func(inputs) {
 			}
 			fileName := "input_" + rIndex + "." + fileExtension
 			mixcrCmdBuilder.addFile(fileName, inputFile).
-							arg(fileName)
+				arg(fileName)
 		}
 
 		mixcrCmdBuilder.arg("result")

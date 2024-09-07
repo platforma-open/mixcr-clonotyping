@@ -12,12 +12,12 @@ mixcrSw := assets.importSoftware("@milaboratory/mixcr:main")
 
 self.body(func(inputs) {
 	listPresets := exec.builder().
-						software(mixcrSw).
-						arg("listPresetSpecificationsForUI").
-						arg("presets.json").
-						inUiQueue().
-						saveFile("presets.json").
-						run()
+		software(mixcrSw).
+		arg("listPresetSpecificationsForUI").
+		arg("presets.json").
+		inUiQueue().
+		saveFile("presets.json").
+		run()
 
 	return {
 		presets: file.exportFile(listPresets.getFile("presets.json"))

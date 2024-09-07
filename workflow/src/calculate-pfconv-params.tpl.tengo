@@ -8,27 +8,27 @@ json := import("json")
 self.defineOutputs("params")
 
 self.body(func(inputs) {
-	
+
 	// filter function
 	filter := func(list, predicate) {
-    	result := []
-    	for item in list {
-        	if predicate(item) {
-            	result = append(result, item)
-        	}
-    	}
-    	return result
+		result := []
+		for item in list {
+			if predicate(item) {
+				result = append(result, item)
+			}
+		}
+		return result
 	}
 
 	fieldsToColumns := {
-    	"-cellGroup": "cellGroup",
+		"-cellGroup": "cellGroup",
 		"-topChains": "topChains",
-    	"-isotype": "isotype",
-    	"-vHit": "bestVHit",
-    	"-dHit": "bestDHit",
-    	"-jHit": "bestJHit",
-    	"-cHit": "bestCHit"
-		}
+		"-isotype": "isotype",
+		"-vHit": "bestVHit",
+		"-dHit": "bestDHit",
+		"-jHit": "bestJHit",
+		"-cHit": "bestCHit"
+	}
 
 	// get specs and preset data
 	specs := inputs.specs.getDataAsJson()
@@ -51,7 +51,7 @@ self.body(func(inputs) {
 			imputed = false
 		} else if !is_undefined(fieldsToColumns[field.field]) {
 			columnsList = append(columnsList, fieldsToColumns[field.field])
-		}			
+		}
 	}
 
 	// add columns with sequences
@@ -73,7 +73,7 @@ self.body(func(inputs) {
 	// create axes fields
 	axes := []
 	if len(specs.cellTags) == 0 {
-		axes = filter(pvconfParams.axes, func(item) { return item.column == "cloneId" }) 
+		axes = filter(pvconfParams.axes, func(item) { return item.column == "cloneId" })
 	} else {
 		axes = pvconfParams.axes
 	}
@@ -83,7 +83,7 @@ self.body(func(inputs) {
 			"axes": axes,
 			"columns": columns,
 			"storageFormat": "Binary",
-  			"partitionKeyLength": 0
+			"partitionKeyLength": 0
 		}
 	}
 })
