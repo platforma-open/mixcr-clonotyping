@@ -177,7 +177,7 @@ export {
         },
         "annotations": {
           "type": "sequence",
-          "pl7.app/label": "FR1 Nt"
+          "pl7.app/label": "FR1 nt"
         }
       }
     }, {
@@ -207,7 +207,7 @@ export {
         },
         "annotations": {
           "type": "sequence",
-          "pl7.app/label": "FR2 Nt"
+          "pl7.app/label": "FR2 nt"
         }
       }
     }, {
@@ -236,7 +236,7 @@ export {
         },
         "annotations": {
           "type": "sequence",
-          "pl7.app/label": "FR3 Nt"
+          "pl7.app/label": "FR3 nt"
         }
       }
     }, {
@@ -265,7 +265,7 @@ export {
         },
         "annotations": {
           "type": "sequence",
-          "pl7.app/label": "FR4 Nt"
+          "pl7.app/label": "FR4 nt"
         }
       }
     }, {
@@ -294,7 +294,7 @@ export {
         },
         "annotations": {
           "type": "sequence",
-          "pl7.app/label": "CDR1 Nt"
+          "pl7.app/label": "CDR1 nt"
         }
       }
     }, {
@@ -323,7 +323,7 @@ export {
         },
         "annotations": {
           "type": "sequence",
-          "pl7.app/label": "CDR2 Nt"
+          "pl7.app/label": "CDR2 nt"
         }
       }
     }, {
@@ -352,7 +352,7 @@ export {
         },
         "annotations": {
           "type": "sequence",
-          "pl7.app/label": "CDR3 Nt"
+          "pl7.app/label": "CDR3 nt"
         }
       }
     }, {
@@ -381,7 +381,7 @@ export {
         },
         "annotations": {
           "type": "sequence",
-          "pl7.app/label": "FR1 AA"
+          "pl7.app/label": "FR1 aa"
         }
       }
     }, {
@@ -396,7 +396,7 @@ export {
         },
         "annotations": {
           "type": "sequence",
-          "pl7.app/label": "FR2 AA"
+          "pl7.app/label": "FR2 aa"
         }
       }
     }, {
@@ -411,7 +411,7 @@ export {
         },
         "annotations": {
           "type": "sequence",
-          "pl7.app/label": "FR3 AA"
+          "pl7.app/label": "FR3 aa"
         }
       }
     }, {
@@ -426,7 +426,7 @@ export {
         },
         "annotations": {
           "type": "sequence",
-          "pl7.app/label": "FR4 AA"
+          "pl7.app/label": "FR4 aa"
         }
       }
     }, {
@@ -441,7 +441,7 @@ export {
         },
         "annotations": {
           "type": "sequence",
-          "pl7.app/label": "CDR1 AA"
+          "pl7.app/label": "CDR1 aa"
         }
       }
     }, {
@@ -456,7 +456,7 @@ export {
         },
         "annotations": {
           "type": "sequence",
-          "pl7.app/label": "CDR2 AA"
+          "pl7.app/label": "CDR2 aa"
         }
       }
     }, {
@@ -471,7 +471,7 @@ export {
         },
         "annotations": {
           "type": "sequence",
-          "pl7.app/label": "CDR3 AA"
+          "pl7.app/label": "CDR3 aa"
         }
       }
     }, {

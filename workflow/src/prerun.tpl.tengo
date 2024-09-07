@@ -6,7 +6,7 @@ ll := import("@milaboratory/tengo-sdk:ll")
 assets := import("@milaboratory/tengo-sdk:assets")
 
 listPresetsTpl := assets.importTemplate(":list-presets")
-getPresetTpl := assets.importTemplate(":get-preset-for-back")
+getPresetTpl := assets.importTemplate(":get-preset")
 
 wf.body(func(args) {
 
@@ -22,7 +22,7 @@ wf.body(func(args) {
 				species: args.species
 			}
 		})
-		outputs.preset = getPreset.output("preset", 24 * 60 * 60 * 1000)
+		outputs.preset = getPreset.output("presetSpecForBack", 24 * 60 * 60 * 1000)
 	}
 
 	return {

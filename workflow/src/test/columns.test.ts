@@ -25,6 +25,7 @@ const testCases: TestCase[] = [
   },
   {
     presetName: '10x-sc-xcr-vdj',
+    species: 'human',
     check: (expect, config) => {
       console.dir(config, { depth: 5 });
       expect(config.axes).to.have.lengthOf(2);
@@ -89,6 +90,7 @@ const testCases: TestCase[] = [
   },
   {
     presetName: 'rna-seq',
+    species: 'human',
     check: (expect, config) => {
       console.dir(config, { depth: 5 });
       expect(config.axes).to.have.lengthOf(1);
