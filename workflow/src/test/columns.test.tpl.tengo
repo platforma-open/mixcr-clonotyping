@@ -12,12 +12,13 @@ self.defineOutputs("conf")
 self.body(func(inputs) {
 	request := inputs.request
 
-	preset := render.create(getPresetTpl, {
+	getPreset := render.create(getPresetTpl, {
 		request: request
-	}).output("preset")
+	})
 
 	pfconvConfig := render.create(calculateColumnsParamsTpl, {
-		preset: preset
+		preset: getPreset.output("preset"),
+		specs: getPreset.output("presetSpecForBack")
 	}).output("params")
 
 	return {

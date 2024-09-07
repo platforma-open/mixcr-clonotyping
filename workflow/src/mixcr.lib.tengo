@@ -1,0 +1,18 @@
+ll := import("@milaboratory/tengo-sdk:ll")
+
+addAdditionalColumnArgs := func(mixcrCmdBuiler) {
+	mixcrCmdBuiler.
+		arg("--append-export-clones-field").
+		arg("-vHit").
+		arg("--append-export-clones-field").
+		arg("-dHit").
+		arg("--append-export-clones-field").
+		arg("-jHit").
+		arg("--append-export-clones-field").
+		arg("-cHit")
+	return mixcrCmdBuiler
+}
+
+export ll.toStrict({
+	addAdditionalColumnArgs: addAdditionalColumnArgs
+})

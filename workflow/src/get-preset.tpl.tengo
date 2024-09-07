@@ -4,6 +4,7 @@ self := import("@milaboratory/tengo-sdk:tpl")
 ll := import("@milaboratory/tengo-sdk:ll")
 exec := import("@milaboratory/tengo-sdk:exec")
 assets := import("@milaboratory/tengo-sdk:assets")
+mixcr := import(":mixcr")
 
 self.validateInputs({
 	"__options__,closed": "",
@@ -16,30 +17,46 @@ self.validateInputs({
 
 mixcrSw := assets.importSoftware("@milaboratory/mixcr:main")
 
-self.defineOutputs("preset")
+self.defineOutputs("preset", "presetSpecForBack")
 
 self.body(func(inputs) {
 	presetName := inputs.request.presetName
 	species := inputs.request.species
 
-	mixcrCmdBuilder := exec.builder().
+	mixcrExportPresetCmdBuilder := exec.builder().
 						software(mixcrSw).
 						printErrStreamToStdout().
 						arg("exportPreset").
 						arg("--preset-name").
 						arg(presetName)
 
+	mixcr.addAdditionalColumnArgs(mixcrExportPresetCmdBuilder)
+
 	if !is_undefined(species) {
-		mixcrCmdBuilder.arg("--species").arg(species)
+		mixcrExportPresetCmdBuilder.arg("--species").arg(species)
 	}
 
-	mixcrCmd := mixcrCmdBuilder.arg("preset.json").
+	mixcrExportPresetCmd := mixcrExportPresetCmdBuilder.arg("preset.json").
 						saveFileContent("preset.json").
+						saveFile("preset.json").
 						run()
 
-	presetContent := mixcrCmd.getFileContent("preset.json")
+	presetContent := mixcrExportPresetCmd.getFileContent("preset.json")
+
+	mixcrForBackCmd := exec.builder().
+						software(mixcrSw).
+						printErrStreamToStdout().
+						arg("presetSpecificationsForBack").
+						addFile("preset.yaml", mixcrExportPresetCmd.getFile("preset.json")).
+						arg("preset.yaml").
+						arg("presetForBack.json").
+						saveFileContent("presetForBack.json").
+						run()
+
+	presetSpecForBackContent := mixcrForBackCmd.getFileContent("presetForBack.json")
 
 	return {
-		preset: presetContent
+		preset: presetContent,
+		presetSpecForBack: presetSpecForBackContent
 	}
 })

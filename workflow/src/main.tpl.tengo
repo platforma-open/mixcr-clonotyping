@@ -13,7 +13,7 @@ exec := import("@milaboratory/tengo-sdk:exec")
 
 json := import("json")
 
-getPresetTpl := assets.importTemplate(":get-preset-for-back")
+getPresetTpl := assets.importTemplate(":get-preset")
 calculatePfconvParamsTpl := assets.importTemplate(":calculate-pfconv-params")
 processTpl := assets.importTemplate(":process")
 
@@ -33,10 +33,13 @@ wf.body(func(args) {
 			species: species
 		}
 	})
+
 	presetContent := getPreset.output("preset", 24 * 60 * 60 * 1000)
+	specsContent := getPreset.output("presetSpecForBack", 24 * 60 * 60 * 1000)
 
 	calculatePfconvParams := render.create(calculatePfconvParamsTpl, {
-		preset: presetContent
+		preset: presetContent,
+		specs: specsContent
 	})
 	pfconvParams := calculatePfconvParams.output("params", 24 * 60 * 60 * 1000)
 
@@ -45,7 +48,7 @@ wf.body(func(args) {
 			preset: preset,
 			species: species
 		}),
-		presetContent: presetContent,
+		presetContent: specsContent,
 		pfconvParams: pfconvParams,
 		inputSpec: input.getFutureInputField("spec"),
 		inputData: input.getFutureInputField("data")
