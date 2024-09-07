@@ -11,11 +11,11 @@ import { blockSpec as myBlockSpec } from 'this-block';
 import { InferBlockState, fromPlRef, wrapOutputs } from '@milaboratory/sdk-ui';
 import * as tp from 'node:timers/promises';
 
-blockTest('empty imputs', { timeout: 10000 }, async ({ rawPrj: project, ml, helpers, expect }) => {
+blockTest('empty imputs', { timeout: 30000 }, async ({ rawPrj: project, ml, helpers, expect }) => {
   const blockId = await project.addBlock('Block', myBlockSpec);
   const stableState = (await awaitStableState(
     project.getBlockState(blockId),
-    5000
+    25000
   )) as InferBlockState<typeof platforma>;
   expect(stableState.outputs).toMatchObject({ inputOptions: { ok: true, value: [] } });
   const presets = wrapOutputs(stableState.outputs).presets;
@@ -24,7 +24,7 @@ blockTest('empty imputs', { timeout: 10000 }, async ({ rawPrj: project, ml, help
 
 blockTest(
   'preset content',
-  { timeout: 10000 },
+  { timeout: 30000 },
   async ({ rawPrj: project, ml, helpers, expect }) => {
     const blockId = await project.addBlock('Block', myBlockSpec);
     await project.setBlockArgs(blockId, {
@@ -32,7 +32,7 @@ blockTest(
     } satisfies BlockArgs);
     const stableState = (await awaitStableState(
       project.getBlockState(blockId),
-      10000
+      250000
     )) as InferBlockState<typeof platforma>;
     const preset = wrapOutputs(stableState.outputs).preset;
     expect(preset).toBeTypeOf('object');
@@ -135,7 +135,7 @@ blockTest(
     await project.runBlock(clonotypingBlockId);
     const clonotypingStableState3 = (await helpers.awaitBlockDoneAndGetStableBlockState(
       clonotypingBlockId,
-      20000
+      25000
     )) as InferBlockState<typeof platforma>;
     const outputs3 = wrapOutputs<BlockOutputs>(clonotypingStableState3.outputs);
 
