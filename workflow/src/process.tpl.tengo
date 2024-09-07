@@ -40,7 +40,7 @@ self.body(func(inputs) {
 
 	reports := []
 
-	for step in presetContent.pipeline {
+	for step in presetContent.reportTypes {
 		if step == "align" || step == "assemble" {
 			reports = append(reports, {
 				id: step,
@@ -67,6 +67,9 @@ self.body(func(inputs) {
 		}, {
 			type: "Resource",
 			name: "log"
+		}, {
+			type: "Resource",
+			name: "clns"
 		}, {
 			type: "ResourceMap",
 			name: "reports",
@@ -153,6 +156,8 @@ self.body(func(inputs) {
 			]
 		},
 		"reports.data": mixcrResults.output("reports"),
+
+		"clns.data": mixcrResults.output("clns"),
 
 		"clones": clones.lockAndBuild()
 	}

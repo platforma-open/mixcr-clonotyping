@@ -13,7 +13,7 @@ exec := import("@milaboratory/tengo-sdk:exec")
 
 json := import("json")
 
-getPresetTpl := assets.importTemplate(":get-preset")
+getPresetTpl := assets.importTemplate(":get-preset-for-back")
 calculatePfconvParamsTpl := assets.importTemplate(":calculate-pfconv-params")
 processTpl := assets.importTemplate(":process")
 
@@ -67,7 +67,8 @@ wf.body(func(args) {
 		qc: pframes.exportColumnData(runMixcr.output("qc.data")),
 		reports: pframes.exportColumnData(runMixcr.output("reports.data")),
 		logs: runMixcr.output("logs.data"),
-		clones: pframes.exportFrame(runMixcr.output("clones"))
+		clones: pframes.exportFrame(runMixcr.output("clones")),
+		clns: runMixcr.output("clns.data")
 	}
 
 	return {

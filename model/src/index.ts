@@ -31,28 +31,39 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
 
   .output('qc', (ctx) =>
     parseResourceMap(ctx.outputs?.resolve({ field: 'qc', assertFieldType: 'Input' }), (acc) =>
-      acc.getRemoteFileHandle()
+      acc.getFileHandle()
     )
   )
 
   .output('reports', (ctx) =>
     parseResourceMap(ctx.outputs?.resolve({ field: 'reports', assertFieldType: 'Input' }), (acc) =>
-      acc.getRemoteFileHandle()
+      acc.getFileHandle()
     )
   )
 
   .output('logs', (ctx) => {
-    return parseResourceMap(
-      ctx.outputs?.resolve({ field: 'logs', assertFieldType: 'Input' }),
-      (acc) => acc.getLogHandle()
-    );
+    return ctx.outputs !== undefined
+      ? parseResourceMap(ctx.outputs?.resolve({ field: 'logs', assertFieldType: 'Input' }), (acc) =>
+          acc.getLogHandle()
+        )
+      : undefined;
   })
 
   .output('progress', (ctx) => {
-    return parseResourceMap(
-      ctx.outputs?.resolve({ field: 'logs', assertFieldType: 'Input' }),
-      (acc) => acc.getProgressLog(ProgressPrefix)
-    );
+    return ctx.outputs !== undefined
+      ? parseResourceMap(ctx.outputs?.resolve({ field: 'logs', assertFieldType: 'Input' }), (acc) =>
+          acc.getProgressLog(ProgressPrefix)
+        )
+      : undefined;
+  })
+
+  .output('done', (ctx) => {
+    return ctx.outputs !== undefined
+      ? parseResourceMap(
+          ctx.outputs?.resolve({ field: 'clns', assertFieldType: 'Input' }),
+          (acc) => true
+        ).data.map((e) => e.key[0] as string)
+      : undefined;
   })
 
   .output('clones', (ctx) => {
@@ -124,11 +135,19 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
 
     // if (sampleLabelsObj.obj.data.resourceType.name !== 'PColumn/Json') return undefined;
 
-    return sampleLabelsObj.obj.data.getDataAsJson();
+    return Object.fromEntries(
+      Object.entries(sampleLabelsObj.obj.data.getDataAsJson<Record<string, string>>()).map((e) => [
+        JSON.parse(e[0])[0],
+        e[1]
+      ])
+    ) satisfies Record<string, string>;
   })
 
   .sections((ctx) => {
-    return [{ type: 'link', href: '/', label: 'Settings' }];
+    return [
+      { type: 'link', href: '/', label: 'Settings' },
+      { type: 'link', href: '/reports', label: 'Reports' }
+    ];
   })
 
   .inputsValid((ctx) => BlockArgsValid.safeParse(ctx.args).success)
@@ -139,4 +158,5 @@ export type BlockOutputs = InferOutputsType<typeof platforma>;
 export type Href = InferHrefType<typeof platforma>;
 export * from './args';
 export * from './helpers';
+export * from './logs';
 export { BlockArgs };

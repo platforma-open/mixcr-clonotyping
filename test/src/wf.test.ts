@@ -87,7 +87,7 @@ blockTest(
       ]
     } satisfies SamplesAndDataBlockArgs);
     await project.runBlock(sndBlockId);
-    await helpers.awaitBlockDone(sndBlockId);
+    await helpers.awaitBlockDone(sndBlockId, 4000);
     const sndBlockState = project.getBlockState(sndBlockId);
     const clonotypingBlockState = project.getBlockState(clonotypingBlockId);
 
@@ -128,9 +128,9 @@ blockTest(
     )) as InferBlockState<typeof platforma>;
 
     const outputs2 = wrapOutputs<BlockOutputs>(clonotypingStableState2.outputs);
-    console.dir(outputs2.sampleLabels, { depth: 5 });
-    console.log(JSON.stringify([sample1Id]));
-    expect(outputs2.sampleLabels[JSON.stringify([sample1Id])]).toBeDefined();
+    // console.dir(outputs2.sampleLabels, { depth: 5 });
+    // console.log(JSON.stringify([sample1Id]));
+    expect(outputs2.sampleLabels[sample1Id]).toBeDefined();
 
     await project.runBlock(clonotypingBlockId);
     const clonotypingStableState3 = (await helpers.awaitBlockDoneAndGetStableBlockState(
@@ -155,7 +155,7 @@ blockTest(
       ).toString('utf8')
     );
 
-    console.dir(alignJsonReport, { depth: 5 });
+    // console.dir(alignJsonReport, { depth: 5 });
     expect(alignJsonReport.aligned).toBeDefined();
     expect(alignJsonReport.aligned).greaterThan(2);
 
@@ -165,7 +165,7 @@ blockTest(
 
     const clonesPfColumnList = await ml.driverKit.pFrameDriver.listColumns(clonesPfHandle);
 
-    console.log(clonesPfColumnList);
+    // console.log(clonesPfColumnList);
     expect(clonesPfColumnList).length.to.greaterThanOrEqual(1);
 
     // console.dir(clonotypingStableState3, { depth: 8 });

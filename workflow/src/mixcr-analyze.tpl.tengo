@@ -10,7 +10,7 @@ render := import("@milaboratory/tengo-sdk:render")
 
 json := import("json")
 
-self.defineOutputs("qc", "reports", "clones", "log")
+self.defineOutputs("qc", "reports", "clones", "log", "clns")
 
 exportClonesTpl := assets.importTemplate(":export-clones")
 mixcrSw := assets.importSoftware("@milaboratory/mixcr:main")
@@ -38,6 +38,18 @@ self.body(func(inputs) {
 	}
 
 	inputDataMeta := inputData.getDataAsJson()
+
+	hasAssembleContigs := false
+	for stage in presetContent.analysisStages {
+		if stage == "assembleContigs" {
+			hasAssembleContigs = true
+		}
+	}
+
+	clnsFileName := "result.clns"
+	if hasAssembleContigs {
+		clnsFileName = "result.contigs.clns"
+	}
 
 	if inputDataMeta.keyLength == 1 {
 		mixcrCmdBuilder := exec.builder().
@@ -77,6 +89,7 @@ self.body(func(inputs) {
 		mixcrCmdBuilder.arg("result")
 
 		mixcrCmdBuilder.saveFile("result.qc.json")
+		mixcrCmdBuilder.saveFile(clnsFileName)
 
 		for report in reports {
 			mixcrCmdBuilder.saveFile(report.fileJson)
@@ -106,6 +119,7 @@ self.body(func(inputs) {
 			qc: mixcrCmd.getFile("result.qc.json"),
 			log: mixcrCmd.getStdoutStream(),
 			reports: reportsMap.lockAndBuild(),
+			clns: mixcrCmd.getFile(clnsFileName),
 			clones: clones
 		}
 

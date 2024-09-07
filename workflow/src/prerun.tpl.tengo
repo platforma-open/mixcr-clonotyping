@@ -6,7 +6,7 @@ ll := import("@milaboratory/tengo-sdk:ll")
 assets := import("@milaboratory/tengo-sdk:assets")
 
 listPresetsTpl := assets.importTemplate(":list-presets")
-getPresetTpl := assets.importTemplate(":get-preset")
+getPresetTpl := assets.importTemplate(":get-preset-for-back")
 
 wf.body(func(args) {
 
