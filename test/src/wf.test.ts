@@ -165,6 +165,14 @@ blockTest(
 
     const clonesPfColumnList = await ml.driverKit.pFrameDriver.listColumns(clonesPfHandle);
 
+    expect(
+      clonesPfColumnList[0].spec.axesSpec.find((s: any) => s.name === 'pl7.app/vdj/cloneId')
+    ).toMatchObject({
+      domain: {
+        'pl7.app/blockId': clonotypingBlockId
+      }
+    });
+
     // console.log(clonesPfColumnList);
     expect(clonesPfColumnList).length.to.greaterThanOrEqual(7);
 

@@ -23,6 +23,9 @@ self.awaitState("pfconvParams", "ResourceReady")
 self.body(func(inputs) {
 	params := inputs.params
 	preset := params.preset
+	species := params.species
+	blockId := params.blockId
+
 	inputSpec := self.rawInputs().inputSpec.getValue().getDataAsJson()
 
 	presetContent := self.rawInputs().presetContent.getValue().getDataAsJson()
@@ -95,6 +98,7 @@ self.body(func(inputs) {
 		{
 			params: smart.createJsonResource({
 				preset: preset,
+				species: species,
 				fileExtension: fileExtension,
 				reports: reports
 			}),
@@ -113,6 +117,9 @@ self.body(func(inputs) {
 		"qc.spec": {
 			kind: "PColumn",
 			name: "mixcr.com/qc",
+			domain: {
+				"pl7.app/blockId": blockId
+			},
 			valueType: "File",
 			axesSpec: [
 				inputSpec.axesSpec[0]
@@ -123,6 +130,9 @@ self.body(func(inputs) {
 		"logs.spec": {
 			kind: "PColumn",
 			name: "pl7.app/log",
+			domain: {
+				"pl7.app/blockId": blockId
+			},
 			valueType: "Log",
 			axesSpec: [
 				inputSpec.axesSpec[0]
@@ -133,6 +143,9 @@ self.body(func(inputs) {
 		"reports.spec": {
 			kind: "PColumn",
 			name: "mixcr.com/report",
+			domain: {
+				"pl7.app/blockId": blockId
+			},
 			valueType: "File",
 			axesSpec: [
 				inputSpec.axesSpec[0],
@@ -157,6 +170,15 @@ self.body(func(inputs) {
 		},
 		"reports.data": mixcrResults.output("reports"),
 
+		"clns.spec": {
+			kind: "PColumn",
+			name: "mixcr.com/clns",
+			domain: {
+				"pl7.app/blockId": blockId
+			},
+			valueType: "File",
+			axesSpec: [ inputSpec.axesSpec[0] ]
+		},
 		"clns.data": mixcrResults.output("clns"),
 
 		"clones": clones.lockAndBuild()
