@@ -2,6 +2,7 @@ module.exports = { Templates: {
   'calculate-pfconv-params': { type: 'from-file', path: require.resolve('./dist/tengo/tpl/calculate-pfconv-params.plj.gz') },
   'export-clones': { type: 'from-file', path: require.resolve('./dist/tengo/tpl/export-clones.plj.gz') },
   'get-preset-spec': { type: 'from-file', path: require.resolve('./dist/tengo/tpl/get-preset-spec.plj.gz') },
+  'get-preset-for-back': { type: 'from-file', path: require.resolve('./dist/tengo/tpl/get-preset-for-back.plj.gz') },
   'get-preset': { type: 'from-file', path: require.resolve('./dist/tengo/tpl/get-preset.plj.gz') },
   'list-presets': { type: 'from-file', path: require.resolve('./dist/tengo/tpl/list-presets.plj.gz') },
   'mixcr-analyze': { type: 'from-file', path: require.resolve('./dist/tengo/tpl/mixcr-analyze.plj.gz') },

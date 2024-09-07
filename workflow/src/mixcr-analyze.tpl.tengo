@@ -10,15 +10,19 @@ render := import("@milaboratory/tengo-sdk:render")
 
 json := import("json")
 
-exportClonesTpl := assets.importTemplate(":export-clones")
+self.defineOutputs("qc", "reports", "clones", "log", "clns")
 
-self.defineOutputs("qc", "reports", "clones")
+exportClonesTpl := assets.importTemplate(":export-clones")
+mixcrSw := assets.importSoftware("@milaboratory/mixcr:main")
+
+progressPrefix := "[==PROGRESS==]"
 
 self.body(func(inputs) {
 	inputData := inputs[pConstants.VALUE_FIELD_NAME]
 
 	params := inputs.params
 	preset := params.preset
+	species := params.species
 	fileExtension := params.fileExtension
 	reports := params.reports
 
@@ -35,12 +39,30 @@ self.body(func(inputs) {
 
 	inputDataMeta := inputData.getDataAsJson()
 
+	hasAssembleContigs := false
+	for stage in presetContent.analysisStages {
+		if stage == "assembleContigs" {
+			hasAssembleContigs = true
+		}
+	}
+
+	clnsFileName := "result.clns"
+	if hasAssembleContigs {
+		clnsFileName = "result.contigs.clns"
+	}
+
 	if inputDataMeta.keyLength == 1 {
 		mixcrCmdBuilder := exec.builder().
-								printErrStreamToStdout().
-						        cmd("mixcr").
-						        arg("analyze").
-								arg(preset)
+							printErrStreamToStdout().
+							env("MI_PROGRESS_PREFIX", progressPrefix).
+							software(mixcrSw).
+							arg("analyze")
+
+		if !is_undefined(species) {
+			mixcrCmdBuilder.arg("--species").arg(species)
+		}
+
+		mixcrCmdBuilder.arg(preset)
 
 		// The following code is split into two loops to maintain correct file index ordering (R1, R2, ...)
 
@@ -67,6 +89,7 @@ self.body(func(inputs) {
 		mixcrCmdBuilder.arg("result")
 
 		mixcrCmdBuilder.saveFile("result.qc.json")
+		mixcrCmdBuilder.saveFile(clnsFileName)
 
 		for report in reports {
 			mixcrCmdBuilder.saveFile(report.fileJson)
@@ -94,16 +117,11 @@ self.body(func(inputs) {
 
 		result := {
 			qc: mixcrCmd.getFile("result.qc.json"),
+			log: mixcrCmd.getStdoutStream(),
 			reports: reportsMap.lockAndBuild(),
+			clns: mixcrCmd.getFile(clnsFileName),
 			clones: clones
 		}
-
-		// cloneColumns := smart.mapBuilder()
-
-		// for cloneColumn in pfconvParams.columns {
-		// 	cloneColumns.add(cloneColumn.id, )
-		// 	result["clones/" + cloneColumn.id] = clones.getFutureInputField(cloneColumn.id)
-		// }
 
 		return result
 	} else {

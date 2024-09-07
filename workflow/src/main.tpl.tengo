@@ -15,6 +15,7 @@ json := import("json")
 
 getPresetTpl := assets.importTemplate(":get-preset")
 getPresetSpecTpl := assets.importTemplate(":get-preset-spec")
+getPresetTpl := assets.importTemplate(":get-preset-for-back")
 calculatePfconvParamsTpl := assets.importTemplate(":calculate-pfconv-params")
 processTpl := assets.importTemplate(":process")
 
@@ -24,11 +25,15 @@ wf.body(func(args) {
 	inputRef := args.input
 
 	preset := args.preset
+	species := args.species
 
 	input := wf.resolve(inputRef)
 
 	getPreset := render.create(getPresetTpl, {
-		preset: args.preset
+		request: {
+			presetName: preset,
+			species: species
+		}
 	})
 
 	getSpecs := render.create(getPresetSpecTpl, {
@@ -46,7 +51,8 @@ wf.body(func(args) {
 
 	runMixcr := render.createEphemeral(processTpl, {
 		params: smart.createJsonResource({
-			preset: preset
+			preset: preset,
+			species: species
 		}),
 		presetContent: presetContent,
 		pfconvParams: pfconvParams,
@@ -63,13 +69,15 @@ wf.body(func(args) {
 			spec: runMixcr.output("reports.spec"),
 			data: runMixcr.output("reports.data")
 		},
-		clonse: runMixcr.output("clones")
+		clones: runMixcr.output("clones")
 	}
 
 	outputs := {
 		qc: pframes.exportColumnData(runMixcr.output("qc.data")),
 		reports: pframes.exportColumnData(runMixcr.output("reports.data")),
-		clones: pframes.exportFrame(runMixcr.output("clones"))
+		logs: runMixcr.output("logs.data"),
+		clones: pframes.exportFrame(runMixcr.output("clones")),
+		clns: runMixcr.output("clns.data")
 	}
 
 	return {

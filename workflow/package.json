@@ -11,6 +11,8 @@
   "devDependencies": {
     "@milaboratory/tengo-template-builder": "catalog:",
     "@milaboratory/tengo-sdk": "catalog:",
+    "@milaboratory/pframes-conv": "catalog:",
+    "@milaboratory/mixcr": "catalog:",
     "@milaboratory/sdk-test": "catalog:",
     "vitest": "catalog:",
     "typescript": "catalog:"

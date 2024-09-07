@@ -18,11 +18,7 @@ blockTest('empty imputs', { timeout: 10000 }, async ({ rawPrj: project, ml, help
     5000
   )) as InferBlockState<typeof platforma>;
   expect(stableState.outputs).toMatchObject({ inputOptions: { ok: true, value: [] } });
-  const presetsOutput = wrapOutputs(stableState.outputs).presets;
-  const presetsStr = Buffer.from(
-    await ml.driverKit.blobDriver.getContent(presetsOutput!.handle)
-  ).toString();
-  const presets = JSON.parse(presetsStr);
+  const presets = wrapOutputs(stableState.outputs).presets;
   expect(presets).length.gt(10);
 });
 
@@ -36,15 +32,16 @@ blockTest(
     } satisfies BlockArgs);
     const stableState = (await awaitStableState(
       project.getBlockState(blockId),
-      5000
+      10000
     )) as InferBlockState<typeof platforma>;
-    expect(stableState.outputs).toMatchObject({ preset: { ok: true } });
+    const preset = wrapOutputs(stableState.outputs).preset;
+    expect(preset).toBeTypeOf('object');
   }
 );
 
 blockTest(
   'simple project',
-  { timeout: 25000 },
+  { timeout: 30000 },
   async ({ rawPrj: project, ml, helpers, expect }) => {
     const sndBlockId = await project.addBlock('Samples & Data', samplesAndDataBlockSpec);
     const clonotypingBlockId = await project.addBlock('MiXCR Clonotyping', myBlockSpec);
@@ -90,7 +87,7 @@ blockTest(
       ]
     } satisfies SamplesAndDataBlockArgs);
     await project.runBlock(sndBlockId);
-    await helpers.awaitBlockDone(sndBlockId);
+    await helpers.awaitBlockDone(sndBlockId, 4000);
     const sndBlockState = project.getBlockState(sndBlockId);
     const clonotypingBlockState = project.getBlockState(clonotypingBlockId);
 
@@ -101,7 +98,7 @@ blockTest(
 
     const clonotypingStableState1 = (await awaitStableState(
       clonotypingBlockState,
-      5000
+      15000
     )) as InferBlockState<typeof platforma>;
 
     expect(clonotypingStableState1.outputs).toMatchObject({
@@ -115,11 +112,7 @@ blockTest(
       }
     });
 
-    const presetsOutput = wrapOutputs<BlockOutputs>(clonotypingStableState1.outputs).presets;
-    const presetsStr = Buffer.from(
-      await ml.driverKit.blobDriver.getContent(presetsOutput!.handle)
-    ).toString();
-    const presets = JSON.parse(presetsStr);
+    const presets = wrapOutputs<BlockOutputs>(clonotypingStableState1.outputs).presets;
     expect(presets).length.gt(10);
 
     const clonotypingStableState1Outputs = wrapOutputs(clonotypingStableState1.outputs);
@@ -128,19 +121,30 @@ blockTest(
       input: clonotypingStableState1Outputs.inputOptions[0].ref,
       preset: 'milab-human-dna-xcr-7genes-multiplex'
     } satisfies BlockArgs);
-    await project.runBlock(clonotypingBlockId);
-    const clonotypingStableState2 = (await helpers.awaitBlockDoneAndGetStableBlockState(
-      clonotypingBlockId,
-      10000
+
+    const clonotypingStableState2 = (await awaitStableState(
+      project.getBlockState(clonotypingBlockId),
+      15000
     )) as InferBlockState<typeof platforma>;
+
     const outputs2 = wrapOutputs<BlockOutputs>(clonotypingStableState2.outputs);
+    // console.dir(outputs2.sampleLabels, { depth: 5 });
+    // console.log(JSON.stringify([sample1Id]));
+    expect(outputs2.sampleLabels[sample1Id]).toBeDefined();
 
-    console.dir(clonotypingStableState2, { depth: 8 });
+    await project.runBlock(clonotypingBlockId);
+    const clonotypingStableState3 = (await helpers.awaitBlockDoneAndGetStableBlockState(
+      clonotypingBlockId,
+      15000
+    )) as InferBlockState<typeof platforma>;
+    const outputs3 = wrapOutputs<BlockOutputs>(clonotypingStableState3.outputs);
 
-    expect(outputs2.reports.isComplete).toEqual(true);
+    // console.dir(clonotypingStableState3, { depth: 8 });
 
-    const alignJsonReportEntry = outputs2.reports.data.find(
-      (e) => e.key[1] === 'align' && e.key[2] === 'json'
+    expect(outputs3.reports.isComplete).toEqual(true);
+
+    const alignJsonReportEntry = outputs3.reports.data.find(
+      (e: any) => e.key[1] === 'align' && e.key[2] === 'json'
     );
 
     expect(alignJsonReportEntry).toBeDefined();
@@ -151,19 +155,19 @@ blockTest(
       ).toString('utf8')
     );
 
-    console.dir(alignJsonReport, { depth: 5 });
+    // console.dir(alignJsonReport, { depth: 5 });
     expect(alignJsonReport.aligned).toBeDefined();
     expect(alignJsonReport.aligned).greaterThan(2);
 
     // console.dir(alignJsonReport, { depth: 5 });
 
-    const clonesPfHandle = wrapOutputs(clonotypingStableState2.outputs).clones!;
+    const clonesPfHandle = wrapOutputs(clonotypingStableState3.outputs).clones!;
 
     const clonesPfColumnList = await ml.driverKit.pFrameDriver.listColumns(clonesPfHandle);
 
-    console.log(clonesPfColumnList)
+    // console.log(clonesPfColumnList);
     expect(clonesPfColumnList).length.to.greaterThanOrEqual(1);
 
-    // console.dir(clonotypingStableState2, { depth: 8 });
+    // console.dir(clonotypingStableState3, { depth: 8 });
   }
 );

@@ -4,12 +4,15 @@ self := import("@milaboratory/tengo-sdk:tpl")
 ll := import("@milaboratory/tengo-sdk:ll")
 exec := import("@milaboratory/tengo-sdk:exec")
 file := import("@milaboratory/tengo-sdk:file")
+assets := import("@milaboratory/tengo-sdk:assets")
 
 self.defineOutputs("presets")
 
+mixcrSw := assets.importSoftware("@milaboratory/mixcr:main")
+
 self.body(func(inputs) {
 	listPresets := exec.builder().
-						cmd("mixcr").
+						software(mixcrSw).
 						arg("listPresetSpecificationsForUI").
 						arg("presets.json").
 						inUiQueue().

@@ -40,7 +40,7 @@ self.body(func(inputs) {
 
 	reports := []
 
-	for step in presetContent.pipeline {
+	for step in presetContent.reportTypes {
 		if step == "align" || step == "assemble" {
 			reports = append(reports, {
 				id: step,
@@ -64,6 +64,12 @@ self.body(func(inputs) {
 	aggregationTargets := [{
 			type: "Resource",
 			name: "qc"
+		}, {
+			type: "Resource",
+			name: "log"
+		}, {
+			type: "Resource",
+			name: "clns"
 		}, {
 			type: "ResourceMap",
 			name: "reports",
@@ -114,6 +120,16 @@ self.body(func(inputs) {
 		},
 		"qc.data": mixcrResults.output("qc"),
 
+		"logs.spec": {
+			kind: "PColumn",
+			name: "pl7.app/log",
+			valueType: "Log",
+			axesSpec: [
+				inputSpec.axesSpec[0]
+			]
+		},
+		"logs.data": mixcrResults.output("log"),
+
 		"reports.spec": {
 			kind: "PColumn",
 			name: "mixcr.com/report",
@@ -140,6 +156,8 @@ self.body(func(inputs) {
 			]
 		},
 		"reports.data": mixcrResults.output("reports"),
+
+		"clns.data": mixcrResults.output("clns"),
 
 		"clones": clones.lockAndBuild()
 	}
