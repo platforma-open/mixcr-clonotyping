@@ -166,7 +166,7 @@ blockTest(
     const clonesPfColumnList = await ml.driverKit.pFrameDriver.listColumns(clonesPfHandle);
 
     // console.log(clonesPfColumnList);
-    expect(clonesPfColumnList).length.to.greaterThanOrEqual(1);
+    expect(clonesPfColumnList).length.to.greaterThanOrEqual(7);
 
     // console.dir(clonotypingStableState3, { depth: 8 });
   }

@@ -48,7 +48,7 @@ wf.body(func(args) {
 			preset: preset,
 			species: species
 		}),
-		presetContent: presetContent,
+		presetContent: specsContent,
 		pfconvParams: pfconvParams,
 		inputSpec: input.getFutureInputField("spec"),
 		inputData: input.getFutureInputField("data")

@@ -4,6 +4,7 @@ self := import("@milaboratory/tengo-sdk:tpl")
 ll := import("@milaboratory/tengo-sdk:ll")
 exec := import("@milaboratory/tengo-sdk:exec")
 assets := import("@milaboratory/tengo-sdk:assets")
+mixcr := import(":mixcr")
 
 self.validateInputs({
 	"__options__,closed": "",
@@ -27,15 +28,9 @@ self.body(func(inputs) {
 						printErrStreamToStdout().
 						arg("exportPreset").
 						arg("--preset-name").
-						arg(presetName).
-						arg("--append-export-clones-field").
-						arg("-vHit").
-						arg("--append-export-clones-field").
-						arg("-dHit").
-						arg("--append-export-clones-field").
-						arg("-jHit").
-						arg("--append-export-clones-field").
-						arg("-cHit")
+						arg(presetName)
+
+	mixcr.addAdditionalColumnArgs(mixcrExportPresetCmdBuilder)
 
 	if !is_undefined(species) {
 		mixcrExportPresetCmdBuilder.arg("--species").arg(species)
