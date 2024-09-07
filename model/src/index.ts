@@ -79,7 +79,6 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
   })
 
   .output('inputOptions', (ctx) => {
-    const spectFromPool = ctx.resultPool.getSpecsFromResultPool();
     return ctx.resultPool
       .getSpecsFromResultPool()
       .entries.filter((v) => {
