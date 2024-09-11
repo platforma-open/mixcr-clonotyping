@@ -13,7 +13,7 @@ catalog:
   '@milaboratory/sdk-ui': ^0.12.22
   '@milaboratory/sdk-test': ^1.5.5
 
-  '@milaboratory/tengo-sdk': ^1.2.1
+  '@milaboratory/tengo-sdk': ^1.2.2
   '@milaboratory/pframes-conv': ^0.4.25
 
   '@milaboratory/mixcr': 4.7.0-70-develop

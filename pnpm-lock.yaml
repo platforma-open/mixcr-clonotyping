@@ -52,8 +52,8 @@ catalogs:
       specifier: ^1.1.1
       version: 1.1.2
     '@milaboratory/tengo-sdk':
-      specifier: ^1.2.1
-      version: 1.2.1
+      specifier: ^1.2.2
+      version: 1.2.2
     '@milaboratory/tengo-template-builder':
       specifier: ^1.13.0
       version: 1.13.0
@@ -224,7 +224,7 @@ importers:
         version: 1.5.5(@milaboratory/sdk-model@1.3.9)(@types/node@22.0.0)
       '@milaboratory/tengo-sdk':
         specifier: 'catalog:'
-        version: 1.2.1
+        version: 1.2.2
       '@milaboratory/tengo-template-builder':
         specifier: 'catalog:'
         version: 1.13.0
@@ -934,6 +934,9 @@ packages:
 
   '@milaboratory/tengo-sdk@1.2.1':
     resolution: {integrity: sha512-6AYoSyjgzW7xXQd8E4ur1Cxh5/1Y817gDZa1tS2ZB4bVRQUf6K+A0BPRDGOxoNSyEq0SZginMiX5CMPccAUwwA==, tarball: https://npm.pkg.github.com/download/@milaboratory/tengo-sdk/1.2.1/e64e93dab69d543e23992f32017f7bbfb1a57c9b}
+
+  '@milaboratory/tengo-sdk@1.2.2':
+    resolution: {integrity: sha512-1JCWp2Bpt5Xt1YulfOP+LnaONznrmODPWJ+Olgq6zex0ho2Ds2rXHvglgf9suy1TDrow3jiUzMejxBihW8uHHg==, tarball: https://npm.pkg.github.com/download/@milaboratory/tengo-sdk/1.2.2/0f508db4cd03ef8f0a2b628da3533eb0b1da41aa}
 
   '@milaboratory/tengo-template-builder@1.13.0':
     resolution: {integrity: sha512-xokNWyp+IWC8JLIq6yUbLW1HA+qzLs+nEELv2LtHlUoKVH1JR5ju7fj5H4OeOgP9NIvKfjyzq4VpGjNSNa92Gw==, tarball: https://npm.pkg.github.com/download/@milaboratory/tengo-template-builder/1.13.0/e866030cc9ec80cee031541aa27bfd05f10d5221}
@@ -4140,6 +4143,8 @@ snapshots:
       - typescript
 
   '@milaboratory/tengo-sdk@1.2.1': {}
+
+  '@milaboratory/tengo-sdk@1.2.2': {}
 
   '@milaboratory/tengo-template-builder@1.13.0':
     dependencies:

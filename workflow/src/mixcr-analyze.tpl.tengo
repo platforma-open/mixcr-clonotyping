@@ -4,9 +4,9 @@ self := import("@milaboratory/tengo-sdk:tpl")
 pConstants := import("@milaboratory/tengo-sdk:pframes.constants")
 ll := import("@milaboratory/tengo-sdk:ll")
 exec := import("@milaboratory/tengo-sdk:exec")
-smart := import("@milaboratory/tengo-sdk:smart")
 assets := import("@milaboratory/tengo-sdk:assets")
 render := import("@milaboratory/tengo-sdk:render")
+pframes := import("@milaboratory/tengo-sdk:pframes")
 mixcr := import(":mixcr")
 
 json := import("json")
@@ -103,13 +103,10 @@ self.body(func(inputs) {
 
 		mixcrCmd := mixcrCmdBuilder.run()
 
-		reportsMap := smart.structBuilder(
-			pConstants.RTYPE_P_COLUMN_DATA_RESOURCE_MAP,
-			json.encode({ keyLength: 2 })
-		)
+		reportsMap := pframes.pColumnResourceMapDataBuilder( /* keyLength */ 2 )
 		for report in reports {
-			reportsMap.createInputField(json.encode([report.id, "json"])).set(mixcrCmd.getFile(report.fileJson))
-			reportsMap.createInputField(json.encode([report.id, "txt"])).set(mixcrCmd.getFile(report.fileTxt))
+			reportsMap.add([report.id, "json"], mixcrCmd.getFile(report.fileJson))
+			reportsMap.add([report.id, "txt"], mixcrCmd.getFile(report.fileTxt))
 		}
 
 		// converting clone tables to p columns
@@ -121,7 +118,7 @@ self.body(func(inputs) {
 		result := {
 			qc: mixcrCmd.getFile("result.qc.json"),
 			log: mixcrCmd.getStdoutStream(),
-			reports: reportsMap.lockAndBuild(),
+			reports: reportsMap.build(),
 			clns: mixcrCmd.getFile(clnsFileName),
 			clones: clones
 		}
