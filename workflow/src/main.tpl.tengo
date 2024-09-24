@@ -67,7 +67,7 @@ wf.body(func(args) {
 			spec: runMixcr.output("reports.spec"),
 			data: runMixcr.output("reports.data")
 		},
-		// clones: runMixcr.output("clones"),
+		clones: runMixcr.output("clones"),
 		clns: {
 			spec: runMixcr.output("clns.spec"),
 			data: runMixcr.output("clns.data")
@@ -78,7 +78,7 @@ wf.body(func(args) {
 		qc: pframes.exportColumnData(runMixcr.output("qc.data")),
 		reports: pframes.exportColumnData(runMixcr.output("reports.data")),
 		logs: runMixcr.output("logs.data"),
-		// clones: pframes.exportFrame(runMixcr.output("clones")),
+		clones: pframes.exportFrame(runMixcr.output("clones")),
 		clns: runMixcr.output("clns.data")
 	}
 
