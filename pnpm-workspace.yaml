@@ -6,7 +6,7 @@ packages:
   - test
 
 catalog:
-  '@milaboratory/tengo-template-builder': ^1.13.0
+  '@milaboratory/tengo-template-builder': ^1.14.3
   '@milaboratory/pl-block-tools': ^2.1.5
   '@milaboratory/block-builder': ^1.2.3
 

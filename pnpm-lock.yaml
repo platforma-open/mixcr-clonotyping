@@ -55,8 +55,8 @@ catalogs:
       specifier: ^1.2.2
       version: 1.2.2
     '@milaboratory/tengo-template-builder':
-      specifier: ^1.13.0
-      version: 1.13.0
+      specifier: ^1.14.3
+      version: 1.14.3
     '@vitejs/plugin-vue':
       specifier: ^5.1.3
       version: 5.1.3
@@ -227,7 +227,7 @@ importers:
         version: 1.2.2
       '@milaboratory/tengo-template-builder':
         specifier: 'catalog:'
-        version: 1.13.0
+        version: 1.14.3
       typescript:
         specifier: 'catalog:'
         version: 5.5.4
@@ -938,8 +938,8 @@ packages:
   '@milaboratory/tengo-sdk@1.2.2':
     resolution: {integrity: sha512-1JCWp2Bpt5Xt1YulfOP+LnaONznrmODPWJ+Olgq6zex0ho2Ds2rXHvglgf9suy1TDrow3jiUzMejxBihW8uHHg==, tarball: https://npm.pkg.github.com/download/@milaboratory/tengo-sdk/1.2.2/0f508db4cd03ef8f0a2b628da3533eb0b1da41aa}
 
-  '@milaboratory/tengo-template-builder@1.13.0':
-    resolution: {integrity: sha512-xokNWyp+IWC8JLIq6yUbLW1HA+qzLs+nEELv2LtHlUoKVH1JR5ju7fj5H4OeOgP9NIvKfjyzq4VpGjNSNa92Gw==, tarball: https://npm.pkg.github.com/download/@milaboratory/tengo-template-builder/1.13.0/e866030cc9ec80cee031541aa27bfd05f10d5221}
+  '@milaboratory/tengo-template-builder@1.14.3':
+    resolution: {integrity: sha512-ifPpcrLZEtVckpOhhgOl8kUleScIp9ndkE+49KRxBHR5zeSP/mOdsmujDz/bOEL0Q8BHmzsA47koI+gO605itA==, tarball: https://npm.pkg.github.com/download/@milaboratory/tengo-template-builder/1.14.3/753a41068f4b854d2fefab2224642ab682af491f}
     hasBin: true
 
   '@milaboratory/tengo-tester@1.4.1':
@@ -4146,7 +4146,7 @@ snapshots:
 
   '@milaboratory/tengo-sdk@1.2.2': {}
 
-  '@milaboratory/tengo-template-builder@1.13.0':
+  '@milaboratory/tengo-template-builder@1.14.3':
     dependencies:
       '@milaboratory/tengo-tester': 1.4.1
       '@oclif/core': 3.27.0

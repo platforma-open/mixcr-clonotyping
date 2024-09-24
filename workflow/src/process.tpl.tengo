@@ -177,6 +177,12 @@ self.body(func(inputs) {
 			domain: {
 				"pl7.app/blockId": blockId
 			},
+			annotations: {
+				"mixcr.com/assemblingFeature": "VDJRegion",
+				"mixcr.com/cellTags": "",
+				"mixcr.com/coveredFeaturesOnExport": "FR1,CDR1,FR2,CDR2,FR3,CDR3,FR4",
+				"mixcr.com/umiTags": "UMI"
+			},
 			valueType: "File",
 			axesSpec: [ inputSpec.axesSpec[0] ]
 		},
