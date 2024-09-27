@@ -8,8 +8,6 @@ import { AnyLogHandle } from '@milaboratory/sdk-ui';
 
 const app = useApp();
 
-app.createArgsModel();
-
 const inputOptions = computed(() =>
   app.getOutputFieldOkOptional("inputOptions")?.map((v) => ({
     text: v.label,

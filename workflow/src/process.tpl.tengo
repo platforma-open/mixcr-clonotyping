@@ -98,12 +98,12 @@ self.body(func(inputs) {
 		aggregationTargets,
 		false,
 		{
-			params: smart.createJsonResource({
+			params: {
 				preset: preset,
 				species: species,
 				fileExtension: fileExtension,
 				reports: reports
-			}),
+			},
 			presetContent: presetContent,
 			pfconvParams: purifiedPfconvCfg
 		}
