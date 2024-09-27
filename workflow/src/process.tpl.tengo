@@ -12,6 +12,7 @@ pUtil := import("@milaboratory/tengo-sdk:pframes.util")
 pConstants := import("@milaboratory/tengo-sdk:pframes.constants")
 
 json := import("json")
+text := import("text")
 
 mixcrAnalyzeTpl := assets.importTemplate(":mixcr-analyze")
 
@@ -178,10 +179,10 @@ self.body(func(inputs) {
 				"pl7.app/blockId": blockId
 			},
 			annotations: {
-				"mixcr.com/assemblingFeature": "VDJRegion",
-				"mixcr.com/cellTags": "",
-				"mixcr.com/coveredFeaturesOnExport": "FR1,CDR1,FR2,CDR2,FR3,CDR3,FR4",
-				"mixcr.com/umiTags": "UMI"
+				"mixcr.com/assemblingFeature": text.join(presetContent.assemblingFeature, ","),
+				"mixcr.com/cellTags": text.join(presetContent.cellTags, ","),
+				"mixcr.com/coveredFeaturesOnExport": text.join(presetContent.coveredFeaturesOnExport, ","),
+				"mixcr.com/umiTags": text.join(presetContent.umiTags, ",")
 			},
 			valueType: "File",
 			axesSpec: [ inputSpec.axesSpec[0] ]
