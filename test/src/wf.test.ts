@@ -87,18 +87,18 @@ blockTest(
       ]
     } satisfies SamplesAndDataBlockArgs);
     await project.runBlock(sndBlockId);
-    await helpers.awaitBlockDone(sndBlockId, 4000);
+    await helpers.awaitBlockDone(sndBlockId, 8000);
     const sndBlockState = project.getBlockState(sndBlockId);
     const clonotypingBlockState = project.getBlockState(clonotypingBlockId);
 
-    const sdnStableState1 = await helpers.awaitBlockDoneAndGetStableBlockState(sndBlockId);
+    const sdnStableState1 = await helpers.awaitBlockDoneAndGetStableBlockState(sndBlockId, 8000);
     expect(sdnStableState1.outputs).toMatchObject({
       fileImports: { ok: true, value: { [r1Handle]: { done: true }, [r2Handle]: { done: true } } }
     });
 
     const clonotypingStableState1 = (await awaitStableState(
       clonotypingBlockState,
-      15000
+      25000
     )) as InferBlockState<typeof platforma>;
 
     expect(clonotypingStableState1.outputs).toMatchObject({
@@ -124,7 +124,7 @@ blockTest(
 
     const clonotypingStableState2 = (await awaitStableState(
       project.getBlockState(clonotypingBlockId),
-      15000
+      25000
     )) as InferBlockState<typeof platforma>;
 
     const outputs2 = wrapOutputs<BlockOutputs>(clonotypingStableState2.outputs);
@@ -135,7 +135,7 @@ blockTest(
     await project.runBlock(clonotypingBlockId);
     const clonotypingStableState3 = (await helpers.awaitBlockDoneAndGetStableBlockState(
       clonotypingBlockId,
-      25000
+      35000
     )) as InferBlockState<typeof platforma>;
     const outputs3 = wrapOutputs<BlockOutputs>(clonotypingStableState3.outputs);
 

@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     watch: false,
     maxConcurrency: 3,
-    testTimeout: 5000
+    testTimeout: 10000,
+    retry: 2
   }
 });

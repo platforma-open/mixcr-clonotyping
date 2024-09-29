@@ -14,7 +14,7 @@ const testCases: TestCase[] = [
   {
     presetName: 'milab-human-dna-xcr-7genes-multiplex',
     check: (expect, config) => {
-      console.dir(config, { depth: 5 });
+      // console.dir(config, { depth: 5 });
       expect(config.axes).to.have.lengthOf(1);
       expect(config.axes.find((c: any) => c.column === 'cloneId')).toBeDefined();
       expect(config.columns.find((c: any) => c.column === 'readCount')).toBeDefined();
@@ -27,7 +27,7 @@ const testCases: TestCase[] = [
     presetName: '10x-sc-xcr-vdj',
     species: 'human',
     check: (expect, config) => {
-      console.dir(config, { depth: 5 });
+      // console.dir(config, { depth: 5 });
       expect(config.axes).to.have.lengthOf(2);
       expect(config.axes.find((c: any) => c.column === 'tagValueCELL')).toBeDefined();
       expect(config.axes.find((c: any) => c.column === 'cloneId')).toBeDefined();
@@ -54,7 +54,7 @@ const testCases: TestCase[] = [
   {
     presetName: 'cellecta-human-rna-xcr-umi-drivermap-air',
     check: (expect, config) => {
-      console.dir(config, { depth: 5 });
+      // console.dir(config, { depth: 5 });
       expect(config.axes).to.have.lengthOf(1);
       expect(config.axes.find((c: any) => c.column === 'cloneId')).toBeDefined();
       expect(config.columns.find((c: any) => c.column === 'uniqueMoleculeCount')).toBeDefined();
@@ -66,7 +66,7 @@ const testCases: TestCase[] = [
   {
     presetName: 'takara-human-rna-bcr-umi-smartseq',
     check: (expect, config) => {
-      console.dir(config, { depth: 5 });
+      // console.dir(config, { depth: 5 });
       expect(config.axes).to.have.lengthOf(1);
       expect(config.axes.find((c: any) => c.column === 'cloneId')).toBeDefined();
       expect(config.columns.find((c: any) => c.column === 'uniqueMoleculeCount')).toBeDefined();
@@ -92,7 +92,7 @@ const testCases: TestCase[] = [
     presetName: 'rna-seq',
     species: 'human',
     check: (expect, config) => {
-      console.dir(config, { depth: 5 });
+      // console.dir(config, { depth: 5 });
       expect(config.axes).to.have.lengthOf(1);
       expect(config.axes.find((c: any) => c.column === 'cloneId')).toBeDefined();
       expect(config.columns.find((c: any) => c.column === 'readCount')).toBeDefined();
@@ -106,7 +106,7 @@ const testCases: TestCase[] = [
     presetName: 'generic-single-cell-gex',
     species: 'human',
     check: (expect, config) => {
-      console.dir(config, { depth: 5 });
+      // console.dir(config, { depth: 5 });
       expect(config.axes).to.have.lengthOf(1);
       expect(config.columns.find((c: any) => c.column === 'readCount')).toBeDefined();
     }
