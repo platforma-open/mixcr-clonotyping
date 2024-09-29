@@ -1,4 +1,4 @@
-# @milaboratory/milaboratories.mixcr-clonotyping.workflow
+# @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
 ## 1.0.1
 

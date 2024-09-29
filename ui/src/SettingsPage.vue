@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { platforma, ProgressPrefix } from '@milaboratory/milaboratories.mixcr-clonotyping.model';
+import { platforma, ProgressPrefix } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
 import { useApp } from './app';
-import { PlDropdown, PlTextArea } from '@milaboratory/platforma-uikit';
+import { PlDropdown, PlTextArea } from '@milaboratories/uikit';
 import { computed, ref, watch } from 'vue';
 import { asyncComputed, useTimeoutPoll } from '@vueuse/core';
-import { AnyLogHandle } from '@milaboratory/sdk-ui';
+import { AnyLogHandle } from '@platforma-sdk/model';
 
 const app = useApp();
 

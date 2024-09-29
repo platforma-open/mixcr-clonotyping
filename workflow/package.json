@@ -1,7 +1,6 @@
 {
-  "name": "@milaboratory/milaboratories.mixcr-clonotyping.workflow",
+  "name": "@platforma-open/milaboratories.mixcr-clonotyping.workflow",
   "version": "1.0.1",
-  "type": "module",
   "description": "Tengo-based template",
   "//": {
     "build": "node ./scripts/build-static.mjs src/pfconv_params.json src/pfconv_params.lib.tengo && rm -rf dist && pl-tengo check && pl-tengo build"
@@ -12,11 +11,11 @@
     "test": "vitest"
   },
   "devDependencies": {
-    "@milaboratory/tengo-template-builder": "catalog:",
-    "@milaboratory/tengo-sdk": "catalog:",
-    "@milaboratory/pframes-conv": "catalog:",
+    "@platforma-sdk/tengo-builder": "catalog:",
+    "@platforma-sdk/workflow-tengo": "catalog:",
+    "@milaboratories/software-pframes-conv": "catalog:",
     "@milaboratory/mixcr": "catalog:",
-    "@milaboratory/sdk-test": "catalog:",
+    "@platforma-sdk/test": "catalog:",
     "vitest": "catalog:",
     "typescript": "catalog:"
   }

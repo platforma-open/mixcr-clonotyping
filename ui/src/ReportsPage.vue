@@ -4,7 +4,7 @@ import '@ag-grid-community/styles/ag-theme-quartz.css';
 
 import { AgGridVue } from '@ag-grid-community/vue3';
 
-import { platforma } from '@milaboratory/milaboratories.mixcr-clonotyping.model';
+import { platforma } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
 import { useApp } from './app';
 import { ShallowRef, computed, ref, shallowRef, watch } from 'vue';
 import {
@@ -14,9 +14,9 @@ import {
     GridReadyEvent,
     ModuleRegistry,
 } from '@ag-grid-community/core';
-import { BlobHandleAndSize } from '@milaboratory/sdk-ui';
+import { BlobHandleAndSize } from '@platforma-sdk/model';
 import { ClientSideRowModelModule } from '@ag-grid-community/client-side-row-model';
-import { ProgressPrefix } from '@milaboratory/milaboratories.mixcr-clonotyping.model';
+import { ProgressPrefix } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
 
 const app = useApp();
 

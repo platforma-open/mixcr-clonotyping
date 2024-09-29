@@ -6,7 +6,7 @@ import {
   isPColumn,
   isPColumnSpec,
   type InferOutputsType
-} from '@milaboratory/sdk-ui';
+} from '@platforma-sdk/model';
 import { BlockArgs, BlockArgsValid } from './args';
 import { parseResourceMap } from './helpers';
 import { ProgressPrefix } from './logs';
@@ -135,10 +135,9 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
     // if (sampleLabelsObj.obj.data.resourceType.name !== 'PColumn/Json') return undefined;
 
     return Object.fromEntries(
-      Object.entries(sampleLabelsObj.obj.data.getDataAsJson<Record<string, string>>()).map((e) => [
-        JSON.parse(e[0])[0],
-        e[1]
-      ])
+      Object.entries(
+        sampleLabelsObj.obj.data.getDataAsJson<{ data: Record<string, string> }>().data
+      ).map((e) => [JSON.parse(e[0])[0], e[1]])
     ) satisfies Record<string, string>;
   })
 

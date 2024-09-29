@@ -4,7 +4,7 @@
 
 import { z } from 'zod';
 import { base32Encode } from './base32-encode';
-import { PValueInt, TreeNodeAccessor } from '@milaboratory/sdk-ui';
+import { PValueInt, TreeNodeAccessor } from '@platforma-sdk/model';
 
 /** Number of raw bytes in the PlId. */
 export const PlIdBytes = 15;

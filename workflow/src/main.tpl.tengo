@@ -1,15 +1,15 @@
-wf := import("@milaboratory/tengo-sdk:workflow")
+wf := import("@platforma-sdk/workflow-tengo:workflow")
 
-render := import("@milaboratory/tengo-sdk:render")
+render := import("@platforma-sdk/workflow-tengo:render")
 
-maps := import("@milaboratory/tengo-sdk:maps")
-ll := import("@milaboratory/tengo-sdk:ll")
-assets := import("@milaboratory/tengo-sdk:assets")
-smart := import("@milaboratory/tengo-sdk:smart")
-file := import("@milaboratory/tengo-sdk:file")
-llPFrames := import("@milaboratory/tengo-sdk:pframes.ll")
-pframes := import("@milaboratory/tengo-sdk:pframes")
-exec := import("@milaboratory/tengo-sdk:exec")
+maps := import("@platforma-sdk/workflow-tengo:maps")
+ll := import("@platforma-sdk/workflow-tengo:ll")
+assets := import("@platforma-sdk/workflow-tengo:assets")
+smart := import("@platforma-sdk/workflow-tengo:smart")
+file := import("@platforma-sdk/workflow-tengo:file")
+llPFrames := import("@platforma-sdk/workflow-tengo:pframes.ll")
+pframes := import("@platforma-sdk/workflow-tengo:pframes")
+exec := import("@platforma-sdk/workflow-tengo:exec")
 
 json := import("json")
 

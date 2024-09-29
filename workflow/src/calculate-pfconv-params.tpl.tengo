@@ -1,6 +1,6 @@
 // calculate-pfconv-params
-self := import("@milaboratory/tengo-sdk:tpl")
-// validation := import("@milaboratory/tengo-sdk:validation")
+self := import("@platforma-sdk/workflow-tengo:tpl")
+// validation := import("@platforma-sdk/workflow-tengo:validation")
 
 pfconvParamsLib := import(":pfconv_params")
 

@@ -1,15 +1,15 @@
 // process
 
-self := import("@milaboratory/tengo-sdk:tpl")
+self := import("@platforma-sdk/workflow-tengo:tpl")
 
-ll := import("@milaboratory/tengo-sdk:ll")
-assets := import("@milaboratory/tengo-sdk:assets")
-pframes := import("@milaboratory/tengo-sdk:pframes")
-smart := import("@milaboratory/tengo-sdk:smart")
-file := import("@milaboratory/tengo-sdk:file")
-llPFrames := import("@milaboratory/tengo-sdk:pframes.ll")
-pUtil := import("@milaboratory/tengo-sdk:pframes.util")
-pConstants := import("@milaboratory/tengo-sdk:pframes.constants")
+ll := import("@platforma-sdk/workflow-tengo:ll")
+assets := import("@platforma-sdk/workflow-tengo:assets")
+pframes := import("@platforma-sdk/workflow-tengo:pframes")
+smart := import("@platforma-sdk/workflow-tengo:smart")
+file := import("@platforma-sdk/workflow-tengo:file")
+llPFrames := import("@platforma-sdk/workflow-tengo:pframes.ll")
+pUtil := import("@platforma-sdk/workflow-tengo:pframes.util")
+pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 
 json := import("json")
 text := import("text")

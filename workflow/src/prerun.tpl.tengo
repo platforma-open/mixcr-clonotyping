@@ -1,9 +1,9 @@
 // pre-run
 
-wf := import("@milaboratory/tengo-sdk:workflow")
-render := import("@milaboratory/tengo-sdk:render")
-ll := import("@milaboratory/tengo-sdk:ll")
-assets := import("@milaboratory/tengo-sdk:assets")
+wf := import("@platforma-sdk/workflow-tengo:workflow")
+render := import("@platforma-sdk/workflow-tengo:render")
+ll := import("@platforma-sdk/workflow-tengo:ll")
+assets := import("@platforma-sdk/workflow-tengo:assets")
 
 listPresetsTpl := assets.importTemplate(":list-presets")
 getPresetTpl := assets.importTemplate(":get-preset")

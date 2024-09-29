@@ -1,9 +1,9 @@
 // get preset
 
-self := import("@milaboratory/tengo-sdk:tpl")
-ll := import("@milaboratory/tengo-sdk:ll")
-exec := import("@milaboratory/tengo-sdk:exec")
-assets := import("@milaboratory/tengo-sdk:assets")
+self := import("@platforma-sdk/workflow-tengo:tpl")
+ll := import("@platforma-sdk/workflow-tengo:ll")
+exec := import("@platforma-sdk/workflow-tengo:exec")
+assets := import("@platforma-sdk/workflow-tengo:assets")
 mixcr := import(":mixcr")
 
 self.validateInputs({

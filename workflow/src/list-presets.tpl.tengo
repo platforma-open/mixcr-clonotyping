@@ -1,10 +1,10 @@
 // list presets
 
-self := import("@milaboratory/tengo-sdk:tpl")
-ll := import("@milaboratory/tengo-sdk:ll")
-exec := import("@milaboratory/tengo-sdk:exec")
-file := import("@milaboratory/tengo-sdk:file")
-assets := import("@milaboratory/tengo-sdk:assets")
+self := import("@platforma-sdk/workflow-tengo:tpl")
+ll := import("@platforma-sdk/workflow-tengo:ll")
+exec := import("@platforma-sdk/workflow-tengo:exec")
+file := import("@platforma-sdk/workflow-tengo:file")
+assets := import("@platforma-sdk/workflow-tengo:assets")
 
 self.defineOutputs("presets")
 

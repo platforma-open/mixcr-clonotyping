@@ -1,4 +1,4 @@
-import { awaitStableState, tplTest, ML } from '@milaboratory/sdk-test';
+import { awaitStableState, tplTest, ML } from '@platforma-sdk/test';
 import { ExpectStatic } from 'vitest';
 
 type Request = {

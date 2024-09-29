@@ -1,4 +1,4 @@
-# @milaboratory/milaboratories.mixcr-clonotyping.test
+# @platforma-open/milaboratories.mixcr-clonotyping.test
 
 ## 1.0.1
 

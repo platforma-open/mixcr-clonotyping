@@ -1,25 +1,26 @@
 {
-  "name": "@milaboratory/milaboratories.mixcr-clonotyping",
+  "name": "@platforma-open/milaboratories.mixcr-clonotyping",
   "version": "1.0.1",
   "scripts": {
     "pretty": "prettier --write \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json,vue}\"",
-    "build": "rm -rf ./block-pack && block-tools pack"
+    "build": "rm -rf ./block-pack && block-tools pack",
+    "prepublishOnly": "block-tools pack && block-tools publish -r 's3://milab-euce1-prod-pkgs-s3-block-registry/pub/releases/?region=eu-central-1'"
   },
   "files": [
     "index.d.ts",
     "index.js"
   ],
   "dependencies": {
-    "@milaboratory/sdk-ui": "catalog:",
-    "@milaboratory/milaboratories.mixcr-clonotyping.workflow": "workspace:*",
-    "@milaboratory/milaboratories.mixcr-clonotyping.model": "workspace:*",
-    "@milaboratory/milaboratories.mixcr-clonotyping.ui": "workspace:*"
+    "@platforma-sdk/model": "catalog:",
+    "@platforma-open/milaboratories.mixcr-clonotyping.workflow": "workspace:*",
+    "@platforma-open/milaboratories.mixcr-clonotyping.model": "workspace:*",
+    "@platforma-open/milaboratories.mixcr-clonotyping.ui": "workspace:*"
   },
   "block": {
     "components": {
-      "workflow": "@milaboratory/milaboratories.mixcr-clonotyping.workflow/dist/tengo/tpl/main.plj.gz",
-      "model": "@milaboratory/milaboratories.mixcr-clonotyping.model/dist/model.json",
-      "ui": "@milaboratory/milaboratories.mixcr-clonotyping.ui/dist"
+      "workflow": "@platforma-open/milaboratories.mixcr-clonotyping.workflow/dist/tengo/tpl/main.plj.gz",
+      "model": "@platforma-open/milaboratories.mixcr-clonotyping.model/dist/model.json",
+      "ui": "@platforma-open/milaboratories.mixcr-clonotyping.ui/dist"
     },
     "meta": {
       "title": "MiXCR Clonotyping",
@@ -39,34 +40,7 @@
     }
   },
   "devDependencies": {
-    "@milaboratory/pl-block-tools": "catalog:",
+    "@platforma-sdk/block-tools": "catalog:",
     "@changesets/cli": "catalog:"
-  },
-  "//": {
-    "pnpm": {
-      "overrides": {
-        "@milaboratory/pl-middle-layer": "file:/Volumes/Data/Projects/MiLaboratory/platforma/ts-pl-middle-layer/milaboratory-pl-middle-layer-1.9.30.tgz"
-      }
-    },
-    "pnpm1": {
-      "overrides": {
-        "@milaboratory/pl-middle-layer": "1.9.30",
-        "@milaboratory/tengo-sdk": "file:/Volumes/Data/Projects/MiLaboratory/blocks-beta/tengo-sdk/milaboratory-tengo-sdk-1.0.14.tgz",
-        "@milaboratory/tengo-template-builder": "file:/Volumes/Data/Projects/MiLaboratory/blocks-beta/tengo-template-builder"
-      }
-    },
-    "pnpm2": {
-      "overrides": {
-        "@milaboratory/tengo-sdk": "file:/Volumes/Data/Projects/MiLaboratory/blocks-beta/tengo-sdk",
-        "@milaboratory/pl-middle-layer": "file:/Volumes/Data/Projects/MiLaboratory/platforma/ts-pl-middle-layer",
-        "@milaboratory/sdk-ui": "file:/Volumes/Data/Projects/MiLaboratory/platforma/ts-sdk-ui",
-        "@milaboratory/sdk-test": "file:/Volumes/Data/Projects/MiLaboratory/platforma/ts-sdk-test",
-        "@milaboratory/sdk-vue": "file:/Volumes/Data/Projects/MiLaboratory/platforma/sdk-vue",
-        "@milaboratory/milaboratories.samples-and-data.workflow": "file:/Volumes/Data/Projects/MiLaboratory/blocks-beta/block-samples-and-data/workflow"
-      }
-    }
-  },
-  "pnpm": {
-    "overrides": {}
   }
 }

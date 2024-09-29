@@ -1,4 +1,4 @@
-import { BlockArgs } from '@milaboratory/milaboratories.mixcr-clonotyping.model';
+import { BlockArgs } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
 import { useApp } from './app';
 import { DeepReadonly, Ref, ref, watch } from 'vue';
 

@@ -1,5 +1,5 @@
-import { platforma } from '@milaboratory/milaboratories.mixcr-clonotyping.model';
-import { defineApp } from '@milaboratory/sdk-vue';
+import { platforma } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
+import { defineApp } from '@platforma-sdk/ui-vue';
 import SettingsPage from './SettingsPage.vue';
 import ReportsPage from './ReportsPage.vue';
 

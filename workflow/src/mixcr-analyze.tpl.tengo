@@ -1,12 +1,12 @@
 // mixcr analyze
 
-self := import("@milaboratory/tengo-sdk:tpl")
-pConstants := import("@milaboratory/tengo-sdk:pframes.constants")
-ll := import("@milaboratory/tengo-sdk:ll")
-exec := import("@milaboratory/tengo-sdk:exec")
-assets := import("@milaboratory/tengo-sdk:assets")
-render := import("@milaboratory/tengo-sdk:render")
-pframes := import("@milaboratory/tengo-sdk:pframes")
+self := import("@platforma-sdk/workflow-tengo:tpl")
+pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
+ll := import("@platforma-sdk/workflow-tengo:ll")
+exec := import("@platforma-sdk/workflow-tengo:exec")
+assets := import("@platforma-sdk/workflow-tengo:assets")
+render := import("@platforma-sdk/workflow-tengo:render")
+pframes := import("@platforma-sdk/workflow-tengo:pframes")
 mixcr := import(":mixcr")
 
 json := import("json")

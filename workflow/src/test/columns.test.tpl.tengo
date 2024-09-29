@@ -1,8 +1,8 @@
 // columns-test
 
-self := import("@milaboratory/tengo-sdk:tpl")
-assets := import("@milaboratory/tengo-sdk:assets")
-render := import("@milaboratory/tengo-sdk:render")
+self := import("@platforma-sdk/workflow-tengo:tpl")
+assets := import("@platforma-sdk/workflow-tengo:assets")
+render := import("@platforma-sdk/workflow-tengo:render")
 
 getPresetTpl := assets.importTemplate(":get-preset")
 calculateColumnsParamsTpl := assets.importTemplate(":calculate-pfconv-params")
