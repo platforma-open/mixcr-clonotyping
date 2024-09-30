@@ -55,6 +55,7 @@ self.body(func(inputs) {
 	if inputDataMeta.keyLength == 1 {
 		mixcrCmdBuilder := exec.builder().
 			printErrStreamToStdout().
+			secret("MI_LICENSE", "MI_LICENSE").
 			env("MI_PROGRESS_PREFIX", progressPrefix).
 			software(mixcrSw).
 			arg("analyze")

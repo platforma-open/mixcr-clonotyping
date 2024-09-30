@@ -13,6 +13,7 @@ mixcrSw := assets.importSoftware("@milaboratory/mixcr:main")
 self.body(func(inputs) {
 	listPresets := exec.builder().
 		software(mixcrSw).
+		secret("MI_LICENSE", "MI_LICENSE").
 		arg("listPresetSpecificationsForUI").
 		arg("presets.json").
 		inUiQueue().
