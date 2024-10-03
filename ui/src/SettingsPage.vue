@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { platforma, ProgressPrefix } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
 import { useApp } from './app';
-import { PlDropdown, PlTextArea } from '@milaboratories/uikit';
+import { PlDropdown, PlTextArea, PlBlockPage } from '@platforma-sdk/ui-vue';
 import { computed, ref, watch } from 'vue';
 import { asyncComputed, useTimeoutPoll } from '@vueuse/core';
 import { AnyLogHandle } from '@platforma-sdk/model';
@@ -146,13 +146,13 @@ const speciesOptions = [
 </script>
 
 <template>
-  <div class="container">
+  <PlBlockPage>
     <pl-dropdown :options="inputOptions ?? []" v-model="args.model.input" label="Select dataset" clearable />
     <pl-dropdown :options="presetOptions ?? []" v-model="args.model.preset" label="Select preset" clearable />
     <pl-dropdown v-if="needSpecies" :options="speciesOptions" v-model="args.model.species" label="Select species" />
     <pl-dropdown :options="sampleOptionsForLogs ?? []" v-model="currentLogKey" label="Show log for..." />
     <pl-text-area :model-value="logState?.lines" :rows="30" readonly />
-  </div>
+  </PlBlockPage>
 </template>
 
 <style lang="css">
