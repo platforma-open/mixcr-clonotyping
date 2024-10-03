@@ -1,5 +1,16 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 1.1.2
+
+### Patch Changes
+
+- 99b1a7f: SDK upgrade & secrets API usage in workflow
+- Updated dependencies [c680030]
+- Updated dependencies [99b1a7f]
+  - @platforma-open/milaboratories.mixcr-clonotyping.ui@1.1.1
+  - @platforma-open/milaboratories.mixcr-clonotyping.workflow@1.1.1
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.1.1
+
 ## 1.1.1
 
 ### Patch Changes
