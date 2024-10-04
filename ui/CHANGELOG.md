@@ -1,5 +1,14 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.1.1
+
+### Patch Changes
+
+- c680030: fix settings page layout
+- 99b1a7f: SDK upgrade & secrets API usage in workflow
+- Updated dependencies [99b1a7f]
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.1.1
+
 ## 1.1.0
 
 ### Minor Changes
