@@ -125,7 +125,7 @@ self.body(func(inputs) {
 			valueType: "File",
 			axesSpec: [
 				inputSpec.axesSpec[0]
-				]
+			]
 		},
 		"qc.data": mixcrResults.output("qc"),
 
@@ -138,7 +138,7 @@ self.body(func(inputs) {
 			valueType: "Log",
 			axesSpec: [
 				inputSpec.axesSpec[0]
-				]
+			]
 		},
 		"logs.data": mixcrResults.output("log"),
 

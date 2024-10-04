@@ -142,10 +142,7 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
   })
 
   .sections((ctx) => {
-    return [
-      { type: 'link', href: '/', label: 'Settings' },
-      { type: 'link', href: '/reports', label: 'Reports' }
-    ];
+    return [{ type: 'link', href: '/', label: 'Main' }];
   })
 
   .inputsValid((ctx) => BlockArgsValid.safeParse(ctx.args).success)
@@ -157,4 +154,6 @@ export type Href = InferHrefType<typeof platforma>;
 export * from './args';
 export * from './helpers';
 export * from './logs';
+export * from './qc';
+export * from './reports';
 export { BlockArgs };

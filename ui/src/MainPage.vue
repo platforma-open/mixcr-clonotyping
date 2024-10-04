@@ -4,9 +4,8 @@ import '@ag-grid-community/styles/ag-theme-quartz.css';
 
 import { AgGridVue } from '@ag-grid-community/vue3';
 
-import { platforma } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
 import { useApp } from './app';
-import { ShallowRef, computed, ref, shallowRef, watch } from 'vue';
+import { computed, reactive, shallowRef, watch } from 'vue';
 import {
     ColDef,
     GridApi,
@@ -14,10 +13,8 @@ import {
     GridReadyEvent,
     ModuleRegistry,
 } from '@ag-grid-community/core';
-import { BlobHandleAndSize } from '@platforma-sdk/model';
+import { ReactiveFileContent, PlBtnGhost, PlTextField, PlSlideModal, PlBlockPage } from '@platforma-sdk/ui-vue';
 import { ClientSideRowModelModule } from '@ag-grid-community/client-side-row-model';
-import { ProgressPrefix } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
-import { ChachedFileContent } from './file_content';
 
 const app = useApp();
 
@@ -27,31 +24,6 @@ const gridApi = shallowRef<GridApi<any>>();
 const onGridReady = (params: GridReadyEvent) => {
     gridApi.value = params.api;
 };
-
-const fileContent = new ChachedFileContent();
-
-
-function getFileContent(handle: FileHandle | undefined): ShallowRef<any> | undefined {
-    if (handle === undefined)
-        return undefined;
-    const refFromMap = fileContents.get(handle);
-    if (refFromMap !== undefined)
-        return refFromMap;
-    const newRef = shallowRef<any>();
-    fileContents.set(handle, newRef);
-
-    // Initiating actual upload
-    (async () => {
-        try {
-            const content = await platforma.blobDriver.getContent(handle);
-            newRef.value = JSON.parse(new TextDecoder().decode(content));
-        } catch (err: unknown) {
-            console.error(err);
-        }
-    })()
-
-    return newRef;
-}
 
 const columnDefs = computed<ColDef[]>(() => [
     {
@@ -70,71 +42,6 @@ const columnDefs = computed<ColDef[]>(() => [
         headerName: "Aligned"
     }
 ]);
-
-type MiXCRResult = {
-    label: string,
-    sampleId: string,
-    progress: string,
-    qc?: any,
-    reports: Record<string, any>
-}
-
-const results = computed<MiXCRResult[] | undefined>(() => {
-    const sampleLabels = app.getOutputFieldOkOptional("sampleLabels")
-
-    // keys for qc's are calculated as soon as input data have locked inputs
-    // (as early as possible to tell the list of samples we are analyzing here)
-    const qc = app.getOutputFieldOkOptional("qc");
-    if (qc === undefined)
-        return undefined;
-
-    const progress = app.getOutputFieldOkOptional("progress");
-    if (progress === undefined)
-        return undefined;
-
-    const doneRaw = app.getOutputFieldOkOptional("done");
-    if (doneRaw === undefined)
-        return undefined;
-    const done = new Set(doneRaw);
-
-    const resultsMap = new Map<string, MiXCRResult>()
-    for (const qcData of qc.data) {
-        const sampleId = qcData.key[0] as string;
-        const result: MiXCRResult = {
-            sampleId,
-            progress: "",
-            label: sampleLabels?.[sampleId] ?? sampleId,
-            reports: {}
-        }
-        resultsMap.set(sampleId, result);
-        const qcRef = getFileContent(qcData.value?.handle);
-        if (qcRef)
-            result.qc = qcRef.value
-    }
-
-    for (const p of progress.data) {
-        const sampleId = p.key[0] as string;
-        if (p?.value)
-            resultsMap.get(sampleId)!.progress = done.has(sampleId) ? "Done" : (p.value?.replace(ProgressPrefix, "") ?? "Not started")
-    }
-
-    const reports = app.getOutputFieldOkOptional("reports");
-
-    if (reports)
-        for (const report of reports.data) {
-            const sampleId = report.key[0] as string;
-            const reportId = report.key[1] as string;
-            if (report.key[2] !== "json")
-                continue;
-            const reportRef = getFileContent(report.value?.handle);
-            if (reportRef?.value)
-                resultsMap.get(sampleId)!.reports[reportId] = reportRef?.value
-        }
-
-    const results = [...resultsMap.values()];
-    results.sort((r1, r2) => r1.label.localeCompare(r2.label))
-    return results;
-});
 
 type MiXCRResultRow = {
     id: string,
@@ -159,16 +66,43 @@ watch(rowData, rd => {
 const gridOptions: GridOptions<MiXCRResultRow> = {
     getRowId: (row) => row.data.id,
 };
+
+const data = reactive({
+    settingsOpen: false,
+    value: ""
+})
+
 </script>
 
 <template>
-    <div class="container">
-        <div class="ag-theme-quartz" :style="{ height: '300px' }">
-            <ag-grid-vue :style="{ height: '100%' }" @grid-ready="onGridReady" :rowData="rowData"
-                :columnDefs="columnDefs" :grid-options="gridOptions">
-            </ag-grid-vue>
+    <PlBlockPage>
+        <template #title>Samples & Metadata</template>
+        <template #append>
+            <PlBtnGhost :icon="'settings-2'" @click.stop="() => data.settingsOpen = true">Clear</PlBtnGhost>
+        </template>
+        <div class="container">
+            <div class="ag-theme-quartz" :style="{ height: '300px' }">
+                <ag-grid-vue :style="{ height: '100%' }" @grid-ready="onGridReady" :rowData="rowData"
+                    :columnDefs="columnDefs" :grid-options="gridOptions">
+                </ag-grid-vue>
+            </div>
         </div>
-    </div>
+    </PlBlockPage>
+    <PlSlideModal v-model="data.settingsOpen" width="50%">
+        <template #title>Settings</template>
+        <PlTextField label="Paramter" v-model="data.value" />
+        <!-- <PlContainer :style="{ marginTop: '40px', marginLeft: '5px', marginRight: '5px' }">
+            <PlTextField label="Dataset Name" @update:model-value="v => dataset.update(ds => ds.label = v ?? '')"
+                :model-value="dataset.value.label" />
+            <PlCheckbox :model-value="dataset.value.content.gzipped"
+                @update:model-value="v => dataset.update(ds => ds.content.gzipped = v)">
+                Gzipped
+            </PlCheckbox>
+            <PlBtnGroup :model-value="currentReadIndices" @update:model-value="setReadIndices"
+                :options="readIndicesOptions" />
+            <PlBtnPrimary icon="clear" @click="() => data.deleteModalOpen = true">Delete Dataset</PlBtnPrimary>
+        </PlContainer> -->
+    </PlSlideModal>
 </template>
 
 <style lang="css">

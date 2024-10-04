@@ -2,12 +2,12 @@ import { platforma } from '@platforma-open/milaboratories.mixcr-clonotyping.mode
 import { defineApp } from '@platforma-sdk/ui-vue';
 import SettingsPage from './SettingsPage.vue';
 import ReportsPage from './ReportsPage.vue';
+import MainPage from './MainPage.vue';
 
 export const sdkPlugin = defineApp(platforma, () => {
   return {
     routes: {
-      '/': SettingsPage,
-      '/reports': ReportsPage
+      '/': MainPage
     }
   };
 });
