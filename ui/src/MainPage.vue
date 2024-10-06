@@ -5,7 +5,7 @@ import '@ag-grid-community/styles/ag-theme-quartz.css';
 import { AgGridVue } from '@ag-grid-community/vue3';
 
 import { useApp } from './app';
-import { computed, reactive, shallowRef, watch } from 'vue';
+import { computed, reactive, shallowRef, watch, watchEffect } from 'vue';
 import {
     ColDef,
     GridApi,
@@ -13,8 +13,13 @@ import {
     GridReadyEvent,
     ModuleRegistry,
 } from '@ag-grid-community/core';
-import { ReactiveFileContent, PlBtnGhost, PlTextField, PlSlideModal, PlBlockPage } from '@platforma-sdk/ui-vue';
+import { PlBtnGhost, PlSlideModal, PlBlockPage } from '@platforma-sdk/ui-vue';
 import { ClientSideRowModelModule } from '@ag-grid-community/client-side-row-model';
+import { MiXCRResult, MiXCRResultsFull } from './results';
+import SettingsPanel from './SettingsPanel.vue';
+import { PlId } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
+import AlignmentStatsCell from './AlignmentStatsCell.vue';
+import ProgressCell from './ProgressCell.vue';
 
 const app = useApp();
 
@@ -34,86 +39,80 @@ const columnDefs = computed<ColDef[]>(() => [
     {
         colId: 'progress',
         field: 'progress',
+        cellRenderer: 'ProgressCell',
         headerName: "Progress"
     },
     {
-        colId: 'aligned',
-        field: 'aligned',
-        headerName: "Aligned"
-    }
+        colId: 'alignmentStats',
+        field: 'alignReport',
+        cellRenderer: 'AlignmentStatsCell',
+        headerName: "Alignments"
+    },
 ]);
 
-type MiXCRResultRow = {
-    id: string,
-    label: string,
-    progress: string,
-    aligned?: number,
-}
-
-const rowData = computed<MiXCRResultRow[] | undefined>(() =>
-    results?.value?.map(r => ({
-        id: r.sampleId,
-        label: r.label,
-        progress: r.progress,
-        aligned: r?.reports?.["align"]?.["aligned"] as number
-    }))
-);
-
-watch(rowData, rd => {
+watch(MiXCRResultsFull, rd => {
     console.dir(rd, { depth: 5 })
 }, { immediate: true })
 
-const gridOptions: GridOptions<MiXCRResultRow> = {
-    getRowId: (row) => row.data.id,
+const gridOptions: GridOptions<MiXCRResult> = {
+    getRowId: (row) => row.data.sampleId,
+    components: {
+        AlignmentStatsCell,
+        ProgressCell
+    }
 };
 
-const data = reactive({
-    settingsOpen: false,
-    value: ""
+const data = reactive<{
+    settingsOpen: boolean,
+    sampleReportOpen: boolean,
+    selectedSample: PlId | undefined
+}>({
+    settingsOpen: app.outputValues.started === false,
+    sampleReportOpen: false,
+    selectedSample: undefined,
+})
+
+watchEffect(() => { if (data.settingsOpen) data.selectedSample = undefined; })
+
+watch(computed(() => app.outputValues.started), (newVal, oldVal) => {
+    if (oldVal === false && newVal === true)
+        data.settingsOpen = false;
+    if (oldVal === true && newVal === false)
+        data.settingsOpen = true;
+})
+
+watch(computed(() => data.selectedSample), (newVal, oldVal) => {
+    if (oldVal === false && newVal === true)
+        data.settingsOpen = false;
+    if (oldVal === true && newVal === false)
+        data.settingsOpen = true;
 })
 
 </script>
 
 <template>
     <PlBlockPage>
-        <template #title>Samples & Metadata</template>
+        <template #title>MiXCR Clonotyping</template>
         <template #append>
-            <PlBtnGhost :icon="'settings-2'" @click.stop="() => data.settingsOpen = true">Clear</PlBtnGhost>
+            <PlBtnGhost :icon="'settings-2'" @click.stop="() => data.settingsOpen = true">Settings</PlBtnGhost>
         </template>
-        <div class="container">
-            <div class="ag-theme-quartz" :style="{ height: '300px' }">
-                <ag-grid-vue :style="{ height: '100%' }" @grid-ready="onGridReady" :rowData="rowData"
-                    :columnDefs="columnDefs" :grid-options="gridOptions">
-                </ag-grid-vue>
-            </div>
+        <div v-if="MiXCRResultsFull !== undefined" class="ag-theme-quartz" :style="{ flex: 1 }">
+            <ag-grid-vue :style="{ height: '100%' }" @grid-ready="onGridReady" :rowData="MiXCRResultsFull"
+                :columnDefs="columnDefs" :grid-options="gridOptions">
+            </ag-grid-vue>
+        </div>
+        <div v-else :style="{ flex: 1 }">
+            Not started
         </div>
     </PlBlockPage>
-    <PlSlideModal v-model="data.settingsOpen" width="50%">
+    <PlSlideModal v-model="data.settingsOpen" width="50%" :shadow="true"
+        :close-on-outside-click="app.outputValues.started">
         <template #title>Settings</template>
-        <PlTextField label="Paramter" v-model="data.value" />
-        <!-- <PlContainer :style="{ marginTop: '40px', marginLeft: '5px', marginRight: '5px' }">
-            <PlTextField label="Dataset Name" @update:model-value="v => dataset.update(ds => ds.label = v ?? '')"
-                :model-value="dataset.value.label" />
-            <PlCheckbox :model-value="dataset.value.content.gzipped"
-                @update:model-value="v => dataset.update(ds => ds.content.gzipped = v)">
-                Gzipped
-            </PlCheckbox>
-            <PlBtnGroup :model-value="currentReadIndices" @update:model-value="setReadIndices"
-                :options="readIndicesOptions" />
-            <PlBtnPrimary icon="clear" @click="() => data.deleteModalOpen = true">Delete Dataset</PlBtnPrimary>
-        </PlContainer> -->
+        <SettingsPanel />
+    </PlSlideModal>
+    <PlSlideModal v-model="data.selectedSample !== undefined" width="50%" :shadow="true"
+        :close-on-outside-click="app.outputValues.started">
+        <template #title>Settings</template>
+        <SettingsPanel />
     </PlSlideModal>
 </template>
-
-<style lang="css">
-button {
-    padding: 12px 0;
-}
-
-.container {
-    display: flex;
-    flex-direction: column;
-    max-width: 100%;
-    gap: 24px;
-}
-</style>

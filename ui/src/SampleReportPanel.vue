@@ -1,33 +1,13 @@
 <script setup lang="ts">
 import { platforma, ProgressPrefix } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
 import { useApp } from './app';
-import { PlDropdown, PlTextArea, PlBlockPage } from '@platforma-sdk/ui-vue';
+import { PlDropdown, PlTextArea, PlBlockPage, PlProgressBar } from '@platforma-sdk/ui-vue';
 import { computed, ref, watch } from 'vue';
-import { asyncComputed, useTimeoutPoll } from '@vueuse/core';
+import { useTimeoutPoll } from '@vueuse/core';
 import { AnyLogHandle } from '@platforma-sdk/model';
 
 const app = useApp();
 
-const inputOptions = computed(() =>
-  app.getOutputFieldOkOptional("inputOptions")?.map((v) => ({
-    text: v.label,
-    value: v.ref,
-  }))
-);
-
-const args = app.createArgsModel();
-
-const presets = computed(() => app.getOutputFieldOkOptional("presets"))
-
-const presetOptions = computed(() => {
-  return presets.value?.map(preset => ({ text: `${preset.label}${preset.vendor ? ' - ' + preset.vendor : ''}`, value: preset.presetName }))
-})
-
-const preset = computed(() => app.args.preset === undefined ? undefined : presets.value?.find(p => p.presetName === app.args.preset))
-const needSpecies = computed(() => preset.value === undefined ? undefined : (preset.value.requiredFlags.findIndex(f => f === 'species') >= 0))
-
-const progress = computed(() => app.getOutputFieldOkOptional("progress"))
-const sampleLabels = computed(() => app.getOutputFieldOkOptional("sampleLabels"))
 const done = computed(() => {
   const v = app.getOutputFieldOkOptional("done")
   if (v === undefined)
@@ -36,17 +16,17 @@ const done = computed(() => {
 })
 
 const currentLogKey = ref<string>("")
-const logs = computed(() => app.getOutputFieldOkOptional("logs"))
+const logs = computed(() => app.outputValues.logs)
 const sampleOptionsForLogs = computed(() => {
-  if (sampleLabels.value === undefined)
+  if (app.outputValues.sampleLabels === undefined)
     return undefined;
-  const entries = Object.entries(sampleLabels.value) as [string, string][];
+  const entries = Object.entries(app.outputValues.sampleLabels) as [string, string][];
   entries.sort((a, b) => a[1].localeCompare(b[1]))
   return entries.map(e => {
     const sampleId = e[0];
     const sampleLabel = e[1];
     // proegress value exists === analysis for sample was started
-    const started = progress.value?.data?.find(l => l.key[0] === sampleId && l.value !== undefined) !== undefined;
+    const started = app.outputValues.progress?.data?.find(l => l.key[0] === sampleId && l.value !== undefined) !== undefined;
     const finished = done.value?.has(sampleId) === true;
     const status = started ? finished ? " [Finished]" : " [Running]" : ""
     return {
@@ -120,50 +100,9 @@ watch(logHandle, (lh) => {
   }
 }, { immediate: true })
 
-//  = computed(() => {
-
-
-// })
-
-watch(needSpecies, ns => {
-  if (ns === false && // everething is loaded and we know that species is not specified as flag
-    args.model.species !== undefined)
-    args.model.species = undefined;
-
-  if (ns === true && // the opposite of the above
-    args.model.species === undefined)
-    args.model.species = "hsa";
-})
-
-const speciesOptions = [
-  { text: "Homo sapience", value: "hsa" },
-  { text: "Mus musculus", value: "mmu" },
-  { text: "Lama glama", value: "lama" },
-  { text: "Alpaca", value: "alpaca" },
-  { text: "Macaca fascicularis", value: "mfas" },
-];
-
 </script>
 
 <template>
-  <PlBlockPage>
-    <pl-dropdown :options="inputOptions ?? []" v-model="args.model.input" label="Select dataset" clearable />
-    <pl-dropdown :options="presetOptions ?? []" v-model="args.model.preset" label="Select preset" clearable />
-    <pl-dropdown v-if="needSpecies" :options="speciesOptions" v-model="args.model.species" label="Select species" />
-    <pl-dropdown :options="sampleOptionsForLogs ?? []" v-model="currentLogKey" label="Show log for..." />
-    <pl-text-area :model-value="logState?.lines" :rows="30" readonly />
-  </PlBlockPage>
+  <PlDropdown :options="sampleOptionsForLogs ?? []" v-model="currentLogKey" label="Show log for..." />
+  <PlTextArea :model-value="logState?.lines" :rows="30" readonly />
 </template>
-
-<style lang="css">
-button {
-  padding: 12px 0;
-}
-
-.container {
-  display: flex;
-  flex-direction: column;
-  max-width: 100%;
-  gap: 24px;
-}
-</style>

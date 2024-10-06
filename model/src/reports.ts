@@ -104,6 +104,15 @@ export const AlignReport = z.object({
 });
 export type AlignReport = z.infer<typeof AlignReport>;
 
+export function extractAlignmentChannels(report: AlignReport): [AlignmentChannel, number][] {
+  return (Object.entries(AlignmentChannelLabel) as [AlignmentChannel, string][]).map(
+    ([cId, cLabel]) => [
+      cId,
+      cId === 'Success' ? report.aligned : report.notAlignedReasons[cId] ?? 0
+    ]
+  );
+}
+
 const RoundedToInt = z.number().transform((n) => Math.round(n));
 
 export const AssembleReport = z.object({
