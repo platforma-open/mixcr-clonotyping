@@ -10,6 +10,9 @@ export const ImmuneChain = z.union([
   z.literal('IGL')
 ]);
 
+// Fixed ordering for immune chains
+export const ImmuneChains = ImmuneChain.options.map((o) => o.value);
+
 export const NotAlignedReason = z.union([
   z.literal('NoHits'),
   z.literal('FailedAfterAOverlap'),
@@ -35,7 +38,19 @@ export const AlignmentChannel = z.union([
 ]);
 export type AlignmentChannel = z.infer<typeof AlignmentChannel>;
 
-export const AlignmentChannelLabel = {
+/* Ordered list of channels */
+export const AlignmentChannels = [
+  'Success',
+  'NoHits',
+  'NoCDR3Parts',
+  'NoVHits',
+  'NoJHits',
+  'VAndJOnDifferentTargets',
+  'LowTotalScore',
+  'NoBarcode'
+] satisfies AlignmentChannel[];
+
+export const AlignmentChannelLabels = {
   Success: 'Successfully aligned',
   NoHits: 'No hits (not TCR/IG?)',
   FailedAfterAOverlap: 'Failed after alignment-overlap',
@@ -105,12 +120,10 @@ export const AlignReport = z.object({
 export type AlignReport = z.infer<typeof AlignReport>;
 
 export function extractAlignmentChannels(report: AlignReport): [AlignmentChannel, number][] {
-  return (Object.entries(AlignmentChannelLabel) as [AlignmentChannel, string][]).map(
-    ([cId, cLabel]) => [
-      cId,
-      cId === 'Success' ? report.aligned : report.notAlignedReasons[cId] ?? 0
-    ]
-  );
+  return AlignmentChannels.map((cId) => [
+    cId,
+    cId === 'Success' ? report.aligned : report.notAlignedReasons[cId] ?? 0
+  ]);
 }
 
 const RoundedToInt = z.number().transform((n) => Math.round(n));

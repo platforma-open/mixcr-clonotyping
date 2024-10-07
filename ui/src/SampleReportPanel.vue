@@ -8,6 +8,7 @@ import SampleReportPanelLogs from './SampleReportPanelLogs.vue';
 import { PlBtnGroup, SimpleOption } from '@platforma-sdk/ui-vue';
 import SampleReportPanelReports from './SampleReportPanelReports.vue';
 import SampleReportPanelQc from './SampleReportPanelQc.vue';
+import SampleReportPanelVisualReport from './SampleReportPanelVisualReport.vue';
 
 const sampleId = defineModel<PlId | undefined>()
 
@@ -18,7 +19,7 @@ const sampleData = computed(() => {
   return resultMap.value.get(sampleId.value);
 })
 
-type TabId = "qc" | "logs" | "reports";
+type TabId = "visualReport" | "qc" | "logs" | "reports";
 
 const data = reactive<{
   currentTab: TabId
@@ -27,7 +28,8 @@ const data = reactive<{
 })
 
 const tabOptions: SimpleOption<TabId>[] = [
-  { value: 'qc', text: 'QC' },
+  { value: 'visualReport', text: 'Visual Report' },
+  { value: 'qc', text: 'Quality Checks' },
   { value: 'logs', text: 'Log' },
   { value: 'reports', text: 'Reports' },
 ]
@@ -36,6 +38,7 @@ const tabOptions: SimpleOption<TabId>[] = [
 <template>
   <PlBtnGroup :options="tabOptions" v-model="data.currentTab" />
   <div v-if="sampleId !== undefined && sampleData !== undefined">
+    <SampleReportPanelVisualReport v-if="data.currentTab === 'visualReport'" :sample-data="sampleData" />
     <SampleReportPanelQc v-if="data.currentTab === 'qc'" :sample-data="sampleData" />
     <SampleReportPanelLogs v-else-if="data.currentTab === 'logs'" :sample-data="sampleData" />
     <SampleReportPanelReports v-else-if="data.currentTab === 'reports'" :sample-id="sampleId" />

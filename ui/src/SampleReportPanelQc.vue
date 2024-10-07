@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { useApp } from './app';
 import { MiXCRResult } from './results';
 
@@ -8,10 +9,12 @@ const props = defineProps<{
 
 const app = useApp();
 
+const qc = computed(() => props.sampleData.qc)
+
 </script>
 
 <template>
     <pre>
-        {{ props.sampleData.qc }}
+        {{ qc }}
     </pre>
 </template>

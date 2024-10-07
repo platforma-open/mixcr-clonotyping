@@ -4,7 +4,7 @@ import { computed } from 'vue';
 import { useApp } from './app';
 import { MiXCRResult } from './results';
 import { extractAlignmentChannels } from '@platforma-open/milaboratories.mixcr-clonotyping.model/src/reports';
-import { AlignmentChannelLabel } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
+import { AlignmentChannelLabels } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
 
 const app = useApp();
 
@@ -18,8 +18,8 @@ const dummyText = computed(() => {
     const alignmentChannels = extractAlignmentChannels(alignReport);
 
     // with human readable labels
-    // return alignmentChannels.map(([c, v]) => `${AlignmentChannelLabel[c]}: ${v}`).join(", ")
-    
+    // return alignmentChannels.map(([c, v]) => `${AlignmentChannelLabels[c]}: ${v}`).join(", ")
+
     return alignmentChannels.map(([c, v]) => `${c}: ${v}`).join(", ")
 })
 
