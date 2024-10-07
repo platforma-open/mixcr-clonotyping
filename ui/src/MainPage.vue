@@ -5,7 +5,7 @@ import '@ag-grid-community/styles/ag-theme-quartz.css';
 import { AgGridVue } from '@ag-grid-community/vue3';
 
 import { useApp } from './app';
-import { computed, reactive, shallowRef, watch, watchEffect } from 'vue';
+import { computed, reactive, shallowRef, watch } from 'vue';
 import {
     ColDef,
     GridApi,
@@ -25,7 +25,10 @@ import { refDebounced, whenever } from '@vueuse/core';
 
 const app = useApp();
 
-const result = refDebounced(MiXCRResultsFull, 300);
+// @TODO
+const result = refDebounced(MiXCRResultsFull, 100, {
+    maxWait: 200
+});
 
 const data = reactive<{
     settingsOpen: boolean,
@@ -64,13 +67,19 @@ const columnDefs = computed<ColDef[]>(() => [
         colId: 'progress',
         field: 'progress',
         cellRenderer: 'ProgressCell',
-        headerName: "Progress"
+        headerName: "Progress",
+        cellStyle: {
+            '--ag-cell-horizontal-padding': '0',
+            // '--ag-cell-horizontal-border': 'solid rgb(150, 150, 200);',
+            'border-width': '0'
+        }
     },
     {
         colId: 'alignmentStats',
         field: 'alignReport',
         cellRenderer: 'AlignmentStatsCell',
-        headerName: "Alignments"
+        headerName: "Alignments",
+        flex: 1
     },
 ]);
 
@@ -94,7 +103,7 @@ const gridOptions: GridOptions<MiXCRResult> = {
 
 <template>
     <PlBlockPage>
-        <template #title>MiXCR Clonotyping</template>
+        <template #title>MiXCR Clonotyping 14</template>
         <template #append>
             <PlBtnGhost :icon="'settings-2'" @click.stop="() => data.settingsOpen = true">Settings</PlBtnGhost>
         </template>
