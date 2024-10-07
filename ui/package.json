@@ -15,7 +15,6 @@
     "@ag-grid-community/vue3": "catalog:",
     "@milaboratories/helpers": "catalog:",
     "@platforma-open/milaboratories.mixcr-clonotyping.model": "workspace:*",
-    "@milaboratories/uikit": "catalog:",
     "@platforma-sdk/model": "catalog:",
     "@platforma-sdk/ui-vue": "catalog:",
     "utility-types": "catalog:",
@@ -27,6 +26,7 @@
     "@vitejs/plugin-vue": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
+    "vitest": "catalog:",
     "vue-tsc": "catalog:"
   }
 }

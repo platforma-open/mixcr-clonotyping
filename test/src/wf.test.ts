@@ -1,7 +1,10 @@
 import {
+  AlignReport,
+  AssembleReport,
   BlockArgs,
   BlockOutputs,
   platforma,
+  Qc,
   uniquePlId
 } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
 import { awaitStableState, blockTest } from '@platforma-sdk/test';
@@ -9,7 +12,6 @@ import { blockSpec as samplesAndDataBlockSpec } from '@platforma-open/milaborato
 import { BlockArgs as SamplesAndDataBlockArgs } from '@platforma-open/milaboratories.samples-and-data.model';
 import { blockSpec as myBlockSpec } from 'this-block';
 import { InferBlockState, fromPlRef, wrapOutputs } from '@platforma-sdk/model';
-import * as tp from 'node:timers/promises';
 
 blockTest('empty imputs', { timeout: 30000 }, async ({ rawPrj: project, ml, helpers, expect }) => {
   const blockId = await project.addBlock('Block', myBlockSpec);
@@ -143,23 +145,43 @@ blockTest(
 
     expect(outputs3.reports.isComplete).toEqual(true);
 
+    const qcEntry = outputs3.qc.data[0];
+    expect(qcEntry).toBeDefined();
+
     const alignJsonReportEntry = outputs3.reports.data.find(
       (e: any) => e.key[1] === 'align' && e.key[2] === 'json'
     );
-
-    expect(alignJsonReportEntry).toBeDefined();
-
-    const alignJsonReport = JSON.parse(
-      Buffer.from(
-        await ml.driverKit.blobDriver.getContent(alignJsonReportEntry!.value!.handle)
-      ).toString('utf8')
+    const assembleJsonReportEntry = outputs3.reports.data.find(
+      (e: any) => e.key[1] === 'assemble' && e.key[2] === 'json'
     );
 
-    // console.dir(alignJsonReport, { depth: 5 });
-    expect(alignJsonReport.aligned).toBeDefined();
-    expect(alignJsonReport.aligned).greaterThan(2);
+    expect(alignJsonReportEntry).toBeDefined();
+    expect(assembleJsonReportEntry).toBeDefined();
 
-    // console.dir(alignJsonReport, { depth: 5 });
+    const alignReport = AlignReport.parse(
+      JSON.parse(
+        Buffer.from(
+          await ml.driverKit.blobDriver.getContent(alignJsonReportEntry!.value!.handle)
+        ).toString('utf8')
+      )
+    );
+    const assembledReport = AssembleReport.parse(
+      JSON.parse(
+        Buffer.from(
+          await ml.driverKit.blobDriver.getContent(assembleJsonReportEntry!.value!.handle)
+        ).toString('utf8')
+      )
+    );
+
+    const qc = Qc.parse(
+      JSON.parse(
+        Buffer.from(await ml.driverKit.blobDriver.getContent(qcEntry!.value!.handle)).toString(
+          'utf8'
+        )
+      )
+    );
+
+    expect(alignReport.aligned).greaterThan(2);
 
     const clonesPfHandle = wrapOutputs(clonotypingStableState3.outputs).clones!;
 
@@ -173,9 +195,6 @@ blockTest(
       }
     });
 
-    // console.log(clonesPfColumnList);
     expect(clonesPfColumnList).length.to.greaterThanOrEqual(7);
-
-    // console.dir(clonotypingStableState3, { depth: 8 });
   }
 );

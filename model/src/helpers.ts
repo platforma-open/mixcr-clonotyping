@@ -53,8 +53,9 @@ export type PColumnResourceMapData<T> = {
 function populateResourceMapData<T>(
   acc: TreeNodeAccessor | undefined,
   resourceParser: (acc: TreeNodeAccessor) => T | undefined,
-  data: PColumnResourceMapEntry<T>[],
-  keyPrefix: PColumnKey = []
+  data: PColumnResourceMapEntry<T | undefined>[],
+  keyPrefix: PColumnKey = [],
+  addEntriesWithNoData: boolean
 ): boolean {
   if (acc === undefined) return false;
   switch (acc.resourceType.name) {
@@ -62,13 +63,10 @@ function populateResourceMapData<T>(
       let isComplete = acc.getInputsLocked();
       for (const keyStr of acc.listInputFields()) {
         const value = acc.resolve({ field: keyStr, assertFieldType: 'Input' });
-        if (value === undefined) isComplete = false;
-        else {
-          const key = [...keyPrefix, ...JSON.parse(keyStr)] as PColumnKey;
-          const converted = resourceParser(value);
-          if (converted === undefined) isComplete = false;
-          else data.push({ key, value: converted });
-        }
+        const key = [...keyPrefix, ...JSON.parse(keyStr)] as PColumnKey;
+        const converted = value === undefined ? undefined : resourceParser(value);
+        if (converted === undefined) isComplete = false;
+        if (converted !== undefined || addEntriesWithNoData) data.push({ key, value: converted });
       }
       return isComplete;
     }
@@ -79,7 +77,9 @@ function populateResourceMapData<T>(
         if (value === undefined) isComplete = false;
         else {
           const key = [...keyPrefix, ...JSON.parse(keyStr)] as PColumnKey;
-          isComplete = isComplete && populateResourceMapData(value, resourceParser, data, key);
+          isComplete =
+            isComplete &&
+            populateResourceMapData(value, resourceParser, data, key, addEntriesWithNoData);
         }
       }
       return isComplete;
@@ -91,9 +91,20 @@ function populateResourceMapData<T>(
 
 export function parseResourceMap<T>(
   acc: TreeNodeAccessor | undefined,
-  resourceParser: (acc: TreeNodeAccessor) => T | undefined
-): PColumnResourceMapData<NonNullable<T>> {
-  const data: PColumnResourceMapEntry<NonNullable<T>>[] = [];
-  const isComplete = populateResourceMapData(acc, resourceParser, data, []);
+  resourceParser: (acc: TreeNodeAccessor) => T | undefined,
+  addEntriesWithNoData: false
+): PColumnResourceMapData<NonNullable<T>>;
+export function parseResourceMap<T>(
+  acc: TreeNodeAccessor | undefined,
+  resourceParser: (acc: TreeNodeAccessor) => T | undefined,
+  addEntriesWithNoData: true
+): PColumnResourceMapData<T | undefined>;
+export function parseResourceMap<T>(
+  acc: TreeNodeAccessor | undefined,
+  resourceParser: (acc: TreeNodeAccessor) => T | undefined,
+  addEntriesWithNoData: boolean = false
+): PColumnResourceMapData<T | undefined> {
+  const data: PColumnResourceMapEntry<T | undefined>[] = [];
+  const isComplete = populateResourceMapData(acc, resourceParser, data, [], addEntriesWithNoData);
   return { isComplete, data };
 }

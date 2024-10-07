@@ -2,26 +2,25 @@ packages:
   - workflow
   - model
   - ui
-  - .
   - test
 
 catalog:
-  '@platforma-sdk/tengo-builder': ^1.14.11
-  '@platforma-sdk/block-tools': ^2.3.4
+  '@platforma-sdk/tengo-builder': ^1.14.13
+  '@platforma-sdk/block-tools': ^2.3.10
 
   '@platforma-sdk/model': ^1.2.28
-  '@platforma-sdk/test': ^1.5.24
+  '@platforma-sdk/test': ^1.5.37
 
-  '@platforma-sdk/workflow-tengo': ^1.2.9
+  '@platforma-sdk/workflow-tengo': ^1.2.10
 
   '@milaboratories/uikit': ^1.2.7
   '@platforma-sdk/ui-vue': ^1.3.11
-  '@milaboratories/helpers': ^1.6.2
+  '@milaboratories/helpers': ^1.6.5
 
-  '@milaboratories/software-pframes-conv': ^1.5.6
+  '@milaboratories/software-pframes-conv': ^1.5.10
   '@milaboratory/mixcr': 4.7.0-70-develop
 
-  'vue': ^3.5.10
+  'vue': ^3.5.11
   'vue-tsc': ^2.1.6
 
   'zod': ^3.23.8
@@ -29,21 +28,22 @@ catalog:
 
   'typescript': ~5.5.4
   'tsup': ~8.1.2
+  'turbo': ^2.1.3
 
   'vite': ^5.4.8
-  'vitest': ^2.1.1
+  'vitest': ^2.1.2
   '@vitejs/plugin-vue': ^5.1.4
 
   '@vueuse/core': ^11.1.0
 
-  '@ag-grid-community/core': ^32.2.1
-  '@ag-grid-community/client-side-row-model': ^32.2.1
-  '@ag-grid-community/vue3': ^32.2.1
-  '@ag-grid-community/styles': ^32.2.1
+  '@ag-grid-community/core': ^32.2.2
+  '@ag-grid-community/client-side-row-model': ^32.2.2
+  '@ag-grid-community/vue3': ^32.2.2
+  '@ag-grid-community/styles': ^32.2.2
 
-  '@changesets/cli': ^2.27.8
+  '@changesets/cli': ^2.27.9
 
   # other blocks used in tests
 
-  '@platforma-open/milaboratories.samples-and-data': ^1.3.2
-  '@platforma-open/milaboratories.samples-and-data.model': ^1.3.0
+  '@platforma-open/milaboratories.samples-and-data': ^1.3.3
+  '@platforma-open/milaboratories.samples-and-data.model': ^1.3.1

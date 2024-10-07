@@ -30,21 +30,25 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
   )
 
   .output('qc', (ctx) =>
-    parseResourceMap(ctx.outputs?.resolve({ field: 'qc', assertFieldType: 'Input' }), (acc) =>
-      acc.getFileHandle()
+    parseResourceMap(
+      ctx.outputs?.resolve({ field: 'qc', assertFieldType: 'Input' }),
+      (acc) => acc.getFileHandle(),
+      true
     )
   )
 
   .output('reports', (ctx) =>
     parseResourceMap(ctx.outputs?.resolve({ field: 'reports', assertFieldType: 'Input' }), (acc) =>
-      acc.getFileHandle()
+      acc.getFileHandle(),
+  false
     )
   )
 
   .output('logs', (ctx) => {
     return ctx.outputs !== undefined
       ? parseResourceMap(ctx.outputs?.resolve({ field: 'logs', assertFieldType: 'Input' }), (acc) =>
-          acc.getLogHandle()
+          acc.getLogHandle(),
+      false
         )
       : undefined;
   })
@@ -52,16 +56,20 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
   .output('progress', (ctx) => {
     return ctx.outputs !== undefined
       ? parseResourceMap(ctx.outputs?.resolve({ field: 'logs', assertFieldType: 'Input' }), (acc) =>
-          acc.getProgressLog(ProgressPrefix)
+          acc.getProgressLog(ProgressPrefix),
+      false
         )
       : undefined;
   })
+
+  .output('started', (ctx) => ctx.outputs !== undefined)
 
   .output('done', (ctx) => {
     return ctx.outputs !== undefined
       ? parseResourceMap(
           ctx.outputs?.resolve({ field: 'clns', assertFieldType: 'Input' }),
-          (acc) => true
+          (acc) => true,
+          false
         ).data.map((e) => e.key[0] as string)
       : undefined;
   })
@@ -103,7 +111,7 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
       );
   })
 
-  .output('sampleLabels', (ctx) => {
+  .output('sampleLabels', (ctx): Record<string, string> | undefined => {
     const inputRef = ctx.args.input;
     if (inputRef === undefined) return undefined;
     // @todo implement getSpecByRef method
@@ -142,10 +150,7 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
   })
 
   .sections((ctx) => {
-    return [
-      { type: 'link', href: '/', label: 'Settings' },
-      { type: 'link', href: '/reports', label: 'Reports' }
-    ];
+    return [{ type: 'link', href: '/', label: 'Main' }];
   })
 
   .inputsValid((ctx) => BlockArgsValid.safeParse(ctx.args).success)
@@ -157,4 +162,6 @@ export type Href = InferHrefType<typeof platforma>;
 export * from './args';
 export * from './helpers';
 export * from './logs';
+export * from './qc';
+export * from './reports';
 export { BlockArgs };
