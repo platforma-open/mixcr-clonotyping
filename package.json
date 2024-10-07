@@ -53,16 +53,12 @@
       "overrides": {
         "@platforma-sdk/model": "file:/Users/dbolotin/milab/core/platforma/sdk/model/package.tgz",
         "@platforma-sdk/ui-vue": "file:/Users/dbolotin/milab/core/platforma/sdk/ui-vue/package.tgz",
+        "@platforma-sdk/workflow-tengo": "file:/Users/dbolotin/milab/core/platforma/sdk/workflow-tengo/package.tgz",
         "@milaboratories/uikit": "file:/Users/dbolotin/milab/core/platforma/lib/ui/uikit/package.tgz"
       }
     }
   },
   "pnpm": {
-    "overrides": {
-      "@platforma-sdk/model": "file:/Users/dbolotin/milab/core/platforma/sdk/model/package.tgz",
-      "@platforma-sdk/ui-vue": "file:/Users/dbolotin/milab/core/platforma/sdk/ui-vue/package.tgz",
-      "@platforma-sdk/workflow-tengo": "file:/Users/dbolotin/milab/core/platforma/sdk/workflow-tengo/package.tgz",
-      "@milaboratories/uikit": "file:/Users/dbolotin/milab/core/platforma/lib/ui/uikit/package.tgz"
-    }
+    "overrides": {}
   }
 }

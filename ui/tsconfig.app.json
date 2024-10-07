@@ -23,5 +23,5 @@
     // "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "../model/src/qc.test.ts", "../model/src/qc.ts", "../model/src/report.test.ts", "../model/src/reports.ts"]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"]
 }

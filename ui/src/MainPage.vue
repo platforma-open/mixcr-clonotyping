@@ -20,8 +20,32 @@ import SettingsPanel from './SettingsPanel.vue';
 import { PlId } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
 import AlignmentStatsCell from './AlignmentStatsCell.vue';
 import ProgressCell from './ProgressCell.vue';
+import SampleReportPanel from './SampleReportPanel.vue';
+import { refDebounced, whenever } from '@vueuse/core';
 
 const app = useApp();
+
+const result = refDebounced(MiXCRResultsFull, 300);
+
+const data = reactive<{
+    settingsOpen: boolean,
+    sampleReportOpen: boolean,
+    selectedSample: PlId | undefined
+}>({
+    settingsOpen: app.outputValues.started === false,
+    sampleReportOpen: false,
+    selectedSample: undefined,
+})
+
+watch(() => app.outputValues.started, (newVal, oldVal) => {
+    if (oldVal === false && newVal === true)
+        data.settingsOpen = false;
+    if (oldVal === true && newVal === false)
+        data.settingsOpen = true;
+})
+
+whenever(() => data.settingsOpen, () => data.sampleReportOpen = false);
+whenever(() => data.sampleReportOpen, () => data.settingsOpen = false);
 
 ModuleRegistry.registerModules([ClientSideRowModelModule]);
 
@@ -50,43 +74,21 @@ const columnDefs = computed<ColDef[]>(() => [
     },
 ]);
 
-watch(MiXCRResultsFull, rd => {
-    console.dir(rd, { depth: 5 })
-}, { immediate: true })
+// watch(result, rd => {
+//     console.dir(rd, { depth: 5 })
+// }, { immediate: true })
 
 const gridOptions: GridOptions<MiXCRResult> = {
     getRowId: (row) => row.data.sampleId,
+    onRowDoubleClicked: (e) => {
+        data.selectedSample = e.data?.sampleId
+        data.sampleReportOpen = data.selectedSample !== undefined;
+    },
     components: {
         AlignmentStatsCell,
         ProgressCell
     }
 };
-
-const data = reactive<{
-    settingsOpen: boolean,
-    sampleReportOpen: boolean,
-    selectedSample: PlId | undefined
-}>({
-    settingsOpen: app.outputValues.started === false,
-    sampleReportOpen: false,
-    selectedSample: undefined,
-})
-
-watchEffect(() => { if (data.settingsOpen) data.selectedSample = undefined; })
-
-watch(computed(() => app.outputValues.started), (newVal, oldVal) => {
-    if (oldVal === false && newVal === true)
-        data.settingsOpen = false;
-    if (oldVal === true && newVal === false)
-        data.settingsOpen = true;
-})
-
-watch(computed(() => data.selectedSample), (newVal, oldVal) => {
-    if (oldVal === false && newVal === true)
-        data.settingsOpen = false;
-    if (oldVal === true && newVal === false)
-        data.settingsOpen = true;
-})
 
 </script>
 
@@ -96,8 +98,8 @@ watch(computed(() => data.selectedSample), (newVal, oldVal) => {
         <template #append>
             <PlBtnGhost :icon="'settings-2'" @click.stop="() => data.settingsOpen = true">Settings</PlBtnGhost>
         </template>
-        <div v-if="MiXCRResultsFull !== undefined" class="ag-theme-quartz" :style="{ flex: 1 }">
-            <ag-grid-vue :style="{ height: '100%' }" @grid-ready="onGridReady" :rowData="MiXCRResultsFull"
+        <div v-if="result !== undefined" class="ag-theme-quartz" :style="{ flex: 1 }">
+            <ag-grid-vue :style="{ height: '100%' }" @grid-ready="onGridReady" :rowData="result"
                 :columnDefs="columnDefs" :grid-options="gridOptions">
             </ag-grid-vue>
         </div>
@@ -110,9 +112,9 @@ watch(computed(() => data.selectedSample), (newVal, oldVal) => {
         <template #title>Settings</template>
         <SettingsPanel />
     </PlSlideModal>
-    <PlSlideModal v-model="data.selectedSample !== undefined" width="50%" :shadow="true"
-        :close-on-outside-click="app.outputValues.started">
-        <template #title>Settings</template>
-        <SettingsPanel />
+    <PlSlideModal v-model="data.sampleReportOpen" width="80%" :close-on-outside-click="app.outputValues.started">
+        <template #title>Results for {{ (data.selectedSample ? app.outputValues.sampleLabels?.[data.selectedSample] :
+            undefined) ?? "..." }}</template>
+        <SampleReportPanel v-model="data.selectedSample" />
     </PlSlideModal>
 </template>

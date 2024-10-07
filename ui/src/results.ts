@@ -4,14 +4,17 @@ import { ReactiveFileContent } from '@platforma-sdk/ui-vue';
 import {
   AlignReport,
   AssembleReport,
+  PlId,
   ProgressPrefix,
   Qc
 } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
+import { AnyLogHandle } from '@platforma-sdk/model';
 
 export type MiXCRResult = {
   label: string;
-  sampleId: string;
+  sampleId: PlId;
   progress: string;
+  logHandle?: AnyLogHandle;
   qc?: Qc;
   alignReport?: AlignReport;
   assembleReport?: AssembleReport;
@@ -38,7 +41,7 @@ export const MiXCRResultsMap = computed(() => {
   for (const qcData of sortedQcData) {
     const sampleId = qcData.key[0] as string;
     const result: MiXCRResult = {
-      sampleId,
+      sampleId: sampleId as PlId,
       progress: 'Not started',
       label: sampleLabels?.[sampleId] ?? sampleId
     };
@@ -47,6 +50,13 @@ export const MiXCRResultsMap = computed(() => {
     // globally cached
     result.qc = ReactiveFileContent.getContentJson(qcData.value.handle, Qc).value;
   }
+
+  const logs = app.outputValues.logs;
+  if (logs)
+    for (const logData of logs.data) {
+      const sampleId = logData.key[0] as string;
+      resultMap.get(sampleId)!.logHandle = logData.value;
+    }
 
   const reports = app.outputValues.reports;
 
