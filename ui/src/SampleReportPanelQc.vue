@@ -14,7 +14,7 @@ const qc = computed(() => props.sampleData.qc)
 </script>
 
 <template>
-    <pre>
+    <pre class="pl-scrollable" style="max-height: 400px;">
         {{ qc }}
     </pre>
 </template>

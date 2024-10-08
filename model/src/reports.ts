@@ -10,6 +10,8 @@ export const ImmuneChain = z.union([
   z.literal('IGL')
 ]);
 
+export type ImmuneChain = z.infer<typeof ImmuneChain>;
+
 // Fixed ordering for immune chains
 export const ImmuneChains = ImmuneChain.options.map((o) => o.value);
 
@@ -62,6 +64,57 @@ export const AlignmentChannelLabels = {
   NoBarcode: 'Absent barcode',
   SampleNotMatched: 'Sample not matched'
 } satisfies Record<NotAlignedReason | AlignmentChannel, string>;
+
+export const AlignmentChannelColors = {
+  Success: '#42B842',
+  NoHits: '#FEE27A',
+  FailedAfterAOverlap: 'red', // @TODO (was missing)
+  NoCDR3Parts: '#FEBF51',
+  NoVHits: '#FB9361',
+  NoJHits: '#E75B64',
+  VAndJOnDifferentTargets: '#B8397A',
+  LowTotalScore: '#7E2583',
+  NoBarcode: '#4B1979',
+  SampleNotMatched: '#2B125C',
+} satisfies Record<NotAlignedReason | AlignmentChannel, string>;
+
+export const AlignmentChainColors = {
+  TRA: {
+    total: '#105BCC',
+    hasStops: '#2D93FA',
+    isOOF: '#99CCFF',
+  },
+  TRB: {
+    total: '#198020',
+    hasStops: '#42B842',
+    isOOF: '#99E099',
+  },
+  TRD: {
+    total: '#068A94',
+    hasStops: '#27C2C2',
+    isOOF: '#90E0E0',
+  },
+  TRG: {
+    total: '#5F31CC',
+    hasStops: '#845CFF',
+    isOOF: '#C1ADFF',
+  },
+  IGH: {
+    total: '#AD3757',
+    hasStops: '#F05670',
+    isOOF: '#FFADBA',
+  },
+  IGL: {
+    total: '#C26A27',
+    hasStops: '#FF9429',
+    isOOF: '#FFCB8F',
+  },
+  IGK: {
+    total: '#A324B2',
+    hasStops: '#E553E5',
+    isOOF: '#FAAAFA',
+  },
+} satisfies Record<ImmuneChain, Record<'total' | 'hasStops' | 'isOOF', string>>;
 
 export const CoveregeGeneFeature = z.union([
   z.literal('CDR3'),

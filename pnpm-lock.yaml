@@ -49,8 +49,8 @@ catalogs:
       specifier: ^1.5.37
       version: 1.5.37
     '@platforma-sdk/ui-vue':
-      specifier: ^1.5.0
-      version: 1.5.0
+      specifier: ^1.5.38
+      version: 1.5.38
     '@platforma-sdk/workflow-tengo':
       specifier: ^1.2.10
       version: 1.2.10
@@ -187,7 +187,7 @@ importers:
         version: 1.2.32
       '@platforma-sdk/ui-vue':
         specifier: 'catalog:'
-        version: 1.5.0(typescript@5.5.4)
+        version: 1.5.38(typescript@5.5.4)
       '@vueuse/core':
         specifier: 'catalog:'
         version: 11.1.0(vue@3.5.11(typescript@5.5.4))
@@ -946,11 +946,11 @@ packages:
   '@milaboratories/ts-helpers@1.0.29':
     resolution: {integrity: sha512-T4hh2/j57zd1pjLa0dcrTkF+u6iM8LlYn1RHXvFIrKFp5koCFh016y4MX1lc6rvF7bLK1c1ppwMAvx8MFOkleQ==}
 
-  '@milaboratories/uikit@1.2.15':
-    resolution: {integrity: sha512-zLBe9CyIN8EwpbpEbnYVMZXNXZ3sNskNaC8esvWjjXANQqJr1rUUXApblXYMDfq0jcI+MvUzwUJfBdToI+oVSQ==}
-
   '@milaboratories/uikit@1.2.16':
     resolution: {integrity: sha512-FT3ppyGTAn38CeiTY8favOCs2VNbBp3fwCbhxDksuKmTAUP1SMB2ZSHOVbcklk2IqiuFeepuHge38HC9x29lGA==}
+
+  '@milaboratories/uikit@1.2.17':
+    resolution: {integrity: sha512-wIcBbyYbXiAYFd77ddmoIUk2GzAlYhV5jj5k7ANy720jXp0ebxLb5hVaY5vKtUZgOlnG7Ogykv0w6EADSRma+A==}
 
   '@milaboratory/mixcr@4.7.0-70-develop':
     resolution: {integrity: sha512-C/GGIzrrow07uQnx7Pqr3z+kF9jDLFUOKfHjZMwWQBhe+tN+0SoVLSh+TRGXgfD7SnS8CinKs/xz7yAKWx6+Mw==, tarball: https://npm.pkg.github.com/download/@milaboratory/mixcr/4.7.0-70-develop/26e2a7be5d49630243d7e32ae44925e17e07db41}
@@ -1005,11 +1005,11 @@ packages:
   '@platforma-sdk/test@1.5.37':
     resolution: {integrity: sha512-aAm5TcoINHd5P0p+tXmd22slKB6tOCgzNSSu+P7TGzDitk/PiFXiEMU4V6x1ON1Klga24RQvIi8IEe++QfOnlA==}
 
-  '@platforma-sdk/ui-vue@1.4.4':
-    resolution: {integrity: sha512-0iJwwvEZQXtOwyNOLOwSw4HSwHgPCJKJMrRIsvRRSNEPCVTtE1w9TaNvitEpXPhn+3hKiEshLGo1AgC7yD9OOQ==}
-
   '@platforma-sdk/ui-vue@1.5.0':
     resolution: {integrity: sha512-U7H4l/u8oPw7p5oXOe8vsZxRXG2M/i6jLZr7k3JmRiuwIFTlY+PpDcr8cMKMDbRhD0DbneUEmlz991a2S3HSOQ==}
+
+  '@platforma-sdk/ui-vue@1.5.38':
+    resolution: {integrity: sha512-Nu+aoPSlTrHjexQaJdPujBqLm7JbzZT2b0FtxwBidnNg8S4JPu/Z6Myhqi0N7PHrLPNWVz4ob3IgrnNNuC26rA==}
 
   '@platforma-sdk/workflow-tengo@1.2.10':
     resolution: {integrity: sha512-N4/J6bqyU9IyEVh9MDZ4Vzjd62r0KAG4uX0wSjUDymA6EMnLSeHAbz+X+Jju3eggPQPEBcf6hpM6PQZnXB8tUA==}
@@ -4061,13 +4061,13 @@ snapshots:
     dependencies:
       denque: 2.1.0
 
-  '@milaboratories/uikit@1.2.15(typescript@5.5.4)':
+  '@milaboratories/uikit@1.2.16(typescript@5.5.4)':
     dependencies:
       vue: 3.5.11(typescript@5.5.4)
     transitivePeerDependencies:
       - typescript
 
-  '@milaboratories/uikit@1.2.16(typescript@5.5.4)':
+  '@milaboratories/uikit@1.2.17(typescript@5.5.4)':
     dependencies:
       vue: 3.5.11(typescript@5.5.4)
     transitivePeerDependencies:
@@ -4149,10 +4149,10 @@ snapshots:
       '@ag-grid-enterprise/range-selection': 32.2.1
       '@ag-grid-enterprise/rich-select': 32.2.1
       '@milaboratories/helpers': 1.6.4
-      '@milaboratories/uikit': 1.2.15(typescript@5.5.4)
+      '@milaboratories/uikit': 1.2.16(typescript@5.5.4)
       '@platforma-open/milaboratories.samples-and-data.model': 1.3.1
       '@platforma-sdk/model': 1.2.32
-      '@platforma-sdk/ui-vue': 1.4.4(typescript@5.5.4)
+      '@platforma-sdk/ui-vue': 1.5.0(typescript@5.5.4)
       utility-types: 3.11.0
       vue: 3.5.11(typescript@5.5.4)
       zod: 3.23.8
@@ -4229,17 +4229,19 @@ snapshots:
       - supports-color
       - terser
 
-  '@platforma-sdk/ui-vue@1.4.4(typescript@5.5.4)':
+  '@platforma-sdk/ui-vue@1.5.0(typescript@5.5.4)':
     dependencies:
-      '@milaboratories/uikit': 1.2.15(typescript@5.5.4)
+      '@milaboratories/uikit': 1.2.16(typescript@5.5.4)
       '@platforma-sdk/model': 1.2.32
+      canonicalize: 2.0.0
+      lru-cache: 11.0.1
       vue: 3.5.11(typescript@5.5.4)
     transitivePeerDependencies:
       - typescript
 
-  '@platforma-sdk/ui-vue@1.5.0(typescript@5.5.4)':
+  '@platforma-sdk/ui-vue@1.5.38(typescript@5.5.4)':
     dependencies:
-      '@milaboratories/uikit': 1.2.16(typescript@5.5.4)
+      '@milaboratories/uikit': 1.2.17(typescript@5.5.4)
       '@platforma-sdk/model': 1.2.32
       canonicalize: 2.0.0
       lru-cache: 11.0.1

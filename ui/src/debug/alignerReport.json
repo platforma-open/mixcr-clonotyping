@@ -1,0 +1,62 @@
+{
+  "type": "alignerReport",
+  "totalReadsProcessed": 34088,
+  "aligned": 34074,
+  "notAligned": 1014,
+  "notAlignedReasons": {
+    "NoHits": 1000,
+    "FailedAfterAOverlap": 12,
+    "NoCDR3Parts": 0,
+    "NoVHits": 0,
+    "NoJHits": 0,
+    "VAndJOnDifferentTargets": 2,
+    "LowTotalScore": 0,
+    "NoBarcode": 0,
+    "SampleNotMatched": 0
+  },
+  "overlapped": 33178,
+  "overlappedAligned": 33178,
+  "overlappedNotAligned": 0,
+  "alignmentAidedOverlaps": 0,
+  "noCDR3PartsAlignments": 0,
+  "partialAlignments": 56,
+  "chimeras": 0,
+  "vChimeras": 114,
+  "jChimeras": 0,
+  "pairedEndAlignmentConflicts": 109,
+  "realignedWithForcedNonFloatingBound": 910,
+  "realignedWithForcedNonFloatingRightBoundInLeftRead": 468,
+  "realignedWithForcedNonFloatingLeftBoundInRightRead": 468,
+  "chainUsage": {
+    "chimeras": 0,
+    "total": 34074,
+    "chains": {
+      "IGH": {
+        "total": 22957,
+        "nonFunctional": 183,
+        "isOOF": 36,
+        "hasStops": 147
+      },
+      "IGK": {
+        "total": 5107,
+        "nonFunctional": 20,
+        "isOOF": 2,
+        "hasStops": 18
+      },
+      "IGL": {
+        "total": 6010,
+        "nonFunctional": 45,
+        "isOOF": 2,
+        "hasStops": 43
+      }
+    }
+  },
+  "coverage": {
+    "VDJRegion": 33175,
+    "CDR1_TO_FR4": 33186,
+    "FR2_TO_FR4": 33546,
+    "CDR2_TO_FR4": 33995,
+    "FR3_TO_FR4": 34001,
+    "CDR3": 34018
+  }
+}

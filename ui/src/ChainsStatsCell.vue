@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ICellRendererParams } from '@ag-grid-community/core';
 import { MiXCRResult } from './results';
-import AlignmentRow from './components/AlignmentRow.vue';
+import ChainRow from './components/ChainRow.vue';
 
 defineProps<{
     params: ICellRendererParams<MiXCRResult>;
@@ -9,5 +9,5 @@ defineProps<{
 </script>
 
 <template>
-    <AlignmentRow style="height: 100%;" :align-report="params.data?.alignReport" />
+    <ChainRow style="height: 100%;" :align-report="params.data?.alignReport" />
 </template>

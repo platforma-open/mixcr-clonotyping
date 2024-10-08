@@ -1,23 +1,16 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useApp } from './app';
 import { MiXCRResult } from './results';
-import { extractAlignmentChannels, ImmuneChains } from '@platforma-open/milaboratories.mixcr-clonotyping.model/src/reports';
+import AlignmentRow from './components/AlignmentRow.vue';
+import ChainRow from './components/ChainRow.vue';
 
-const props = defineProps<{
+defineProps<{
     sampleData: MiXCRResult
-}>()
-
-const app = useApp();
-
-const alignmantStats = computed(() => props.sampleData.alignReport === undefined ? undefined : extractAlignmentChannels(props.sampleData.alignReport))
-const chainStats = computed(() => props.sampleData.alignReport === undefined ? undefined : ImmuneChains.map(c => [c, props.sampleData.alignReport!.chainUsage.chains[c]?.total ?? 0] as const))
-
+}>();
 </script>
 
 <template>
-    <pre>
-        {{ alignmantStats }}
-        {{ chainStats }}
-    </pre>
+    <h4>Alignments</h4>
+    <AlignmentRow size="large" :align-report="sampleData.alignReport" />
+    <h4>Chain Usage</h4>
+    <ChainRow size="large" :align-report="sampleData.alignReport" />
 </template>

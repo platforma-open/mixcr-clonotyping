@@ -19,6 +19,7 @@ import { MiXCRResult, MiXCRResultsFull } from './results';
 import SettingsPanel from './SettingsPanel.vue';
 import { PlId } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
 import AlignmentStatsCell from './AlignmentStatsCell.vue';
+import ChainsStatsCell from './ChainsStatsCell.vue';
 import ProgressCell from './ProgressCell.vue';
 import SampleReportPanel from './SampleReportPanel.vue';
 import { refDebounced, whenever } from '@vueuse/core';
@@ -79,7 +80,24 @@ const columnDefs = computed<ColDef[]>(() => [
         field: 'alignReport',
         cellRenderer: 'AlignmentStatsCell',
         headerName: "Alignments",
-        flex: 1
+        flex: 1,
+        cellStyle: {
+            '--ag-cell-horizontal-padding': '12px',
+            // '--ag-cell-horizontal-border': 'solid rgb(150, 150, 200);',
+            'border-width': '0'
+        }
+    },
+    {
+        colId: 'chainsStats',
+        field: 'alignReport',
+        cellRenderer: 'ChainsStatsCell',
+        headerName: "Chains",
+        flex: 1,
+        cellStyle: {
+            '--ag-cell-horizontal-padding': '12px',
+            // '--ag-cell-horizontal-border': 'solid rgb(150, 150, 200);',
+            'border-width': '0'
+        }
     },
 ]);
 
@@ -95,7 +113,8 @@ const gridOptions: GridOptions<MiXCRResult> = {
     },
     components: {
         AlignmentStatsCell,
-        ProgressCell
+        ProgressCell,
+        ChainsStatsCell
     }
 };
 
