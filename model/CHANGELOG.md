@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.1.2
+
+### Patch Changes
+
+- 11fbc06: progress cell v1
+
 ## 1.1.1
 
 ### Patch Changes

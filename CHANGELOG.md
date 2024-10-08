@@ -1,5 +1,12 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 1.1.3
+
+### Patch Changes
+
+- dd6bab9: build script fixes
+- 2e2ff70: fix to build scripts
+
 ## 1.1.2
 
 ### Patch Changes

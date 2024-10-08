@@ -1,5 +1,14 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.1.2
+
+### Patch Changes
+
+- 8057128: ui-vue 1.5.0
+- 11fbc06: progress cell v1
+- Updated dependencies [11fbc06]
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.1.2
+
 ## 1.1.1
 
 ### Patch Changes
