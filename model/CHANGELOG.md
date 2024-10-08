@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.1.4
+
+### Patch Changes
+
+- 9dc0ce6: update Quality Checks section
+
 ## 1.1.3
 
 ### Patch Changes
