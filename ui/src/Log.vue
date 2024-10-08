@@ -1,14 +1,11 @@
 <script setup lang="ts">
 import { platforma, ProgressPrefix } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
-import { useApp } from './app';
-import { PlTextArea } from '@platforma-sdk/ui-vue';
+import { PlLogView, PlTextArea } from '@platforma-sdk/ui-vue';
 import { shallowRef, watch } from 'vue';
 import { useTimeoutPoll, whenever } from '@vueuse/core';
 import { AnyLogHandle } from '@platforma-sdk/model';
 
 const props = defineProps<{ handle: AnyLogHandle | undefined }>()
-
-const app = useApp();
 
 type LogState = {
   logHandle: AnyLogHandle,
@@ -72,5 +69,5 @@ watch(() => props.handle, (lh) => {
 </script>
 
 <template>
-  <PlTextArea :model-value="logState?.lines" :rows="30" readonly />
+  <PlLogView :value="logState?.lines" />
 </template>

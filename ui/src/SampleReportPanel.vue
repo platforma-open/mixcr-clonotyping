@@ -51,6 +51,7 @@ const tabOptions: SimpleOption<TabId>[] = [
   gap: 24px;
   height: 100%; 
   max-height: 100%;
+  max-width: 100%;
   padding: 0 6px;
   margin: 0 -6px;
 }
