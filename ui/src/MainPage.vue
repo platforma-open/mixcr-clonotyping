@@ -103,7 +103,7 @@ const gridOptions: GridOptions<MiXCRResult> = {
 
 <template>
     <PlBlockPage>
-        <template #title>MiXCR Clonotyping 14</template>
+        <template #title>MiXCR Clonotyping</template>
         <template #append>
             <PlBtnGhost :icon="'settings-2'" @click.stop="() => data.settingsOpen = true">Settings</PlBtnGhost>
         </template>

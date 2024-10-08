@@ -21,7 +21,7 @@ const presetOptions = computed(() => {
   return presets.value?.map(preset => ({ text: `${preset.label}${preset.vendor ? ' - ' + preset.vendor : ''}`, value: preset.presetName }))
 })
 
-const preset = computed(() => app.args.preset === undefined ? undefined : presets.value?.find(p => p.presetName === app.args.preset))
+const preset = computed(() => app.args?.preset === undefined ? undefined : presets.value?.find(p => p.presetName === app.args.preset))
 const needSpecies = computed(() => preset.value === undefined ? undefined : (preset.value.requiredFlags.findIndex(f => f === 'species') >= 0))
 
 watch(needSpecies, ns => {

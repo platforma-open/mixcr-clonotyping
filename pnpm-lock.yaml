@@ -40,8 +40,8 @@ catalogs:
       specifier: ^2.3.10
       version: 2.3.10
     '@platforma-sdk/model':
-      specifier: ^1.2.28
-      version: 1.2.30
+      specifier: ^1.2.32
+      version: 1.2.32
     '@platforma-sdk/tengo-builder':
       specifier: ^1.14.13
       version: 1.14.13
@@ -49,8 +49,8 @@ catalogs:
       specifier: ^1.5.37
       version: 1.5.37
     '@platforma-sdk/ui-vue':
-      specifier: ^1.3.11
-      version: 1.4.4
+      specifier: ^1.5.0
+      version: 1.5.0
     '@platforma-sdk/workflow-tengo':
       specifier: ^1.2.10
       version: 1.2.10
@@ -103,7 +103,7 @@ importers:
         version: link:workflow
       '@platforma-sdk/model':
         specifier: 'catalog:'
-        version: 1.2.30
+        version: 1.2.32
     devDependencies:
       '@changesets/cli':
         specifier: 'catalog:'
@@ -119,7 +119,7 @@ importers:
     dependencies:
       '@platforma-sdk/model':
         specifier: 'catalog:'
-        version: 1.2.30
+        version: 1.2.32
       zod:
         specifier: 'catalog:'
         version: 3.23.8
@@ -184,10 +184,10 @@ importers:
         version: link:../model
       '@platforma-sdk/model':
         specifier: 'catalog:'
-        version: 1.2.30
+        version: 1.2.32
       '@platforma-sdk/ui-vue':
         specifier: 'catalog:'
-        version: 1.4.4(typescript@5.5.4)
+        version: 1.5.0(typescript@5.5.4)
       '@vueuse/core':
         specifier: 'catalog:'
         version: 11.1.0(vue@3.5.11(typescript@5.5.4))
@@ -949,6 +949,9 @@ packages:
   '@milaboratories/uikit@1.2.15':
     resolution: {integrity: sha512-zLBe9CyIN8EwpbpEbnYVMZXNXZ3sNskNaC8esvWjjXANQqJr1rUUXApblXYMDfq0jcI+MvUzwUJfBdToI+oVSQ==}
 
+  '@milaboratories/uikit@1.2.16':
+    resolution: {integrity: sha512-FT3ppyGTAn38CeiTY8favOCs2VNbBp3fwCbhxDksuKmTAUP1SMB2ZSHOVbcklk2IqiuFeepuHge38HC9x29lGA==}
+
   '@milaboratory/mixcr@4.7.0-70-develop':
     resolution: {integrity: sha512-C/GGIzrrow07uQnx7Pqr3z+kF9jDLFUOKfHjZMwWQBhe+tN+0SoVLSh+TRGXgfD7SnS8CinKs/xz7yAKWx6+Mw==, tarball: https://npm.pkg.github.com/download/@milaboratory/mixcr/4.7.0-70-develop/26e2a7be5d49630243d7e32ae44925e17e07db41}
 
@@ -992,9 +995,6 @@ packages:
     resolution: {integrity: sha512-nc3DoPyJbOjldgqqBufwdUWBlaxey+BpeEVXs++JWas+kMnldhO6/rAbvFcEwh9Fp1KTmxRB1lBoTe9bU5rhog==}
     hasBin: true
 
-  '@platforma-sdk/model@1.2.30':
-    resolution: {integrity: sha512-Vr84WYpTODLdm9slQahyY5kBJMH+taChgkqEzQqhdc+uPwpULz3XjWfyURWaBD6A/4S7QN9OCTlWSonHMrJl0w==}
-
   '@platforma-sdk/model@1.2.32':
     resolution: {integrity: sha512-ALcIebUHTgnq5Tkc4vE47jsCrtOuEwA4LBmWXAZIy/aQnvgOqvt9Ky0o/eS3cEqYBENb7ZlTjiXQJDjUOT8Egw==}
 
@@ -1007,6 +1007,9 @@ packages:
 
   '@platforma-sdk/ui-vue@1.4.4':
     resolution: {integrity: sha512-0iJwwvEZQXtOwyNOLOwSw4HSwHgPCJKJMrRIsvRRSNEPCVTtE1w9TaNvitEpXPhn+3hKiEshLGo1AgC7yD9OOQ==}
+
+  '@platforma-sdk/ui-vue@1.5.0':
+    resolution: {integrity: sha512-U7H4l/u8oPw7p5oXOe8vsZxRXG2M/i6jLZr7k3JmRiuwIFTlY+PpDcr8cMKMDbRhD0DbneUEmlz991a2S3HSOQ==}
 
   '@platforma-sdk/workflow-tengo@1.2.10':
     resolution: {integrity: sha512-N4/J6bqyU9IyEVh9MDZ4Vzjd62r0KAG4uX0wSjUDymA6EMnLSeHAbz+X+Jju3eggPQPEBcf6hpM6PQZnXB8tUA==}
@@ -4064,6 +4067,12 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
+  '@milaboratories/uikit@1.2.16(typescript@5.5.4)':
+    dependencies:
+      vue: 3.5.11(typescript@5.5.4)
+    transitivePeerDependencies:
+      - typescript
+
   '@milaboratory/mixcr@4.7.0-70-develop': {}
 
   '@nodelib/fs.scandir@2.1.5':
@@ -4125,7 +4134,7 @@ snapshots:
 
   '@platforma-open/milaboratories.samples-and-data.model@1.3.1':
     dependencies:
-      '@platforma-sdk/model': 1.2.30
+      '@platforma-sdk/model': 1.2.32
       zod: 3.23.8
 
   '@platforma-open/milaboratories.samples-and-data.ui@1.6.1(typescript@5.5.4)':
@@ -4142,7 +4151,7 @@ snapshots:
       '@milaboratories/helpers': 1.6.4
       '@milaboratories/uikit': 1.2.15(typescript@5.5.4)
       '@platforma-open/milaboratories.samples-and-data.model': 1.3.1
-      '@platforma-sdk/model': 1.2.30
+      '@platforma-sdk/model': 1.2.32
       '@platforma-sdk/ui-vue': 1.4.4(typescript@5.5.4)
       utility-types: 3.11.0
       vue: 3.5.11(typescript@5.5.4)
@@ -4157,7 +4166,7 @@ snapshots:
       '@platforma-open/milaboratories.samples-and-data.model': 1.3.1
       '@platforma-open/milaboratories.samples-and-data.ui': 1.6.1(typescript@5.5.4)
       '@platforma-open/milaboratories.samples-and-data.workflow': 1.7.2
-      '@platforma-sdk/model': 1.2.30
+      '@platforma-sdk/model': 1.2.32
     transitivePeerDependencies:
       - typescript
 
@@ -4178,12 +4187,6 @@ snapshots:
       zod: 3.23.8
     transitivePeerDependencies:
       - aws-crt
-
-  '@platforma-sdk/model@1.2.30':
-    dependencies:
-      '@milaboratories/pl-model-common': 1.3.13
-      utility-types: 3.11.0
-      zod: 3.23.8
 
   '@platforma-sdk/model@1.2.32':
     dependencies:
@@ -4229,7 +4232,17 @@ snapshots:
   '@platforma-sdk/ui-vue@1.4.4(typescript@5.5.4)':
     dependencies:
       '@milaboratories/uikit': 1.2.15(typescript@5.5.4)
-      '@platforma-sdk/model': 1.2.30
+      '@platforma-sdk/model': 1.2.32
+      vue: 3.5.11(typescript@5.5.4)
+    transitivePeerDependencies:
+      - typescript
+
+  '@platforma-sdk/ui-vue@1.5.0(typescript@5.5.4)':
+    dependencies:
+      '@milaboratories/uikit': 1.2.16(typescript@5.5.4)
+      '@platforma-sdk/model': 1.2.32
+      canonicalize: 2.0.0
+      lru-cache: 11.0.1
       vue: 3.5.11(typescript@5.5.4)
     transitivePeerDependencies:
       - typescript

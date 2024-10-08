@@ -19,11 +19,11 @@ const app = useApp();
 
 const reportHandle = computed(() => {
   const sampleId = props.sampleId;
-  return app.outputValues.reports?.data?.find(
+  return app.outputValues?.reports?.data?.find(
     d => d.key[0] === sampleId &&
       d.key[1] === data.currentReport &&
       d.key[2] === 'txt')?.value?.handle;
-})
+});
 
 const reportContent = computed(() => ReactiveFileContent.getContentString(reportHandle.value)?.value)
 
