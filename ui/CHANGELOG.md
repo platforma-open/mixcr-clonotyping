@@ -1,5 +1,13 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.1.4
+
+### Patch Changes
+
+- 9dc0ce6: update Quality Checks section
+- Updated dependencies [9dc0ce6]
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.1.4
+
 ## 1.1.3
 
 ### Patch Changes
