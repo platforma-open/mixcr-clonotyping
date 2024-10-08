@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.1.3
+
+### Patch Changes
+
+- cf5a66a: add visual reports
+
 ## 1.1.2
 
 ### Patch Changes
