@@ -30,7 +30,7 @@ jobs:
       pnpm-recursive-build: false
 
       test: true
-      build-script-name: 'test-block'
+      test-script-name: 'test-block'
       pnpm-recursive-tests: false
       
       publish-to-public: 'false'
