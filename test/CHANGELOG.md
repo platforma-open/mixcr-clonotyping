@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.test
 
+## 1.1.2
+
+### Patch Changes
+
+- Logo update
+
 ## 1.1.1
 
 ### Patch Changes
