@@ -25,8 +25,8 @@ self.body(func(inputs) {
 
 	mixcrExportPresetCmdBuilder := exec.builder().
 		software(mixcrSw).
-		printErrStreamToStdout().
 		secret("MI_LICENSE", "MI_LICENSE").
+		printErrStreamToStdout().
 		arg("exportPreset").
 		arg("--preset-name").
 		arg(presetName)
@@ -46,6 +46,7 @@ self.body(func(inputs) {
 
 	mixcrForBackCmd := exec.builder().
 		software(mixcrSw).
+		secret("MI_LICENSE", "MI_LICENSE").
 		printErrStreamToStdout().
 		arg("presetSpecificationsForBack").
 		addFile("preset.yaml", mixcrExportPresetCmd.getFile("preset.json")).

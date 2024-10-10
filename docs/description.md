@@ -1,4 +1,8 @@
 # Overview
 
-This block allows to create samples and link samples with meta information.
+MiXCR Clonotyping analysis
+
+## Secrets
+
+`MI_LICENSE` - license code from MiLaboratories for MiXCR
 
