@@ -19,7 +19,7 @@ catalog:
   '@milaboratories/helpers': ^1.6.5
 
   '@milaboratories/software-pframes-conv': ^1.5.10
-  '@milaboratory/mixcr': 4.7.0-70-develop
+  '@platforma-open/milaboraotries.software-mixcr': 4.7.0-109-develop
 
   'vue': ^3.5.11
   'vue-tsc': ^2.1.6

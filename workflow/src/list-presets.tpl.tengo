@@ -8,7 +8,7 @@ assets := import("@platforma-sdk/workflow-tengo:assets")
 
 self.defineOutputs("presets")
 
-mixcrSw := assets.importSoftware("@milaboratory/mixcr:main")
+mixcrSw := assets.importSoftware("@platforma-open/milaboraotries.software-mixcr:main")
 
 self.body(func(inputs) {
 	listPresets := exec.builder().
