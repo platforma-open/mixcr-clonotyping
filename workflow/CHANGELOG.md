@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 1.1.3
+
+### Patch Changes
+
+- be26771: Pass MI_LICENSE secret to mixcr commands
+
 ## 1.1.2
 
 ### Patch Changes
