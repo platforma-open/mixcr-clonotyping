@@ -1,17 +1,12 @@
 <script setup lang="ts">
 import { useApp } from './app';
-import { PlDropdown } from '@platforma-sdk/ui-vue';
+import { PlDropdown, PlDropdownRef } from '@platforma-sdk/ui-vue';
 import { computed, watch } from 'vue';
 import { retentive } from './retentive';
 
 const app = useApp();
 
-const inputOptions = computed(() =>
-  app.outputValues.inputOptions?.map((v) => ({
-    text: v.label,
-    value: v.ref,
-  }))
-);
+const inputOptions = computed(() => app.outputValues.inputOptions ?? []);
 
 const args = app.createArgsModel();
 
@@ -45,7 +40,7 @@ const speciesOptions = [
 </script>
 
 <template>
-  <pl-dropdown :options="inputOptions ?? []" v-model="args.model.input" label="Select dataset" clearable />
-  <pl-dropdown :options="presetOptions ?? []" v-model="args.model.preset" label="Select preset" clearable />
-  <pl-dropdown v-if="needSpecies" :options="speciesOptions" v-model="args.model.species" label="Select species" />
+  <PlDropdownRef :options="inputOptions ?? []" v-model="args.model.input" label="Select dataset" clearable />
+  <PlDropdown :options="presetOptions ?? []" v-model="args.model.preset" label="Select preset" clearable />
+  <PlDropdown v-if="needSpecies" :options="speciesOptions" v-model="args.model.species" label="Select species" />
 </template>
