@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.1.6
+
+### Patch Changes
+
+- cb2a1a3: Use PlDropdownRef
+
 ## 1.1.5
 
 ### Patch Changes

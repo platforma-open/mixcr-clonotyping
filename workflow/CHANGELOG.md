@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 1.1.4
+
+### Patch Changes
+
+- 4b70a39: chore: fix software.mixcr pkg name
+
 ## 1.1.3
 
 ### Patch Changes
