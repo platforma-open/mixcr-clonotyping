@@ -14,7 +14,7 @@ json := import("json")
 self.defineOutputs("qc", "reports", "clones", "log", "clns")
 
 exportClonesTpl := assets.importTemplate(":export-clones")
-mixcrSw := assets.importSoftware("@platforma-open/milaboraotries.software-mixcr:main")
+mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:main")
 
 progressPrefix := "[==PROGRESS==]"
 

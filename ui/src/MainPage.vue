@@ -1,28 +1,25 @@
 <script setup lang="ts">
-import '@ag-grid-community/styles/ag-grid.css';
-import '@ag-grid-community/styles/ag-theme-quartz.css';
 
 import { AgGridVue } from '@ag-grid-community/vue3';
 
-import { useApp } from './app';
-import { computed, reactive, shallowRef, watch } from 'vue';
+import { ClientSideRowModelModule } from '@ag-grid-community/client-side-row-model';
 import {
-    ColDef,
     GridApi,
     GridOptions,
     GridReadyEvent,
-    ModuleRegistry,
+    ModuleRegistry
 } from '@ag-grid-community/core';
-import { PlBtnGhost, PlSlideModal, PlBlockPage } from '@platforma-sdk/ui-vue';
-import { ClientSideRowModelModule } from '@ag-grid-community/client-side-row-model';
-import { MiXCRResult, MiXCRResultsFull } from './results';
-import SettingsPanel from './SettingsPanel.vue';
 import { PlId } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
+import { PlAgOverlayLoading, PlAgOverlayNoRows, PlBlockPage, PlBtnGhost, PlSlideModal } from '@platforma-sdk/ui-vue';
+import { refDebounced, whenever } from '@vueuse/core';
+import { reactive, shallowRef, watch } from 'vue';
 import AlignmentStatsCell from './AlignmentStatsCell.vue';
+import { useApp } from './app';
 import ChainsStatsCell from './ChainsStatsCell.vue';
 import ProgressCell from './ProgressCell.vue';
+import { MiXCRResult, MiXCRResultsFull } from './results';
 import SampleReportPanel from './SampleReportPanel.vue';
-import { refDebounced, whenever } from '@vueuse/core';
+import SettingsPanel from './SettingsPanel.vue';
 
 const app = useApp();
 
@@ -58,7 +55,7 @@ const onGridReady = (params: GridReadyEvent) => {
     gridApi.value = params.api;
 };
 
-const columnDefs = computed<ColDef[]>(() => [
+const columnDefs = [
     {
         colId: 'label',
         field: 'label',
@@ -70,9 +67,10 @@ const columnDefs = computed<ColDef[]>(() => [
         cellRenderer: 'ProgressCell',
         headerName: "Progress",
         cellStyle: {
-            '--ag-cell-horizontal-padding': '0',
+            '--ag-cell-horizontal-padding': '2px',
+            '--ag-cell-vertical-padding': '2px',
             // '--ag-cell-horizontal-border': 'solid rgb(150, 150, 200);',
-            'border-width': '0'
+            // 'border-width': '0'
         }
     },
     {
@@ -84,7 +82,7 @@ const columnDefs = computed<ColDef[]>(() => [
         cellStyle: {
             '--ag-cell-horizontal-padding': '12px',
             // '--ag-cell-horizontal-border': 'solid rgb(150, 150, 200);',
-            'border-width': '0'
+            // 'border-width': '0'
         }
     },
     {
@@ -96,10 +94,10 @@ const columnDefs = computed<ColDef[]>(() => [
         cellStyle: {
             '--ag-cell-horizontal-padding': '12px',
             // '--ag-cell-horizontal-border': 'solid rgb(150, 150, 200);',
-            'border-width': '0'
+            // 'border-width': '0'
         }
     },
-]);
+];
 
 // watch(result, rd => {
 //     console.dir(rd, { depth: 5 })
@@ -126,17 +124,13 @@ const gridOptions: GridOptions<MiXCRResult> = {
         <template #append>
             <PlBtnGhost :icon="'settings-2'" @click.stop="() => data.settingsOpen = true">Settings</PlBtnGhost>
         </template>
-        <div v-if="result !== undefined" class="ag-theme-quartz" :style="{ flex: 1 }">
-            <ag-grid-vue :style="{ height: '100%' }" @grid-ready="onGridReady" :rowData="result"
-                :columnDefs="columnDefs" :grid-options="gridOptions">
-            </ag-grid-vue>
-        </div>
-        <div v-else :style="{ flex: 1 }">
-            Not started
+        <div :style="{ flex: 1 }">
+            <AgGridVue :style="{ height: '100%' }" @grid-ready="onGridReady" :rowData="result" :columnDefs="columnDefs"
+                :grid-options="gridOptions" :loadingOverlayComponentParams="{ notReady: true }"
+                :loadingOverlayComponent=PlAgOverlayLoading :noRowsOverlayComponent=PlAgOverlayNoRows />
         </div>
     </PlBlockPage>
-    <PlSlideModal v-model="data.settingsOpen" width="50%" :shadow="true"
-        :close-on-outside-click="app.outputValues.started">
+    <PlSlideModal v-model="data.settingsOpen" :shadow="true" :close-on-outside-click="app.outputValues.started">
         <template #title>Settings</template>
         <SettingsPanel />
     </PlSlideModal>

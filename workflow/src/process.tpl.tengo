@@ -40,13 +40,25 @@ self.body(func(inputs) {
 		ll.panic("no pfconvParams")
 	}
 
-	decomposition := pUtil.decomposePfconvCfg(pfconvParams, { additionalAxesSpec: [
-		inputSpec.axesSpec[0],
-		{
-			"name": "pl7.app/vdj/chain",
-			"type": "String"
-		}
-		] })
+	sampleAxis := inputSpec.axesSpec[0]
+	datasetLabel := inputSpec.annotations["pl7.app/label"]
+	if datasetLabel == undefined {
+		datasetLabel = "Unlabelled"
+	}
+
+	decomposition := pUtil.decomposePfconvCfg(pfconvParams, {
+		 additionalAxesSpec: [
+			sampleAxis,
+			{
+				"name": "pl7.app/vdj/chain",
+				"type": "String",
+				"annotations": {
+					"pl7.app/label": "Chain",
+					"pl7.app/axisNature": "scaleCompatible"
+				}
+			}
+			]
+		})
 	purifiedPfconvCfg := decomposition.purifiedCfg
 	cloneColumnsSpec := decomposition.columnsSpec
 
@@ -182,7 +194,8 @@ self.body(func(inputs) {
 				"mixcr.com/assemblingFeature": text.join(presetContent.assemblingFeature, ","),
 				"mixcr.com/cellTags": text.join(presetContent.cellTags, ","),
 				"mixcr.com/coveredFeaturesOnExport": text.join(presetContent.coveredFeaturesOnExport, ","),
-				"mixcr.com/umiTags": text.join(presetContent.umiTags, ",")
+				"mixcr.com/umiTags": text.join(presetContent.umiTags, ","),
+				"pl7.app/label": datasetLabel + " / MiXCR Clonotypes"
 			},
 			valueType: "File",
 			axesSpec: [ inputSpec.axesSpec[0] ]

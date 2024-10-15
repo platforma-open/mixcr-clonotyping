@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ICellRendererParams } from '@ag-grid-community/core';
+import { ProgressPattern } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
 import { computed, unref } from 'vue';
 import { MiXCRResult } from './results';
-import { ProgressPattern } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
 
 const props = defineProps<{
     params: ICellRendererParams<MiXCRResult>;
@@ -82,6 +82,7 @@ const parsed = computed<Parsed>(() => {
     position: relative;
     width: 100%;
     overflow: hidden;
+    border-radius: 2px;
     /* border-left: 1px solid var(--border-color-div-grey);
     border-right: 1px solid var(--border-color-div-grey); */
 }
