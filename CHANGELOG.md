@@ -1,5 +1,21 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 1.2.0
+
+### Minor Changes
+
+- ffe5dc0: - Update Platforma SDK
+  - Fix block deduplication bug
+  - Better styles for the table component
+  - Fix annotation of export counts
+  - Fix chain axis nature (scaleCompatible)
+
+### Patch Changes
+
+- Updated dependencies [ffe5dc0]
+  - @platforma-open/milaboratories.mixcr-clonotyping.workflow@1.2.0
+  - @platforma-open/milaboratories.mixcr-clonotyping.ui@1.2.0
+
 ## 1.1.9
 
 ### Patch Changes
