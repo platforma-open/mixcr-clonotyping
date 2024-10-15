@@ -1,5 +1,16 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 1.1.9
+
+### Patch Changes
+
+- 4b70a39: chore: fix software.mixcr pkg name
+- cb2a1a3: Use PlDropdownRef
+- Updated dependencies [4b70a39]
+- Updated dependencies [cb2a1a3]
+  - @platforma-open/milaboratories.mixcr-clonotyping.workflow@1.1.4
+  - @platforma-open/milaboratories.mixcr-clonotyping.ui@1.1.6
+
 ## 1.1.7
 
 ### Patch Changes
