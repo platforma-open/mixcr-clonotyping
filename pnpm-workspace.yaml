@@ -14,8 +14,7 @@ catalog:
 
   '@platforma-sdk/workflow-tengo': ^1.4.1
 
-  '@milaboratories/uikit': ^1.2.17
-  '@platforma-sdk/ui-vue': ^1.5.38
+  '@platforma-sdk/ui-vue': ^1.5.57
   '@milaboratories/helpers': ^1.6.5
 
   '@milaboratories/software-pframes-conv': ^1.5.10
