@@ -27,15 +27,15 @@ catalogs:
     '@milaboratories/software-pframes-conv':
       specifier: ^1.5.10
       version: 1.5.10
-    '@platforma-open/milaboraotries.software-mixcr':
-      specifier: 4.7.0-109-develop
-      version: 4.7.0-109-develop
     '@platforma-open/milaboratories.samples-and-data':
       specifier: ^1.4.0
       version: 1.4.0
     '@platforma-open/milaboratories.samples-and-data.model':
       specifier: ^1.4.0
       version: 1.4.0
+    '@platforma-open/milaboratories.software-mixcr':
+      specifier: 4.7.0-112-develop
+      version: 4.7.0-112-develop
     '@platforma-sdk/block-tools':
       specifier: ^2.3.10
       version: 2.3.12
@@ -222,9 +222,9 @@ importers:
       '@milaboratories/software-pframes-conv':
         specifier: 'catalog:'
         version: 1.5.10
-      '@platforma-open/milaboraotries.software-mixcr':
+      '@platforma-open/milaboratories.software-mixcr':
         specifier: 'catalog:'
-        version: 4.7.0-109-develop
+        version: 4.7.0-112-develop
       '@platforma-sdk/tengo-builder':
         specifier: 'catalog:'
         version: 1.14.13
@@ -948,9 +948,6 @@ packages:
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
 
-  '@platforma-open/milaboraotries.software-mixcr@4.7.0-109-develop':
-    resolution: {integrity: sha512-t5WpicUGLEFfNhHjKcB4NmftRIkkNXvyEUyCbjoIjM4SWlur0JwT4GniyWn28m2qUTxbf24yC1OBZT0aKrZGUA==}
-
   '@platforma-open/milaboratories.samples-and-data.model@1.4.0':
     resolution: {integrity: sha512-OpXhi41GwPRZZF331E2UCAGaXq/QsyETftqOcdk2E97+cViTdDvzQDMQY33SA9i2ZGu+PpsUxFih/Q+UF+45xQ==}
 
@@ -962,6 +959,9 @@ packages:
 
   '@platforma-open/milaboratories.samples-and-data@1.4.0':
     resolution: {integrity: sha512-2JTqEC9kohaD34cTaiIlNmBZIbVAElHoNjsH/WI1JukzRavfINH6ia+TMHYHwySl+sQ28/qWPEa5JQY2nVLXvA==}
+
+  '@platforma-open/milaboratories.software-mixcr@4.7.0-112-develop':
+    resolution: {integrity: sha512-vXagd6fzjT1jRQlYBfbTEm6SK4QrTIo1K4oWDoNw3BOk0Eav38AK8zNwbqpS4vNwOUkxoNYM4g69D6kmNFQ46g==}
 
   '@platforma-sdk/block-tools@2.3.12':
     resolution: {integrity: sha512-+UNzRVpPn+eqk4mNttr51Cv88gBwc3K/FseDyiq6z33cwTrAxt9qnWC8motlcvAyv2ApbJyGHjIXqi94LU3vBw==}
@@ -3968,8 +3968,6 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@platforma-open/milaboraotries.software-mixcr@4.7.0-109-develop': {}
-
   '@platforma-open/milaboratories.samples-and-data.model@1.4.0':
     dependencies:
       '@platforma-sdk/model': 1.5.40
@@ -4009,6 +4007,8 @@ snapshots:
     transitivePeerDependencies:
       - '@vue/composition-api'
       - typescript
+
+  '@platforma-open/milaboratories.software-mixcr@4.7.0-112-develop': {}
 
   '@platforma-sdk/block-tools@2.3.12':
     dependencies:
