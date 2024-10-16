@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 1.2.1
+
+### Patch Changes
+
+- 57faff1: Update SDK
+
 ## 1.2.0
 
 ### Minor Changes
