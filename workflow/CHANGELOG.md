@@ -1,5 +1,16 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 1.3.0
+
+### Minor Changes
+
+- 50f6bae: mixcr software upgrade, new version should allocate 85% of available memory in container environment
+
+### Patch Changes
+
+- 11af733: workflow: bump wf, fix paths on windows in workdir lib
+- 797f5bf: all preset-export / -list mixcr commands moved to ui execution queue to prevent blocking of initial execution setup and subsequent online deduplication
+
 ## 1.2.1
 
 ### Patch Changes
