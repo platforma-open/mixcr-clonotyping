@@ -1,5 +1,12 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.1.6
+
+### Patch Changes
+
+- 9a99a0d: SDK upgrade
+- 9a99a0d: fixes absence of mitool-based presets
+
 ## 1.1.5
 
 ### Patch Changes
