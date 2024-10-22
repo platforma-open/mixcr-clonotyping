@@ -24,6 +24,7 @@ self.body(func(inputs) {
 	species := inputs.request.species
 
 	mixcrExportPresetCmdBuilder := exec.builder().
+		inUiQueue().
 		software(mixcrSw).
 		secret("MI_LICENSE", "MI_LICENSE").
 		printErrStreamToStdout().
@@ -45,6 +46,7 @@ self.body(func(inputs) {
 	presetContent := mixcrExportPresetCmd.getFileContent("preset.json")
 
 	mixcrForBackCmd := exec.builder().
+		inUiQueue().
 		software(mixcrSw).
 		secret("MI_LICENSE", "MI_LICENSE").
 		printErrStreamToStdout().
