@@ -1,5 +1,12 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 1.2.1
+
+### Patch Changes
+
+- 9a99a0d: SDK upgrade
+- 9a99a0d: fixes error when using presets with floating assembling features
+
 ## 1.2.0
 
 ### Minor Changes

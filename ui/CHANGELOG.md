@@ -1,5 +1,15 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.2.1
+
+### Patch Changes
+
+- 9a99a0d: SDK upgrade
+- 9a99a0d: fixes quick args multi-set problem
+- Updated dependencies [9a99a0d]
+- Updated dependencies [9a99a0d]
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.1.6
+
 ## 1.2.0
 
 ### Minor Changes
