@@ -8,8 +8,6 @@ const app = useApp();
 
 const inputOptions = computed(() => app.outputValues.inputOptions ?? []);
 
-const args = app.createArgsModel();
-
 const presets = retentive(computed(() => app.outputValues.presets))
 
 const presetOptions = computed(() => {
@@ -21,12 +19,12 @@ const needSpecies = computed(() => preset.value === undefined ? undefined : (pre
 
 watch(needSpecies, ns => {
   if (ns === false && // everething is loaded and we know that species is not specified as flag
-    args.model.species !== undefined)
-    args.model.species = undefined;
+    app.model.args.species !== undefined)
+    app.model.args.species = undefined;
 
   if (ns === true && // the opposite of the above
-    args.model.species === undefined)
-    args.model.species = "hsa";
+    app.model.args.species === undefined)
+    app.model.args.species = "hsa";
 })
 
 const speciesOptions = [
@@ -40,7 +38,7 @@ const speciesOptions = [
 </script>
 
 <template>
-  <PlDropdownRef :options="inputOptions ?? []" v-model="args.model.input" label="Select dataset" clearable />
-  <PlDropdown :options="presetOptions ?? []" v-model="args.model.preset" label="Select preset" clearable />
-  <PlDropdown v-if="needSpecies" :options="speciesOptions" v-model="args.model.species" label="Select species" />
+  <PlDropdownRef :options="inputOptions ?? []" v-model="app.model.args.input" label="Select dataset" clearable />
+  <PlDropdown :options="presetOptions ?? []" v-model="app.model.args.preset" label="Select preset" clearable />
+  <PlDropdown v-if="needSpecies" :options="speciesOptions" v-model="app.model.args.species" label="Select species" />
 </template>

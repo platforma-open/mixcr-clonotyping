@@ -22,6 +22,7 @@ blockTest('empty imputs', { timeout: 30000 }, async ({ rawPrj: project, ml, help
   expect(stableState.outputs).toMatchObject({ inputOptions: { ok: true, value: [] } });
   const presets = wrapOutputs(stableState.outputs).presets;
   expect(presets).length.gt(10);
+  expect(presets?.map((p) => p.presetName)).toContain('10x-sc-xcr-vdj');
 });
 
 blockTest(

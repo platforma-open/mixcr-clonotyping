@@ -1,6 +1,9 @@
 import { z } from 'zod';
 
 const MiXCRStage = z.union([
+  z.literal('mitool-parse'),
+  z.literal('mitool-refine-tags'),
+  z.literal('mitool-consensus'),
   z.literal('parse'),
   z.literal('refineTags'),
   z.literal('consensus'),

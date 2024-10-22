@@ -127,6 +127,14 @@ self.body(func(inputs) {
 	}
 	clones = clones.build()
 
+	joinOrUndefined := func(arr) {
+		if is_undefined(arr) {
+			return undefined
+		} else {
+			return text.join(arr, ",")
+		}
+	}
+
 	return {
 		"qc.spec": {
 			kind: "PColumn",
@@ -191,10 +199,10 @@ self.body(func(inputs) {
 				"pl7.app/blockId": blockId
 			},
 			annotations: {
-				"mixcr.com/assemblingFeature": text.join(presetContent.assemblingFeature, ","),
-				"mixcr.com/cellTags": text.join(presetContent.cellTags, ","),
-				"mixcr.com/coveredFeaturesOnExport": text.join(presetContent.coveredFeaturesOnExport, ","),
-				"mixcr.com/umiTags": text.join(presetContent.umiTags, ","),
+				"mixcr.com/assemblingFeature": joinOrUndefined(presetContent.assemblingFeature),
+				"mixcr.com/cellTags": joinOrUndefined(presetContent.cellTags),
+				"mixcr.com/coveredFeaturesOnExport": joinOrUndefined(presetContent.coveredFeaturesOnExport),
+				"mixcr.com/umiTags": joinOrUndefined(presetContent.umiTags),
 				"pl7.app/label": datasetLabel + " / MiXCR Clonotypes"
 			},
 			valueType: "File",

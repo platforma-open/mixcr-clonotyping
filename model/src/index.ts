@@ -153,7 +153,7 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
     return [{ type: 'link', href: '/', label: 'Main' }];
   })
 
-  .inputsValid((ctx) => BlockArgsValid.safeParse(ctx.args).success)
+  .argsValid((ctx) => BlockArgsValid.safeParse(ctx.args).success)
 
   .done();
 
