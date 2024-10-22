@@ -27,9 +27,6 @@ catalogs:
     '@milaboratories/software-pframes-conv':
       specifier: ^1.6.1
       version: 1.6.1
-    '@milaboratories/software-small-binaries':
-      specifier: ^1.11.0
-      version: 1.12.0
     '@platforma-open/milaboratories.samples-and-data':
       specifier: ^1.5.2
       version: 1.5.2
@@ -39,6 +36,9 @@ catalogs:
     '@platforma-open/milaboratories.software-mixcr':
       specifier: 4.7.0-112-develop
       version: 4.7.0-112-develop
+    '@platforma-open/milaboratories.software-small-binaries':
+      specifier: ^1.11.0
+      version: 1.13.2
     '@platforma-sdk/block-tools':
       specifier: ^2.3.17
       version: 2.3.17
@@ -225,12 +225,12 @@ importers:
       '@milaboratories/software-pframes-conv':
         specifier: 'catalog:'
         version: 1.6.1
-      '@milaboratories/software-small-binaries':
-        specifier: 'catalog:'
-        version: 1.12.0
       '@platforma-open/milaboratories.software-mixcr':
         specifier: 'catalog:'
         version: 4.7.0-112-develop
+      '@platforma-open/milaboratories.software-small-binaries':
+        specifier: 'catalog:'
+        version: 1.13.2
       '@platforma-sdk/tengo-builder':
         specifier: 'catalog:'
         version: 1.14.13
@@ -925,9 +925,6 @@ packages:
 
   '@milaboratories/software-pframes-conv@1.6.1':
     resolution: {integrity: sha512-vVcc1si0xPA8yIdn0IRhsJdQLZ/hwJathx8Fg/M3mo1DuxUmh2cX5EPJ81aAo1zdUjGLgrdMSoRkYuNlXIpQ1Q==}
-
-  '@milaboratories/software-small-binaries@1.12.0':
-    resolution: {integrity: sha512-5jLgrrPlylBVIDwcIQUOGyFW5QxUycjtip3pdqe3OvSF5ss/idxVYW+nNB0F1jnq3opA89e5+cNZ8+i3+oUZ1g==}
 
   '@milaboratories/tengo-tester@1.4.4':
     resolution: {integrity: sha512-UWT05MAwizVEbUQC+HDD7VPb26AtZesCAT67CEzWSg4GUbNrOw5c/+TCCLJAS1lq3UQY0i3VV9QOtI1kjVokRQ==}
@@ -4092,8 +4089,6 @@ snapshots:
   '@milaboratories/resolve-helper@1.0.1': {}
 
   '@milaboratories/software-pframes-conv@1.6.1': {}
-
-  '@milaboratories/software-small-binaries@1.12.0': {}
 
   '@milaboratories/tengo-tester@1.4.4': {}
 
