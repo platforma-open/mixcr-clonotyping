@@ -8,7 +8,7 @@ packages:
 catalog:
   '@platforma-sdk/workflow-tengo': ^1.6.1
   '@platforma-sdk/model': ^1.7.9
-  '@platforma-sdk/ui-vue': ^1.7.9
+  '@platforma-sdk/ui-vue': ^1.7.12
   '@platforma-sdk/tengo-builder': ^1.14.13
   '@platforma-sdk/block-tools': ^2.3.17
 
@@ -17,7 +17,7 @@ catalog:
 
   '@milaboratories/software-pframes-conv': ^1.6.1
   '@platforma-open/milaboratories.software-small-binaries': ^1.11.0
-  '@platforma-open/milaboratories.software-mixcr': 4.7.0-112-develop
+  '@platforma-open/milaboratories.software-mixcr': 4.7.0-113-develop
 
   'vue': ^3.5.12
   'vue-tsc': ^2.1.6
@@ -35,10 +35,10 @@ catalog:
 
   '@vueuse/core': ^11.1.0
 
-  '@ag-grid-community/core': ^32.2.2
-  '@ag-grid-community/client-side-row-model': ^32.2.2
-  '@ag-grid-community/vue3': ^32.2.2
-  '@ag-grid-community/styles': ^32.2.2
+  '@ag-grid-community/core': ^32.3.0
+  '@ag-grid-community/client-side-row-model': ^32.3.0
+  '@ag-grid-community/vue3': ^32.3.0
+  '@ag-grid-community/styles': ^32.3.0
 
   '@changesets/cli': ^2.27.9
 

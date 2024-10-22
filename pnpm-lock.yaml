@@ -7,17 +7,17 @@ settings:
 catalogs:
   default:
     '@ag-grid-community/client-side-row-model':
-      specifier: ^32.2.2
-      version: 32.2.2
+      specifier: ^32.3.0
+      version: 32.3.0
     '@ag-grid-community/core':
-      specifier: ^32.2.2
-      version: 32.2.2
+      specifier: ^32.3.0
+      version: 32.3.0
     '@ag-grid-community/styles':
-      specifier: ^32.2.2
-      version: 32.2.2
+      specifier: ^32.3.0
+      version: 32.3.0
     '@ag-grid-community/vue3':
-      specifier: ^32.2.2
-      version: 32.2.2
+      specifier: ^32.3.0
+      version: 32.3.0
     '@changesets/cli':
       specifier: ^2.27.9
       version: 2.27.9
@@ -34,8 +34,8 @@ catalogs:
       specifier: ^1.4.2
       version: 1.4.2
     '@platforma-open/milaboratories.software-mixcr':
-      specifier: 4.7.0-112-develop
-      version: 4.7.0-112-develop
+      specifier: 4.7.0-113-develop
+      version: 4.7.0-113-develop
     '@platforma-open/milaboratories.software-small-binaries':
       specifier: ^1.11.0
       version: 1.13.2
@@ -52,8 +52,8 @@ catalogs:
       specifier: ^1.7.11
       version: 1.7.11
     '@platforma-sdk/ui-vue':
-      specifier: ^1.7.9
-      version: 1.7.9
+      specifier: ^1.7.12
+      version: 1.7.12
     '@platforma-sdk/workflow-tengo':
       specifier: ^1.6.1
       version: 1.6.1
@@ -169,16 +169,16 @@ importers:
     dependencies:
       '@ag-grid-community/client-side-row-model':
         specifier: 'catalog:'
-        version: 32.2.2
+        version: 32.3.0
       '@ag-grid-community/core':
         specifier: 'catalog:'
-        version: 32.2.2
+        version: 32.3.0
       '@ag-grid-community/styles':
         specifier: 'catalog:'
-        version: 32.2.2
+        version: 32.3.0
       '@ag-grid-community/vue3':
         specifier: 'catalog:'
-        version: 32.2.2(typescript@5.5.4)
+        version: 32.3.0(typescript@5.5.4)
       '@milaboratories/helpers':
         specifier: 'catalog:'
         version: 1.6.5
@@ -190,7 +190,7 @@ importers:
         version: 1.7.9
       '@platforma-sdk/ui-vue':
         specifier: 'catalog:'
-        version: 1.7.9(typescript@5.5.4)
+        version: 1.7.12(typescript@5.5.4)
       '@vueuse/core':
         specifier: 'catalog:'
         version: 11.1.0(vue@3.5.12(typescript@5.5.4))
@@ -227,7 +227,7 @@ importers:
         version: 1.6.1
       '@platforma-open/milaboratories.software-mixcr':
         specifier: 'catalog:'
-        version: 4.7.0-112-develop
+        version: 4.7.0-113-develop
       '@platforma-open/milaboratories.software-small-binaries':
         specifier: 'catalog:'
         version: 1.13.2
@@ -249,11 +249,14 @@ importers:
 
 packages:
 
-  '@ag-grid-community/client-side-row-model@32.2.2':
-    resolution: {integrity: sha512-BenXaVRISOAlMwl59BWGAJ/RBRsc0eHR3i/pGRmjQc8eGgdTqjrePL4kDL7UXDAKoqqNsoGKK5TGHjCHAs1cHA==}
+  '@ag-grid-community/client-side-row-model@32.3.0':
+    resolution: {integrity: sha512-/cVD4POG1jQ0FuVjHaL9rYPaj+fbEPLTNpXR6ElCQNnXgupLEuB3ZD8f4E3Emn4Z1Q1B2n8UBK4IannZWyH0XA==}
 
   '@ag-grid-community/core@32.2.2':
     resolution: {integrity: sha512-8w++Q5DKbFKhee7ZZ3HCx6KkMTHVwtV+xNwN/RJZneQ3WkXJYvsnkgVWmiwtglEo1iuMArxTz6pqOz/p23TBxA==}
+
+  '@ag-grid-community/core@32.3.0':
+    resolution: {integrity: sha512-Kkn2ac6f53WmPYA0k0J9EbKCWXy9864Ez0XeoXEayMSEkraAer1w10PHVpf4iDiH9ORJ+9fanVbIEqKD5Jag5w==}
 
   '@ag-grid-community/csv-export@32.2.2':
     resolution: {integrity: sha512-9ttdlJ7XOgK/qGC0QyXM1ep3f1GIjnyz1cQqIr9B2epe0fGFDt+lvK9EJBAQCG2GVJaFJ/xxBJfkQx65ganp+g==}
@@ -261,11 +264,11 @@ packages:
   '@ag-grid-community/infinite-row-model@32.2.2':
     resolution: {integrity: sha512-/K17BClH264UpXxtypRgY9Vy7mM3IWzlyCkAtoUF+TraYMwJqMSIjXCzZ/n/iXKQSKuTRiREqbq9ve5M/LtAaA==}
 
-  '@ag-grid-community/styles@32.2.2':
-    resolution: {integrity: sha512-YQm+Tb0yPUxxFmExrYtic+gMOU+00/brLZNVE8sB8/6SuxIKla6Vk7sC1aljtMtwaxO0H4gOL7vx4wYB4FtwBA==}
+  '@ag-grid-community/styles@32.3.0':
+    resolution: {integrity: sha512-JsKxvsJQbwolVnLbOPY0CPg7tb1PEE1Z6gY/fVI2FKYCF817mZbzba3fXnJK0NJ0ngxJWO8O8gZWCEjIBz8xgQ==}
 
-  '@ag-grid-community/vue3@32.2.2':
-    resolution: {integrity: sha512-fbGy2c2/775huBmLXJtYPoKaKLLWQGxTrm18VOACFwo4hFkGVBgovygFwtOPuXNZDkV4rZWrgQ59zJCkKFY36Q==}
+  '@ag-grid-community/vue3@32.3.0':
+    resolution: {integrity: sha512-5lWxy7zB+BkNL3ioDw3HiuDhG9+3GUhxDxxpeG25WVOiIOapOGc8iXnzN681FkAAIlRqJtaXqV7rkZipYc3kiQ==}
 
   '@ag-grid-enterprise/clipboard@32.2.2':
     resolution: {integrity: sha512-uw7kBiy1RvrtzUXEeIjeVQ3UfhO7lpArwyMNJG3QFM9EhJGLd6suRE1HNRBNTc9ugA1l6kIMagooGfu3aAbJvw==}
@@ -937,8 +940,8 @@ packages:
   '@milaboratories/ts-helpers@1.1.0':
     resolution: {integrity: sha512-nbGUetdEc47wX/btCANxOggHC4xzrD1f9ibZLLTIYVVOokzdVOVbZ9Qv+78TF1G15Sq7lgvqXr/BjYxGSCCO3g==}
 
-  '@milaboratories/uikit@1.2.25':
-    resolution: {integrity: sha512-PEW4TVJAVL0xnc1NdvWxIiD4rp37W6GoSzicqJ0DCZ9JvxZQatEoMjElLMKmnJVLCkJxqoRJvjUtfbxHKPt78w==}
+  '@milaboratories/uikit@1.2.26':
+    resolution: {integrity: sha512-oObsH2Am3yH/w/lnYjBMX1b5vI1H549O/sLD1ujSN/0WpE/Ascic4oK1RDoVu0Qca6ZmLUYFlj49NcXkCMR12w==}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -972,8 +975,8 @@ packages:
   '@platforma-open/milaboratories.samples-and-data@1.5.2':
     resolution: {integrity: sha512-0+tqv3kuTfFt/ohLSIwd2vS4Zqkc6touL2vi/IvyR6Wp32S6kp393UYTV3zBFF7sPU8SX7x5ATZIVsdM5KsF3A==}
 
-  '@platforma-open/milaboratories.software-mixcr@4.7.0-112-develop':
-    resolution: {integrity: sha512-vXagd6fzjT1jRQlYBfbTEm6SK4QrTIo1K4oWDoNw3BOk0Eav38AK8zNwbqpS4vNwOUkxoNYM4g69D6kmNFQ46g==}
+  '@platforma-open/milaboratories.software-mixcr@4.7.0-113-develop':
+    resolution: {integrity: sha512-Nt8CyVutiadwiasnXjZAN2qWnkuq6nQQb4/fZCNfSU/FJPpGQdvV0ff3cab0w3ZgM6LTnwiWLqFcfOmLSUW4ig==}
 
   '@platforma-open/milaboratories.software-small-binaries@1.13.2':
     resolution: {integrity: sha512-Do/HyYfB7mSJenxLvW6xtJkgVxIVe+MLaIvLQKMWsk7ZNB+mUuHA4NoJanN9ecO47AE6maX+WFBgVPP3efIXWg==}
@@ -992,8 +995,8 @@ packages:
   '@platforma-sdk/test@1.7.11':
     resolution: {integrity: sha512-pQShE/L3L35M/JOWmAvu+MKI/V8gB87D8DQ/1jZkrdzy8Aj71KQ0+jIfV2f5XD1C/jKCFRmcvvvV1fj/Cc7p4g==}
 
-  '@platforma-sdk/ui-vue@1.7.9':
-    resolution: {integrity: sha512-eOaAhiHTDrT0GMIlpUM4pgtIZ6229rb/8RA4DoYjq/8Kf/i4LZ0DDCzbAe1djGufP1xKX0fyh+3XL59cloQAmA==}
+  '@platforma-sdk/ui-vue@1.7.12':
+    resolution: {integrity: sha512-7KNLeNGXP9fY4uUwqhghRsnf5FIgZG+iYV9V1J6Rvp9Q96SiYsBElsujlGQB5ATh6UnO5FQgOmhwlhS3S89sLw==}
 
   '@platforma-sdk/workflow-tengo@1.6.1':
     resolution: {integrity: sha512-lN8yihsupM5ZJAllg+RwkisPO8Hl74zUFrSLx6KfJSWFh8+fyijus9zREo57AGC373MSABfAn62tfZzI5BDFJg==}
@@ -1464,6 +1467,9 @@ packages:
 
   ag-charts-types@10.2.0:
     resolution: {integrity: sha512-PUqH1QtugpYLnlbMdeSZVf5PpT1XZVsP69qN1JXhetLtQpVC28zaj7ikwu9CMA9N9b+dBboA9QcjUQUJZVUokQ==}
+
+  ag-charts-types@10.3.0:
+    resolution: {integrity: sha512-6nIwJmp/9JMMo4SsWZPcaYqlhN0Tzg3SmY2v+NXmfO4jjBSp8vJs3bDpPTpNtzutrmAMimGzQV31YSwq+K3bRQ==}
 
   agent-base@6.0.2:
     resolution: {integrity: sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==}
@@ -2980,14 +2986,19 @@ packages:
 
 snapshots:
 
-  '@ag-grid-community/client-side-row-model@32.2.2':
+  '@ag-grid-community/client-side-row-model@32.3.0':
     dependencies:
-      '@ag-grid-community/core': 32.2.2
+      '@ag-grid-community/core': 32.3.0
       tslib: 2.7.0
 
   '@ag-grid-community/core@32.2.2':
     dependencies:
       ag-charts-types: 10.2.0
+      tslib: 2.7.0
+
+  '@ag-grid-community/core@32.3.0':
+    dependencies:
+      ag-charts-types: 10.3.0
       tslib: 2.7.0
 
   '@ag-grid-community/csv-export@32.2.2':
@@ -3000,11 +3011,11 @@ snapshots:
       '@ag-grid-community/core': 32.2.2
       tslib: 2.7.0
 
-  '@ag-grid-community/styles@32.2.2': {}
+  '@ag-grid-community/styles@32.3.0': {}
 
-  '@ag-grid-community/vue3@32.2.2(typescript@5.5.4)':
+  '@ag-grid-community/vue3@32.3.0(typescript@5.5.4)':
     dependencies:
-      '@ag-grid-community/core': 32.2.2
+      '@ag-grid-community/core': 32.3.0
       vue: 3.5.12(typescript@5.5.4)
     transitivePeerDependencies:
       - typescript
@@ -4101,7 +4112,7 @@ snapshots:
     dependencies:
       denque: 2.1.0
 
-  '@milaboratories/uikit@1.2.25(typescript@5.5.4)':
+  '@milaboratories/uikit@1.2.26(typescript@5.5.4)':
     dependencies:
       vue: 3.5.12(typescript@5.5.4)
     transitivePeerDependencies:
@@ -4159,7 +4170,7 @@ snapshots:
       '@platforma-open/milaboratories.samples-and-data.workflow': 1.7.4
       '@platforma-sdk/model': 1.7.9
 
-  '@platforma-open/milaboratories.software-mixcr@4.7.0-112-develop': {}
+  '@platforma-open/milaboratories.software-mixcr@4.7.0-113-develop': {}
 
   '@platforma-open/milaboratories.software-small-binaries@1.13.2': {}
 
@@ -4222,21 +4233,21 @@ snapshots:
       - supports-color
       - terser
 
-  '@platforma-sdk/ui-vue@1.7.9(typescript@5.5.4)':
+  '@platforma-sdk/ui-vue@1.7.12(typescript@5.5.4)':
     dependencies:
-      '@ag-grid-community/client-side-row-model': 32.2.2
-      '@ag-grid-community/core': 32.2.2
+      '@ag-grid-community/client-side-row-model': 32.3.0
+      '@ag-grid-community/core': 32.3.0
       '@ag-grid-community/csv-export': 32.2.2
       '@ag-grid-community/infinite-row-model': 32.2.2
-      '@ag-grid-community/styles': 32.2.2
-      '@ag-grid-community/vue3': 32.2.2(typescript@5.5.4)
+      '@ag-grid-community/styles': 32.3.0
+      '@ag-grid-community/vue3': 32.3.0(typescript@5.5.4)
       '@ag-grid-enterprise/clipboard': 32.2.2
       '@ag-grid-enterprise/core': 32.2.2
       '@ag-grid-enterprise/excel-export': 32.2.2
       '@ag-grid-enterprise/menu': 32.2.2
       '@ag-grid-enterprise/range-selection': 32.2.2
       '@ag-grid-enterprise/rich-select': 32.2.2
-      '@milaboratories/uikit': 1.2.25(typescript@5.5.4)
+      '@milaboratories/uikit': 1.2.26(typescript@5.5.4)
       '@platforma-sdk/model': 1.7.9
       canonicalize: 2.0.0
       lru-cache: 11.0.1
@@ -4864,6 +4875,8 @@ snapshots:
       event-target-shim: 5.0.1
 
   ag-charts-types@10.2.0: {}
+
+  ag-charts-types@10.3.0: {}
 
   agent-base@6.0.2:
     dependencies:
