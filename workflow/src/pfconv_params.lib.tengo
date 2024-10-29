@@ -24,7 +24,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "Cell tag",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 10101
+            "pl7.app/table/orderPriority": "10101"
           }
         }
       }
@@ -40,7 +40,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "Cell group number",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 10100
+            "pl7.app/table/orderPriority": "10100"
           }
         }
       }, {
@@ -53,7 +53,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "Number Of Reads",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 10001
+            "pl7.app/table/orderPriority": "10001"
           }
         }
       }, {
@@ -66,7 +66,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "Fraction of reads",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 10000
+            "pl7.app/table/orderPriority": "10000"
           }
         }
       }, {
@@ -79,7 +79,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "Number of UMI",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 10001
+            "pl7.app/table/orderPriority": "10001"
           }
         }
       }, {
@@ -92,7 +92,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "Fraction of UMI",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 10000
+            "pl7.app/table/orderPriority": "10000"
           }
         }
       }, {
@@ -110,7 +110,7 @@ getColumns := func(blockId) {
             "pl7.app/type": "sequence",
             "pl7.app/label": "Clonal sequences",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1000
+            "pl7.app/table/orderPriority": "1000"
           }
         }
       }, {
@@ -143,7 +143,7 @@ getColumns := func(blockId) {
             "type": "V gene name",
             "pl7.app/label": "Best V hit",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1104
+            "pl7.app/table/orderPriority": "1104"
 
           }
         }
@@ -160,7 +160,7 @@ getColumns := func(blockId) {
             "type": "D gene name",
             "pl7.app/label": "Best D hit",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1103
+            "pl7.app/table/orderPriority": "1103"
           }
         }
       }, {
@@ -177,7 +177,7 @@ getColumns := func(blockId) {
             "type": "J gene name",
             "pl7.app/label": "Best J hit",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1102
+            "pl7.app/table/orderPriority": "1102"
           }
         }
       }, {
@@ -193,7 +193,7 @@ getColumns := func(blockId) {
             "type": "C gene name",
             "pl7.app/label": "Best C hit",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1101
+            "pl7.app/table/orderPriority": "1101"
           }
         }
       }, {
@@ -209,7 +209,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR1 nt",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1013
+            "pl7.app/table/orderPriority": "1013"
           }
         }
       }, {
@@ -241,7 +241,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR2 nt",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1011
+            "pl7.app/table/orderPriority": "1011"
           }
         }
       }, {
@@ -272,7 +272,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR3 nt",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1009
+            "pl7.app/table/orderPriority": "1009"
           }
         }
       }, {
@@ -303,7 +303,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR4 nt",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1008
+            "pl7.app/table/orderPriority": "1008"
           }
         }
       }, {
@@ -334,7 +334,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "CDR1 nt",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1012
+            "pl7.app/table/orderPriority": "1012"
           }
         }
       }, {
@@ -365,7 +365,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "CDR2 nt",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1010
+            "pl7.app/table/orderPriority": "1010"
           }
         }
       }, {
@@ -396,7 +396,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "CDR3 nt",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1111
+            "pl7.app/table/orderPriority": "1111"
           }
         }
       }, {
@@ -427,7 +427,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR1 aa",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1007
+            "pl7.app/table/orderPriority": "1007"
           }
         }
       }, {
@@ -443,7 +443,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR2 aa",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1005
+            "pl7.app/table/orderPriority": "1005"
           }
         }
       }, {
@@ -459,7 +459,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR3 aa",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1003
+            "pl7.app/table/orderPriority": "1003"
           }
         }
       }, {
@@ -475,7 +475,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR4 aa",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1002
+            "pl7.app/table/orderPriority": "1002"
           }
         }
       }, {
@@ -491,7 +491,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "CDR1 aa",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1006
+            "pl7.app/table/orderPriority": "1006"
           }
         }
       }, {
@@ -507,7 +507,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "CDR2 aa",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1004
+            "pl7.app/table/orderPriority": "1004"
           }
         }
       }, {
@@ -523,7 +523,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "CDR3 aa",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1110
+            "pl7.app/table/orderPriority": "1110"
           }
         }
       }, {
@@ -539,7 +539,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR1 imputed nt",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1013
+            "pl7.app/table/orderPriority": "1013"
           }
         }
       }, {
@@ -555,7 +555,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR2 imputed nt",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1011
+            "pl7.app/table/orderPriority": "1011"
           }
         }
       }, {
@@ -571,7 +571,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR3 imputed nt",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1009
+            "pl7.app/table/orderPriority": "1009"
           }
         }
       }, {
@@ -587,7 +587,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR4 imputed nt",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1008
+            "pl7.app/table/orderPriority": "1008"
           }
         }
       }, {
@@ -603,7 +603,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "CDR1 imputed nt",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1012
+            "pl7.app/table/orderPriority": "1012"
           }
         }
       }, {
@@ -619,7 +619,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "CDR2 imputed nt",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1010
+            "pl7.app/table/orderPriority": "1010"
           }
         }
       }, {
@@ -635,7 +635,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "CDR3 imputed nt",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1111
+            "pl7.app/table/orderPriority": "1111"
           }
         }
       }, {
@@ -651,7 +651,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR1 imputed aa",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1007
+            "pl7.app/table/orderPriority": "1007"
           }
         }
       }, {
@@ -667,7 +667,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR2 imputed aa",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1005
+            "pl7.app/table/orderPriority": "1005"
           }
         }
       }, {
@@ -683,7 +683,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR3 imputed aa",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1003
+            "pl7.app/table/orderPriority": "1003"
           }
         }
       }, {
@@ -699,7 +699,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR4 imputed aa",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1002
+            "pl7.app/table/orderPriority": "1002"
           }
         }
       }, {
@@ -715,7 +715,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "CDR1 imputed aa",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1006
+            "pl7.app/table/orderPriority": "1006"
           }
         }
       }, {
@@ -731,7 +731,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "CDR2 imputed aa",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1004
+            "pl7.app/table/orderPriority": "1004"
           }
         }
       }, {
@@ -747,7 +747,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "CDR3 imputed aa",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1110
+            "pl7.app/table/orderPriority": "1110"
           }
         }
       }, {
@@ -759,7 +759,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "IG isotype",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1105
+            "pl7.app/table/orderPriority": "1105"
           }
         }
       }, {
@@ -772,7 +772,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "Chain",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": 1106
+            "pl7.app/table/orderPriority": "1106"
           }
         }
       }
