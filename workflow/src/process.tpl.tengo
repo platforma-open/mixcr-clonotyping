@@ -74,6 +74,16 @@ self.body(func(inputs) {
 		}
 	}
 
+	hasAssembleContigs := false
+	hasAssembleCells := false
+	for stage in presetContent.analysisStages {
+		if stage == "assembleContigs" {
+			hasAssembleContigs = true
+		} else if stage == "assembleCells" {
+			hasAssembleCells = true
+		}
+	}
+
 	fileExtension := inputSpec.domain["pl7.app/fileExtension"]
 
 	aggregationTargets := [{
@@ -133,6 +143,22 @@ self.body(func(inputs) {
 		} else {
 			return text.join(arr, ",")
 		}
+	}
+
+	// calculating clns annotations
+
+	clnsAnnotations := {
+		"mixcr.com/assemblingFeature": joinOrUndefined(presetContent.assemblingFeature),
+		"mixcr.com/cellTags": joinOrUndefined(presetContent.cellTags),
+		"mixcr.com/coveredFeaturesOnExport": joinOrUndefined(presetContent.coveredFeaturesOnExport),
+		"mixcr.com/umiTags": joinOrUndefined(presetContent.umiTags),
+		"pl7.app/label": datasetLabel + " / MiXCR Clonotypes"
+	}
+	if hasAssembleContigs {
+		clnsAnnotations["mixcr.com/contigsAssembled"] = "true"
+	}
+	if hasAssembleCells {
+		clnsAnnotations["mixcr.com/cellsAssembled"] = "true"
 	}
 
 	return {
@@ -198,13 +224,7 @@ self.body(func(inputs) {
 			domain: {
 				"pl7.app/blockId": blockId
 			},
-			annotations: {
-				"mixcr.com/assemblingFeature": joinOrUndefined(presetContent.assemblingFeature),
-				"mixcr.com/cellTags": joinOrUndefined(presetContent.cellTags),
-				"mixcr.com/coveredFeaturesOnExport": joinOrUndefined(presetContent.coveredFeaturesOnExport),
-				"mixcr.com/umiTags": joinOrUndefined(presetContent.umiTags),
-				"pl7.app/label": datasetLabel + " / MiXCR Clonotypes"
-			},
+			annotations: clnsAnnotations,
 			valueType: "File",
 			axesSpec: [ inputSpec.axesSpec[0] ]
 		},

@@ -41,15 +41,21 @@ self.body(func(inputs) {
 	inputDataMeta := inputData.getDataAsJson()
 
 	hasAssembleContigs := false
+	hasAssembleCells := false
 	for stage in presetContent.analysisStages {
 		if stage == "assembleContigs" {
 			hasAssembleContigs = true
+		} else if stage == "assembleCells" {
+			hasAssembleCells = true
 		}
 	}
 
 	clnsFileName := "result.clns"
 	if hasAssembleContigs {
 		clnsFileName = "result.contigs.clns"
+	}
+	if hasAssembleCells {
+		clnsFileName = "result.assembledCells.clns"
 	}
 
 	if inputDataMeta.keyLength == 1 {

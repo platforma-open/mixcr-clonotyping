@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const ImmuneChain = z.union([
   z.literal('TRA'),
+  z.literal('TRAD'),
   z.literal('TRB'),
   z.literal('TRG'),
   z.literal('TRD'),
@@ -80,6 +81,11 @@ export const AlignmentChannelColors = {
 
 export const AlignmentChainColors = {
   TRA: {
+    total: '#105BCC',
+    hasStops: '#2D93FA',
+    isOOF: '#99CCFF',
+  },
+  TRAD: {
     total: '#105BCC',
     hasStops: '#2D93FA',
     isOOF: '#99CCFF',
