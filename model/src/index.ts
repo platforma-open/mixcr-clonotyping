@@ -1,10 +1,16 @@
 import {
   BlockModel,
   InferHrefType,
+  It,
+  MainOutputs,
   Option,
   Ref,
+  StagingOutputs,
+  getImportProgress,
+  getResourceField,
   isPColumn,
   isPColumnSpec,
+  mapResourceFields,
   type InferOutputsType
 } from '@platforma-sdk/model';
 import { BlockArgs, BlockArgsValid } from './args';
@@ -151,6 +157,16 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
       ).map((e) => [JSON.parse(e[0])[0], e[1]])
     ) satisfies Record<string, string>;
   })
+
+  .output(
+    'mainFileImports',
+    mapResourceFields(getResourceField(MainOutputs, 'fileImports'), getImportProgress(It))
+  )
+
+  .output(
+    'prerunFileImports',
+    mapResourceFields(getResourceField(StagingOutputs, 'fileImports'), getImportProgress(It))
+  )
 
   .sections((ctx) => {
     return [{ type: 'link', href: '/', label: 'Main' }];

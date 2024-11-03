@@ -1,6 +1,7 @@
 // get preset
 
 self := import("@platforma-sdk/workflow-tengo:tpl")
+smart := import("@platforma-sdk/workflow-tengo:smart")
 ll := import("@platforma-sdk/workflow-tengo:ll")
 exec := import("@platforma-sdk/workflow-tengo:exec")
 assets := import("@platforma-sdk/workflow-tengo:assets")
@@ -8,9 +9,9 @@ mixcr := import(":mixcr")
 
 self.validateInputs({
 	"__options__,closed": "",
-	"request": {
+	"preset": "any",
+	"params": {
 		"__options__,closed": "",
-		"presetName": "string",
 		"species,omitempty": "string"
 	}
 })
@@ -20,17 +21,28 @@ mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:
 self.defineOutputs("preset", "presetSpecForBack")
 
 self.body(func(inputs) {
-	presetName := inputs.request.presetName
-	species := inputs.request.species
+	preset := inputs.preset
+	species := inputs.params.species
 
 	mixcrExportPresetCmdBuilder := exec.builder().
 		inUiQueue().
 		software(mixcrSw).
 		secret("MI_LICENSE", "MI_LICENSE").
 		printErrStreamToStdout().
-		arg("exportPreset").
-		arg("--preset-name").
-		arg(presetName)
+		arg("exportPreset")
+
+	if smart.isResource(preset) /* file */ {
+		mixcrExportPresetCmdBuilder.
+			arg("--preset-name").
+			arg("local#input_preset").
+			addFile("input_preset.yaml", preset)
+	} else {
+		ll.assert(!is_undefined(preset.name), "undefined preset name")
+		mixcrExportPresetCmdBuilder.
+			arg("--preset-name").
+			arg(preset.name)
+	}
+
 
 	mixcr.addAdditionalColumnArgs(mixcrExportPresetCmdBuilder)
 

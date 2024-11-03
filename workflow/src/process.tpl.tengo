@@ -24,7 +24,7 @@ self.awaitState("pfconvParams", "ResourceReady")
 
 self.body(func(inputs) {
 	params := inputs.params
-	preset := params.preset
+	preset := inputs.preset
 	inputSpec := inputs.inputSpec
 	species := params.species
 	blockId := params.blockId
@@ -120,8 +120,8 @@ self.body(func(inputs) {
 		aggregationTargets,
 		false,
 		{
+			preset: preset,
 			params: {
-				preset: preset,
 				species: species,
 				fileExtension: fileExtension,
 				reports: reports

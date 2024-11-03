@@ -20,18 +20,47 @@ processTpl := assets.importTemplate(":process")
 wf.setPreRun(assets.importTemplate(":prerun"))
 
 wf.body(func(args) {
+	// (begin) @TODO To be moved to SDK / Model
+
+	fileImports := {}
+
+	importFile := func(importHandle) {
+		fromMap := fileImports[importHandle]
+		if fromMap == undefined {
+			fImport := file.importFile(importHandle)
+			fileImports[importHandle] = fImport
+			return fImport.file
+		} else {
+			return fromMap.file
+		}
+	}
+
+	// (end)
+
 	blockId := wf.blockId().getDataAsJson()
 
 	inputRef := args.input
 
 	preset := args.preset
+
+	// file or json with preset name
+	presetResource := undefined
+
+	if preset.type == "file" {
+		presetResource = importFile(preset.file)
+	} else {
+		ll.assert(preset.type == "name", "unexpected preset type")
+		// whole json, including type
+		presetResource = smart.createJsonResource(preset)
+	}
+
 	species := args.species
 
 	input := wf.resolve(inputRef)
 
 	getPreset := render.create(getPresetTpl, {
-		request: {
-			presetName: preset,
+		preset: presetResource,
+		params: {
 			species: species
 		}
 	})
@@ -47,12 +76,12 @@ wf.body(func(args) {
 	pfconvParams := calculatePfconvParams.output("params", 24 * 60 * 60 * 1000)
 
 	runMixcr := render.createEphemeral(processTpl, {
+		preset: presetResource,
+		presetContent: specsContent,
 		params: smart.createJsonResource({
-			preset: preset,
 			species: species,
 			blockId: blockId
 		}),
-		presetContent: specsContent,
 		pfconvParams: pfconvParams,
 		inputSpec: input.getFutureInputField("spec"),
 		inputData: input.getFutureInputField("data")
@@ -79,7 +108,10 @@ wf.body(func(args) {
 		reports: pframes.exportColumnData(runMixcr.output("reports.data")),
 		logs: runMixcr.output("logs.data"),
 		clones: pframes.exportFrame(runMixcr.output("clones")),
-		clns: runMixcr.output("clns.data")
+		clns: runMixcr.output("clns.data"),
+		fileImports: smart.createMapResource(maps.mapValues(fileImports, func(im) {
+			return im.handle
+		}))
 	}
 
 	return {

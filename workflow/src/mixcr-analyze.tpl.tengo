@@ -1,6 +1,7 @@
 // mixcr analyze
 
 self := import("@platforma-sdk/workflow-tengo:tpl")
+smart := import("@platforma-sdk/workflow-tengo:smart")
 pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 ll := import("@platforma-sdk/workflow-tengo:ll")
 exec := import("@platforma-sdk/workflow-tengo:exec")
@@ -22,7 +23,7 @@ self.body(func(inputs) {
 	inputData := inputs[pConstants.VALUE_FIELD_NAME]
 
 	params := inputs.params
-	preset := params.preset
+	preset := inputs.preset
 	species := params.species
 	fileExtension := params.fileExtension
 	reports := params.reports
@@ -72,7 +73,15 @@ self.body(func(inputs) {
 			mixcrCmdBuilder.arg("--species").arg(species)
 		}
 
-		mixcrCmdBuilder.arg(preset)
+		if smart.isResource(preset) /* file */ {
+			mixcrCmdBuilder.
+				arg("local#input_preset").
+				addFile("input_preset.yaml", preset)
+		} else {
+			ll.assert(!is_undefined(preset.name), "undefined preset name")
+			mixcrCmdBuilder.
+				arg(preset.name)
+		}
 
 		// The following code is split into two loops to maintain correct file index ordering (R1, R2, ...)
 

@@ -1,18 +1,30 @@
+import { ImportFileHandle } from '@platforma-sdk/model';
 import { awaitStableState, tplTest, ML } from '@platforma-sdk/test';
 import { ExpectStatic } from 'vitest';
 
-type Request = {
-  presetName: string;
+type Preset =
+  | {
+      type: 'name';
+      name: string;
+    }
+  | {
+      type: 'file';
+      file: ImportFileHandle;
+    };
+
+type Params = {
   species?: string;
 };
 
-type TestCase = Request & {
+type TestCase = {
+  preset: string;
+  species?: string;
   check: (expect: ExpectStatic, config: any) => void;
 };
 
 const testCases: TestCase[] = [
   {
-    presetName: 'milab-human-dna-xcr-7genes-multiplex',
+    preset: 'milab-human-dna-xcr-7genes-multiplex',
     check: (expect, config) => {
       // console.dir(config, { depth: 5 });
       expect(config.axes).to.have.lengthOf(1);
@@ -24,7 +36,7 @@ const testCases: TestCase[] = [
     }
   },
   {
-    presetName: '10x-sc-xcr-vdj',
+    preset: '10x-sc-xcr-vdj',
     species: 'human',
     check: (expect, config) => {
       // console.dir(config, { depth: 5 });
@@ -52,7 +64,7 @@ const testCases: TestCase[] = [
     }
   },
   {
-    presetName: 'cellecta-human-rna-xcr-umi-drivermap-air',
+    preset: 'cellecta-human-rna-xcr-umi-drivermap-air',
     check: (expect, config) => {
       // console.dir(config, { depth: 5 });
       expect(config.axes).to.have.lengthOf(1);
@@ -64,7 +76,7 @@ const testCases: TestCase[] = [
     }
   },
   {
-    presetName: 'takara-human-rna-bcr-umi-smartseq',
+    preset: 'takara-human-rna-bcr-umi-smartseq',
     check: (expect, config) => {
       // console.dir(config, { depth: 5 });
       expect(config.axes).to.have.lengthOf(1);
@@ -89,7 +101,7 @@ const testCases: TestCase[] = [
     }
   },
   {
-    presetName: 'rna-seq',
+    preset: 'rna-seq',
     species: 'human',
     check: (expect, config) => {
       // console.dir(config, { depth: 5 });
@@ -103,7 +115,7 @@ const testCases: TestCase[] = [
     }
   },
   {
-    presetName: 'generic-single-cell-gex',
+    preset: 'generic-single-cell-gex',
     species: 'human',
     check: (expect, config) => {
       // console.dir(config, { depth: 5 });
@@ -116,14 +128,15 @@ const testCases: TestCase[] = [
 tplTest.for(testCases)(
   'checking preset for $presetName',
   { timeout: 30000 },
-  async ({ presetName, species, check }, { helper, expect }) => {
+  async ({ preset, species, check }, { helper, expect }) => {
     const resultC = (
       await helper.renderTemplate(true, 'test.columns.test', ['conf'], (tx) => {
         return {
-          request: tx.createValue(
+          preset: tx.createValue(
             ML.Pl.JsonObject,
-            JSON.stringify({ presetName, species } satisfies Request)
-          )
+            JSON.stringify({ type: 'name', name: preset } satisfies Preset)
+          ),
+          params: tx.createValue(ML.Pl.JsonObject, JSON.stringify({ species } satisfies Params))
         };
       })
     ).computeOutput('conf', (c) => c?.getDataAsJson());

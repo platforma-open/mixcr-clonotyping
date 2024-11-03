@@ -10,10 +10,25 @@ const Species = z.union([
   z.literal('mfas')
 ]);
 
+export const PresetName = z.object({
+  type: z.literal('name'),
+  name: z.string()
+});
+export type PresetName = z.infer<typeof PresetName>;
+
+export const PresetFile = z.object({
+  type: z.literal('file'),
+  file: z.string().transform((v) => v as ImportFileHandle)
+});
+export type PresetFile = z.infer<typeof PresetFile>;
+
+export const Preset = z.discriminatedUnion('type', [PresetName, PresetFile]);
+export type Preset = z.infer<typeof Preset>;
+
 export const BlockArgsValid = z
   .object({
     input: Ref,
-    preset: z.string(),
+    preset: Preset,
     species: z.string().optional()
   })
   .strict();
