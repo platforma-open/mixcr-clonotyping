@@ -1,5 +1,15 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 1.2.5
+
+### Patch Changes
+
+- 4e79c1d: Preset file support & SDK upgrade
+- Updated dependencies [4e79c1d]
+  - @platforma-open/milaboratories.mixcr-clonotyping.workflow@1.4.1
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.1.8
+  - @platforma-open/milaboratories.mixcr-clonotyping.ui@1.2.4
+
 ## 1.2.4
 
 ### Patch Changes

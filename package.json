@@ -1,6 +1,6 @@
 {
   "name": "@platforma-open/milaboratories.mixcr-clonotyping",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "scripts": {
     "pretty": "prettier --write \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json,vue}\"",
     "build-block": "turbo run build && rm -rf block-pack/* && block-tools pack",
@@ -34,7 +34,12 @@
       "description": "Extract TCR / BCR clonotypes from next-generation sequencing data",
       "longDescription": "file:./docs/description.md",
       "changelog": "file:CHANGELOG.md",
-      "tags": ["upstream", "airr", "vdj", "single-cell"],
+      "tags": [
+        "upstream",
+        "airr",
+        "vdj",
+        "single-cell"
+      ],
       "organization": {
         "name": "MiLaboratories Inc",
         "url": "https://milaboratories.com/",
