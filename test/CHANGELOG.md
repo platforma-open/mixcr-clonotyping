@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.test
 
+## 1.1.5
+
+### Patch Changes
+
+- 4e79c1d: Preset file support & SDK upgrade
+
 ## 1.1.4
 
 ### Patch Changes
