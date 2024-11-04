@@ -1,5 +1,14 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.2.5
+
+### Patch Changes
+
+- 6c574ab: SDK upgrade
+- f0d4026: Migration to new theming AgGrid API
+- Updated dependencies [6c574ab]
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.1.9
+
 ## 1.2.4
 
 ### Patch Changes
