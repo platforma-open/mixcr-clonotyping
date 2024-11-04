@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 1.5.0
+
+### Minor Changes
+
+- ba1094c: Multilate fastq support.
+
 ## 1.4.1
 
 ### Patch Changes
