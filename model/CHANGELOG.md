@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.1.9
+
+### Patch Changes
+
+- 6c574ab: SDK upgrade
+
 ## 1.1.8
 
 ### Patch Changes
