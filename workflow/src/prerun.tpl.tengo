@@ -1,14 +1,34 @@
 // pre-run
 
 wf := import("@platforma-sdk/workflow-tengo:workflow")
+maps := import("@platforma-sdk/workflow-tengo:maps")
 render := import("@platforma-sdk/workflow-tengo:render")
 ll := import("@platforma-sdk/workflow-tengo:ll")
+smart := import("@platforma-sdk/workflow-tengo:smart")
 assets := import("@platforma-sdk/workflow-tengo:assets")
+file := import("@platforma-sdk/workflow-tengo:file")
 
 listPresetsTpl := assets.importTemplate(":list-presets")
 getPresetTpl := assets.importTemplate(":get-preset")
 
 wf.body(func(args) {
+
+	// (begin) @TODO To be moved to SDK / Model
+
+	fileImports := {}
+
+	importFile := func(importHandle) {
+		fromMap := fileImports[importHandle]
+		if fromMap == undefined {
+			fImport := file.importFile(importHandle)
+			fileImports[importHandle] = fImport
+			return fImport.file
+		} else {
+			return fromMap.file
+		}
+	}
+
+	// (end)
 
 	outputs := {}
 
@@ -16,14 +36,32 @@ wf.body(func(args) {
 	outputs.presets = listPresets.output("presets", 24 * 60 * 60 * 1000)
 
 	if !is_undefined(args.preset) {
+
+		preset := args.preset
+
+		// file or json with preset name
+		presetResource := undefined
+
+		if preset.type == "file" {
+			presetResource = importFile(preset.file)
+		} else {
+			ll.assert(preset.type == "name", "unexpected preset type")
+			// whole json, including type
+			presetResource = smart.createJsonResource(preset)
+		}
+
 		getPreset := render.create(getPresetTpl, {
-			request: {
-				presetName: args.preset,
+			preset: presetResource,
+			params: {
 				species: args.species
 			}
 		})
 		outputs.preset = getPreset.output("presetSpecForBack", 24 * 60 * 60 * 1000)
 	}
+
+	outputs.fileImports = smart.createMapResource(maps.mapValues(fileImports, func(im) {
+		return im.handle
+	}))
 
 	return {
 		outputs: outputs,

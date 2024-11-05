@@ -1,16 +1,22 @@
 import {
   BlockModel,
   InferHrefType,
+  It,
+  MainOutputs,
   Option,
   Ref,
+  StagingOutputs,
+  getImportProgress,
+  getResourceField,
   isPColumn,
   isPColumnSpec,
+  mapResourceFields,
   type InferOutputsType
 } from '@platforma-sdk/model';
 import { BlockArgs, BlockArgsValid } from './args';
 import { parseResourceMap } from './helpers';
-import { ProgressPrefix } from './logs';
 import { SupportedPresetList } from './preset';
+import { ProgressPrefix } from './progress';
 
 export const platforma = BlockModel.create<BlockArgs>('Heavy')
 
@@ -38,26 +44,29 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
   )
 
   .output('reports', (ctx) =>
-    parseResourceMap(ctx.outputs?.resolve({ field: 'reports', assertFieldType: 'Input' }), (acc) =>
-      acc.getFileHandle(),
-  false
+    parseResourceMap(
+      ctx.outputs?.resolve({ field: 'reports', assertFieldType: 'Input' }),
+      (acc) => acc.getFileHandle(),
+      false
     )
   )
 
   .output('logs', (ctx) => {
     return ctx.outputs !== undefined
-      ? parseResourceMap(ctx.outputs?.resolve({ field: 'logs', assertFieldType: 'Input' }), (acc) =>
-          acc.getLogHandle(),
-      false
+      ? parseResourceMap(
+          ctx.outputs?.resolve({ field: 'logs', assertFieldType: 'Input' }),
+          (acc) => acc.getLogHandle(),
+          false
         )
       : undefined;
   })
 
   .output('progress', (ctx) => {
     return ctx.outputs !== undefined
-      ? parseResourceMap(ctx.outputs?.resolve({ field: 'logs', assertFieldType: 'Input' }), (acc) =>
-          acc.getProgressLog(ProgressPrefix),
-      false
+      ? parseResourceMap(
+          ctx.outputs?.resolve({ field: 'logs', assertFieldType: 'Input' }),
+          (acc) => acc.getProgressLog(ProgressPrefix),
+          false
         )
       : undefined;
   })
@@ -88,7 +97,7 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
 
   .output('inputOptions', (ctx) => {
     return ctx.resultPool
-      .getSpecsFromResultPool()
+      .getSpecs()
       .entries.filter((v) => {
         if (!isPColumnSpec(v.obj)) return false;
         const domain = v.obj.domain;
@@ -116,7 +125,7 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
     if (inputRef === undefined) return undefined;
     // @todo implement getSpecByRef method
     const inputSpec = ctx.resultPool
-      .getSpecsFromResultPool()
+      .getSpecs()
       .entries.find(
         (obj) => obj.ref.blockId === inputRef.blockId && obj.ref.name === inputRef.name
       )?.obj;
@@ -124,7 +133,7 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
     const sampleAxisSpec = inputSpec.axesSpec[0];
 
     // @todo implement get by spec
-    const sampleLabelsObj = ctx.resultPool.getDataFromResultPool().entries.find((f) => {
+    const sampleLabelsObj = ctx.resultPool.getData().entries.find((f) => {
       const spec = f.obj.spec;
       if (!isPColumnSpec(spec)) return false;
       if (spec.name !== 'pl7.app/label' || spec.axesSpec.length !== 1) return false;
@@ -149,6 +158,16 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
     ) satisfies Record<string, string>;
   })
 
+  .output(
+    'mainFileImports',
+    mapResourceFields(getResourceField(MainOutputs, 'fileImports'), getImportProgress(It))
+  )
+
+  .output(
+    'prerunFileImports',
+    mapResourceFields(getResourceField(StagingOutputs, 'fileImports'), getImportProgress(It))
+  )
+
   .sections((ctx) => {
     return [{ type: 'link', href: '/', label: 'Main' }];
   })
@@ -161,7 +180,6 @@ export type BlockOutputs = InferOutputsType<typeof platforma>;
 export type Href = InferHrefType<typeof platforma>;
 export * from './args';
 export * from './helpers';
-export * from './logs';
 export * from './qc';
 export * from './reports';
 export * from './progress';

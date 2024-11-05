@@ -10,10 +10,12 @@ calculateColumnsParamsTpl := assets.importTemplate(":calculate-pfconv-params")
 self.defineOutputs("conf")
 
 self.body(func(inputs) {
-	request := inputs.request
+	preset := inputs.preset
+	params := inputs.params
 
 	getPreset := render.create(getPresetTpl, {
-		request: request
+		preset: preset,
+		params: params
 	})
 
 	pfconvConfig := render.create(calculateColumnsParamsTpl, {

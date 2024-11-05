@@ -1,11 +1,11 @@
 import { platforma } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
 import { defineApp } from '@platforma-sdk/ui-vue';
-import MainPage from './MainPage.vue';
+import MainPageWrapper from './MainPageWrapper.vue';
 
 export const sdkPlugin = defineApp(platforma, () => {
   return {
     routes: {
-      '/': MainPage
+      '/': MainPageWrapper
     }
   };
 });

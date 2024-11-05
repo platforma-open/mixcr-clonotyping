@@ -1,5 +1,33 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 1.5.1
+
+### Patch Changes
+
+- 6c574ab: SDK upgrade
+
+## 1.5.0
+
+### Minor Changes
+
+- ba1094c: Multilate fastq support.
+
+## 1.4.1
+
+### Patch Changes
+
+- 4e79c1d: Preset file support & SDK upgrade
+
+## 1.4.0
+
+### Minor Changes
+
+- 5238326: Now block exports \*.assembledCells.clns for presets where cell assembly is applied to the data
+
+### Patch Changes
+
+- 5238326: SDK upgrade
+
 ## 1.3.0
 
 ### Minor Changes

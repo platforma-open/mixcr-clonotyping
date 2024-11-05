@@ -24,7 +24,7 @@ self.awaitState("pfconvParams", "ResourceReady")
 
 self.body(func(inputs) {
 	params := inputs.params
-	preset := params.preset
+	preset := inputs.preset
 	inputSpec := inputs.inputSpec
 	species := params.species
 	blockId := params.blockId
@@ -74,6 +74,16 @@ self.body(func(inputs) {
 		}
 	}
 
+	hasAssembleContigs := false
+	hasAssembleCells := false
+	for stage in presetContent.analysisStages {
+		if stage == "assembleContigs" {
+			hasAssembleContigs = true
+		} else if stage == "assembleCells" {
+			hasAssembleCells = true
+		}
+	}
+
 	fileExtension := inputSpec.domain["pl7.app/fileExtension"]
 
 	aggregationTargets := [{
@@ -105,13 +115,23 @@ self.body(func(inputs) {
 
 	ll.assert(smart.isResource(inputs.inputData), "input data should be a resource")
 
+	aggIndices := undefined
+	if len(inputSpec.axesSpec) == 2 {
+		ll.assert(inputSpec.axesSpec[1].name == "pl7.app/sequencing/readIndex", "unexpected axis name " + inputSpec.axesSpec[1].name)
+		aggIndices = [1]
+	} else if len(inputSpec.axesSpec) == 3 {
+		ll.assert(inputSpec.axesSpec[1].name == "pl7.app/sequencing/lane", "unexpected axis name " + inputSpec.axesSpec[1].name)
+		ll.assert(inputSpec.axesSpec[2].name == "pl7.app/sequencing/readIndex", "unexpected axi name " + inputSpec.axesSpec[2].name)
+		aggIndices = [1, 2]
+	}
+
 	mixcrResults := llPFrames.aggregate(
-		inputs.inputData, [1], mixcrAnalyzeTpl,
+		inputs.inputData, aggIndices, mixcrAnalyzeTpl,
 		aggregationTargets,
 		false,
 		{
+			preset: preset,
 			params: {
-				preset: preset,
 				species: species,
 				fileExtension: fileExtension,
 				reports: reports
@@ -133,6 +153,22 @@ self.body(func(inputs) {
 		} else {
 			return text.join(arr, ",")
 		}
+	}
+
+	// calculating clns annotations
+
+	clnsAnnotations := {
+		"mixcr.com/assemblingFeature": joinOrUndefined(presetContent.assemblingFeature),
+		"mixcr.com/cellTags": joinOrUndefined(presetContent.cellTags),
+		"mixcr.com/coveredFeaturesOnExport": joinOrUndefined(presetContent.coveredFeaturesOnExport),
+		"mixcr.com/umiTags": joinOrUndefined(presetContent.umiTags),
+		"pl7.app/label": datasetLabel + " / MiXCR Clonotypes"
+	}
+	if hasAssembleContigs {
+		clnsAnnotations["mixcr.com/contigsAssembled"] = "true"
+	}
+	if hasAssembleCells {
+		clnsAnnotations["mixcr.com/cellsAssembled"] = "true"
 	}
 
 	return {
@@ -198,13 +234,7 @@ self.body(func(inputs) {
 			domain: {
 				"pl7.app/blockId": blockId
 			},
-			annotations: {
-				"mixcr.com/assemblingFeature": joinOrUndefined(presetContent.assemblingFeature),
-				"mixcr.com/cellTags": joinOrUndefined(presetContent.cellTags),
-				"mixcr.com/coveredFeaturesOnExport": joinOrUndefined(presetContent.coveredFeaturesOnExport),
-				"mixcr.com/umiTags": joinOrUndefined(presetContent.umiTags),
-				"pl7.app/label": datasetLabel + " / MiXCR Clonotypes"
-			},
+			annotations: clnsAnnotations,
 			valueType: "File",
 			axesSpec: [ inputSpec.axesSpec[0] ]
 		},

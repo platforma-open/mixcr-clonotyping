@@ -1,5 +1,24 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.1.9
+
+### Patch Changes
+
+- 6c574ab: SDK upgrade
+
+## 1.1.8
+
+### Patch Changes
+
+- 4e79c1d: Preset file support & SDK upgrade
+
+## 1.1.7
+
+### Patch Changes
+
+- 5238326: SDK upgrade
+- 5238326: Fix for reports for shotgun-type data where TRAD pseudo-chain may appear in alignment reports
+
 ## 1.1.6
 
 ### Patch Changes

@@ -1,6 +1,7 @@
 // mixcr analyze
 
 self := import("@platforma-sdk/workflow-tengo:tpl")
+smart := import("@platforma-sdk/workflow-tengo:smart")
 pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 ll := import("@platforma-sdk/workflow-tengo:ll")
 exec := import("@platforma-sdk/workflow-tengo:exec")
@@ -22,7 +23,7 @@ self.body(func(inputs) {
 	inputData := inputs[pConstants.VALUE_FIELD_NAME]
 
 	params := inputs.params
-	preset := params.preset
+	preset := inputs.preset
 	species := params.species
 	fileExtension := params.fileExtension
 	reports := params.reports
@@ -41,9 +42,12 @@ self.body(func(inputs) {
 	inputDataMeta := inputData.getDataAsJson()
 
 	hasAssembleContigs := false
+	hasAssembleCells := false
 	for stage in presetContent.analysisStages {
 		if stage == "assembleContigs" {
 			hasAssembleContigs = true
+		} else if stage == "assembleCells" {
+			hasAssembleCells = true
 		}
 	}
 
@@ -51,81 +55,100 @@ self.body(func(inputs) {
 	if hasAssembleContigs {
 		clnsFileName = "result.contigs.clns"
 	}
+	if hasAssembleCells {
+		clnsFileName = "result.assembledCells.clns"
+	}
+
+	mixcrCmdBuilder := exec.builder().
+		printErrStreamToStdout().
+		env("MI_PROGRESS_PREFIX", progressPrefix).
+		software(mixcrSw).
+		secret("MI_LICENSE", "MI_LICENSE").
+		arg("analyze")
+
+	mixcr.addAdditionalColumnArgs(mixcrCmdBuilder)
+
+	if !is_undefined(species) {
+		mixcrCmdBuilder.arg("--species").arg(species)
+	}
+
+	if smart.isResource(preset) /* file */ {
+		mixcrCmdBuilder.
+			arg("local#input_preset").
+			addFile("input_preset.yaml", preset)
+	} else {
+		ll.assert(!is_undefined(preset.name), "undefined preset name")
+		mixcrCmdBuilder.
+			arg(preset.name)
+	}
 
 	if inputDataMeta.keyLength == 1 {
-		mixcrCmdBuilder := exec.builder().
-			printErrStreamToStdout().
-			env("MI_PROGRESS_PREFIX", progressPrefix).
-			software(mixcrSw).
-			secret("MI_LICENSE", "MI_LICENSE").
-			arg("analyze")
-
-		mixcr.addAdditionalColumnArgs(mixcrCmdBuilder)
-
-		if !is_undefined(species) {
-			mixcrCmdBuilder.arg("--species").arg(species)
-		}
-
-		mixcrCmdBuilder.arg(preset)
-
-		// The following code is split into two loops to maintain correct file index ordering (R1, R2, ...)
-
-		filesByRIndex := {}
 		for sKey, inputFile in inputData.inputs() {
 			key := json.decode(sKey)
+			if len(key) != 1 {
+				ll.panic("malformed key: %v", sKey)
+			}
 			r := key[0]
 			if (r[0] != 'R' && r[0] != "I") || (r[1] != '1' && r[1] != '2') || len(r) != 2 {
 				ll.panic("malformed read index: %v", r)
 			}
-			filesByRIndex[r] = inputFile
+			mixcrCmdBuilder.addFile("input_" + r + "." + fileExtension, inputFile)
 		}
-
-		for rIndex in ["I1", "I2", "R1", "R2"] {
-			inputFile := filesByRIndex[rIndex]
-			if is_undefined(inputFile) {
-				continue
+		mixcrCmdBuilder.arg("input_{{R}}." + fileExtension)
+	} else if inputDataMeta.keyLength == 2 {
+		for sKey, inputFile in inputData.inputs() {
+			key := json.decode(sKey)
+			if len(key) != 2 {
+				ll.panic("malformed key: %v", sKey)
 			}
-			fileName := "input_" + rIndex + "." + fileExtension
-			mixcrCmdBuilder.addFile(fileName, inputFile).
-				arg(fileName)
+			lane := key[0]
+			r := key[1]
+			if (r[0] != 'R' && r[0] != "I") || (r[1] != '1' && r[1] != '2') || len(r) != 2 {
+				ll.panic("malformed read index: %v", r)
+			}
+			if is_undefined(int(lane)) {
+				ll.panic("malformed lane: %v", lane)
+			}
+			mixcrCmdBuilder.addFile("input_L" + lane + "_" + r + "." + fileExtension, inputFile)
 		}
-
-		mixcrCmdBuilder.arg("result")
-
-		mixcrCmdBuilder.saveFile("result.qc.json")
-		mixcrCmdBuilder.saveFile(clnsFileName)
-
-		for report in reports {
-			mixcrCmdBuilder.saveFile(report.fileJson)
-			mixcrCmdBuilder.saveFile(report.fileTxt)
-		}
-
-		mixcrCmdBuilder.saveFileSet("clones", "^result\\.clones_[A-Z0-9]+\\.tsv$")
-
-		mixcrCmd := mixcrCmdBuilder.run()
-
-		reportsMap := pframes.pColumnResourceMapDataBuilder( /* keyLength */ 2 )
-		for report in reports {
-			reportsMap.add([report.id, "json"], mixcrCmd.getFile(report.fileJson))
-			reportsMap.add([report.id, "txt"], mixcrCmd.getFile(report.fileTxt))
-		}
-
-		// converting clone tables to p columns
-		clones := render.create(exportClonesTpl, {
-			data: mixcrCmd.getFileSet("clones"),
-			pfconvParams: pfconvParams
-		}).output("result", 24 * 60 * 60 * 1000)
-
-		result := {
-			qc: mixcrCmd.getFile("result.qc.json"),
-			log: mixcrCmd.getStdoutStream(),
-			reports: reportsMap.build(),
-			clns: mixcrCmd.getFile(clnsFileName),
-			clones: clones
-		}
-
-		return result
+		mixcrCmdBuilder.arg("input_L{{n}}_{{R}}." + fileExtension)
 	} else {
-		ll.panic("not yet supported")
+		ll.panic("too many axes / not supported")
 	}
+
+	mixcrCmdBuilder.arg("result")
+
+	mixcrCmdBuilder.saveFile("result.qc.json")
+	mixcrCmdBuilder.saveFile(clnsFileName)
+
+	for report in reports {
+		mixcrCmdBuilder.saveFile(report.fileJson)
+		mixcrCmdBuilder.saveFile(report.fileTxt)
+	}
+
+	mixcrCmdBuilder.saveFileSet("clones", "^result\\.clones_[A-Z0-9]+\\.tsv$")
+
+	mixcrCmd := mixcrCmdBuilder.run()
+
+	reportsMap := pframes.pColumnResourceMapDataBuilder( /* keyLength */ 2 )
+	for report in reports {
+		reportsMap.add([report.id, "json"], mixcrCmd.getFile(report.fileJson))
+		reportsMap.add([report.id, "txt"], mixcrCmd.getFile(report.fileTxt))
+	}
+
+	// converting clone tables to p columns
+	clones := render.create(exportClonesTpl, {
+		data: mixcrCmd.getFileSet("clones"),
+		pfconvParams: pfconvParams
+	}).output("result", 24 * 60 * 60 * 1000)
+
+	result := {
+		qc: mixcrCmd.getFile("result.qc.json"),
+		log: mixcrCmd.getStdoutStream(),
+		reports: reportsMap.build(),
+		clns: mixcrCmd.getFile(clnsFileName),
+		clones: clones
+	}
+
+	return result
 })

@@ -31,7 +31,7 @@ blockTest(
   async ({ rawPrj: project, ml, helpers, expect }) => {
     const blockId = await project.addBlock('Block', myBlockSpec);
     await project.setBlockArgs(blockId, {
-      preset: 'milab-human-dna-xcr-7genes-multiplex'
+      preset: { type: 'name', name: 'milab-human-dna-xcr-7genes-multiplex' }
     } satisfies BlockArgs);
     const stableState = (await awaitStableState(
       project.getBlockState(blockId),
@@ -122,7 +122,7 @@ blockTest(
 
     await project.setBlockArgs(clonotypingBlockId, {
       input: clonotypingStableState1Outputs.inputOptions[0].ref,
-      preset: 'milab-human-dna-xcr-7genes-multiplex'
+      preset: { type: 'name', name: 'milab-human-dna-xcr-7genes-multiplex' }
     } satisfies BlockArgs);
 
     const clonotypingStableState2 = (await awaitStableState(

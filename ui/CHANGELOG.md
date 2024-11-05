@@ -1,5 +1,32 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.2.5
+
+### Patch Changes
+
+- 6c574ab: SDK upgrade
+- f0d4026: Migration to new theming AgGrid API
+- Updated dependencies [6c574ab]
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.1.9
+
+## 1.2.4
+
+### Patch Changes
+
+- 4e79c1d: Preset file support & SDK upgrade
+- Updated dependencies [4e79c1d]
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.1.8
+
+## 1.2.3
+
+### Patch Changes
+
+- 5238326: SDK upgrade
+- 5238326: Fix for reports for shotgun-type data where TRAD pseudo-chain may appear in alignment reports
+- Updated dependencies [5238326]
+- Updated dependencies [5238326]
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.1.7
+
 ## 1.2.2
 
 ### Patch Changes
