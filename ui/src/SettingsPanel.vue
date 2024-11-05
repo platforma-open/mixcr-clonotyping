@@ -72,7 +72,8 @@ function setPresetFile(file?: ImportFileHandle) {
 </script>
 
 <template>
-  <PlDropdownRef :options="inputOptions ?? []" v-model="app.model.args.input" label="Select dataset" clearable />
+  <!--(Temp z-index fix, will become obsolete after dropdown update)-->
+  <PlDropdownRef style="z-index: 2;" :options="inputOptions ?? []" v-model="app.model.args.input" label="Select dataset" clearable />
 
   <PlBtnGroup :options="presetSourceOptions" v-model="data.presetType" />
 
