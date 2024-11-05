@@ -8,13 +8,14 @@ exec := import("@platforma-sdk/workflow-tengo:exec")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 render := import("@platforma-sdk/workflow-tengo:render")
 pframes := import("@platforma-sdk/workflow-tengo:pframes")
+xsv := import("@platforma-sdk/workflow-tengo:pframes.xsv")
 mixcr := import(":mixcr")
 
 json := import("json")
 
 self.defineOutputs("qc", "reports", "clones", "log", "clns")
 
-exportClonesTpl := assets.importTemplate(":export-clones")
+exportClonesTpl := assets.importTemplate(":export-clones-bulk")
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:main")
 
 progressPrefix := "[==PROGRESS==]"
@@ -25,6 +26,7 @@ self.body(func(inputs) {
 	params := inputs.params
 	preset := inputs.preset
 	species := params.species
+	limitInput := params.limitInput
 	fileExtension := params.fileExtension
 	reports := params.reports
 
@@ -70,6 +72,10 @@ self.body(func(inputs) {
 
 	if !is_undefined(species) {
 		mixcrCmdBuilder.arg("--species").arg(species)
+	}
+
+	if !is_undefined(limitInput) {
+		mixcrCmdBuilder.arg("--limit-input").arg(string(limitInput))
 	}
 
 	if smart.isResource(preset) /* file */ {
@@ -126,9 +132,15 @@ self.body(func(inputs) {
 		mixcrCmdBuilder.saveFile(report.fileTxt)
 	}
 
-	mixcrCmdBuilder.saveFileSet("clones", "^result\\.clones_[A-Z0-9]+\\.tsv$")
+	if hasAssembleCells {
+		mixcrCmdBuilder.saveFile("result.clones.tsv")
+	} else {
+		mixcrCmdBuilder.saveFileSet("clones", "^result\\.clones_[A-Z0-9]+\\.tsv$")
+	}
 
 	mixcrCmd := mixcrCmdBuilder.run()
+
+	// collecting results
 
 	reportsMap := pframes.pColumnResourceMapDataBuilder( /* keyLength */ 2 )
 	for report in reports {
@@ -137,10 +149,15 @@ self.body(func(inputs) {
 	}
 
 	// converting clone tables to p columns
-	clones := render.create(exportClonesTpl, {
-		data: mixcrCmd.getFileSet("clones"),
-		pfconvParams: pfconvParams
-	}).output("result", 24 * 60 * 60 * 1000)
+	clones := {}
+	if hasAssembleCells {
+		clones = xsv.importFile(mixcrCmd.getFile("result.clones.tsv"), "tsv", pfconvParams, { dataOnly: true })
+	} else {
+		clones = render.create(exportClonesTpl, {
+			data: mixcrCmd.getFileSet("clones"),
+			pfconvParams: pfconvParams
+		}).output("result", 24 * 60 * 60 * 1000)
+	}
 
 	result := {
 		qc: mixcrCmd.getFile("result.qc.json"),

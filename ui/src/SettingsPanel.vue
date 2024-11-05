@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useApp } from './app';
-import { ListOption, PlBtnGroup, PlDropdown, PlDropdownRef, PlFileInput } from '@platforma-sdk/ui-vue';
+import { ListOption, PlBtnGroup, PlDropdown, PlDropdownRef, PlFileInput, PlTextField } from '@platforma-sdk/ui-vue';
 import { computed, reactive, watch } from 'vue';
 import { retentive } from './retentive';
 import { Preset } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
@@ -69,11 +69,16 @@ function setPresetName(name?: string) {
 function setPresetFile(file?: ImportFileHandle) {
   app.model.args.preset = file === undefined ? undefined : { type: 'file', file }
 }
+
+function setLimitInput() {
+
+}
 </script>
 
 <template>
   <!--(Temp z-index fix, will become obsolete after dropdown update)-->
-  <PlDropdownRef style="z-index: 2;" :options="inputOptions ?? []" v-model="app.model.args.input" label="Select dataset" clearable />
+  <PlDropdownRef style="z-index: 2;" :options="inputOptions ?? []" v-model="app.model.args.input" label="Select dataset"
+    clearable />
 
   <PlBtnGroup :options="presetSourceOptions" v-model="data.presetType" />
 
@@ -88,4 +93,8 @@ function setPresetFile(file?: ImportFileHandle) {
     @update:model-value="setPresetFile" clearable />
 
   <PlDropdown v-if="needSpecies" :options="speciesOptions" v-model="app.model.args.species" label="Select species" />
+
+  <PlTextField :model-value="app.model.args.limitInput !== undefined ? String(app.model.args.limitInput) : undefined"
+    @update:model-value="v => app.model.args.limitInput = v && !isNaN(parseInt(v)) ? parseInt(v) : undefined"
+    label="Take only this number of reads into analysis" :rules="[v => !isNaN(parseInt(v))]" />
 </template>

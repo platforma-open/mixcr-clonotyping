@@ -28,7 +28,7 @@ getColumns := func(blockId) {
           }
         }
       }
-      ],
+    ],
     "columns": [
       {
         "column": "cellGroup",
@@ -776,7 +776,7 @@ getColumns := func(blockId) {
           }
         }
       }
-      ],
+    ],
     "storageFormat": "Binary",
     "partitionKeyLength": 0
   }

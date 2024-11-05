@@ -55,6 +55,7 @@ wf.body(func(args) {
 	}
 
 	species := args.species
+	limitInput := args.limitInput
 
 	input := wf.resolve(inputRef)
 
@@ -80,6 +81,7 @@ wf.body(func(args) {
 		presetContent: specsContent,
 		params: smart.createJsonResource({
 			species: species,
+			limitInput: limitInput,
 			blockId: blockId
 		}),
 		pfconvParams: pfconvParams,

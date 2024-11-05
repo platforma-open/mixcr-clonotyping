@@ -27,6 +27,7 @@ self.body(func(inputs) {
 	preset := inputs.preset
 	inputSpec := inputs.inputSpec
 	species := params.species
+	limitInput := params.limitInput
 	blockId := params.blockId
 
 	presetContent := inputs.presetContent.getDataAsJson()
@@ -45,22 +46,6 @@ self.body(func(inputs) {
 	if datasetLabel == undefined {
 		datasetLabel = "Unlabelled"
 	}
-
-	decomposition := pUtil.decomposePfconvCfg(pfconvParams, {
-		 additionalAxesSpec: [
-			sampleAxis,
-			{
-				"name": "pl7.app/vdj/chain",
-				"type": "String",
-				"annotations": {
-					"pl7.app/label": "Chain",
-					"pl7.app/axisNature": "scaleCompatible"
-				}
-			}
-			]
-		})
-	purifiedPfconvCfg := decomposition.purifiedCfg
-	cloneColumnsSpec := decomposition.columnsSpec
 
 	reports := []
 
@@ -84,6 +69,24 @@ self.body(func(inputs) {
 		}
 	}
 
+	cColumnsAdditionalAxesSpec := [sampleAxis]
+	if !hasAssembleCells {
+		cColumnsAdditionalAxesSpec = append(cColumnsAdditionalAxesSpec, {
+				"name": "pl7.app/vdj/chain",
+				"type": "String",
+				"annotations": {
+					"pl7.app/label": "Chain",
+					"pl7.app/axisNature": "scaleCompatible"
+				}
+			})
+	}
+
+	decomposition := pUtil.decomposePfconvCfg(pfconvParams, {
+		additionalAxesSpec: cColumnsAdditionalAxesSpec
+	})
+	purifiedPfconvCfg := decomposition.purifiedCfg
+	cloneColumnsSpec := decomposition.columnsSpec
+
 	fileExtension := inputSpec.domain["pl7.app/fileExtension"]
 
 	aggregationTargets := [{
@@ -103,12 +106,18 @@ self.body(func(inputs) {
 
 	ll.assert(purifiedPfconvCfg.partitionKeyLength == 0, "unexpected partition length")
 	ll.assert(purifiedPfconvCfg.storageFormat == "Binary", "unexpected format")
+
+	innerPartitionLength := 0
+	if !hasAssembleCells {
+		innerPartitionLength = 1 // [chain]
+	}
+
 	for columnCfg in purifiedPfconvCfg.columns {
 		aggCfg := {
 			type: "BinaryPartitioned",
 			name: "clones/" + columnCfg.id,
 			path: ["clones", columnCfg.id],
-			partitionKeyLength: 1 // [chain]
+			partitionKeyLength: innerPartitionLength
 		}
 		aggregationTargets = append(aggregationTargets, aggCfg)
 	}
@@ -133,6 +142,7 @@ self.body(func(inputs) {
 			preset: preset,
 			params: {
 				species: species,
+				limitInput: limitInput,
 				fileExtension: fileExtension,
 				reports: reports
 			},
