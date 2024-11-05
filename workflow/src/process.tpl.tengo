@@ -221,7 +221,7 @@ self.body(func(inputs) {
 						"pl7.app/label": "Report format"
 					},
 					domain: {
-						"pl7.app/dense": json.encode(["json", "txt"])
+						"pl7.app/dense": string(json.encode(["json", "txt"]))
 					}
 				}
 				]
