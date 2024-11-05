@@ -1,5 +1,18 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 1.2.8
+
+### Patch Changes
+
+- debcc6a: Use PlLogView directly to display any log handle logs
+- Updated dependencies [6ac0c86]
+- Updated dependencies [6ac0c86]
+- Updated dependencies [debcc6a]
+- Updated dependencies [abd805e]
+  - @platforma-open/milaboratories.mixcr-clonotyping.workflow@1.6.0
+  - @platforma-open/milaboratories.mixcr-clonotyping.ui@1.3.0
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.2.0
+
 ## 1.2.7
 
 ### Patch Changes

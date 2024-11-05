@@ -1,5 +1,16 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 1.6.0
+
+### Minor Changes
+
+- 6ac0c86: "pl7.app/table/visibility" & "pl7.app/table/orderPriority" annotations added to export columns
+- abd805e: Fix for export table columns for single-cell results
+
+### Patch Changes
+
+- 6ac0c86: Fix for dense annotation
+
 ## 1.5.1
 
 ### Patch Changes

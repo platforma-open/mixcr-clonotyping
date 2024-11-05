@@ -1,5 +1,17 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.3.0
+
+### Minor Changes
+
+- abd805e: Fix for export table columns for single-cell results
+
+### Patch Changes
+
+- debcc6a: Use PlLogView directly to display any log handle logs
+- Updated dependencies [abd805e]
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.2.0
+
 ## 1.2.5
 
 ### Patch Changes
