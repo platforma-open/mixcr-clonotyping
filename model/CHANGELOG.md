@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.2.0
+
+### Minor Changes
+
+- abd805e: Fix for export table columns for single-cell results
+
 ## 1.1.9
 
 ### Patch Changes
