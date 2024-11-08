@@ -10,7 +10,7 @@ import {
     ModuleRegistry
 } from '@ag-grid-community/core';
 import { PlId } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
-import { AgGridTheme, PlAgOverlayLoading, PlAgOverlayNoRows, PlBlockPage, PlBtnGhost, PlSlideModal } from '@platforma-sdk/ui-vue';
+import { AgGridTheme, PlAgOverlayLoading, PlAgOverlayNoRows, PlBlockPage, PlBtnGhost, PlSlideModal, PlMaskIcon24 } from '@platforma-sdk/ui-vue';
 import { refDebounced, whenever } from '@vueuse/core';
 import { reactive, shallowRef, watch } from 'vue';
 import AlignmentStatsCell from './AlignmentStatsCell.vue';
@@ -122,7 +122,12 @@ const gridOptions: GridOptions<MiXCRResult> = {
     <PlBlockPage>
         <template #title>MiXCR Clonotyping</template>
         <template #append>
-            <PlBtnGhost :icon="'settings-2'" @click.stop="() => data.settingsOpen = true">Settings</PlBtnGhost>
+            <PlBtnGhost @click.stop="() => data.settingsOpen = true">
+                Settings
+                <template #append>
+                    <PlMaskIcon24 name="settings" />
+                </template>
+            </PlBtnGhost>
         </template>
         <div :style="{ flex: 1 }">
             <AgGridVue :theme="AgGridTheme" :style="{ height: '100%' }" @grid-ready="onGridReady" :rowData="result" :columnDefs="columnDefs"
