@@ -1,5 +1,18 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 1.2.9
+
+### Patch Changes
+
+- 240c5b2: update ui sdk (auto-hug for the Ghost button) & use 24x24 settings icon
+- dc4c8c7: SDK upgrade
+- Updated dependencies [240c5b2]
+- Updated dependencies [87eb0db]
+- Updated dependencies [dc4c8c7]
+  - @platforma-open/milaboratories.mixcr-clonotyping.ui@1.3.1
+  - @platforma-open/milaboratories.mixcr-clonotyping.workflow@1.6.1
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.2.1
+
 ## 1.2.8
 
 ### Patch Changes
