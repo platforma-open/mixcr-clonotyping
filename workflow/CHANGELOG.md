@@ -1,5 +1,12 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 1.6.1
+
+### Patch Changes
+
+- 87eb0db: WF SDK Upgrade, PFrames export fix
+- dc4c8c7: SDK upgrade
+
 ## 1.6.0
 
 ### Minor Changes
