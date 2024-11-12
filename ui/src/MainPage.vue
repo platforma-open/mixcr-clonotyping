@@ -10,7 +10,7 @@ import {
     ModuleRegistry
 } from '@ag-grid-community/core';
 import { PlId } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
-import { AgGridTheme, PlAgOverlayLoading, PlAgOverlayNoRows, PlBlockPage, PlBtnGhost, PlSlideModal, PlMaskIcon24 } from '@platforma-sdk/ui-vue';
+import { AgGridTheme, PlAgOverlayLoading, PlAgOverlayNoRows, PlBlockPage, PlBtnGhost, PlMaskIcon24, PlSlideModal } from '@platforma-sdk/ui-vue';
 import { refDebounced, whenever } from '@vueuse/core';
 import { reactive, shallowRef, watch } from 'vue';
 import AlignmentStatsCell from './AlignmentStatsCell.vue';
@@ -67,8 +67,8 @@ const columnDefs = [
         cellRenderer: 'ProgressCell',
         headerName: "Progress",
         cellStyle: {
-            '--ag-cell-horizontal-padding': '2px',
-            '--ag-cell-vertical-padding': '2px',
+            '--ag-cell-horizontal-padding': '0px',
+            '--ag-cell-vertical-padding': '0px',
             // '--ag-cell-horizontal-border': 'solid rgb(150, 150, 200);',
             // 'border-width': '0'
         }
