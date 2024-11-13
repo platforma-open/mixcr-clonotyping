@@ -422,7 +422,7 @@ getColumns := func(blockId) {
           "name": "pl7.app/vdj/sequence",
           "domain": {
             "pl7.app/vdj/feature": "FR1",
-            "alphabet": "aminoacid"
+            "pl7.app/alphabet": "aminoacid"
           },
           "annotations": {
             "pl7.app/label": "FR1 aa",
@@ -438,7 +438,7 @@ getColumns := func(blockId) {
           "name": "pl7.app/vdj/sequence",
           "domain": {
             "pl7.app/vdj/feature": "FR2",
-            "alphabet": "aminoacid"
+            "pl7.app/alphabet": "aminoacid"
           },
           "annotations": {
             "pl7.app/label": "FR2 aa",
@@ -454,7 +454,7 @@ getColumns := func(blockId) {
           "name": "pl7.app/vdj/sequence",
           "domain": {
             "pl7.app/vdj/feature": "FR3",
-            "alphabet": "aminoacid"
+            "pl7.app/alphabet": "aminoacid"
           },
           "annotations": {
             "pl7.app/label": "FR3 aa",
@@ -470,7 +470,7 @@ getColumns := func(blockId) {
           "name": "pl7.app/vdj/sequence",
           "domain": {
             "pl7.app/vdj/feature": "FR4",
-            "alphabet": "aminoacid"
+            "pl7.app/alphabet": "aminoacid"
           },
           "annotations": {
             "pl7.app/label": "FR4 aa",
@@ -486,7 +486,7 @@ getColumns := func(blockId) {
           "name": "pl7.app/vdj/sequence",
           "domain": {
             "pl7.app/vdj/feature": "CDR1",
-            "alphabet": "aminoacid"
+            "pl7.app/alphabet": "aminoacid"
           },
           "annotations": {
             "pl7.app/label": "CDR1 aa",
@@ -502,7 +502,7 @@ getColumns := func(blockId) {
           "name": "pl7.app/vdj/sequence",
           "domain": {
             "pl7.app/vdj/feature": "CDR2",
-            "alphabet": "aminoacid"
+            "pl7.app/alphabet": "aminoacid"
           },
           "annotations": {
             "pl7.app/label": "CDR2 aa",
@@ -518,7 +518,7 @@ getColumns := func(blockId) {
           "name": "pl7.app/vdj/sequence",
           "domain": {
             "pl7.app/vdj/feature": "CDR3",
-            "alphabet": "aminoacid"
+            "pl7.app/alphabet": "aminoacid"
           },
           "annotations": {
             "pl7.app/label": "CDR3 aa",
@@ -534,7 +534,7 @@ getColumns := func(blockId) {
           "valueType": "String",
           "domain": {
             "pl7.app/vdj/feature": "FR1",
-            "alphabet": "nucleotide"
+            "pl7.app/alphabet": "nucleotide"
           },
           "annotations": {
             "pl7.app/label": "FR1 imputed nt",
@@ -550,7 +550,7 @@ getColumns := func(blockId) {
           "valueType": "String",
           "domain": {
             "pl7.app/vdj/feature": "FR2",
-            "alphabet": "nucleotide"
+            "pl7.app/alphabet": "nucleotide"
           },
           "annotations": {
             "pl7.app/label": "FR2 imputed nt",
@@ -566,7 +566,7 @@ getColumns := func(blockId) {
           "valueType": "String",
           "domain": {
             "pl7.app/vdj/feature": "FR3",
-            "alphabet": "nucleotide"
+            "pl7.app/alphabet": "nucleotide"
           },
           "annotations": {
             "pl7.app/label": "FR3 imputed nt",
@@ -582,7 +582,7 @@ getColumns := func(blockId) {
           "valueType": "String",
           "domain": {
             "pl7.app/vdj/feature": "FR4",
-            "alphabet": "nucleotide"
+            "pl7.app/alphabet": "nucleotide"
           },
           "annotations": {
             "pl7.app/label": "FR4 imputed nt",
@@ -598,7 +598,7 @@ getColumns := func(blockId) {
           "valueType": "String",
           "domain": {
             "pl7.app/vdj/feature": "CDR1",
-            "alphabet": "nucleotide"
+            "pl7.app/alphabet": "nucleotide"
           },
           "annotations": {
             "pl7.app/label": "CDR1 imputed nt",
@@ -614,7 +614,7 @@ getColumns := func(blockId) {
           "valueType": "String",
           "domain": {
             "pl7.app/vdj/feature": "CDR2",
-            "alphabet": "nucleotide"
+            "pl7.app/alphabet": "nucleotide"
           },
           "annotations": {
             "pl7.app/label": "CDR2 imputed nt",
@@ -630,7 +630,7 @@ getColumns := func(blockId) {
           "valueType": "String",
           "domain": {
             "pl7.app/vdj/feature": "CDR3",
-            "alphabet": "nucleotide"
+            "pl7.app/alphabet": "nucleotide"
           },
           "annotations": {
             "pl7.app/label": "CDR3 imputed nt",
@@ -646,7 +646,7 @@ getColumns := func(blockId) {
           "name": "pl7.app/vdj/sequence",
           "domain": {
             "pl7.app/vdj/feature": "FR1",
-            "alphabet": "aminoacid"
+            "pl7.app/alphabet": "aminoacid"
           },
           "annotations": {
             "pl7.app/label": "FR1 imputed aa",
@@ -662,7 +662,7 @@ getColumns := func(blockId) {
           "name": "pl7.app/vdj/sequence",
           "domain": {
             "pl7.app/vdj/feature": "FR2",
-            "alphabet": "aminoacid"
+            "pl7.app/alphabet": "aminoacid"
           },
           "annotations": {
             "pl7.app/label": "FR2 imputed aa",
@@ -678,7 +678,7 @@ getColumns := func(blockId) {
           "name": "pl7.app/vdj/sequence",
           "domain": {
             "pl7.app/vdj/feature": "FR3",
-            "alphabet": "aminoacid"
+            "pl7.app/alphabet": "aminoacid"
           },
           "annotations": {
             "pl7.app/label": "FR3 imputed aa",
@@ -694,7 +694,7 @@ getColumns := func(blockId) {
           "name": "pl7.app/vdj/sequence",
           "domain": {
             "pl7.app/vdj/feature": "FR4",
-            "alphabet": "aminoacid"
+            "pl7.app/alphabet": "aminoacid"
           },
           "annotations": {
             "pl7.app/label": "FR4 imputed aa",
@@ -710,7 +710,7 @@ getColumns := func(blockId) {
           "name": "pl7.app/vdj/sequence",
           "domain": {
             "pl7.app/vdj/feature": "CDR1",
-            "alphabet": "aminoacid"
+            "pl7.app/alphabet": "aminoacid"
           },
           "annotations": {
             "pl7.app/label": "CDR1 imputed aa",
@@ -726,7 +726,7 @@ getColumns := func(blockId) {
           "name": "pl7.app/vdj/sequence",
           "domain": {
             "pl7.app/vdj/feature": "CDR2",
-            "alphabet": "aminoacid"
+            "pl7.app/alphabet": "aminoacid"
           },
           "annotations": {
             "pl7.app/label": "CDR2 imputed aa",
@@ -742,7 +742,7 @@ getColumns := func(blockId) {
           "name": "pl7.app/vdj/sequence",
           "domain": {
             "pl7.app/vdj/feature": "CDR3",
-            "alphabet": "aminoacid"
+            "pl7.app/alphabet": "aminoacid"
           },
           "annotations": {
             "pl7.app/label": "CDR3 imputed aa",
