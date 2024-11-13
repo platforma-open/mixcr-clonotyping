@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 1.6.2
+
+### Patch Changes
+
+- 204e8ff: Fix alphabet annotation
+
 ## 1.6.1
 
 ### Patch Changes
