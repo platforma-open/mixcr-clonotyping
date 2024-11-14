@@ -5,6 +5,7 @@ getColumns := func(blockId) {
     "axes": [
       {
         "column": "cloneId",
+        "naRegex": "region_not_covered",
         "spec": {
           "name": "pl7.app/vdj/cloneId",
           "type": "Long",
@@ -18,6 +19,7 @@ getColumns := func(blockId) {
         }
       }, {
         "column": "tagValueCELL",
+        "naRegex": "",
         "spec": {
           "name": "pl7.app/vdj/tagValueCELL",
           "type": "String",
@@ -33,6 +35,7 @@ getColumns := func(blockId) {
       {
         "column": "cellGroup",
         "id": "cell-group",
+        "naRegex": "region_not_covered",
         "allowNA": false,
         "spec": {
           "name": "pl7.app/vdj/cellGroup",
@@ -46,6 +49,7 @@ getColumns := func(blockId) {
       }, {
         "column": "readCount",
         "id": "read-count",
+        "naRegex": "region_not_covered",
         "allowNA": false,
         "spec": {
           "name": "pl7.app/vdj/readCount",
@@ -59,6 +63,7 @@ getColumns := func(blockId) {
       }, {
         "column": "readFraction",
         "id": "read-fraction",
+        "naRegex": "region_not_covered",
         "allowNA": false,
         "spec": {
           "name": "pl7.app/vdj/readFraction",
@@ -72,6 +77,7 @@ getColumns := func(blockId) {
       }, {
         "column": "uniqueMoleculeCount",
         "id": "umi-count",
+        "naRegex": "region_not_covered",
         "allowNA": false,
         "spec": {
           "name": "pl7.app/vdj/uniqueMoleculeCount",
@@ -85,6 +91,7 @@ getColumns := func(blockId) {
       }, {
         "column": "uniqueMoleculeFraction",
         "id": "umi-fraction",
+        "naRegex": "region_not_covered",
         "allowNA": false,
         "spec": {
           "name": "pl7.app/vdj/uniqueMoleculeFraction",
@@ -98,6 +105,7 @@ getColumns := func(blockId) {
       }, {
         "column": "targetSequences",
         "id": "n-seq-clonal-sequences",
+        "naRegex": "",
         "allowNA": false,
         "spec": {
           "name": "pl7.app/vdj/sequence",
@@ -116,6 +124,7 @@ getColumns := func(blockId) {
       }, {
         "column": "targetQualities",
         "id": "clonal-qualities",
+        "naRegex": "",
         "allowNA": false,
         "spec": {
           "name": "pl7.app/vdj/sequenceQuality",
@@ -132,6 +141,7 @@ getColumns := func(blockId) {
       }, {
         "column": "bestVHit",
         "id": "best-v-hit",
+        "naRegex": "",
         "allowNA": false,
         "spec": {
           "name": "pl7.app/vdj/geneHit",
@@ -144,12 +154,12 @@ getColumns := func(blockId) {
             "pl7.app/label": "Best V hit",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "1104"
-
           }
         }
       }, {
         "column": "bestDHit",
         "id": "best-d-hit",
+        "naRegex": "",
         "spec": {
           "name": "pl7.app/vdj/geneHit",
           "valueType": "String",
@@ -166,6 +176,7 @@ getColumns := func(blockId) {
       }, {
         "column": "bestJHit",
         "id": "best-j-hit",
+        "naRegex": "",
         "allowNA": false,
         "spec": {
           "name": "pl7.app/vdj/geneHit",
@@ -183,6 +194,7 @@ getColumns := func(blockId) {
       }, {
         "column": "bestCHit",
         "id": "best-c-hit",
+        "naRegex": "",
         "spec": {
           "name": "pl7.app/vdj/geneHit",
           "valueType": "String",
@@ -199,6 +211,7 @@ getColumns := func(blockId) {
       }, {
         "column": "nSeqFR1",
         "id": "n-seq-fr1",
+        "naRegex": "",
         "spec": {
           "name": "pl7.app/vdj/sequence",
           "valueType": "String",
@@ -215,6 +228,7 @@ getColumns := func(blockId) {
       }, {
         "column": "minQualFR1",
         "id": "min-qual-fr1",
+        "naRegex": "region_not_covered",
         "spec": {
           "name": "pl7.app/vdj/sequenceQuality",
           "valueType": "Int",
@@ -230,10 +244,10 @@ getColumns := func(blockId) {
       }, {
         "column": "nSeqFR2",
         "id": "n-seq-fr2",
+        "naRegex": "",
         "spec": {
           "name": "pl7.app/vdj/sequence",
           "valueType": "String",
-
           "domain": {
             "pl7.app/vdj/feature": "FR2",
             "pl7.app/alphabet": "nucleotide"
@@ -247,6 +261,7 @@ getColumns := func(blockId) {
       }, {
         "column": "minQualFR2",
         "id": "min-qual-fr2",
+        "naRegex": "region_not_covered",
         "spec": {
           "name": "pl7.app/vdj/sequenceQuality",
           "valueType": "Int",
@@ -262,6 +277,7 @@ getColumns := func(blockId) {
       }, {
         "column": "nSeqFR3",
         "id": "n-seq-fr3",
+        "naRegex": "",
         "spec": {
           "name": "pl7.app/vdj/sequence",
           "valueType": "String",
@@ -278,6 +294,7 @@ getColumns := func(blockId) {
       }, {
         "column": "minQualFR3",
         "id": "min-qual-fr3",
+        "naRegex": "region_not_covered",
         "spec": {
           "name": "pl7.app/vdj/sequenceQuality",
           "valueType": "Int",
@@ -293,6 +310,7 @@ getColumns := func(blockId) {
       }, {
         "column": "nSeqFR4",
         "id": "n-seq-fr4",
+        "naRegex": "",
         "spec": {
           "name": "pl7.app/vdj/sequence",
           "valueType": "String",
@@ -309,6 +327,7 @@ getColumns := func(blockId) {
       }, {
         "column": "minQualFR4",
         "id": "min-qual-fr4",
+        "naRegex": "region_not_covered",
         "spec": {
           "name": "pl7.app/vdj/sequenceQuality",
           "valueType": "Int",
@@ -324,6 +343,7 @@ getColumns := func(blockId) {
       }, {
         "column": "nSeqCDR1",
         "id": "n-seq-cdr1",
+        "naRegex": "",
         "spec": {
           "name": "pl7.app/vdj/sequence",
           "valueType": "String",
@@ -340,6 +360,7 @@ getColumns := func(blockId) {
       }, {
         "column": "minQualCDR1",
         "id": "min-qual-cdr1",
+        "naRegex": "region_not_covered",
         "spec": {
           "name": "pl7.app/vdj/minQualCDR1",
           "valueType": "Int",
@@ -355,6 +376,7 @@ getColumns := func(blockId) {
       }, {
         "column": "nSeqCDR2",
         "id": "n-seq-cdr2",
+        "naRegex": "",
         "spec": {
           "name": "pl7.app/vdj/sequence",
           "valueType": "String",
@@ -371,6 +393,7 @@ getColumns := func(blockId) {
       }, {
         "column": "minQualCDR2",
         "id": "min-qual-cdr2",
+        "naRegex": "region_not_covered",
         "spec": {
           "name": "pl7.app/vdj/sequenceQuality",
           "valueType": "Int",
@@ -386,6 +409,7 @@ getColumns := func(blockId) {
       }, {
         "column": "nSeqCDR3",
         "id": "n-seq-cdr3",
+        "naRegex": "",
         "spec": {
           "valueType": "String",
           "name": "pl7.app/vdj/sequence",
@@ -402,6 +426,7 @@ getColumns := func(blockId) {
       }, {
         "column": "minQualCDR3",
         "id": "min-qual-cdr3",
+        "naRegex": "region_not_covered",
         "spec": {
           "name": "pl7.app/vdj/sequenceQuality",
           "valueType": "Int",
@@ -417,6 +442,7 @@ getColumns := func(blockId) {
       }, {
         "column": "aaSeqFR1",
         "id": "aa-seq-fr1",
+        "naRegex": "",
         "spec": {
           "valueType": "String",
           "name": "pl7.app/vdj/sequence",
@@ -433,6 +459,7 @@ getColumns := func(blockId) {
       }, {
         "column": "aaSeqFR2",
         "id": "aa-seq-fr2",
+        "naRegex": "",
         "spec": {
           "valueType": "String",
           "name": "pl7.app/vdj/sequence",
@@ -449,6 +476,7 @@ getColumns := func(blockId) {
       }, {
         "column": "aaSeqFR3",
         "id": "aa-seq-fr3",
+        "naRegex": "",
         "spec": {
           "valueType": "String",
           "name": "pl7.app/vdj/sequence",
@@ -465,6 +493,7 @@ getColumns := func(blockId) {
       }, {
         "column": "aaSeqFR4",
         "id": "aa-seq-fr4",
+        "naRegex": "",
         "spec": {
           "valueType": "String",
           "name": "pl7.app/vdj/sequence",
@@ -481,6 +510,7 @@ getColumns := func(blockId) {
       }, {
         "column": "aaSeqCDR1",
         "id": "aa-seq-cdr1",
+        "naRegex": "",
         "spec": {
           "valueType": "String",
           "name": "pl7.app/vdj/sequence",
@@ -497,6 +527,7 @@ getColumns := func(blockId) {
       }, {
         "column": "aaSeqCDR2",
         "id": "aa-seq-cdr2",
+        "naRegex": "",
         "spec": {
           "valueType": "String",
           "name": "pl7.app/vdj/sequence",
@@ -513,6 +544,7 @@ getColumns := func(blockId) {
       }, {
         "column": "aaSeqCDR3",
         "id": "aa-seq-cdr3",
+        "naRegex": "",
         "spec": {
           "valueType": "String",
           "name": "pl7.app/vdj/sequence",
@@ -529,6 +561,7 @@ getColumns := func(blockId) {
       }, {
         "column": "nSeqImputedFR1",
         "id": "n-seq-imputed-fr1",
+        "naRegex": "",
         "spec": {
           "name": "pl7.app/vdj/sequence",
           "valueType": "String",
@@ -545,6 +578,7 @@ getColumns := func(blockId) {
       }, {
         "column": "nSeqImputedFR2",
         "id": "n-seq-imputed-fr2",
+        "naRegex": "",
         "spec": {
           "name": "pl7.app/vdj/sequence",
           "valueType": "String",
@@ -561,6 +595,7 @@ getColumns := func(blockId) {
       }, {
         "column": "nSeqImputedFR3",
         "id": "n-seq-imputed-fr3",
+        "naRegex": "",
         "spec": {
           "name": "pl7.app/vdj/sequence",
           "valueType": "String",
@@ -577,6 +612,7 @@ getColumns := func(blockId) {
       }, {
         "column": "nSeqImputedFR4",
         "id": "n-seq-imputed-fr4",
+        "naRegex": "",
         "spec": {
           "name": "pl7.app/vdj/sequence",
           "valueType": "String",
@@ -593,6 +629,7 @@ getColumns := func(blockId) {
       }, {
         "column": "nSeqImputedCDR1",
         "id": "n-seq-imputed-cdr1",
+        "naRegex": "",
         "spec": {
           "name": "pl7.app/vdj/sequence",
           "valueType": "String",
@@ -609,6 +646,7 @@ getColumns := func(blockId) {
       }, {
         "column": "nSeqImputedCDR2",
         "id": "n-seq-imputed-cdr2",
+        "naRegex": "",
         "spec": {
           "name": "pl7.app/vdj/sequence",
           "valueType": "String",
@@ -625,6 +663,7 @@ getColumns := func(blockId) {
       }, {
         "column": "nSeqImputedCDR3",
         "id": "n-seq-imputed-CDR3",
+        "naRegex": "",
         "spec": {
           "name": "pl7.app/vdj/sequence",
           "valueType": "String",
@@ -641,6 +680,7 @@ getColumns := func(blockId) {
       }, {
         "column": "aaSeqImputedFR1",
         "id": "aa-seq-imputed-fr1",
+        "naRegex": "",
         "spec": {
           "valueType": "String",
           "name": "pl7.app/vdj/sequence",
@@ -657,6 +697,7 @@ getColumns := func(blockId) {
       }, {
         "column": "aaSeqImputedFR2",
         "id": "aa-seq-imputed-fr2",
+        "naRegex": "",
         "spec": {
           "valueType": "String",
           "name": "pl7.app/vdj/sequence",
@@ -673,6 +714,7 @@ getColumns := func(blockId) {
       }, {
         "column": "aaSeqImputedFR3",
         "id": "aa-seq-imputed-fr3",
+        "naRegex": "",
         "spec": {
           "valueType": "String",
           "name": "pl7.app/vdj/sequence",
@@ -689,6 +731,7 @@ getColumns := func(blockId) {
       }, {
         "column": "aaSeqImputedFR4",
         "id": "aa-seq-imputed-fr4",
+        "naRegex": "",
         "spec": {
           "valueType": "String",
           "name": "pl7.app/vdj/sequence",
@@ -705,6 +748,7 @@ getColumns := func(blockId) {
       }, {
         "column": "aaSeqImputedCDR1",
         "id": "aa-seq-imputed-cdr1",
+        "naRegex": "",
         "spec": {
           "valueType": "String",
           "name": "pl7.app/vdj/sequence",
@@ -721,6 +765,7 @@ getColumns := func(blockId) {
       }, {
         "column": "aaSeqImputedCDR2",
         "id": "aa-seq-imputed-cdr2",
+        "naRegex": "",
         "spec": {
           "valueType": "String",
           "name": "pl7.app/vdj/sequence",
@@ -737,6 +782,7 @@ getColumns := func(blockId) {
       }, {
         "column": "aaSeqImputedCDR3",
         "id": "aa-seq-imputed-CDR3",
+        "naRegex": "",
         "spec": {
           "valueType": "String",
           "name": "pl7.app/vdj/sequence",
@@ -753,6 +799,7 @@ getColumns := func(blockId) {
       }, {
         "column": "isotype",
         "id": "isotype",
+        "naRegex": "",
         "spec": {
           "valueType": "String",
           "name": "pl7.app/vdj/isotype",
@@ -765,6 +812,7 @@ getColumns := func(blockId) {
       }, {
         "column": "topChains",
         "id": "top-chains",
+        "naRegex": "",
         "allowNA": false,
         "spec": {
           "valueType": "String",

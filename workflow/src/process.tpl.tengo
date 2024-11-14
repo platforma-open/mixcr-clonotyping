@@ -81,7 +81,7 @@ self.body(func(inputs) {
 			})
 	}
 
-	decomposition := pUtil.decomposePfconvCfg(pfconvParams, {
+	decomposition := pUtil.decomposePfconvImportCfg(pfconvParams, {
 		additionalAxesSpec: cColumnsAdditionalAxesSpec
 	})
 	purifiedPfconvCfg := decomposition.purifiedCfg

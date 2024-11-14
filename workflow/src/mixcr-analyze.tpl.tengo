@@ -8,6 +8,7 @@ exec := import("@platforma-sdk/workflow-tengo:exec")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 render := import("@platforma-sdk/workflow-tengo:render")
 pframes := import("@platforma-sdk/workflow-tengo:pframes")
+pcolumn := import("@platforma-sdk/workflow-tengo:pframes.pcolumn")
 xsv := import("@platforma-sdk/workflow-tengo:pframes.xsv")
 mixcr := import(":mixcr")
 
@@ -142,7 +143,7 @@ self.body(func(inputs) {
 
 	// collecting results
 
-	reportsMap := pframes.pColumnResourceMapDataBuilder( /* keyLength */ 2 )
+	reportsMap := pcolumn.resourceMapBuilder( /* keyLength */ 2 )
 	for report in reports {
 		reportsMap.add([report.id, "json"], mixcrCmd.getFile(report.fileJson))
 		reportsMap.add([report.id, "txt"], mixcrCmd.getFile(report.fileTxt))

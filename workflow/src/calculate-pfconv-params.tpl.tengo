@@ -97,7 +97,6 @@ self.body(func(inputs) {
 		params: {
 			"axes": axes,
 			"columns": columns,
-			"naStr": "region_not_covered",
 			"storageFormat": "Binary",
 			"partitionKeyLength": 0
 		}

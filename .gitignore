@@ -7,3 +7,4 @@ log/
 .test_auth.json
 .turbo
 vite.config.*.timestamp-*
+.DS_Store
