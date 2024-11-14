@@ -11,6 +11,7 @@ pframes := import("@platforma-sdk/workflow-tengo:pframes")
 pcolumn := import("@platforma-sdk/workflow-tengo:pframes.pcolumn")
 xsv := import("@platforma-sdk/workflow-tengo:pframes.xsv")
 mixcr := import(":mixcr")
+times := import("times")
 
 json := import("json")
 
@@ -139,6 +140,7 @@ self.body(func(inputs) {
 		mixcrCmdBuilder.saveFileSet("clones", "^result\\.clones_[A-Z0-9]+\\.tsv$")
 	}
 
+	mixcrCmdBuilder = mixcrCmdBuilder.cache(48 * times.hour)
 	mixcrCmd := mixcrCmdBuilder.run()
 
 	// collecting results

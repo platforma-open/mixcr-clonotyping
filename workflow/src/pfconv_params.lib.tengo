@@ -1,11 +1,10 @@
 ll := import("@platforma-sdk/workflow-tengo:ll")
 
 getColumns := func(blockId) {
-  return {
+  cols := {
     "axes": [
       {
         "column": "cloneId",
-        "naRegex": "region_not_covered",
         "spec": {
           "name": "pl7.app/vdj/cloneId",
           "type": "Long",
@@ -35,8 +34,8 @@ getColumns := func(blockId) {
       {
         "column": "cellGroup",
         "id": "cell-group",
-        "naRegex": "region_not_covered",
-        "allowNA": false,
+        "naRegex": "undefined",
+        "allowNA": true,
         "spec": {
           "name": "pl7.app/vdj/cellGroup",
           "valueType": "Long",
@@ -49,7 +48,6 @@ getColumns := func(blockId) {
       }, {
         "column": "readCount",
         "id": "read-count",
-        "naRegex": "region_not_covered",
         "allowNA": false,
         "spec": {
           "name": "pl7.app/vdj/readCount",
@@ -63,7 +61,6 @@ getColumns := func(blockId) {
       }, {
         "column": "readFraction",
         "id": "read-fraction",
-        "naRegex": "region_not_covered",
         "allowNA": false,
         "spec": {
           "name": "pl7.app/vdj/readFraction",
@@ -77,7 +74,6 @@ getColumns := func(blockId) {
       }, {
         "column": "uniqueMoleculeCount",
         "id": "umi-count",
-        "naRegex": "region_not_covered",
         "allowNA": false,
         "spec": {
           "name": "pl7.app/vdj/uniqueMoleculeCount",
@@ -91,7 +87,6 @@ getColumns := func(blockId) {
       }, {
         "column": "uniqueMoleculeFraction",
         "id": "umi-fraction",
-        "naRegex": "region_not_covered",
         "allowNA": false,
         "spec": {
           "name": "pl7.app/vdj/uniqueMoleculeFraction",
@@ -159,7 +154,7 @@ getColumns := func(blockId) {
       }, {
         "column": "bestDHit",
         "id": "best-d-hit",
-        "naRegex": "",
+        "naRegex": "region_not_covered",
         "spec": {
           "name": "pl7.app/vdj/geneHit",
           "valueType": "String",
@@ -176,7 +171,7 @@ getColumns := func(blockId) {
       }, {
         "column": "bestJHit",
         "id": "best-j-hit",
-        "naRegex": "",
+        "naRegex": "region_not_covered",
         "allowNA": false,
         "spec": {
           "name": "pl7.app/vdj/geneHit",
@@ -194,7 +189,7 @@ getColumns := func(blockId) {
       }, {
         "column": "bestCHit",
         "id": "best-c-hit",
-        "naRegex": "",
+        "naRegex": "region_not_covered",
         "spec": {
           "name": "pl7.app/vdj/geneHit",
           "valueType": "String",
@@ -211,7 +206,7 @@ getColumns := func(blockId) {
       }, {
         "column": "nSeqFR1",
         "id": "n-seq-fr1",
-        "naRegex": "",
+        "naRegex": "region_not_covered",
         "spec": {
           "name": "pl7.app/vdj/sequence",
           "valueType": "String",
@@ -228,7 +223,7 @@ getColumns := func(blockId) {
       }, {
         "column": "minQualFR1",
         "id": "min-qual-fr1",
-        "naRegex": "region_not_covered",
+        "naRegex": "region_not_covered",    
         "spec": {
           "name": "pl7.app/vdj/sequenceQuality",
           "valueType": "Int",
@@ -244,7 +239,7 @@ getColumns := func(blockId) {
       }, {
         "column": "nSeqFR2",
         "id": "n-seq-fr2",
-        "naRegex": "",
+        "naRegex": "region_not_covered",
         "spec": {
           "name": "pl7.app/vdj/sequence",
           "valueType": "String",
@@ -277,7 +272,7 @@ getColumns := func(blockId) {
       }, {
         "column": "nSeqFR3",
         "id": "n-seq-fr3",
-        "naRegex": "",
+        "naRegex": "region_not_covered",
         "spec": {
           "name": "pl7.app/vdj/sequence",
           "valueType": "String",
@@ -310,7 +305,7 @@ getColumns := func(blockId) {
       }, {
         "column": "nSeqFR4",
         "id": "n-seq-fr4",
-        "naRegex": "",
+        "naRegex": "region_not_covered",
         "spec": {
           "name": "pl7.app/vdj/sequence",
           "valueType": "String",
@@ -343,7 +338,7 @@ getColumns := func(blockId) {
       }, {
         "column": "nSeqCDR1",
         "id": "n-seq-cdr1",
-        "naRegex": "",
+        "naRegex": "region_not_covered",
         "spec": {
           "name": "pl7.app/vdj/sequence",
           "valueType": "String",
@@ -376,7 +371,7 @@ getColumns := func(blockId) {
       }, {
         "column": "nSeqCDR2",
         "id": "n-seq-cdr2",
-        "naRegex": "",
+        "naRegex": "region_not_covered",
         "spec": {
           "name": "pl7.app/vdj/sequence",
           "valueType": "String",
@@ -409,7 +404,7 @@ getColumns := func(blockId) {
       }, {
         "column": "nSeqCDR3",
         "id": "n-seq-cdr3",
-        "naRegex": "",
+        "naRegex": "region_not_covered",
         "spec": {
           "valueType": "String",
           "name": "pl7.app/vdj/sequence",
@@ -442,7 +437,7 @@ getColumns := func(blockId) {
       }, {
         "column": "aaSeqFR1",
         "id": "aa-seq-fr1",
-        "naRegex": "",
+        "naRegex": "region_not_covered",
         "spec": {
           "valueType": "String",
           "name": "pl7.app/vdj/sequence",
@@ -459,7 +454,7 @@ getColumns := func(blockId) {
       }, {
         "column": "aaSeqFR2",
         "id": "aa-seq-fr2",
-        "naRegex": "",
+        "naRegex": "region_not_covered",
         "spec": {
           "valueType": "String",
           "name": "pl7.app/vdj/sequence",
@@ -476,7 +471,7 @@ getColumns := func(blockId) {
       }, {
         "column": "aaSeqFR3",
         "id": "aa-seq-fr3",
-        "naRegex": "",
+        "naRegex": "region_not_covered",
         "spec": {
           "valueType": "String",
           "name": "pl7.app/vdj/sequence",
@@ -493,7 +488,7 @@ getColumns := func(blockId) {
       }, {
         "column": "aaSeqFR4",
         "id": "aa-seq-fr4",
-        "naRegex": "",
+        "naRegex": "region_not_covered",
         "spec": {
           "valueType": "String",
           "name": "pl7.app/vdj/sequence",
@@ -510,7 +505,7 @@ getColumns := func(blockId) {
       }, {
         "column": "aaSeqCDR1",
         "id": "aa-seq-cdr1",
-        "naRegex": "",
+        "naRegex": "region_not_covered",
         "spec": {
           "valueType": "String",
           "name": "pl7.app/vdj/sequence",
@@ -527,7 +522,7 @@ getColumns := func(blockId) {
       }, {
         "column": "aaSeqCDR2",
         "id": "aa-seq-cdr2",
-        "naRegex": "",
+        "naRegex": "region_not_covered",
         "spec": {
           "valueType": "String",
           "name": "pl7.app/vdj/sequence",
@@ -544,7 +539,7 @@ getColumns := func(blockId) {
       }, {
         "column": "aaSeqCDR3",
         "id": "aa-seq-cdr3",
-        "naRegex": "",
+        "naRegex": "region_not_covered",
         "spec": {
           "valueType": "String",
           "name": "pl7.app/vdj/sequence",
@@ -828,6 +823,11 @@ getColumns := func(blockId) {
     "storageFormat": "Binary",
     "partitionKeyLength": 0
   }
+
+  for col in cols.columns {
+    col["allowNA"] = true
+  }
+  return cols
 }
 
 export ll.toStrict({
