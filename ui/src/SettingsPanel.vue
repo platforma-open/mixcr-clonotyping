@@ -94,7 +94,7 @@ function setLimitInput() {
 
   <PlDropdown v-if="needSpecies" :options="speciesOptions" v-model="app.model.args.species" label="Select species" />
 
-  <PlTextField :model-value="app.model.args.limitInput !== undefined ? String(app.model.args.limitInput) : undefined"
+  <PlTextField :model-value="app.model.args.limitInput !== undefined ? String(app.model.args.limitInput) : ''"
     @update:model-value="v => app.model.args.limitInput = v && !isNaN(parseInt(v)) ? parseInt(v) : undefined"
     label="Take only this number of reads into analysis" :rules="[v => !isNaN(parseInt(v))]" />
 </template>

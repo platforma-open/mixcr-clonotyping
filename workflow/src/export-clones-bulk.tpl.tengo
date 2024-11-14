@@ -3,7 +3,7 @@
 ll := import("@platforma-sdk/workflow-tengo:ll")
 xsv := import("@platforma-sdk/workflow-tengo:pframes.xsv")
 self := import("@platforma-sdk/workflow-tengo:tpl")
-pframes := import("@platforma-sdk/workflow-tengo:pframes")
+pcolumn := import("@platforma-sdk/workflow-tengo:pframes.pcolumn")
 pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 
 text := import("text")
@@ -20,7 +20,7 @@ self.body(func(inputs) {
 	pfconvParams := inputs.pfconvParams
 	data := self.rawInputs().data.getValue()
 
-	csvMap := pframes.pColumnResourceMapDataBuilder(/* key length */ 1)
+	csvMap := pcolumn.resourceMapBuilder(/* key length */ 1)
 
 	for fileName, file in data.inputs() {
 		if !text.has_prefix(fileName, FILE_NAME_PREFIX) || !text.has_suffix(fileName, FILE_NAME_SUFFIX) {
