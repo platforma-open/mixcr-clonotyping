@@ -1,5 +1,12 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.4.0
+
+### Minor Changes
+
+- fddc283: - Cache MiXCR results for 48h
+  - Migrate to new pfconv params & fix columns
+
 ## 1.3.1
 
 ### Patch Changes

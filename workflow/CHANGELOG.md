@@ -1,5 +1,12 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 1.7.0
+
+### Minor Changes
+
+- fddc283: - Cache MiXCR results for 48h
+  - Migrate to new pfconv params & fix columns
+
 ## 1.6.2
 
 ### Patch Changes
