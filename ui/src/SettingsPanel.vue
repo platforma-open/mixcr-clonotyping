@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { useApp } from './app';
-import { ListOption, PlBtnGroup, PlDropdown, PlDropdownRef, PlFileInput, PlTextField } from '@platforma-sdk/ui-vue';
-import { computed, reactive, watch } from 'vue';
-import { retentive } from './retentive';
 import { Preset } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
 import { ImportFileHandle } from '@platforma-sdk/model';
+import { ListOption, PlBtnGroup, PlDropdown, PlDropdownRef, PlFileInput, PlTextField } from '@platforma-sdk/ui-vue';
+import { computed, reactive, watch } from 'vue';
+import { useApp } from './app';
+import { retentive } from './retentive';
 
 const app = useApp();
 
@@ -69,16 +69,11 @@ function setPresetName(name?: string) {
 function setPresetFile(file?: ImportFileHandle) {
   app.model.args.preset = file === undefined ? undefined : { type: 'file', file }
 }
-
-function setLimitInput() {
-
-}
 </script>
 
 <template>
   <!--(Temp z-index fix, will become obsolete after dropdown update)-->
-  <PlDropdownRef style="z-index: 2;" :options="inputOptions ?? []" v-model="app.model.args.input" label="Select dataset"
-    clearable />
+  <PlDropdownRef :options="inputOptions" v-model="app.model.args.input" label="Select dataset" clearable />
 
   <PlBtnGroup :options="presetSourceOptions" v-model="data.presetType" />
 

@@ -4,6 +4,7 @@ import { AgGridVue } from '@ag-grid-community/vue3';
 
 import { ClientSideRowModelModule } from '@ag-grid-community/client-side-row-model';
 import {
+    ColDef,
     GridApi,
     GridOptions,
     GridReadyEvent,
@@ -55,11 +56,20 @@ const onGridReady = (params: GridReadyEvent) => {
     gridApi.value = params.api;
 };
 
-const columnDefs = [
+const defaultColumnDef: ColDef = {
+    suppressHeaderMenuButton: true,
+    lockPinned: true,
+    sortable: false
+}
+
+const columnDefs: ColDef[] = [
     {
         colId: 'label',
         field: 'label',
-        headerName: "Sample label"
+        headerName: "Sample",
+        pinned: 'left',
+        lockPinned: true,
+        sortable: true
     },
     {
         colId: 'progress',
@@ -130,9 +140,10 @@ const gridOptions: GridOptions<MiXCRResult> = {
             </PlBtnGhost>
         </template>
         <div :style="{ flex: 1 }">
-            <AgGridVue :theme="AgGridTheme" :style="{ height: '100%' }" @grid-ready="onGridReady" :rowData="result" :columnDefs="columnDefs"
-                :grid-options="gridOptions" :loadingOverlayComponentParams="{ notReady: true }"
-                :loadingOverlayComponent=PlAgOverlayLoading :noRowsOverlayComponent=PlAgOverlayNoRows />
+            <AgGridVue :theme="AgGridTheme" :style="{ height: '100%' }" @grid-ready="onGridReady" :rowData="result"
+                :defaultColDef="defaultColumnDef" :columnDefs="columnDefs" :grid-options="gridOptions"
+                :loadingOverlayComponentParams="{ notReady: true }" :loadingOverlayComponent=PlAgOverlayLoading
+                :noRowsOverlayComponent=PlAgOverlayNoRows />
         </div>
     </PlBlockPage>
     <PlSlideModal v-model="data.settingsOpen" :shadow="true" :close-on-outside-click="app.outputValues.started">

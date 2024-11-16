@@ -67,7 +67,7 @@ export const AlignmentChannelLabels = {
 } satisfies Record<NotAlignedReason | AlignmentChannel, string>;
 
 export const AlignmentChannelColors = {
-  Success: '#42B842',
+  Success: '#6BD67D',
   NoHits: '#FEE27A',
   FailedAfterAOverlap: 'red', // @TODO (was missing)
   NoCDR3Parts: '#FEBF51',

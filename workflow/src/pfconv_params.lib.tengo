@@ -824,9 +824,6 @@ getColumns := func(blockId) {
     "partitionKeyLength": 0
   }
 
-  for col in cols.columns {
-    col["allowNA"] = true
-  }
   return cols
 }
 
