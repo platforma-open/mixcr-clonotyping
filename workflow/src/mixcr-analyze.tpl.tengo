@@ -90,7 +90,13 @@ self.body(func(inputs) {
 			arg(preset.name)
 	}
 
-	if inputDataMeta.keyLength == 1 {
+	if inputDataMeta.keyLength == 0 {
+		inputFile := inputData.inputs()["[]"]
+		ll.assert(!is_undefined(inputFile), "unexpected agg group structure")
+		inputFileName := "input." + fileExtension
+		mixcrCmdBuilder.addFile(inputFileName, inputFile)
+		mixcrCmdBuilder.arg(inputFileName)
+	} else if inputDataMeta.keyLength == 1 {
 		for sKey, inputFile in inputData.inputs() {
 			key := json.decode(sKey)
 			if len(key) != 1 {

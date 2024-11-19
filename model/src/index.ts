@@ -18,18 +18,18 @@ import { parseResourceMap } from './helpers';
 import { SupportedPresetList } from './preset';
 import { ProgressPrefix } from './progress';
 
-export const platforma = BlockModel.create<BlockArgs>('Heavy')
+export const platforma = BlockModel.create('Heavy')
 
-  .initialArgs({})
+  .withArgs<BlockArgs>({})
 
-  .output('presets', (ctx) =>
+  .retentiveOutput('presets', (ctx) =>
     ctx.prerun
       ?.resolve({ field: 'presets', assertFieldType: 'Input' })
       ?.getFileContentAsJson()
       .mapDefined((c) => SupportedPresetList.parse(c))
   )
 
-  .output('preset', (ctx) =>
+  .retentiveOutput('preset', (ctx) =>
     ctx.prerun
       ?.resolve({ field: 'preset', assertFieldType: 'Input', allowPermanentAbsence: true })
       ?.getDataAsJson<any>()
@@ -95,7 +95,7 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
     return ctx.createPFrame(pColumns);
   })
 
-  .output('inputOptions', (ctx) => {
+  .retentiveOutput('inputOptions', (ctx) => {
     return ctx.resultPool
       .getSpecs()
       .entries.filter((v) => {
@@ -105,7 +105,9 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
           v.obj.name === 'pl7.app/sequencing/data' &&
           (v.obj.valueType as string) === 'File' &&
           domain !== undefined &&
-          (domain['pl7.app/fileExtension'] === 'fastq' ||
+          (domain['pl7.app/fileExtension'] === 'fasta' ||
+            domain['pl7.app/fileExtension'] === 'fasta.gz' ||
+            domain['pl7.app/fileExtension'] === 'fastq' ||
             domain['pl7.app/fileExtension'] === 'fastq.gz')
         );
       })
@@ -158,11 +160,13 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
     ) satisfies Record<string, string>;
   })
 
+  // @TODO migrate to lambdas and merge with prerunFileImports
   .output(
     'mainFileImports',
     mapResourceFields(getResourceField(MainOutputs, 'fileImports'), getImportProgress(It))
   )
 
+  // @TODO migrate to lambdas and merge with mainFileImports
   .output(
     'prerunFileImports',
     mapResourceFields(getResourceField(StagingOutputs, 'fileImports'), getImportProgress(It))

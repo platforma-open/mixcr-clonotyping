@@ -12,8 +12,6 @@ const data = reactive<{ presetType: Preset['type'] }>({
   presetType: app.model.args.preset?.type ?? 'name'
 })
 
-const inputOptions = computed(() => app.outputValues.inputOptions ?? []);
-
 const speciesOptions: ListOption[] = [
   { label: "Homo sapience", value: "hsa" },
   { label: "Mus musculus", value: "mmu" },
@@ -73,11 +71,11 @@ function setPresetFile(file?: ImportFileHandle) {
 
 <template>
   <!--(Temp z-index fix, will become obsolete after dropdown update)-->
-  <PlDropdownRef :options="inputOptions" v-model="app.model.args.input" label="Select dataset" clearable />
+  <PlDropdownRef :options="app.outputValues.inputOptions" v-model="app.model.args.input" label="Select dataset" clearable />
 
   <PlBtnGroup :options="presetSourceOptions" v-model="data.presetType" />
 
-  <PlDropdown v-if="data.presetType === 'name'" label="MiXCR Preset Name" :options="presetOptions ?? []"
+  <PlDropdown v-if="data.presetType === 'name'" label="MiXCR Preset Name" :options="presetOptions"
     :model-value="app.model.args.preset?.type === 'name' ? app.model.args.preset.name : undefined"
     @update:model-value="setPresetName" clearable />
 

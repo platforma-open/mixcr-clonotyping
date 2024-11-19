@@ -126,7 +126,7 @@ const testCases: TestCase[] = [
 ];
 
 tplTest.for(testCases)(
-  'checking preset for $presetName',
+  'checking preset for $preset',
   { timeout: 30000 },
   async ({ preset, species, check }, { helper, expect }) => {
     const resultC = (
