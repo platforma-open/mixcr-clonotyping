@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 1.8.0
+
+### Minor Changes
+
+- e6fb4f5: Fasta input support. Major SDK upgrade.
+
 ## 1.7.0
 
 ### Minor Changes
