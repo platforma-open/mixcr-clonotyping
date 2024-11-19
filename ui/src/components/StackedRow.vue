@@ -34,7 +34,7 @@ const parts = computed(() => {
     return {
       color: p.color,
       fraction,
-      label,
+      label
     };
   });
 });
@@ -43,14 +43,24 @@ const parts = computed(() => {
 <template>
   <div class="stacked-row" :class="size" :style="style">
     <div v-if="size === 'large'" class="label-track">
-      <div v-for="(v, i) in [0, 25, 50, 75, 100]" :key="i" :style="`left: ${v}%`" :data-content="`${v}%`"></div>
+      <div
+        v-for="(v, i) in [0, 25, 50, 75, 100]"
+        :key="i"
+        :style="`left: ${v}%`"
+        :data-content="`${v}%`"
+      ></div>
     </div>
     <div class="stacked-row__container">
       <div v-if="!parts.length" class="stacked-row__not-ready">Not ready</div>
-      <div v-for="(p, i) in parts" :key="i" :title.prop="p.label" :style="{
-        width: `${p.fraction}%`,
-        backgroundColor: p.color,
-      }" />
+      <div
+        v-for="(p, i) in parts"
+        :key="i"
+        :title.prop="p.label"
+        :style="{
+          width: `${p.fraction}%`,
+          backgroundColor: p.color
+        }"
+      />
     </div>
   </div>
 </template>
@@ -66,20 +76,20 @@ const parts = computed(() => {
 .label-track {
   position: absolute;
   top: 0;
-  left: 12px; 
+  left: 12px;
   right: 12px;
   bottom: 0;
   /* z-index: 1; */
 }
 
-.label-track>div {
+.label-track > div {
   height: 100%;
   position: absolute;
   bottom: 0;
-  border-left: 1px solid #E1E3EB;
+  border-left: 1px solid #e1e3eb;
 }
 
-.label-track>div::after {
+.label-track > div::after {
   position: absolute;
   content: attr(data-content);
   left: 0;
@@ -92,6 +102,10 @@ const parts = computed(() => {
   padding: 12px 12px;
   border-radius: 0;
   margin-bottom: 24px;
+}
+
+.stacked-row__not-ready {
+  color: var(--txt-03) !important;
 }
 
 .stacked-row.large .stacked-row__not-ready {
@@ -115,7 +129,7 @@ const parts = computed(() => {
   overflow: hidden;
 }
 
-.stacked-row__container>div {
+.stacked-row__container > div {
   height: 100%;
   display: flex;
   align-items: center;
