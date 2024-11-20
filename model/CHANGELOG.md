@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.3.1
+
+### Patch Changes
+
+- af5b969: Fix for blinking dropdowns, align reports are now loaded as soon as possible, migration to new SDK.
+
 ## 1.3.0
 
 ### Minor Changes
