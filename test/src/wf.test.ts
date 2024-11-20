@@ -5,6 +5,7 @@ import {
   BlockOutputs,
   platforma,
   Qc,
+  SupportedPresetList,
   uniquePlId
 } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
 import { awaitStableState, blockTest } from '@platforma-sdk/test';
@@ -20,7 +21,13 @@ blockTest('empty imputs', { timeout: 30000 }, async ({ rawPrj: project, ml, help
     25000
   )) as InferBlockState<typeof platforma>;
   expect(stableState.outputs).toMatchObject({ inputOptions: { ok: true, value: [] } });
-  const presets = wrapOutputs(stableState.outputs).presets;
+  const presets = SupportedPresetList.parse(
+    JSON.parse(
+      Buffer.from(
+        await ml.driverKit.blobDriver.getContent(wrapOutputs(stableState.outputs).presets!.handle!)
+      ).toString()
+    )
+  );
   expect(presets).length.gt(10);
   expect(presets?.map((p) => p.presetName)).toContain('10x-sc-xcr-vdj');
 });
@@ -115,7 +122,13 @@ blockTest(
       }
     });
 
-    const presets = wrapOutputs<BlockOutputs>(clonotypingStableState1.outputs).presets;
+    const presets = SupportedPresetList.parse(
+      JSON.parse(
+        Buffer.from(
+          await ml.driverKit.blobDriver.getContent(wrapOutputs(clonotypingStableState1.outputs).presets!.handle!)
+        ).toString()
+      )
+    );
     expect(presets).length.gt(10);
 
     const clonotypingStableState1Outputs = wrapOutputs(clonotypingStableState1.outputs);
@@ -133,7 +146,7 @@ blockTest(
     const outputs2 = wrapOutputs<BlockOutputs>(clonotypingStableState2.outputs);
     // console.dir(outputs2.sampleLabels, { depth: 5 });
     // console.log(JSON.stringify([sample1Id]));
-    expect(outputs2.sampleLabels[sample1Id]).toBeDefined();
+    expect(outputs2.sampleLabels![sample1Id]).toBeDefined();
 
     await project.runBlock(clonotypingBlockId);
     const clonotypingStableState3 = (await helpers.awaitBlockDoneAndGetStableBlockState(

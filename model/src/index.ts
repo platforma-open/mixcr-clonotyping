@@ -28,7 +28,7 @@ export const platforma = BlockModel.create('Heavy')
   .retentiveOutput('preset', (ctx) =>
     ctx.prerun
       ?.resolve({ field: 'preset', assertFieldType: 'Input', allowPermanentAbsence: true })
-      ?.getFileHandle()
+      ?.getDataAsJson<any>()
   )
 
   .output('qc', (ctx) =>
