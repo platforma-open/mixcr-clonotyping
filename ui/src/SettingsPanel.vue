@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Preset } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
+import { Preset, SupportedPresetList } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
 import { ImportFileHandle } from '@platforma-sdk/model';
-import { ListOption, PlBtnGroup, PlDropdown, PlDropdownRef, PlFileInput, PlTextField } from '@platforma-sdk/ui-vue';
+import { ListOption, PlBtnGroup, PlDropdown, PlDropdownRef, PlFileInput, PlTextField, ReactiveFileContent } from '@platforma-sdk/ui-vue';
 import { computed, reactive, watch } from 'vue';
 import { useApp } from './app';
 import { retentive } from './retentive';
@@ -25,7 +25,13 @@ const presetSourceOptions: ListOption<Preset['type']>[] = [
   { label: "Preset from file", value: "file" }
 ];
 
-const presets = retentive(computed(() => app.outputValues.presets))
+const inputOptions = retentive(computed(() => app.model.outputs.inputOptions))
+const presets = retentive(computed(() => {
+  const rawContent = ReactiveFileContent.getContentJson(app.model.outputs.presets?.handle)?.value
+  if (rawContent === undefined)
+    return undefined;
+  return SupportedPresetList.parse(rawContent);
+}));
 
 const presetOptions = computed(() => {
   return presets.value?.map(preset => (
@@ -37,7 +43,7 @@ const presetOptions = computed(() => {
 })
 
 const preset = computed(() => {
-  const preset = app.args.preset;
+  const preset = app.model.args.preset;
   return preset?.type === 'name'
     ? presets.value?.find(p => p.presetName === preset.name)
     : undefined
@@ -67,11 +73,20 @@ function setPresetName(name?: string) {
 function setPresetFile(file?: ImportFileHandle) {
   app.model.args.preset = file === undefined ? undefined : { type: 'file', file }
 }
+
+function parseNumber(v: string): number {
+  const parsed = Number(v);
+
+  if (!Number.isFinite(parsed)) {
+    throw Error('Not a number');
+  }
+
+  return parsed;
+}
 </script>
 
 <template>
-  <!--(Temp z-index fix, will become obsolete after dropdown update)-->
-  <PlDropdownRef :options="app.outputValues.inputOptions" v-model="app.model.args.input" label="Select dataset" clearable />
+  <PlDropdownRef :options="inputOptions" v-model="app.model.args.input" label="Select dataset" clearable />
 
   <PlBtnGroup :options="presetSourceOptions" v-model="data.presetType" />
 
@@ -87,7 +102,6 @@ function setPresetFile(file?: ImportFileHandle) {
 
   <PlDropdown v-if="needSpecies" :options="speciesOptions" v-model="app.model.args.species" label="Select species" />
 
-  <PlTextField :model-value="app.model.args.limitInput !== undefined ? String(app.model.args.limitInput) : ''"
-    @update:model-value="v => app.model.args.limitInput = v && !isNaN(parseInt(v)) ? parseInt(v) : undefined"
-    label="Take only this number of reads into analysis" :rules="[v => !isNaN(parseInt(v))]" />
+  <PlTextField v-model="app.model.args.limitInput" :parse="parseNumber" :clearable="() => undefined"
+    label="Take only this number of reads into analysis" />
 </template>

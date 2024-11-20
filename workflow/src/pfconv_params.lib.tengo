@@ -34,7 +34,7 @@ getColumns := func(blockId) {
       {
         "column": "cellGroup",
         "id": "cell-group",
-        "naRegex": "undefined",
+        "naRegex": "undefined|contamination",
         "allowNA": true,
         "spec": {
           "name": "pl7.app/vdj/cellGroup",
@@ -223,7 +223,7 @@ getColumns := func(blockId) {
       }, {
         "column": "minQualFR1",
         "id": "min-qual-fr1",
-        "naRegex": "region_not_covered",    
+        "naRegex": "region_not_covered",
         "spec": {
           "name": "pl7.app/vdj/sequenceQuality",
           "valueType": "Int",
