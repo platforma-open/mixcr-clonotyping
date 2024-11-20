@@ -42,10 +42,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "Cell group number",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "10100"
+            "pl7.app/table/orderPriority": "24000"
           }
         }
-      }, {
+      },
+      {
         "column": "readCount",
         "id": "read-count",
         "allowNA": false,
@@ -55,10 +56,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "Number Of Reads",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "10001"
+            "pl7.app/table/orderPriority": "23500"
           }
         }
-      }, {
+      },
+      {
         "column": "readFraction",
         "id": "read-fraction",
         "allowNA": false,
@@ -68,10 +70,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "Fraction of reads",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "10000"
+            "pl7.app/table/orderPriority": "23000"
           }
         }
-      }, {
+      },
+      {
         "column": "uniqueMoleculeCount",
         "id": "umi-count",
         "allowNA": false,
@@ -81,10 +84,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "Number of UMI",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "10001"
+            "pl7.app/table/orderPriority": "22500"
           }
         }
-      }, {
+      },
+      {
         "column": "uniqueMoleculeFraction",
         "id": "umi-fraction",
         "allowNA": false,
@@ -94,10 +98,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "Fraction of UMI",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "10000"
+            "pl7.app/table/orderPriority": "22000"
           }
         }
-      }, {
+      },
+      {
         "column": "targetSequences",
         "id": "n-seq-clonal-sequences",
         "naRegex": "",
@@ -113,10 +118,11 @@ getColumns := func(blockId) {
             "pl7.app/type": "sequence",
             "pl7.app/label": "Clonal sequences",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1000"
+            "pl7.app/table/orderPriority": "18500"
           }
         }
-      }, {
+      },
+      {
         "column": "targetQualities",
         "id": "clonal-qualities",
         "naRegex": "",
@@ -130,10 +136,12 @@ getColumns := func(blockId) {
           "annotations": {
             "type": "quality string",
             "pl7.app/label": "Clonal qualities",
-            "pl7.app/table/visibility": "optional"
+            "pl7.app/table/visibility": "optional",
+            "pl7.app/table/orderPriority": "4000"
           }
         }
-      }, {
+      },
+      {
         "column": "bestVHit",
         "id": "best-v-hit",
         "naRegex": "",
@@ -148,10 +156,11 @@ getColumns := func(blockId) {
             "type": "V gene name",
             "pl7.app/label": "Best V hit",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1104"
+            "pl7.app/table/orderPriority": "21000"
           }
         }
-      }, {
+      },
+      {
         "column": "bestDHit",
         "id": "best-d-hit",
         "naRegex": "region_not_covered",
@@ -165,10 +174,11 @@ getColumns := func(blockId) {
             "type": "D gene name",
             "pl7.app/label": "Best D hit",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1103"
+            "pl7.app/table/orderPriority": "20500"
           }
         }
-      }, {
+      },
+      {
         "column": "bestJHit",
         "id": "best-j-hit",
         "naRegex": "region_not_covered",
@@ -183,10 +193,11 @@ getColumns := func(blockId) {
             "type": "J gene name",
             "pl7.app/label": "Best J hit",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1102"
+            "pl7.app/table/orderPriority": "20000"
           }
         }
-      }, {
+      },
+      {
         "column": "bestCHit",
         "id": "best-c-hit",
         "naRegex": "region_not_covered",
@@ -200,10 +211,11 @@ getColumns := func(blockId) {
             "type": "C gene name",
             "pl7.app/label": "Best C hit",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1101"
+            "pl7.app/table/orderPriority": "19500"
           }
         }
-      }, {
+      },
+      {
         "column": "nSeqFR1",
         "id": "n-seq-fr1",
         "naRegex": "region_not_covered",
@@ -217,13 +229,14 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR1 nt",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1013"
+            "pl7.app/table/orderPriority": "18000"
           }
         }
-      }, {
+      },
+      {
         "column": "minQualFR1",
         "id": "min-qual-fr1",
-        "naRegex": "region_not_covered",    
+        "naRegex": "region_not_covered",
         "spec": {
           "name": "pl7.app/vdj/sequenceQuality",
           "valueType": "Int",
@@ -233,10 +246,12 @@ getColumns := func(blockId) {
           },
           "annotations": {
             "pl7.app/label": "Min quality FR1",
-            "pl7.app/table/visibility": "optional"
+            "pl7.app/table/visibility": "optional",
+            "pl7.app/table/orderPriority": "3500"
           }
         }
-      }, {
+      },
+      {
         "column": "nSeqFR2",
         "id": "n-seq-fr2",
         "naRegex": "region_not_covered",
@@ -250,10 +265,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR2 nt",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1011"
+            "pl7.app/table/orderPriority": "17000"
           }
         }
-      }, {
+      },
+      {
         "column": "minQualFR2",
         "id": "min-qual-fr2",
         "naRegex": "region_not_covered",
@@ -266,10 +282,12 @@ getColumns := func(blockId) {
           },
           "annotations": {
             "pl7.app/label": "Min quality FR2",
-            "pl7.app/table/visibility": "optional"
+            "pl7.app/table/visibility": "optional",
+            "pl7.app/table/orderPriority": "2500"
           }
         }
-      }, {
+      },
+      {
         "column": "nSeqFR3",
         "id": "n-seq-fr3",
         "naRegex": "region_not_covered",
@@ -283,10 +301,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR3 nt",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1009"
+            "pl7.app/table/orderPriority": "16000"
           }
         }
-      }, {
+      },
+      {
         "column": "minQualFR3",
         "id": "min-qual-fr3",
         "naRegex": "region_not_covered",
@@ -299,10 +318,12 @@ getColumns := func(blockId) {
           },
           "annotations": {
             "pl7.app/label": "Min quality FR3",
-            "pl7.app/table/visibility": "optional"
+            "pl7.app/table/visibility": "optional",
+            "pl7.app/table/orderPriority": "1500"
           }
         }
-      }, {
+      },
+      {
         "column": "nSeqFR4",
         "id": "n-seq-fr4",
         "naRegex": "region_not_covered",
@@ -316,10 +337,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR4 nt",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1008"
+            "pl7.app/table/orderPriority": "15000"
           }
         }
-      }, {
+      },
+      {
         "column": "minQualFR4",
         "id": "min-qual-fr4",
         "naRegex": "region_not_covered",
@@ -335,7 +357,8 @@ getColumns := func(blockId) {
             "pl7.app/table/visibility": "optional"
           }
         }
-      }, {
+      },
+      {
         "column": "nSeqCDR1",
         "id": "n-seq-cdr1",
         "naRegex": "region_not_covered",
@@ -349,10 +372,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "CDR1 nt",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1012"
+            "pl7.app/table/orderPriority": "17500"
           }
         }
-      }, {
+      },
+      {
         "column": "minQualCDR1",
         "id": "min-qual-cdr1",
         "naRegex": "region_not_covered",
@@ -365,10 +389,12 @@ getColumns := func(blockId) {
           },
           "annotations": {
             "pl7.app/label": "Min quality CDR1",
-            "pl7.app/table/visibility": "optional"
+            "pl7.app/table/visibility": "optional",
+            "pl7.app/table/orderPriority": "3000"
           }
         }
-      }, {
+      },
+      {
         "column": "nSeqCDR2",
         "id": "n-seq-cdr2",
         "naRegex": "region_not_covered",
@@ -382,10 +408,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "CDR2 nt",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1010"
+            "pl7.app/table/orderPriority": "16500"
           }
         }
-      }, {
+      },
+      {
         "column": "minQualCDR2",
         "id": "min-qual-cdr2",
         "naRegex": "region_not_covered",
@@ -398,10 +425,12 @@ getColumns := func(blockId) {
           },
           "annotations": {
             "pl7.app/label": "Min quality CDR2",
-            "pl7.app/table/visibility": "optional"
+            "pl7.app/table/visibility": "optional",
+            "pl7.app/table/orderPriority": "2000"
           }
         }
-      }, {
+      },
+      {
         "column": "nSeqCDR3",
         "id": "n-seq-cdr3",
         "naRegex": "region_not_covered",
@@ -415,10 +444,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "CDR3 nt",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1111"
+            "pl7.app/table/orderPriority": "15500"
           }
         }
-      }, {
+      },
+      {
         "column": "minQualCDR3",
         "id": "min-qual-cdr3",
         "naRegex": "region_not_covered",
@@ -431,10 +461,12 @@ getColumns := func(blockId) {
           },
           "annotations": {
             "pl7.app/label": "Min quality CDR3",
-            "pl7.app/table/visibility": "optional"
+            "pl7.app/table/visibility": "optional",
+            "pl7.app/table/orderPriority": "1000"
           }
         }
-      }, {
+      },
+      {
         "column": "aaSeqFR1",
         "id": "aa-seq-fr1",
         "naRegex": "region_not_covered",
@@ -448,10 +480,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR1 aa",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1007"
+            "pl7.app/table/orderPriority": "14500"
           }
         }
-      }, {
+      },
+      {
         "column": "aaSeqFR2",
         "id": "aa-seq-fr2",
         "naRegex": "region_not_covered",
@@ -465,10 +498,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR2 aa",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1005"
+            "pl7.app/table/orderPriority": "13500"
           }
         }
-      }, {
+      },
+      {
         "column": "aaSeqFR3",
         "id": "aa-seq-fr3",
         "naRegex": "region_not_covered",
@@ -482,10 +516,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR3 aa",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1003"
+            "pl7.app/table/orderPriority": "12500"
           }
         }
-      }, {
+      },
+      {
         "column": "aaSeqFR4",
         "id": "aa-seq-fr4",
         "naRegex": "region_not_covered",
@@ -499,10 +534,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR4 aa",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1002"
+            "pl7.app/table/orderPriority": "11500"
           }
         }
-      }, {
+      },
+      {
         "column": "aaSeqCDR1",
         "id": "aa-seq-cdr1",
         "naRegex": "region_not_covered",
@@ -516,10 +552,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "CDR1 aa",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1006"
+            "pl7.app/table/orderPriority": "14000"
           }
         }
-      }, {
+      },
+      {
         "column": "aaSeqCDR2",
         "id": "aa-seq-cdr2",
         "naRegex": "region_not_covered",
@@ -533,10 +570,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "CDR2 aa",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1004"
+            "pl7.app/table/orderPriority": "13000"
           }
         }
-      }, {
+      },
+      {
         "column": "aaSeqCDR3",
         "id": "aa-seq-cdr3",
         "naRegex": "region_not_covered",
@@ -550,10 +588,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "CDR3 aa",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1110"
+            "pl7.app/table/orderPriority": "12000"
           }
         }
-      }, {
+      },
+      {
         "column": "nSeqImputedFR1",
         "id": "n-seq-imputed-fr1",
         "naRegex": "",
@@ -567,10 +606,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR1 imputed nt",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1013"
+            "pl7.app/table/orderPriority": "11000"
           }
         }
-      }, {
+      },
+      {
         "column": "nSeqImputedFR2",
         "id": "n-seq-imputed-fr2",
         "naRegex": "",
@@ -584,10 +624,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR2 imputed nt",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1011"
+            "pl7.app/table/orderPriority": "10000"
           }
         }
-      }, {
+      },
+      {
         "column": "nSeqImputedFR3",
         "id": "n-seq-imputed-fr3",
         "naRegex": "",
@@ -601,10 +642,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR3 imputed nt",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1009"
+            "pl7.app/table/orderPriority": "9000"
           }
         }
-      }, {
+      },
+      {
         "column": "nSeqImputedFR4",
         "id": "n-seq-imputed-fr4",
         "naRegex": "",
@@ -618,10 +660,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR4 imputed nt",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1008"
+            "pl7.app/table/orderPriority": "8000"
           }
         }
-      }, {
+      },
+      {
         "column": "nSeqImputedCDR1",
         "id": "n-seq-imputed-cdr1",
         "naRegex": "",
@@ -635,10 +678,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "CDR1 imputed nt",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1012"
+            "pl7.app/table/orderPriority": "10500"
           }
         }
-      }, {
+      },
+      {
         "column": "nSeqImputedCDR2",
         "id": "n-seq-imputed-cdr2",
         "naRegex": "",
@@ -652,10 +696,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "CDR2 imputed nt",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1010"
+            "pl7.app/table/orderPriority": "9500"
           }
         }
-      }, {
+      },
+      {
         "column": "nSeqImputedCDR3",
         "id": "n-seq-imputed-CDR3",
         "naRegex": "",
@@ -669,10 +714,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "CDR3 imputed nt",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1111"
+            "pl7.app/table/orderPriority": "8500"
           }
         }
-      }, {
+      },
+      {
         "column": "aaSeqImputedFR1",
         "id": "aa-seq-imputed-fr1",
         "naRegex": "",
@@ -686,10 +732,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR1 imputed aa",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1007"
+            "pl7.app/table/orderPriority": "7500"
           }
         }
-      }, {
+      },
+      {
         "column": "aaSeqImputedFR2",
         "id": "aa-seq-imputed-fr2",
         "naRegex": "",
@@ -703,10 +750,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR2 imputed aa",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1005"
+            "pl7.app/table/orderPriority": "6500"
           }
         }
-      }, {
+      },
+      {
         "column": "aaSeqImputedFR3",
         "id": "aa-seq-imputed-fr3",
         "naRegex": "",
@@ -720,10 +768,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR3 imputed aa",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1003"
+            "pl7.app/table/orderPriority": "5500"
           }
         }
-      }, {
+      },
+      {
         "column": "aaSeqImputedFR4",
         "id": "aa-seq-imputed-fr4",
         "naRegex": "",
@@ -737,10 +786,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "FR4 imputed aa",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1002"
+            "pl7.app/table/orderPriority": "4500"
           }
         }
-      }, {
+      },
+      {
         "column": "aaSeqImputedCDR1",
         "id": "aa-seq-imputed-cdr1",
         "naRegex": "",
@@ -754,10 +804,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "CDR1 imputed aa",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1006"
+            "pl7.app/table/orderPriority": "7000"
           }
         }
-      }, {
+      },
+      {
         "column": "aaSeqImputedCDR2",
         "id": "aa-seq-imputed-cdr2",
         "naRegex": "",
@@ -771,10 +822,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "CDR2 imputed aa",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1004"
+            "pl7.app/table/orderPriority": "6000"
           }
         }
-      }, {
+      },
+      {
         "column": "aaSeqImputedCDR3",
         "id": "aa-seq-imputed-CDR3",
         "naRegex": "",
@@ -788,10 +840,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "CDR3 imputed aa",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1110"
+            "pl7.app/table/orderPriority": "5000"
           }
         }
-      }, {
+      },
+      {
         "column": "isotype",
         "id": "isotype",
         "naRegex": "",
@@ -801,10 +854,11 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "IG isotype",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1105"
+            "pl7.app/table/orderPriority": "19000"
           }
         }
-      }, {
+      },
+      {
         "column": "topChains",
         "id": "top-chains",
         "naRegex": "",
@@ -815,7 +869,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "Chain",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "1106"
+            "pl7.app/table/orderPriority": "21500"
           }
         }
       }
