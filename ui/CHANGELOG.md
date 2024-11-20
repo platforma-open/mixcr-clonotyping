@@ -1,5 +1,16 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.5.0
+
+### Minor Changes
+
+- e6fb4f5: Fasta input support. Major SDK upgrade.
+
+### Patch Changes
+
+- Updated dependencies [e6fb4f5]
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.3.0
+
 ## 1.4.1
 
 ### Patch Changes

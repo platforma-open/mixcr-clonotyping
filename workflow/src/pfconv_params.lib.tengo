@@ -35,7 +35,7 @@ getColumns := func(blockId) {
       {
         "column": "cellGroup",
         "id": "cell-group",
-        "naRegex": "undefined",
+        "naRegex": "undefined|contamination",
         "allowNA": true,
         "spec": {
           "name": "pl7.app/vdj/cellGroup",

@@ -11,33 +11,29 @@ import {
   isPColumn,
   isPColumnSpec,
   mapResourceFields,
+  parseResourceMap,
   type InferOutputsType
 } from '@platforma-sdk/model';
 import { BlockArgs, BlockArgsValid } from './args';
-import { parseResourceMap } from './helpers';
-import { SupportedPresetList } from './preset';
 import { ProgressPrefix } from './progress';
 
-export const platforma = BlockModel.create<BlockArgs>('Heavy')
+export const platforma = BlockModel.create('Heavy')
 
-  .initialArgs({})
+  .withArgs<BlockArgs>({})
 
-  .output('presets', (ctx) =>
-    ctx.prerun
-      ?.resolve({ field: 'presets', assertFieldType: 'Input' })
-      ?.getFileContentAsJson()
-      .mapDefined((c) => SupportedPresetList.parse(c))
+  .retentiveOutput('presets', (ctx) =>
+    ctx.prerun?.resolve({ field: 'presets', assertFieldType: 'Input' })?.getFileHandle()
   )
 
-  .output('preset', (ctx) =>
+  .retentiveOutput('preset', (ctx) =>
     ctx.prerun
       ?.resolve({ field: 'preset', assertFieldType: 'Input', allowPermanentAbsence: true })
-      ?.getDataAsJson<any>()
+      ?.getFileHandle()
   )
 
   .output('qc', (ctx) =>
     parseResourceMap(
-      ctx.outputs?.resolve({ field: 'qc', assertFieldType: 'Input' }),
+      ctx.outputs?.resolve('qc'),
       (acc) => acc.getFileHandle(),
       true
     )
@@ -45,7 +41,7 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
 
   .output('reports', (ctx) =>
     parseResourceMap(
-      ctx.outputs?.resolve({ field: 'reports', assertFieldType: 'Input' }),
+      ctx.outputs?.resolve('reports'),
       (acc) => acc.getFileHandle(),
       false
     )
@@ -54,7 +50,7 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
   .output('logs', (ctx) => {
     return ctx.outputs !== undefined
       ? parseResourceMap(
-          ctx.outputs?.resolve({ field: 'logs', assertFieldType: 'Input' }),
+          ctx.outputs?.resolve('logs'),
           (acc) => acc.getLogHandle(),
           false
         )
@@ -64,7 +60,7 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
   .output('progress', (ctx) => {
     return ctx.outputs !== undefined
       ? parseResourceMap(
-          ctx.outputs?.resolve({ field: 'logs', assertFieldType: 'Input' }),
+          ctx.outputs?.resolve('logs'),
           (acc) => acc.getProgressLog(ProgressPrefix),
           false
         )
@@ -76,7 +72,7 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
   .output('done', (ctx) => {
     return ctx.outputs !== undefined
       ? parseResourceMap(
-          ctx.outputs?.resolve({ field: 'clns', assertFieldType: 'Input' }),
+          ctx.outputs?.resolve('clns'),
           (acc) => true,
           false
         ).data.map((e) => e.key[0] as string)
@@ -85,17 +81,15 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
 
   .output('clones', (ctx) => {
     const collection = ctx.outputs
-      ?.resolve({ field: 'clones', assertFieldType: 'Input' })
+      ?.resolve('clones')
       ?.parsePObjectCollection();
     if (collection === undefined) return undefined;
     // if (collection === undefined || !collection.isComplete) return undefined;
-    const pColumns = Object.entries(collection)
-      .map(([id, obj]) => obj)
-      .filter(isPColumn);
+    const pColumns = Object.values(collection).filter(isPColumn);
     return ctx.createPFrame(pColumns);
   })
 
-  .output('inputOptions', (ctx) => {
+  .retentiveOutput('inputOptions', (ctx) => {
     return ctx.resultPool
       .getSpecs()
       .entries.filter((v) => {
@@ -105,7 +99,9 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
           v.obj.name === 'pl7.app/sequencing/data' &&
           (v.obj.valueType as string) === 'File' &&
           domain !== undefined &&
-          (domain['pl7.app/fileExtension'] === 'fastq' ||
+          (domain['pl7.app/fileExtension'] === 'fasta' ||
+            domain['pl7.app/fileExtension'] === 'fasta.gz' ||
+            domain['pl7.app/fileExtension'] === 'fastq' ||
             domain['pl7.app/fileExtension'] === 'fastq.gz')
         );
       })
@@ -158,11 +154,13 @@ export const platforma = BlockModel.create<BlockArgs>('Heavy')
     ) satisfies Record<string, string>;
   })
 
+  // @TODO migrate to lambdas and merge with prerunFileImports
   .output(
     'mainFileImports',
     mapResourceFields(getResourceField(MainOutputs, 'fileImports'), getImportProgress(It))
   )
 
+  // @TODO migrate to lambdas and merge with mainFileImports
   .output(
     'prerunFileImports',
     mapResourceFields(getResourceField(StagingOutputs, 'fileImports'), getImportProgress(It))
@@ -183,4 +181,5 @@ export * from './helpers';
 export * from './qc';
 export * from './reports';
 export * from './progress';
+export * from './preset';
 export { BlockArgs };
