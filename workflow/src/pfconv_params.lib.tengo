@@ -13,7 +13,8 @@ getColumns := func(blockId) {
           },
           "annotations": {
             "pl7.app/label": "Clone id",
-            "pl7.app/table/visibility": "optional"
+            "pl7.app/table/visibility": "optional",
+            "pl7.app/table/orderPriority": "90000"
           }
         }
       }, {
@@ -25,7 +26,7 @@ getColumns := func(blockId) {
           "annotations": {
             "pl7.app/label": "Cell tag",
             "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "10101"
+            "pl7.app/table/orderPriority": "100000"
           }
         }
       }
