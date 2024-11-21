@@ -1,5 +1,17 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 1.4.1
+
+### Patch Changes
+
+- 9380126: Updated styles for progress-cell
+- af5b969: Fix for blinking dropdowns, align reports are now loaded as soon as possible, migration to new SDK.
+- Updated dependencies [9380126]
+- Updated dependencies [af5b969]
+  - @platforma-open/milaboratories.mixcr-clonotyping.ui@1.5.1
+  - @platforma-open/milaboratories.mixcr-clonotyping.workflow@1.8.1
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.3.1
+
 ## 1.4.0
 
 ### Minor Changes
