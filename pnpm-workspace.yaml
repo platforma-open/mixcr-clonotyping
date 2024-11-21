@@ -9,7 +9,7 @@ catalog:
   '@platforma-sdk/workflow-tengo': ^2.2.0
   '@platforma-sdk/model': ^1.10.2
   '@platforma-sdk/ui-vue': ^1.10.4
-  '@platforma-sdk/tengo-builder': ^1.17.2
+  '@platforma-sdk/tengo-builder': ^1.17.3
   '@platforma-sdk/block-tools': ^2.3.25
 
   '@platforma-sdk/test': ^1.10.4
@@ -33,7 +33,7 @@ catalog:
   'vitest': ^2.1.5
   '@vitejs/plugin-vue': ^5.2.0
 
-  '@vueuse/core': ^11.2.0
+  '@vueuse/core': ^11.3.0
 
   '@ag-grid-community/core': &ag-grid ^32.3.3
   '@ag-grid-community/client-side-row-model': *ag-grid
