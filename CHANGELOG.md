@@ -1,5 +1,15 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 1.4.2
+
+### Patch Changes
+
+- 1f25d8e: Output colums ordering. SDK upgrade, preset list fixes.
+- Updated dependencies [1f25d8e]
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.3.2
+  - @platforma-open/milaboratories.mixcr-clonotyping.ui@1.5.2
+  - @platforma-open/milaboratories.mixcr-clonotyping.workflow@1.8.2
+
 ## 1.4.1
 
 ### Patch Changes
