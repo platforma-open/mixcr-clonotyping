@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export const ImmuneChain = z.union([
+  z.literal(''),
   z.literal('TRA'),
   z.literal('TRAD'),
   z.literal('TRB'),
@@ -76,50 +77,55 @@ export const AlignmentChannelColors = {
   VAndJOnDifferentTargets: '#B8397A',
   LowTotalScore: '#7E2583',
   NoBarcode: '#4B1979',
-  SampleNotMatched: '#2B125C',
+  SampleNotMatched: '#2B125C'
 } satisfies Record<NotAlignedReason | AlignmentChannel, string>;
 
 export const AlignmentChainColors = {
+  '': {
+    total: '#A9A9A9',
+    hasStops: '#A9A9A9',
+    isOOF: '#A9A9A9'
+  },
   TRA: {
     total: '#105BCC',
     hasStops: '#2D93FA',
-    isOOF: '#99CCFF',
+    isOOF: '#99CCFF'
   },
   TRAD: {
     total: '#105BCC',
     hasStops: '#2D93FA',
-    isOOF: '#99CCFF',
+    isOOF: '#99CCFF'
   },
   TRB: {
     total: '#198020',
     hasStops: '#42B842',
-    isOOF: '#99E099',
+    isOOF: '#99E099'
   },
   TRD: {
     total: '#068A94',
     hasStops: '#27C2C2',
-    isOOF: '#90E0E0',
+    isOOF: '#90E0E0'
   },
   TRG: {
     total: '#5F31CC',
     hasStops: '#845CFF',
-    isOOF: '#C1ADFF',
+    isOOF: '#C1ADFF'
   },
   IGH: {
     total: '#AD3757',
     hasStops: '#F05670',
-    isOOF: '#FFADBA',
+    isOOF: '#FFADBA'
   },
   IGL: {
     total: '#C26A27',
     hasStops: '#FF9429',
-    isOOF: '#FFCB8F',
+    isOOF: '#FFCB8F'
   },
   IGK: {
     total: '#A324B2',
     hasStops: '#E553E5',
-    isOOF: '#FAAAFA',
-  },
+    isOOF: '#FAAAFA'
+  }
 } satisfies Record<ImmuneChain, Record<'total' | 'hasStops' | 'isOOF', string>>;
 
 export const CoveregeGeneFeature = z.union([
