@@ -5,7 +5,7 @@ import MainPageWrapper from './MainPageWrapper.vue';
 export const sdkPlugin = defineApp(platforma, () => {
   return {
     routes: {
-      '/': MainPageWrapper
+      '/': () => MainPageWrapper
     }
   };
 });
