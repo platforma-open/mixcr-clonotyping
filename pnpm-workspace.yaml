@@ -15,7 +15,7 @@ catalog:
   '@platforma-sdk/test': ^1.13.0
   '@milaboratories/helpers': ^1.6.7
 
-  '@milaboratories/software-pframes-conv': 2.0.3
+  '@milaboratories/software-pframes-conv': 2.0.4
   '@platforma-open/milaboratories.software-small-binaries': ^1.14.6
   '@platforma-open/milaboratories.software-mixcr': 4.7.0-133-develop
 
