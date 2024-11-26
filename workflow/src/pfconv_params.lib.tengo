@@ -12,7 +12,7 @@ getColumns := func(blockId) {
             "pl7.app/blockId": blockId
           },
           "annotations": {
-            "pl7.app/min": "0"
+            "pl7.app/min": "0",
             "pl7.app/label": "Clone id",
             "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "90000"
@@ -42,7 +42,7 @@ getColumns := func(blockId) {
           "name": "pl7.app/vdj/cellGroup",
           "valueType": "Long",
           "annotations": {
-            "pl7.app/min": "0"
+            "pl7.app/min": "0",
             "pl7.app/label": "Cell group number",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "24000"
@@ -57,7 +57,7 @@ getColumns := func(blockId) {
           "name": "pl7.app/vdj/readCount",
           "valueType": "Long",
           "annotations": {
-            "pl7.app/min": "1"
+            "pl7.app/min": "1",
             "pl7.app/label": "Number Of Reads",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "23500"
@@ -72,8 +72,8 @@ getColumns := func(blockId) {
           "name": "pl7.app/vdj/readFraction",
           "valueType": "Double",
           "annotations": {
-            "pl7.app/min": "0"
-            "pl7.app/max": "1"
+            "pl7.app/min": "0",
+            "pl7.app/max": "1",
             "pl7.app/label": "Fraction of reads",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "23000"
@@ -88,7 +88,7 @@ getColumns := func(blockId) {
           "name": "pl7.app/vdj/uniqueMoleculeCount",
           "valueType": "Long",
           "annotations": {
-            "pl7.app/min": "1"
+            "pl7.app/min": "1",
             "pl7.app/label": "Number of UMI",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "22500"
@@ -103,8 +103,8 @@ getColumns := func(blockId) {
           "name": "pl7.app/vdj/uniqueMoleculeFraction",
           "valueType": "Double",
           "annotations": {
-            "pl7.app/min": "0"
-            "pl7.app/max": "1"
+            "pl7.app/min": "0",
+            "pl7.app/max": "1",
             "pl7.app/label": "Fraction of UMI",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "22000"
@@ -236,7 +236,7 @@ getColumns := func(blockId) {
             "pl7.app/alphabet": "nucleotide"
           },
           "annotations": {
-            "pl7.app/vdj/imputed": "false"
+            "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "FR1 nt",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "18000"
@@ -255,8 +255,8 @@ getColumns := func(blockId) {
             "pl7.app/vdj/feature": "FR1"
           },
           "annotations": {
-            "pl7.app/min": "0"
-            "pl7.app/max": "50"
+            "pl7.app/min": "0",
+            "pl7.app/max": "50",
             "pl7.app/label": "Min quality FR1",
             "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "3500"
@@ -275,7 +275,7 @@ getColumns := func(blockId) {
             "pl7.app/alphabet": "nucleotide"
           },
           "annotations": {
-            "pl7.app/vdj/imputed": "false"
+            "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "FR2 nt",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "17000"
@@ -294,8 +294,8 @@ getColumns := func(blockId) {
             "pl7.app/vdj/feature": "FR2"
           },
           "annotations": {
-            "pl7.app/min": "0"
-            "pl7.app/max": "50"
+            "pl7.app/min": "0",
+            "pl7.app/max": "50",
             "pl7.app/label": "Min quality FR2",
             "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "2500"
@@ -314,7 +314,7 @@ getColumns := func(blockId) {
             "pl7.app/alphabet": "nucleotide"
           },
           "annotations": {
-            "pl7.app/vdj/imputed": "false"
+            "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "FR3 nt",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "16000"
@@ -333,8 +333,8 @@ getColumns := func(blockId) {
             "pl7.app/vdj/feature": "FR3"
           },
           "annotations": {
-            "pl7.app/min": "0"
-            "pl7.app/max": "50"
+            "pl7.app/min": "0",
+            "pl7.app/max": "50",
             "pl7.app/label": "Min quality FR3",
             "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "1500"
@@ -353,7 +353,7 @@ getColumns := func(blockId) {
             "pl7.app/alphabet": "nucleotide"
           },
           "annotations": {
-            "pl7.app/vdj/imputed": "false"
+            "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "FR4 nt",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "15000"
@@ -372,8 +372,8 @@ getColumns := func(blockId) {
             "pl7.app/vdj/feature": "FR4"
           },
           "annotations": {
-            "pl7.app/min": "0"
-            "pl7.app/max": "50"
+            "pl7.app/min": "0",
+            "pl7.app/max": "50",
             "pl7.app/label": "Min quality FR4",
             "pl7.app/table/visibility": "optional"
           }
@@ -391,7 +391,7 @@ getColumns := func(blockId) {
             "pl7.app/alphabet": "nucleotide"
           },
           "annotations": {
-            "pl7.app/vdj/imputed": "false"
+            "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "CDR1 nt",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "17500"
@@ -410,8 +410,8 @@ getColumns := func(blockId) {
             "pl7.app/vdj/feature": "CDR1"
           },
           "annotations": {
-            "pl7.app/min": "0"
-            "pl7.app/max": "50"
+            "pl7.app/min": "0",
+            "pl7.app/max": "50",
             "pl7.app/label": "Min quality CDR1",
             "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "3000"
@@ -430,7 +430,7 @@ getColumns := func(blockId) {
             "pl7.app/alphabet": "nucleotide"
           },
           "annotations": {
-            "pl7.app/vdj/imputed": "false"
+            "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "CDR2 nt",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "16500"
@@ -449,8 +449,8 @@ getColumns := func(blockId) {
             "pl7.app/vdj/feature": "CDR2"
           },
           "annotations": {
-            "pl7.app/min": "0"
-            "pl7.app/max": "50"
+            "pl7.app/min": "0",
+            "pl7.app/max": "50",
             "pl7.app/label": "Min quality CDR2",
             "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "2000"
@@ -469,7 +469,7 @@ getColumns := func(blockId) {
             "pl7.app/alphabet": "nucleotide"
           },
           "annotations": {
-            "pl7.app/vdj/imputed": "false"
+            "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "CDR3 nt",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "15500"
@@ -488,8 +488,8 @@ getColumns := func(blockId) {
             "pl7.app/vdj/feature": "CDR3"
           },
           "annotations": {
-            "pl7.app/min": "0"
-            "pl7.app/max": "50"
+            "pl7.app/min": "0",
+            "pl7.app/max": "50",
             "pl7.app/label": "Min quality CDR3",
             "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "1000"
@@ -508,7 +508,7 @@ getColumns := func(blockId) {
             "pl7.app/alphabet": "aminoacid"
           },
           "annotations": {
-            "pl7.app/vdj/imputed": "false"
+            "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "FR1 aa",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "14500"
@@ -527,7 +527,7 @@ getColumns := func(blockId) {
             "pl7.app/alphabet": "aminoacid"
           },
           "annotations": {
-            "pl7.app/vdj/imputed": "false"
+            "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "FR2 aa",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "13500"
@@ -546,7 +546,7 @@ getColumns := func(blockId) {
             "pl7.app/alphabet": "aminoacid"
           },
           "annotations": {
-            "pl7.app/vdj/imputed": "false"
+            "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "FR3 aa",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "12500"
@@ -565,7 +565,7 @@ getColumns := func(blockId) {
             "pl7.app/alphabet": "aminoacid"
           },
           "annotations": {
-            "pl7.app/vdj/imputed": "false"
+            "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "FR4 aa",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "11500"
@@ -584,7 +584,7 @@ getColumns := func(blockId) {
             "pl7.app/alphabet": "aminoacid"
           },
           "annotations": {
-            "pl7.app/vdj/imputed": "false"
+            "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "CDR1 aa",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "14000"
@@ -603,7 +603,7 @@ getColumns := func(blockId) {
             "pl7.app/alphabet": "aminoacid"
           },
           "annotations": {
-            "pl7.app/vdj/imputed": "false"
+            "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "CDR2 aa",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "13000"
@@ -622,7 +622,7 @@ getColumns := func(blockId) {
             "pl7.app/alphabet": "aminoacid"
           },
           "annotations": {
-            "pl7.app/vdj/imputed": "false"
+            "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "CDR3 aa",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "12000"
@@ -641,7 +641,7 @@ getColumns := func(blockId) {
             "pl7.app/alphabet": "nucleotide"
           },
           "annotations": {
-            "pl7.app/vdj/imputed": "true"
+            "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "FR1 imputed nt",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "11000"
@@ -660,7 +660,7 @@ getColumns := func(blockId) {
             "pl7.app/alphabet": "nucleotide"
           },
           "annotations": {
-            "pl7.app/vdj/imputed": "true"
+            "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "FR2 imputed nt",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "10000"
@@ -679,7 +679,7 @@ getColumns := func(blockId) {
             "pl7.app/alphabet": "nucleotide"
           },
           "annotations": {
-            "pl7.app/vdj/imputed": "true"
+            "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "FR3 imputed nt",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "9000"
@@ -698,7 +698,7 @@ getColumns := func(blockId) {
             "pl7.app/alphabet": "nucleotide"
           },
           "annotations": {
-            "pl7.app/vdj/imputed": "true"
+            "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "FR4 imputed nt",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "8000"
@@ -717,7 +717,7 @@ getColumns := func(blockId) {
             "pl7.app/alphabet": "nucleotide"
           },
           "annotations": {
-            "pl7.app/vdj/imputed": "true"
+            "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "CDR1 imputed nt",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "10500"
@@ -736,7 +736,7 @@ getColumns := func(blockId) {
             "pl7.app/alphabet": "nucleotide"
           },
           "annotations": {
-            "pl7.app/vdj/imputed": "true"
+            "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "CDR2 imputed nt",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "9500"
@@ -755,7 +755,7 @@ getColumns := func(blockId) {
             "pl7.app/alphabet": "nucleotide"
           },
           "annotations": {
-            "pl7.app/vdj/imputed": "true"
+            "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "CDR3 imputed nt",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "8500"
@@ -774,7 +774,7 @@ getColumns := func(blockId) {
             "pl7.app/alphabet": "aminoacid"
           },
           "annotations": {
-            "pl7.app/vdj/imputed": "true"
+            "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "FR1 imputed aa",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "7500"
@@ -793,7 +793,7 @@ getColumns := func(blockId) {
             "pl7.app/alphabet": "aminoacid"
           },
           "annotations": {
-            "pl7.app/vdj/imputed": "true"
+            "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "FR2 imputed aa",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "6500"
@@ -812,7 +812,7 @@ getColumns := func(blockId) {
             "pl7.app/alphabet": "aminoacid"
           },
           "annotations": {
-            "pl7.app/vdj/imputed": "true"
+            "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "FR3 imputed aa",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "5500"
@@ -831,7 +831,7 @@ getColumns := func(blockId) {
             "pl7.app/alphabet": "aminoacid"
           },
           "annotations": {
-            "pl7.app/vdj/imputed": "true"
+            "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "FR4 imputed aa",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "4500"
@@ -850,7 +850,7 @@ getColumns := func(blockId) {
             "pl7.app/alphabet": "aminoacid"
           },
           "annotations": {
-            "pl7.app/vdj/imputed": "true"
+            "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "CDR1 imputed aa",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "7000"
@@ -869,7 +869,7 @@ getColumns := func(blockId) {
             "pl7.app/alphabet": "aminoacid"
           },
           "annotations": {
-            "pl7.app/vdj/imputed": "true"
+            "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "CDR2 imputed aa",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "6000"
@@ -888,7 +888,7 @@ getColumns := func(blockId) {
             "pl7.app/alphabet": "aminoacid"
           },
           "annotations": {
-            "pl7.app/vdj/imputed": "true"
+            "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "CDR3 imputed aa",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "5000"
