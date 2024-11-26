@@ -52,8 +52,8 @@ catalogs:
       specifier: ^1.10.4
       version: 1.10.4
     '@platforma-sdk/ui-vue':
-      specifier: ^1.11.5
-      version: 1.11.5
+      specifier: ^1.11.7
+      version: 1.11.7
     '@platforma-sdk/workflow-tengo':
       specifier: ^2.2.0
       version: 2.2.0
@@ -190,7 +190,7 @@ importers:
         version: 1.10.2
       '@platforma-sdk/ui-vue':
         specifier: 'catalog:'
-        version: 1.11.5(typescript@5.5.4)
+        version: 1.11.7(typescript@5.5.4)
       '@vueuse/core':
         specifier: 'catalog:'
         version: 11.3.0(vue@3.5.13(typescript@5.5.4))
@@ -1007,8 +1007,8 @@ packages:
   '@platforma-sdk/test@1.10.4':
     resolution: {integrity: sha512-nAeNsCunC6CVWwSWuhYw2jFhMe5bzJvZbxT/uypg2WDUU4J+zoplymfCGXUuQr8Q7esW9r7mOgjzZvJtfy4jUg==}
 
-  '@platforma-sdk/ui-vue@1.11.5':
-    resolution: {integrity: sha512-raYOp3zFMYZqTAOtNd3Ii2DNT+DLC7fkLxDcMQ2QNymQRSiEbD3r0ZPN44S0qeTrtRs3cLpCVinhO0fVURjPnQ==}
+  '@platforma-sdk/ui-vue@1.11.7':
+    resolution: {integrity: sha512-6tvs6p0LyQWNSLMXgChveRsXGjYxNSD8xpXONYEzhH9nptTTw+/KyhMGc7HaL37Vxhba8dTUKS7VsGyGZO56aA==}
 
   '@platforma-sdk/workflow-tengo@2.2.0':
     resolution: {integrity: sha512-ZT+nRZhVFXnnl1TDlAAHdeLNLohLrbVk/vqUM0fKCVZvdKzyRiVGG+hKwwGjDHb7z1kZ5rasrE6a0vCXyuV+Fw==}
@@ -4251,7 +4251,7 @@ snapshots:
       - supports-color
       - terser
 
-  '@platforma-sdk/ui-vue@1.11.5(typescript@5.5.4)':
+  '@platforma-sdk/ui-vue@1.11.7(typescript@5.5.4)':
     dependencies:
       '@ag-grid-community/client-side-row-model': 32.3.3
       '@ag-grid-community/core': 32.3.3

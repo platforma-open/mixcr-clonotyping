@@ -85,7 +85,10 @@ const columnDefs: ColDef[] = [
     pinned: 'left',
     lockPinned: true,
     sortable: true,
-    cellRenderer: PlAgTextAndButtonCell
+    cellRenderer: PlAgTextAndButtonCell,
+    cellRendererParams: {
+      invokeRowsOnDoubleClick: true
+    }
   },
   {
     colId: 'progress',
