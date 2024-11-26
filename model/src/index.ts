@@ -74,30 +74,29 @@ export const platforma = BlockModel.create('Heavy')
   })
 
   .retentiveOutput('inputOptions', (ctx) => {
-    return ctx.resultPool
-      .getSpecs()
-      .entries.filter((v) => {
-        if (!isPColumnSpec(v.obj)) return false;
-        const domain = v.obj.domain;
-        return (
-          v.obj.name === 'pl7.app/sequencing/data' &&
-          (v.obj.valueType as string) === 'File' &&
-          domain !== undefined &&
-          (domain['pl7.app/fileExtension'] === 'fasta' ||
-            domain['pl7.app/fileExtension'] === 'fasta.gz' ||
-            domain['pl7.app/fileExtension'] === 'fastq' ||
-            domain['pl7.app/fileExtension'] === 'fastq.gz')
-        );
-      })
-      .map(
-        (v) =>
-          ({
-            ref: v.ref,
-            label: `${ctx.getBlockLabel(v.ref.blockId)} / ${
-              v.obj.annotations?.['pl7.app/label'] ?? `unlabelled`
-            }`
-          } satisfies Option)
+    return ctx.resultPool.getOptions((v) => {
+      if (!isPColumnSpec(v)) return false;
+      const domain = v.domain;
+      return (
+        v.name === 'pl7.app/sequencing/data' &&
+        (v.valueType as string) === 'File' &&
+        domain !== undefined &&
+        (domain['pl7.app/fileExtension'] === 'fasta' ||
+          domain['pl7.app/fileExtension'] === 'fasta.gz' ||
+          domain['pl7.app/fileExtension'] === 'fastq' ||
+          domain['pl7.app/fileExtension'] === 'fastq.gz')
       );
+    });
+
+    // .map(
+    //   (v) =>
+    //     ({
+    //       ref: v.ref,
+    //       label: `${ctx.getBlockLabel(v.ref.blockId)} / ${
+    //         v.obj.annotations?.['pl7.app/label'] ?? `unlabelled`
+    //       }`
+    //     } satisfies Option)
+    // );
   })
 
   .output('sampleLabels', (ctx): Record<string, string> | undefined => {

@@ -42,9 +42,6 @@ catalogs:
     '@platforma-sdk/block-tools':
       specifier: ^2.3.25
       version: 2.3.25
-    '@platforma-sdk/model':
-      specifier: ^1.10.12
-      version: 1.10.12
     '@platforma-sdk/tengo-builder':
       specifier: ^1.17.3
       version: 1.17.3
@@ -89,6 +86,7 @@ catalogs:
       version: 3.23.8
 
 overrides:
+  '@platforma-sdk/model': file:/Users/dbolotin/milab/core/platforma/sdk/model/package.tgz
   '@platforma-sdk/workflow-tengo': file:/Users/dbolotin/milab/core/platforma/sdk/workflow-tengo/package.tgz
 
 importers:
@@ -105,8 +103,8 @@ importers:
         specifier: workspace:*
         version: link:workflow
       '@platforma-sdk/model':
-        specifier: 'catalog:'
-        version: 1.10.12
+        specifier: file:/Users/dbolotin/milab/core/platforma/sdk/model/package.tgz
+        version: file:../../core/platforma/sdk/model/package.tgz
     devDependencies:
       '@changesets/cli':
         specifier: 'catalog:'
@@ -121,8 +119,8 @@ importers:
   model:
     dependencies:
       '@platforma-sdk/model':
-        specifier: 'catalog:'
-        version: 1.10.12
+        specifier: file:/Users/dbolotin/milab/core/platforma/sdk/model/package.tgz
+        version: file:../../core/platforma/sdk/model/package.tgz
       zod:
         specifier: 'catalog:'
         version: 3.23.8
@@ -186,8 +184,8 @@ importers:
         specifier: workspace:*
         version: link:../model
       '@platforma-sdk/model':
-        specifier: 'catalog:'
-        version: 1.10.12
+        specifier: file:/Users/dbolotin/milab/core/platforma/sdk/model/package.tgz
+        version: file:../../core/platforma/sdk/model/package.tgz
       '@platforma-sdk/ui-vue':
         specifier: 'catalog:'
         version: 1.11.6(typescript@5.5.4)
@@ -991,8 +989,9 @@ packages:
     resolution: {integrity: sha512-U908yTA6HM21pdZnOwumEQ2uSPzmbih/dMZI/VcqmNEGgnNf9nMyDomTffLLTkAb2xGWMLIm0DR3qZUsevVKXg==}
     hasBin: true
 
-  '@platforma-sdk/model@1.10.12':
-    resolution: {integrity: sha512-19rmhnCM37hxEjJiX7xHbP3yeZtLFTou522syIl1gU7GhNB698YLtFqKlZxqiLdBaKCx4FvC7WdQnn2Dku25DA==}
+  '@platforma-sdk/model@file:../../core/platforma/sdk/model/package.tgz':
+    resolution: {integrity: sha512-5lXvEbnTRs8H+36Smhyta4E/2z5fBEnIhZMXMVdO5V+L64kb16u+ozvIzkkrj0ITAVDXP1oN3QAj/gCq23Kfng==, tarball: file:../../core/platforma/sdk/model/package.tgz}
+    version: 1.10.12
 
   '@platforma-sdk/tengo-builder@1.17.3':
     resolution: {integrity: sha512-UQzDKlPpnwW6VIZoYrEn+rDE4yQfg6xWczMSf/Rl92FVusZ6SjQHOQ1WQtGrvyufLA6ut55XUHLXrOF2cSo3LQ==}
@@ -4060,7 +4059,7 @@ snapshots:
       '@milaboratories/resolve-helper': 1.0.1
       '@milaboratories/ts-helpers': 1.1.1
       '@platforma-sdk/block-tools': 2.3.25
-      '@platforma-sdk/model': 1.10.12
+      '@platforma-sdk/model': file:../../core/platforma/sdk/model/package.tgz
       '@platforma-sdk/workflow-tengo': file:../../core/platforma/sdk/workflow-tengo/package.tgz
       canonicalize: 2.0.0
       denque: 2.1.0
@@ -4157,7 +4156,7 @@ snapshots:
 
   '@platforma-open/milaboratories.samples-and-data.model@1.7.1':
     dependencies:
-      '@platforma-sdk/model': 1.10.12
+      '@platforma-sdk/model': file:../../core/platforma/sdk/model/package.tgz
       zod: 3.23.8
 
   '@platforma-open/milaboratories.samples-and-data.ui@1.12.1': {}
@@ -4169,7 +4168,7 @@ snapshots:
       '@platforma-open/milaboratories.samples-and-data.model': 1.7.1
       '@platforma-open/milaboratories.samples-and-data.ui': 1.12.1
       '@platforma-open/milaboratories.samples-and-data.workflow': 1.8.1
-      '@platforma-sdk/model': 1.10.12
+      '@platforma-sdk/model': file:../../core/platforma/sdk/model/package.tgz
 
   '@platforma-open/milaboratories.software-mixcr@4.7.0-133-develop': {}
 
@@ -4193,7 +4192,7 @@ snapshots:
     transitivePeerDependencies:
       - aws-crt
 
-  '@platforma-sdk/model@1.10.12':
+  '@platforma-sdk/model@file:../../core/platforma/sdk/model/package.tgz':
     dependencies:
       '@milaboratories/pl-model-common': 1.6.2
       utility-types: 3.11.0
@@ -4213,7 +4212,7 @@ snapshots:
       '@milaboratories/pl-middle-layer': 1.16.0
       '@milaboratories/pl-tree': 1.4.14
       '@milaboratories/ts-helpers': 1.1.1
-      '@platforma-sdk/model': 1.10.12
+      '@platforma-sdk/model': file:../../core/platforma/sdk/model/package.tgz
       vitest: 2.1.6(@types/node@22.7.5)
     transitivePeerDependencies:
       - '@edge-runtime/vm'
@@ -4253,7 +4252,7 @@ snapshots:
       '@ag-grid-enterprise/server-side-row-model': 32.3.3
       '@ag-grid-enterprise/side-bar': 32.3.3
       '@milaboratories/uikit': 2.2.11(typescript@5.5.4)
-      '@platforma-sdk/model': 1.10.12
+      '@platforma-sdk/model': file:../../core/platforma/sdk/model/package.tgz
       canonicalize: 2.0.0
       lru-cache: 11.0.2
       vue: 3.5.13(typescript@5.5.4)

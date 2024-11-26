@@ -45,7 +45,8 @@ self.body(func(inputs) {
 
 	sampleAxis := inputSpec.axesSpec[0]
 	trace := pSpec.makeTrace(inputSpec,
-		{type: "milaboratories.mixcr-clonotyping", id: blockId, importance: 20, label: "MiXCR " + presetCommonName})
+		{type: "milaboratories.mixcr-clonotyping", id: blockId, importance: 20, label: "MiXCR " + presetCommonName}
+	)
 
 	reports := []
 
@@ -72,13 +73,13 @@ self.body(func(inputs) {
 	cColumnsAdditionalAxesSpec := [sampleAxis]
 	if !hasAssembleCells {
 		cColumnsAdditionalAxesSpec = append(cColumnsAdditionalAxesSpec, {
-				"name": "pl7.app/vdj/chain",
-				"type": "String",
-				"annotations": {
-					"pl7.app/label": "Chain",
-					"pl7.app/axisNature": "scaleCompatible"
-				}
-			})
+			"name": "pl7.app/vdj/chain",
+			"type": "String",
+			"annotations": {
+				"pl7.app/label": "Chain",
+				"pl7.app/axisNature": "scaleCompatible"
+			}
+		})
 	}
 
 	decomposition := pUtil.decomposePfconvImportCfg(pfconvParams, {
@@ -157,7 +158,7 @@ self.body(func(inputs) {
 
 	clones := pframes.pFrameBuilder()
 	for columnId, columnSpec in cloneColumnsSpec {
-		clones.add(columnId, columnSpec, mixcrResults.output("clones/" + columnId))
+		clones.add(columnId, trace.inject(columnSpec), mixcrResults.output("clones/" + columnId))
 	}
 	clones = clones.build()
 
@@ -195,7 +196,7 @@ self.body(func(inputs) {
 			valueType: "File",
 			axesSpec: [
 				inputSpec.axesSpec[0]
-			]
+				]
 		}),
 		"qc.data": mixcrResults.output("qc"),
 
@@ -208,7 +209,7 @@ self.body(func(inputs) {
 			valueType: "Log",
 			axesSpec: [
 				inputSpec.axesSpec[0]
-			]
+				]
 		}),
 		"logs.data": mixcrResults.output("log"),
 
@@ -238,7 +239,7 @@ self.body(func(inputs) {
 						"pl7.app/dense": string(json.encode(["json", "txt"]))
 					}
 				}
-			]
+				]
 		}),
 		"reports.data": mixcrResults.output("reports"),
 
