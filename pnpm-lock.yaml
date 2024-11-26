@@ -49,8 +49,16 @@ catalogs:
       specifier: ^1.11.1
       version: 1.11.1
     '@platforma-sdk/ui-vue':
+<<<<<<< HEAD
       specifier: ^1.11.5
       version: 1.11.6
+=======
+      specifier: ^1.11.7
+      version: 1.11.7
+    '@platforma-sdk/workflow-tengo':
+      specifier: ^2.2.0
+      version: 2.2.0
+>>>>>>> main
     '@vitejs/plugin-vue':
       specifier: ^5.2.0
       version: 5.2.0
@@ -188,7 +196,11 @@ importers:
         version: file:../../core/platforma/sdk/model/package.tgz
       '@platforma-sdk/ui-vue':
         specifier: 'catalog:'
+<<<<<<< HEAD
         version: 1.11.6(typescript@5.5.4)
+=======
+        version: 1.11.7(typescript@5.5.4)
+>>>>>>> main
       '@vueuse/core':
         specifier: 'catalog:'
         version: 11.3.0(vue@3.5.13(typescript@5.5.4))
@@ -1000,8 +1012,13 @@ packages:
   '@platforma-sdk/test@1.11.1':
     resolution: {integrity: sha512-qrV4SRQkggKtmwIKW4TvYL562o9M69raeXlmsdZhkztGzSnvURIDrCXIr2/BmVW27PASb0EPh1Sz6hqGVz45Lw==}
 
+<<<<<<< HEAD
   '@platforma-sdk/ui-vue@1.11.6':
     resolution: {integrity: sha512-ywTLD+ynvr7vOoJXlZnzK772X+jESzAu/3DGSy7/8IrBsBq4Xw/w4nu/80yyQk/KMDhwVbeUJSmii1qmeoNfiA==}
+=======
+  '@platforma-sdk/ui-vue@1.11.7':
+    resolution: {integrity: sha512-6tvs6p0LyQWNSLMXgChveRsXGjYxNSD8xpXONYEzhH9nptTTw+/KyhMGc7HaL37Vxhba8dTUKS7VsGyGZO56aA==}
+>>>>>>> main
 
   '@platforma-sdk/workflow-tengo@file:../../core/platforma/sdk/workflow-tengo/package.tgz':
     resolution: {integrity: sha512-MiizA2jd9NpZwmd72yW2q179Hs+yzwjLK+g6XFBC9jhNcNcJg5e61f1F4kc44n1tqH21kmVyJJeNIttF6QCqEQ==, tarball: file:../../core/platforma/sdk/workflow-tengo/package.tgz}
@@ -4233,7 +4250,11 @@ snapshots:
       - supports-color
       - terser
 
+<<<<<<< HEAD
   '@platforma-sdk/ui-vue@1.11.6(typescript@5.5.4)':
+=======
+  '@platforma-sdk/ui-vue@1.11.7(typescript@5.5.4)':
+>>>>>>> main
     dependencies:
       '@ag-grid-community/client-side-row-model': 32.3.3
       '@ag-grid-community/core': 32.3.3
@@ -4252,7 +4273,11 @@ snapshots:
       '@ag-grid-enterprise/server-side-row-model': 32.3.3
       '@ag-grid-enterprise/side-bar': 32.3.3
       '@milaboratories/uikit': 2.2.11(typescript@5.5.4)
+<<<<<<< HEAD
       '@platforma-sdk/model': file:../../core/platforma/sdk/model/package.tgz
+=======
+      '@platforma-sdk/model': 1.10.12
+>>>>>>> main
       canonicalize: 2.0.0
       lru-cache: 11.0.2
       vue: 3.5.13(typescript@5.5.4)
