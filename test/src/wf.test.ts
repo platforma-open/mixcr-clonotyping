@@ -116,7 +116,7 @@ blockTest(
         ok: true,
         value: [
           {
-            label: 'Samples & Data / Dataset 1'
+            label: 'Dataset 1'
           }
         ]
       }
