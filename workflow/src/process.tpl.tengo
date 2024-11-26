@@ -8,6 +8,7 @@ pframes := import("@platforma-sdk/workflow-tengo:pframes")
 smart := import("@platforma-sdk/workflow-tengo:smart")
 file := import("@platforma-sdk/workflow-tengo:file")
 llPFrames := import("@platforma-sdk/workflow-tengo:pframes.ll")
+pSpec := import("@platforma-sdk/workflow-tengo:pframes.spec")
 pUtil := import("@platforma-sdk/workflow-tengo:pframes.util")
 pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 
@@ -29,6 +30,7 @@ self.body(func(inputs) {
 	species := params.species
 	limitInput := params.limitInput
 	blockId := params.blockId
+	presetCommonName := params.presetCommonName
 
 	presetContent := inputs.presetContent.getDataAsJson()
 	pfconvParams := inputs.pfconvParams
@@ -42,10 +44,8 @@ self.body(func(inputs) {
 	}
 
 	sampleAxis := inputSpec.axesSpec[0]
-	datasetLabel := inputSpec.annotations["pl7.app/label"]
-	if datasetLabel == undefined {
-		datasetLabel = "Unlabelled"
-	}
+	trace := pSpec.makeTrace(inputSpec,
+		{type: "milaboratories.mixcr-clonotyping", id: blockId, importance: 20, label: "MiXCR " + presetCommonName})
 
 	reports := []
 
@@ -176,7 +176,7 @@ self.body(func(inputs) {
 		"mixcr.com/cellTags": joinOrUndefined(presetContent.cellTags),
 		"mixcr.com/coveredFeaturesOnExport": joinOrUndefined(presetContent.coveredFeaturesOnExport),
 		"mixcr.com/umiTags": joinOrUndefined(presetContent.umiTags),
-		"pl7.app/label": datasetLabel + " / MiXCR Clonotypes"
+		"pl7.app/label": "Clns Files"
 	}
 	if hasAssembleContigs {
 		clnsAnnotations["mixcr.com/contigsAssembled"] = "true"
@@ -186,7 +186,7 @@ self.body(func(inputs) {
 	}
 
 	return {
-		"qc.spec": {
+		"qc.spec": trace.inject({
 			kind: "PColumn",
 			name: "mixcr.com/qc",
 			domain: {
@@ -196,10 +196,10 @@ self.body(func(inputs) {
 			axesSpec: [
 				inputSpec.axesSpec[0]
 			]
-		},
+		}),
 		"qc.data": mixcrResults.output("qc"),
 
-		"logs.spec": {
+		"logs.spec": trace.inject({
 			kind: "PColumn",
 			name: "pl7.app/log",
 			domain: {
@@ -209,10 +209,10 @@ self.body(func(inputs) {
 			axesSpec: [
 				inputSpec.axesSpec[0]
 			]
-		},
+		}),
 		"logs.data": mixcrResults.output("log"),
 
-		"reports.spec": {
+		"reports.spec": trace.inject({
 			kind: "PColumn",
 			name: "mixcr.com/report",
 			domain: {
@@ -238,11 +238,11 @@ self.body(func(inputs) {
 						"pl7.app/dense": string(json.encode(["json", "txt"]))
 					}
 				}
-				]
-		},
+			]
+		}),
 		"reports.data": mixcrResults.output("reports"),
 
-		"clns.spec": {
+		"clns.spec": trace.inject({
 			kind: "PColumn",
 			name: "mixcr.com/clns",
 			domain: {
@@ -251,7 +251,7 @@ self.body(func(inputs) {
 			annotations: clnsAnnotations,
 			valueType: "File",
 			axesSpec: [ inputSpec.axesSpec[0] ]
-		},
+		}),
 		"clns.data": mixcrResults.output("clns"),
 
 		"clones": clones

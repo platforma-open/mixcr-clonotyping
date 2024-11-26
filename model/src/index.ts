@@ -32,28 +32,16 @@ export const platforma = BlockModel.create('Heavy')
   )
 
   .output('qc', (ctx) =>
-    parseResourceMap(
-      ctx.outputs?.resolve('qc'),
-      (acc) => acc.getFileHandle(),
-      true
-    )
+    parseResourceMap(ctx.outputs?.resolve('qc'), (acc) => acc.getFileHandle(), true)
   )
 
   .output('reports', (ctx) =>
-    parseResourceMap(
-      ctx.outputs?.resolve('reports'),
-      (acc) => acc.getFileHandle(),
-      false
-    )
+    parseResourceMap(ctx.outputs?.resolve('reports'), (acc) => acc.getFileHandle(), false)
   )
 
   .output('logs', (ctx) => {
     return ctx.outputs !== undefined
-      ? parseResourceMap(
-          ctx.outputs?.resolve('logs'),
-          (acc) => acc.getLogHandle(),
-          false
-        )
+      ? parseResourceMap(ctx.outputs?.resolve('logs'), (acc) => acc.getLogHandle(), false)
       : undefined;
   })
 
@@ -71,18 +59,14 @@ export const platforma = BlockModel.create('Heavy')
 
   .output('done', (ctx) => {
     return ctx.outputs !== undefined
-      ? parseResourceMap(
-          ctx.outputs?.resolve('clns'),
-          (acc) => true,
-          false
-        ).data.map((e) => e.key[0] as string)
+      ? parseResourceMap(ctx.outputs?.resolve('clns'), (acc) => true, false).data.map(
+          (e) => e.key[0] as string
+        )
       : undefined;
   })
 
   .output('clones', (ctx) => {
-    const collection = ctx.outputs
-      ?.resolve('clones')
-      ?.parsePObjectCollection();
+    const collection = ctx.outputs?.resolve('clones')?.parsePObjectCollection();
     if (collection === undefined) return undefined;
     // if (collection === undefined || !collection.isComplete) return undefined;
     const pColumns = Object.values(collection).filter(isPColumn);
@@ -171,6 +155,8 @@ export const platforma = BlockModel.create('Heavy')
   })
 
   .argsValid((ctx) => BlockArgsValid.safeParse(ctx.args).success)
+
+  .title((ctx) => (ctx.args.title ? `MiXCR Clonotyping - ${ctx.args.title}` : 'MiXCR Clonotyping'))
 
   .done();
 
