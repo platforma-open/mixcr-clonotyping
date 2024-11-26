@@ -30,7 +30,9 @@ export const BlockArgsValid = z
     input: Ref,
     preset: Preset,
     species: z.string().optional(),
-    limitInput: z.number().int().optional()
+    limitInput: z.number().int().optional(),
+    title: z.string().optional(),
+    presetCommonName: z.string().optional()
   })
   .strict();
 export type BlockArgsValid = z.infer<typeof BlockArgsValid>;

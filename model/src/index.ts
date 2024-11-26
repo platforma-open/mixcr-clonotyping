@@ -32,28 +32,16 @@ export const platforma = BlockModel.create('Heavy')
   )
 
   .output('qc', (ctx) =>
-    parseResourceMap(
-      ctx.outputs?.resolve('qc'),
-      (acc) => acc.getFileHandle(),
-      true
-    )
+    parseResourceMap(ctx.outputs?.resolve('qc'), (acc) => acc.getFileHandle(), true)
   )
 
   .output('reports', (ctx) =>
-    parseResourceMap(
-      ctx.outputs?.resolve('reports'),
-      (acc) => acc.getFileHandle(),
-      false
-    )
+    parseResourceMap(ctx.outputs?.resolve('reports'), (acc) => acc.getFileHandle(), false)
   )
 
   .output('logs', (ctx) => {
     return ctx.outputs !== undefined
-      ? parseResourceMap(
-          ctx.outputs?.resolve('logs'),
-          (acc) => acc.getLogHandle(),
-          false
-        )
+      ? parseResourceMap(ctx.outputs?.resolve('logs'), (acc) => acc.getLogHandle(), false)
       : undefined;
   })
 
@@ -71,18 +59,14 @@ export const platforma = BlockModel.create('Heavy')
 
   .output('done', (ctx) => {
     return ctx.outputs !== undefined
-      ? parseResourceMap(
-          ctx.outputs?.resolve('clns'),
-          (acc) => true,
-          false
-        ).data.map((e) => e.key[0] as string)
+      ? parseResourceMap(ctx.outputs?.resolve('clns'), (acc) => true, false).data.map(
+          (e) => e.key[0] as string
+        )
       : undefined;
   })
 
   .output('clones', (ctx) => {
-    const collection = ctx.outputs
-      ?.resolve('clones')
-      ?.parsePObjectCollection();
+    const collection = ctx.outputs?.resolve('clones')?.parsePObjectCollection();
     if (collection === undefined) return undefined;
     // if (collection === undefined || !collection.isComplete) return undefined;
     const pColumns = Object.values(collection).filter(isPColumn);
@@ -90,30 +74,29 @@ export const platforma = BlockModel.create('Heavy')
   })
 
   .retentiveOutput('inputOptions', (ctx) => {
-    return ctx.resultPool
-      .getSpecs()
-      .entries.filter((v) => {
-        if (!isPColumnSpec(v.obj)) return false;
-        const domain = v.obj.domain;
-        return (
-          v.obj.name === 'pl7.app/sequencing/data' &&
-          (v.obj.valueType as string) === 'File' &&
-          domain !== undefined &&
-          (domain['pl7.app/fileExtension'] === 'fasta' ||
-            domain['pl7.app/fileExtension'] === 'fasta.gz' ||
-            domain['pl7.app/fileExtension'] === 'fastq' ||
-            domain['pl7.app/fileExtension'] === 'fastq.gz')
-        );
-      })
-      .map(
-        (v) =>
-          ({
-            ref: v.ref,
-            label: `${ctx.getBlockLabel(v.ref.blockId)} / ${
-              v.obj.annotations?.['pl7.app/label'] ?? `unlabelled`
-            }`
-          } satisfies Option)
+    return ctx.resultPool.getOptions((v) => {
+      if (!isPColumnSpec(v)) return false;
+      const domain = v.domain;
+      return (
+        v.name === 'pl7.app/sequencing/data' &&
+        (v.valueType as string) === 'File' &&
+        domain !== undefined &&
+        (domain['pl7.app/fileExtension'] === 'fasta' ||
+          domain['pl7.app/fileExtension'] === 'fasta.gz' ||
+          domain['pl7.app/fileExtension'] === 'fastq' ||
+          domain['pl7.app/fileExtension'] === 'fastq.gz')
       );
+    });
+
+    // .map(
+    //   (v) =>
+    //     ({
+    //       ref: v.ref,
+    //       label: `${ctx.getBlockLabel(v.ref.blockId)} / ${
+    //         v.obj.annotations?.['pl7.app/label'] ?? `unlabelled`
+    //       }`
+    //     } satisfies Option)
+    // );
   })
 
   .output('sampleLabels', (ctx): Record<string, string> | undefined => {
@@ -171,6 +154,8 @@ export const platforma = BlockModel.create('Heavy')
   })
 
   .argsValid((ctx) => BlockArgsValid.safeParse(ctx.args).success)
+
+  .title((ctx) => (ctx.args.title ? `MiXCR Clonotyping - ${ctx.args.title}` : 'MiXCR Clonotyping'))
 
   .done();
 

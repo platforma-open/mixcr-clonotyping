@@ -929,7 +929,7 @@ getColumns := func(blockId) {
     "partitionKeyLength": 0
   }
 
-  return cols
+	return cols
 }
 
 export ll.toStrict({

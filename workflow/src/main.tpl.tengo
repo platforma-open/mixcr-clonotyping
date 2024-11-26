@@ -82,7 +82,8 @@ wf.body(func(args) {
 		params: smart.createJsonResource({
 			species: species,
 			limitInput: limitInput,
-			blockId: blockId
+			blockId: blockId,
+			presetCommonName: args.presetCommonName
 		}),
 		pfconvParams: pfconvParams,
 		inputSpec: input.getFutureInputField("spec"),
