@@ -1,5 +1,15 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.4.0
+
+### Minor Changes
+
+- 9ccb1fd: Support of trace annotations; SDK upgrade
+
+### Patch Changes
+
+- 53d545e: Fix for empty chain name in report
+
 ## 1.3.2
 
 ### Patch Changes
