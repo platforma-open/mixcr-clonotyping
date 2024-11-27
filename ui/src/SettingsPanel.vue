@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Preset, SupportedPresetList } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
 import { getFilePathFromHandle, ImportFileHandle, Ref as PlRef } from '@platforma-sdk/model';
-import { ListOption, PlBtnGroup, PlDropdown, PlDropdownRef, PlFileInput, PlTextField, ReactiveFileContent } from '@platforma-sdk/ui-vue';
+import { ListOption, PlAccordionSection, PlBtnGroup, PlDropdown, PlDropdownRef, PlFileInput, PlTextField, ReactiveFileContent } from '@platforma-sdk/ui-vue';
 import { computed, reactive, watch } from 'vue';
 import { useApp } from './app';
 import { retentive } from './retentive';
@@ -132,7 +132,8 @@ function parseNumber(v: string): number {
     @update:model-value="setPresetFile" clearable />
 
   <PlDropdown v-if="needSpecies" :options="speciesOptions" v-model="app.model.args.species" label="Select species" />
-
-  <PlTextField v-model="app.model.args.limitInput" :parse="parseNumber" :clearable="() => undefined"
-    label="Take only this number of reads into analysis" />
+  <PlAccordionSection label="Advanced Settings">
+    <PlTextField v-model="app.model.args.limitInput" :parse="parseNumber" :clearable="() => undefined"
+      label="Take only this number of reads into analysis" />
+  </PlAccordionSection>
 </template>
