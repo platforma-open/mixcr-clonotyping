@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.test
 
+## 1.3.0
+
+### Minor Changes
+
+- 9ccb1fd: Support of trace annotations; SDK upgrade
+
 ## 1.2.1
 
 ### Patch Changes

@@ -1,5 +1,24 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 1.5.0
+
+### Minor Changes
+
+- 9ccb1fd: Support of trace annotations; SDK upgrade
+
+### Patch Changes
+
+- 8198363: added component PlAgTextAndButtonCell
+- ce4d025: ui-vue 1.10.18
+- Updated dependencies [555bb9c]
+- Updated dependencies [f18f2e3]
+- Updated dependencies [9ccb1fd]
+- Updated dependencies [53d545e]
+- Updated dependencies [8198363]
+  - @platforma-open/milaboratories.mixcr-clonotyping.ui@1.6.0
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.4.0
+  - @platforma-open/milaboratories.mixcr-clonotyping.workflow@1.9.0
+
 ## 1.4.2
 
 ### Patch Changes

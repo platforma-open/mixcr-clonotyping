@@ -1,5 +1,20 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.6.0
+
+### Minor Changes
+
+- 9ccb1fd: Support of trace annotations; SDK upgrade
+
+### Patch Changes
+
+- 555bb9c: Added title derivation logic
+- f18f2e3: Advanced Settings Section
+- 8198363: added component PlAgTextAndButtonCell
+- Updated dependencies [9ccb1fd]
+- Updated dependencies [53d545e]
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.4.0
+
 ## 1.5.2
 
 ### Patch Changes
