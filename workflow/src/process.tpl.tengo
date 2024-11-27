@@ -177,7 +177,7 @@ self.body(func(inputs) {
 		"mixcr.com/cellTags": joinOrUndefined(presetContent.cellTags),
 		"mixcr.com/coveredFeaturesOnExport": joinOrUndefined(presetContent.coveredFeaturesOnExport),
 		"mixcr.com/umiTags": joinOrUndefined(presetContent.umiTags),
-		"pl7.app/label": "Clns Files"
+		"pl7.app/label": "MiXCR Clonesets"
 	}
 	if hasAssembleContigs {
 		clnsAnnotations["mixcr.com/contigsAssembled"] = "true"

@@ -1,4 +1,4 @@
-import { ImportFileHandle, Ref, ValueType } from '@platforma-sdk/model';
+import { ImportFileHandle, PlRef, Ref, ValueType } from '@platforma-sdk/model';
 import { ZodAnyDef, ZodSchema, z } from 'zod';
 import { PlId } from './helpers';
 
@@ -27,7 +27,7 @@ export type Preset = z.infer<typeof Preset>;
 
 export const BlockArgsValid = z
   .object({
-    input: Ref,
+    input: PlRef,
     preset: Preset,
     species: z.string().optional(),
     limitInput: z.number().int().optional(),
