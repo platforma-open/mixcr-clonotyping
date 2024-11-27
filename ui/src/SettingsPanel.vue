@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Preset, SupportedPresetList } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
-import { ImportFileHandle } from '@platforma-sdk/model';
+import { getFilePathFromHandle, ImportFileHandle, Ref as PlRef } from '@platforma-sdk/model';
 import { ListOption, PlBtnGroup, PlDropdown, PlDropdownRef, PlFileInput, PlTextField, ReactiveFileContent } from '@platforma-sdk/ui-vue';
 import { computed, reactive, watch } from 'vue';
 import { useApp } from './app';
@@ -36,7 +36,7 @@ const presets = retentive(computed(() => {
 const presetOptions = computed(() => {
   return presets.value?.map(preset => (
     {
-      text: `${preset.label}${preset.vendor ? ' - ' + preset.vendor : ''}`,
+      label: `${preset.label}${preset.vendor ? ' - ' + preset.vendor : ''}`,
       value: preset.presetName
     } satisfies ListOption
   ))
@@ -67,11 +67,41 @@ watch(needSpecies, ns => {
 })
 
 function setPresetName(name?: string) {
-  app.model.args.preset = name === undefined ? undefined : { type: 'name', name }
+  if (name === undefined) {
+    app.model.args.preset = undefined;
+    app.model.args.presetCommonName = undefined;
+  } else {
+    app.model.args.preset = { type: 'name', name };
+    app.model.args.presetCommonName = presetOptions.value?.find(o => o.value === name)?.label;
+  }
+}
+
+/* @deprecated Migrate to SDK method when will be published */
+function extractFileName(filePath: string) {
+  return filePath.replace(/^.*[\\/]/, '');
 }
 
 function setPresetFile(file?: ImportFileHandle) {
-  app.model.args.preset = file === undefined ? undefined : { type: 'file', file }
+  if (file === undefined) {
+    app.model.args.preset = undefined;
+    app.model.args.presetCommonName = undefined;
+  } else {
+    app.model.args.preset = { type: 'file', file };
+    app.model.args.presetCommonName = extractFileName(getFilePathFromHandle(file));
+  }
+}
+
+/* @deprecated Migrate to SDK method when will be published */
+function plRefsEqual(ref1: PlRef, ref2: PlRef) {
+  return ref1.blockId === ref2.blockId && ref1.name === ref2.name;
+}
+
+function setInput(inputRef?: PlRef) {
+  app.model.args.input = inputRef;
+  if (inputRef)
+    app.model.args.title = inputOptions.value?.find(o => plRefsEqual(o.ref, inputRef))?.label
+  else
+    app.model.args.title = undefined;
 }
 
 function parseNumber(v: string): number {
@@ -86,7 +116,8 @@ function parseNumber(v: string): number {
 </script>
 
 <template>
-  <PlDropdownRef :options="inputOptions" v-model="app.model.args.input" label="Select dataset" clearable />
+  <PlDropdownRef :options="inputOptions" :model-value="app.model.args.input" @update:model-value="setInput"
+    label="Select dataset" clearable />
 
   <PlBtnGroup :options="presetSourceOptions" v-model="data.presetType" />
 

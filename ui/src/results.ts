@@ -91,10 +91,10 @@ export const MiXCRResultsMap = computed(() => {
 export const MiXCRResultsFull = computed<MiXCRResult[] | undefined>(() => {
   const app = useApp();
 
-  const progress = app.outputValues.progress;
+  const progress = app.model.outputs.progress;
   if (progress === undefined) return undefined;
 
-  const doneRaw = app.outputValues.done;
+  const doneRaw = app.model.outputs.done;
   if (doneRaw === undefined) return undefined;
   const done = new Set(doneRaw);
 
