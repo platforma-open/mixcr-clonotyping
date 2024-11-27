@@ -1,5 +1,12 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 1.9.1
+
+### Patch Changes
+
+- 54155d9: SDK upgrade
+- 54155d9: Export clns column label correction
+
 ## 1.9.0
 
 ### Minor Changes
