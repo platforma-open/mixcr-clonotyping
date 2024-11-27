@@ -27,7 +27,7 @@ catalog:
 
   'typescript': ~5.5.4
   'tsup': ~8.1.2
-  'turbo': ^2.3.2
+  'turbo': ^2.3.3
 
   'vite': ^5.4.11
   'vitest': ^2.1.6
@@ -44,5 +44,5 @@ catalog:
 
   # other blocks used in tests
 
-  '@platforma-open/milaboratories.samples-and-data': ^1.7.1
-  '@platforma-open/milaboratories.samples-and-data.model': ^1.7.1
+  '@platforma-open/milaboratories.samples-and-data': ^1.8.0
+  '@platforma-open/milaboratories.samples-and-data.model': ^1.8.0
