@@ -65,13 +65,13 @@ export const platforma = BlockModel.create('Heavy')
       : undefined;
   })
 
-  // .output('clones', (ctx) => {
-  //   const collection = ctx.outputs?.resolve('clones')?.parsePObjectCollection();
-  //   if (collection === undefined) return undefined;
-  //   // if (collection === undefined || !collection.isComplete) return undefined;
-  //   const pColumns = Object.values(collection).filter(isPColumn);
-  //   return ctx.createPFrame(pColumns);
-  // })
+  .output('clones', (ctx) => {
+    const collection = ctx.outputs?.resolve('clones')?.parsePObjectCollection();
+    if (collection === undefined) return undefined;
+    // if (collection === undefined || !collection.isComplete) return undefined;
+    const pColumns = Object.values(collection).filter(isPColumn);
+    return ctx.createPFrame(pColumns);
+  })
 
   .retentiveOutput('inputOptions', (ctx) => {
     return ctx.resultPool.getOptions((v) => {
