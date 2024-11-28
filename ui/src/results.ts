@@ -43,7 +43,7 @@ export const MiXCRResultsMap = computed(() => {
     const result: MiXCRResult = {
       sampleId: sampleId as PlId,
       progress: 'Queued',
-      label: sampleLabels?.[sampleId] ?? sampleId
+      label: sampleLabels?.[sampleId] ?? `<no label / ${sampleId}>`
     };
     resultMap.set(sampleId, result);
     if (qcData.value === undefined) continue;
