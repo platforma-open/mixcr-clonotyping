@@ -1,5 +1,14 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.6.2
+
+### Patch Changes
+
+- 87757bd: Overall analysis progress now shown at the top of the block
+- 87757bd: SDK upgrade
+- Updated dependencies [87757bd]
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.4.2
+
 ## 1.6.1
 
 ### Patch Changes
