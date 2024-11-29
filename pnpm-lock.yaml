@@ -55,8 +55,8 @@ catalogs:
       specifier: ^1.13.11
       version: 1.13.11
     '@platforma-sdk/workflow-tengo':
-      specifier: ^2.4.0
-      version: 2.4.0
+      specifier: ^2.4.1
+      version: 2.4.1
     '@vitejs/plugin-vue':
       specifier: ^5.2.1
       version: 5.2.1
@@ -239,7 +239,7 @@ importers:
         version: 1.13.14(@types/node@22.7.5)(yaml@2.6.0)
       '@platforma-sdk/workflow-tengo':
         specifier: 'catalog:'
-        version: 2.4.0
+        version: 2.4.1
       typescript:
         specifier: 'catalog:'
         version: 5.5.4
@@ -923,9 +923,6 @@ packages:
   '@milaboratories/pl-middle-layer@1.16.9':
     resolution: {integrity: sha512-jBwP5VexclfTLS9TgUku5y9NDiN2clluCsW53GMmPbGCZ5+ZWybr0CjpfEgZ6gO+QY5I3j/z27/AdPNHTMRfdw==}
 
-  '@milaboratories/pl-model-common@1.6.2':
-    resolution: {integrity: sha512-7srfKzzFb5GltuoAMHZavU5LjxSzp1kArwzvhcIfwl+MnQQiV/8mlzIv2rkxYBNiY/500e294hQPmnBpLy6nGA==}
-
   '@milaboratories/pl-model-common@1.6.4':
     resolution: {integrity: sha512-3iln1uplgk99CaF5ACshwSOd5JVR66SEug+UYDV/0SDWnAiCLfRad5896KnoXZfB9UEbLZU7AE0NW+dMCMVNZg==}
 
@@ -997,9 +994,6 @@ packages:
     resolution: {integrity: sha512-IknoVIUUcCimIm25d5pSs5LPkHgnxvgAD0+1ZHLTIFAmNulVFWxdM7QvRlAvgTj/HORc8moB2N0aU2ZBjhRzaQ==}
     hasBin: true
 
-  '@platforma-sdk/model@1.13.0':
-    resolution: {integrity: sha512-4RVgknhEBtQLEmpHqKF4VTO5vc0m6SGGsHF9U/M5bE/R5jDvx8haiza7bMS+m2MFfCD4KvzmsxgqrPjex2Q0SA==}
-
   '@platforma-sdk/model@1.13.5':
     resolution: {integrity: sha512-1cL9eSZf/G9J/EuUro3UZ1xU3VtoFuffFwaffLY50mYw3UGjxQMLKWMuAwIEKje/cEbzZQZYMD8gd0IXUP7mIA==}
 
@@ -1015,6 +1009,9 @@ packages:
 
   '@platforma-sdk/workflow-tengo@2.4.0':
     resolution: {integrity: sha512-/7+xlVt0GlGjxzfSaUaS5JDENAyMBIWtQIdJXW7Na8bcoSAD0up4sWQRQ3UBvAmB3JHsKJ7GrprkGWD0QbHrFQ==}
+
+  '@platforma-sdk/workflow-tengo@2.4.1':
+    resolution: {integrity: sha512-IYeDU4KlSQ1Zo8jR0reBT6SG4UTYAKk4N0hz4seBJY0mSATccGuR9j27JJr5LCW4mfnb5so+qx0CxTdqMBvg1w==}
 
   '@protobuf-ts/grpc-transport@2.9.4':
     resolution: {integrity: sha512-CgjTR3utmkMkkThpfgtOz9tNR9ZARbNoQYL7TCKqFU2sgAX0LgzAkwOx+sfgtUsZn9J08+yvn307nNJdYocLRA==}
@@ -4064,10 +4061,6 @@ snapshots:
       - encoding
       - supports-color
 
-  '@milaboratories/pl-model-common@1.6.2':
-    dependencies:
-      zod: 3.23.8
-
   '@milaboratories/pl-model-common@1.6.4':
     dependencies:
       zod: 3.23.8
@@ -4148,7 +4141,7 @@ snapshots:
 
   '@platforma-open/milaboratories.samples-and-data.model@1.8.0':
     dependencies:
-      '@platforma-sdk/model': 1.13.0
+      '@platforma-sdk/model': 1.13.5
       zod: 3.23.8
 
   '@platforma-open/milaboratories.samples-and-data.ui@1.13.1': {}
@@ -4160,7 +4153,7 @@ snapshots:
       '@platforma-open/milaboratories.samples-and-data.model': 1.8.0
       '@platforma-open/milaboratories.samples-and-data.ui': 1.13.1
       '@platforma-open/milaboratories.samples-and-data.workflow': 1.9.0
-      '@platforma-sdk/model': 1.13.0
+      '@platforma-sdk/model': 1.13.5
 
   '@platforma-open/milaboratories.software-mixcr@4.7.0-133-develop': {}
 
@@ -4183,12 +4176,6 @@ snapshots:
       zod: 3.23.8
     transitivePeerDependencies:
       - aws-crt
-
-  '@platforma-sdk/model@1.13.0':
-    dependencies:
-      '@milaboratories/pl-model-common': 1.6.2
-      utility-types: 3.11.0
-      zod: 3.23.8
 
   '@platforma-sdk/model@1.13.5':
     dependencies:
@@ -4261,6 +4248,11 @@ snapshots:
       - typescript
 
   '@platforma-sdk/workflow-tengo@2.4.0':
+    dependencies:
+      '@milaboratories/software-pframes-conv': 2.0.4
+      '@platforma-open/milaboratories.software-small-binaries': 1.14.6
+
+  '@platforma-sdk/workflow-tengo@2.4.1':
     dependencies:
       '@milaboratories/software-pframes-conv': 2.0.4
       '@platforma-open/milaboratories.software-small-binaries': 1.14.6
