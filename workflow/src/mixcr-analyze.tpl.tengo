@@ -165,7 +165,7 @@ self.body(func(inputs) {
 		clones = render.create(exportClonesTpl, {
 			data: mixcrCmd.getFileSet("clones"),
 			pfconvParams: pfconvParams
-		}).output("result", 24 * 60 * 60 * 1000)
+		}).output("result", 8 * 24 * 60 * 60 * 1000)
 	}
 
 	result := {
