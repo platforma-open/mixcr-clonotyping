@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 1.9.4
+
+### Patch Changes
+
+- 2fbd0c8: Update workflow-sdk to new version (better deduplication and recovery)
+
 ## 1.9.3
 
 ### Patch Changes
