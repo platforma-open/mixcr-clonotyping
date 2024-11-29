@@ -172,13 +172,23 @@ self.body(func(inputs) {
 
 	// calculating clns annotations
 
-	clnsAnnotations := {
+	removeUndefined := func(m) {
+		r := {}
+		for k, v in m {
+			if !is_undefined(v) {
+				r[k] = v
+			}
+		}
+		return r;
+	}
+
+	clnsAnnotations := removeUndefined({
 		"mixcr.com/assemblingFeature": joinOrUndefined(presetContent.assemblingFeature),
 		"mixcr.com/cellTags": joinOrUndefined(presetContent.cellTags),
 		"mixcr.com/coveredFeaturesOnExport": joinOrUndefined(presetContent.coveredFeaturesOnExport),
 		"mixcr.com/umiTags": joinOrUndefined(presetContent.umiTags),
 		"pl7.app/label": "MiXCR Clonesets"
-	}
+	})
 	if hasAssembleContigs {
 		clnsAnnotations["mixcr.com/contigsAssembled"] = "true"
 	}
@@ -196,7 +206,7 @@ self.body(func(inputs) {
 			valueType: "File",
 			axesSpec: [
 				inputSpec.axesSpec[0]
-				]
+			]
 		}),
 		"qc.data": mixcrResults.output("qc"),
 
@@ -209,7 +219,7 @@ self.body(func(inputs) {
 			valueType: "Log",
 			axesSpec: [
 				inputSpec.axesSpec[0]
-				]
+			]
 		}),
 		"logs.data": mixcrResults.output("log"),
 
