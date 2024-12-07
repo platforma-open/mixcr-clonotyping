@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.6.3
+
+### Patch Changes
+
+- 759f4af: Minor fix for intermediate crash if removing samples
+
 ## 1.6.2
 
 ### Patch Changes
