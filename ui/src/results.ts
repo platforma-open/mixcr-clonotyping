@@ -55,7 +55,7 @@ export const MiXCRResultsMap = computed(() => {
   if (logs)
     for (const logData of logs.data) {
       const sampleId = logData.key[0] as string;
-      resultMap.get(sampleId)!.logHandle = logData.value;
+      if (resultMap.get(sampleId)) resultMap.get(sampleId)!.logHandle = logData.value;
     }
 
   const reports = app.outputValues.reports;
@@ -65,23 +65,23 @@ export const MiXCRResultsMap = computed(() => {
       const sampleId = report.key[0] as string;
       const reportId = report.key[1] as string;
       if (report.key[2] !== 'json' || report.value === undefined) continue;
-
-      switch (reportId) {
-        case 'align':
-          // globally cached
-          resultMap.get(sampleId)!.alignReport = ReactiveFileContent.getContentJson(
-            report.value.handle,
-            AlignReport
-          )?.value;
-          break;
-        case 'assemble':
-          // globally cached
-          resultMap.get(sampleId)!.assembleReport = ReactiveFileContent.getContentJson(
-            report.value.handle,
-            AssembleReport
-          )?.value;
-          break;
-      }
+      if (resultMap.get(sampleId))
+        switch (reportId) {
+          case 'align':
+            // globally cached
+            resultMap.get(sampleId)!.alignReport = ReactiveFileContent.getContentJson(
+              report.value.handle,
+              AlignReport
+            )?.value;
+            break;
+          case 'assemble':
+            // globally cached
+            resultMap.get(sampleId)!.assembleReport = ReactiveFileContent.getContentJson(
+              report.value.handle,
+              AssembleReport
+            )?.value;
+            break;
+        }
     }
 
   return resultMap;
@@ -107,10 +107,11 @@ export const MiXCRResultsFull = computed<MiXCRResult[] | undefined>(() => {
   // adding progress information
   for (const p of progress.data) {
     const sampleId = p.key[0] as string;
-    if (p?.value)
-      resultMap.get(sampleId)!.progress = done.has(sampleId)
-        ? 'Done'
-        : p.value?.replace(ProgressPrefix, '') ?? 'Not started';
+    if (resultMap.get(sampleId))
+      if (p?.value)
+        resultMap.get(sampleId)!.progress = done.has(sampleId)
+          ? 'Done'
+          : p.value?.replace(ProgressPrefix, '') ?? 'Not started';
   }
 
   return [...resultMap.values()];
