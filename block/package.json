@@ -2,11 +2,15 @@
   "name": "@platforma-open/milaboratories.mixcr-clonotyping",
   "version": "1.5.4",
   "scripts": {
-   "pretty": "prettier --write \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json,vue}\"",
+    "pretty": "prettier --write \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json,vue}\"",
     "build": "rm -rf ./block-pack && block-tools pack",
     "mark-stable": "block-tools mark-stable -r 's3://milab-euce1-prod-pkgs-s3-block-registry/pub/releases/?region=eu-central-1'",
     "prepublishOnly": "block-tools pack && block-tools publish -r 's3://milab-euce1-prod-pkgs-s3-block-registry/pub/releases/?region=eu-central-1'"
   },
+  "files": [
+    "index.d.ts",
+    "index.js"
+  ],
   "dependencies": {
     "@platforma-sdk/model": "catalog:",
     "@platforma-open/milaboratories.mixcr-clonotyping.workflow": "workspace:*",
