@@ -1,0 +1,49 @@
+{
+  "name": "@platforma-open/milaboratories.mixcr-clonotyping",
+  "version": "1.5.4",
+  "scripts": {
+   "pretty": "prettier --write \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json,vue}\"",
+    "build": "rm -rf ./block-pack && block-tools pack",
+    "mark-stable": "block-tools mark-stable -r 's3://milab-euce1-prod-pkgs-s3-block-registry/pub/releases/?region=eu-central-1'",
+    "prepublishOnly": "block-tools pack && block-tools publish -r 's3://milab-euce1-prod-pkgs-s3-block-registry/pub/releases/?region=eu-central-1'"
+  },
+  "dependencies": {
+    "@platforma-sdk/model": "catalog:",
+    "@platforma-open/milaboratories.mixcr-clonotyping.workflow": "workspace:*",
+    "@platforma-open/milaboratories.mixcr-clonotyping.model": "workspace:*",
+    "@platforma-open/milaboratories.mixcr-clonotyping.ui": "workspace:*"
+  },
+  "block": {
+    "components": {
+      "workflow": "@platforma-open/milaboratories.mixcr-clonotyping.workflow/dist/tengo/tpl/main.plj.gz",
+      "model": "@platforma-open/milaboratories.mixcr-clonotyping.model/dist/model.json",
+      "ui": "@platforma-open/milaboratories.mixcr-clonotyping.ui/dist"
+    },
+    "meta": {
+      "title": "MiXCR Clonotyping",
+      "logo": "file:../logos/block-logo.png",
+      "url": "https://github.com/milaboratory/block-mixcr-clonotyping",
+      "docs": "https://github.com/milaboratory/block-mixcr-clonotyping/docs",
+      "support": "mailto:support@milaboratories.com",
+      "description": "Extract TCR / BCR clonotypes from next-generation sequencing data",
+      "longDescription": "file:../docs/description.md",
+      "changelog": "file:../CHANGELOG.md",
+      "tags": [
+        "upstream",
+        "airr",
+        "vdj",
+        "single-cell"
+      ],
+      "organization": {
+        "name": "MiLaboratories Inc",
+        "url": "https://milaboratories.com/",
+        "logo": "file:../logos/organization-logo.png"
+      },
+      "marketplaceRanking": 10000
+    }
+  },
+  "devDependencies": {
+    "@platforma-sdk/block-tools": "catalog:"
+  },
+  "packageManager": "pnpm@9.12.0"
+}
