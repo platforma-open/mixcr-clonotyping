@@ -2,8 +2,8 @@ packages:
   - workflow
   - model
   - ui
+  - block
   - test
-  - .
 
 catalog:
   '@platforma-sdk/workflow-tengo': ^2.4.1
