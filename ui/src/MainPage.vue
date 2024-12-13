@@ -9,7 +9,7 @@ import {
   GridReadyEvent,
   ModuleRegistry
 } from '@ag-grid-community/core';
-import { PlId } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
+import type { PlId, Qc } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
 import {
   AgGridTheme,
   PlAgOverlayLoading,
@@ -18,7 +18,8 @@ import {
   PlBtnGhost,
   PlMaskIcon24,
   PlSlideModal,
-  PlAgTextAndButtonCell
+  PlAgTextAndButtonCell,
+  PlAgCellStatusTag
 } from '@platforma-sdk/ui-vue';
 import { refDebounced, whenever } from '@vueuse/core';
 import { reactive, shallowRef, watch } from 'vue';
@@ -42,13 +43,13 @@ const data = reactive<{
   sampleReportOpen: boolean;
   selectedSample: PlId | undefined;
 }>({
-  settingsOpen: app.outputValues.started === false,
+  settingsOpen: app.model.outputs.started === false,
   sampleReportOpen: false,
   selectedSample: undefined
 });
 
 watch(
-  () => app.outputValues.started,
+  () => app.model.outputs.started,
   (newVal, oldVal) => {
     if (oldVal === false && newVal === true) data.settingsOpen = false;
     if (oldVal === true && newVal === false) data.settingsOpen = true;
@@ -65,6 +66,8 @@ whenever(
 );
 
 ModuleRegistry.registerModules([ClientSideRowModelModule]);
+
+const qcPriority = { OK: 0, WARN: 1, ALERT: 2 };
 
 const gridApi = shallowRef<GridApi<any>>();
 const onGridReady = (params: GridReadyEvent) => {
@@ -98,8 +101,27 @@ const columnDefs: ColDef[] = [
     cellStyle: {
       '--ag-cell-horizontal-padding': '0px',
       '--ag-cell-vertical-padding': '0px'
-      // '--ag-cell-horizontal-border': 'solid rgb(150, 150, 200);',
-      // 'border-width': '0'
+    }
+  },
+  {
+    colId: 'qc',
+    field: 'qc',
+    width: 96,
+    cellRendererSelector: (cellData) => {
+      const type = (cellData.data.qc as MiXCRResult['qc'])?.reduce(
+        (result: Qc[number]['status'], item) =>
+          qcPriority[item.status] > qcPriority[result] ? item.status : result,
+        'OK'
+      );
+      return {
+        component: PlAgCellStatusTag,
+        params: { type }
+      };
+    },
+    headerName: 'Quality',
+    cellStyle: {
+      '--ag-cell-horizontal-padding': '0px',
+      '--ag-cell-vertical-padding': '0px'
     }
   },
   {
@@ -176,20 +198,20 @@ const gridOptions: GridOptions<MiXCRResult> = {
   <PlSlideModal
     v-model="data.settingsOpen"
     :shadow="true"
-    :close-on-outside-click="app.outputValues.started"
+    :close-on-outside-click="app.model.outputs.started"
   >
     <template #title>Settings</template>
     <SettingsPanel />
   </PlSlideModal>
   <PlSlideModal
     v-model="data.sampleReportOpen"
-    :close-on-outside-click="app.outputValues.started"
+    :close-on-outside-click="app.model.outputs.started"
     width="80%"
   >
     <template #title>
       Results for
       {{
-        (data.selectedSample ? app.outputValues.sampleLabels?.[data.selectedSample] : undefined) ??
+        (data.selectedSample ? app.model.outputs.sampleLabels?.[data.selectedSample] : undefined) ??
         '...'
       }}
     </template>
