@@ -31,6 +31,7 @@ self.body(func(inputs) {
 	limitInput := params.limitInput
 	fileExtension := params.fileExtension
 	reports := params.reports
+	featureParams := params.featureParams
 
 	presetContent := inputs.presetContent // already in JSON
 	pfconvParams := inputs.pfconvParams // already in JSON
@@ -70,7 +71,7 @@ self.body(func(inputs) {
 		secret("MI_LICENSE", "MI_LICENSE").
 		arg("analyze")
 
-	mixcr.addAdditionalColumnArgs(mixcrCmdBuilder)
+	mixcr.addAdditionalColumnArgs(mixcrCmdBuilder, featureParams)
 
 	if !is_undefined(species) {
 		mixcrCmdBuilder.arg("--species").arg(species)

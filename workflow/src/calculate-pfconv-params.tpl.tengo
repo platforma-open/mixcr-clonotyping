@@ -3,6 +3,7 @@ self := import("@platforma-sdk/workflow-tengo:tpl")
 // validation := import("@platforma-sdk/workflow-tengo:validation")
 
 pfconvParamsLib := import(":pfconv_params")
+getFeature := import(":check-feature")
 
 json := import("json")
 
@@ -15,7 +16,7 @@ json := import("json")
 // 	}
 // })
 
-self.defineOutputs("params")
+self.defineOutputs("params", "featureParams")
 
 self.body(func(inputs) {
 
@@ -32,6 +33,16 @@ self.body(func(inputs) {
 		return result
 	}
 
+	// contains function
+	contains := func(list, value) {
+    for item in list {
+        if item == value {
+            return true
+        	}
+    	}
+    return false
+	}
+
 	fieldsToColumns := {
 		"-cellGroup": "cellGroup",
 		"-topChains": "topChains",
@@ -46,43 +57,87 @@ self.body(func(inputs) {
 	specs := inputs.specs.getDataAsJson()
 	preset := inputs.preset.getDataAsJson()
 
+	// extract covered feature
+	imputed := false
+	assemblingFeature := undefined
+	if !is_undefined(specs.assemblingFeature) {
+		assemblingFeature = specs["assemblingFeature"][0]
+	} else {
+		assemblingFeature = "VDJRegion"
+		imputed = true
+	}
+
 	//if using readCount or umiCount
 	columnsList := []
-	columnsOrder := []
+	hasUmi := false
 	if len(specs.umiTags) == 0 {
 		columnsList += ["readCount", "readFraction"]
 	} else {
-		columnsList += ["uniqueMoleculeCount", "uniqueMoleculeFraction"]
+		hasUmi = true
+		columnsList += ["uniqueMoleculeCount", "uniqueMoleculeFraction", "readCount", "readFraction"]
 	}
 
-	// check if imputed or not and filter columns by fieldsToColumns
-	imputed := undefined
+	//filter columns by fieldsToColumns
 	for field in preset.exportClones.fields {
-		if field.field == "-allAAFeaturesImputed" {
-			imputed = true
-		} else if field.field == "-allAAFeatures" {
-			imputed = false
-		} else if !is_undefined(fieldsToColumns[field.field]) {
+		if !is_undefined(fieldsToColumns[field.field]) {
 			columnsList = append(columnsList, fieldsToColumns[field.field])
 		}
 	}
 
-	// add columns with sequences
+	// add columns with frameworks, cdrs sequences
 	for feature in specs.coveredFeaturesOnExport {
 		if imputed {
-			columnsList += ["nSeqImputed"+feature, "minQual"+feature, "aaSeqImputed"+feature]
+			columnsList += ["nSeqImputed"+feature, "aaSeqImputed"+feature, 
+							"nSeq"+feature, "aaSeq"+feature]
 		} else {
-			columnsList += ["nSeq"+feature, "minQual"+feature, "aaSeq"+feature]
+			columnsList += ["nSeq"+feature, "aaSeq"+feature]
 		}
 	}
 
+	// add columns with covered feature sequences
+	if assemblingFeature != "CDR3" {
+		if imputed {
+			columnsList += ["nSeqImputed"+assemblingFeature, "aaSeqImputed"+assemblingFeature, 
+							"nSeq"+assemblingFeature, "aaSeq"+assemblingFeature]
+		} else {
+			columnsList += ["nSeq"+assemblingFeature, "aaSeq"+assemblingFeature]
+		}
+	}
+
+	// add V, D, J germline sequences
+	columnsList += ["nSeqVRegionOfGermline", "nSeqDRegionOfGermline", "nSeqJRegionOfGermline"]
+
+	// add boolean columns (isProductive, hasStops, hasOOF)
+	featureSpec := getFeature.getProductiveFeature(assemblingFeature, imputed)
+	productiveFeature := featureSpec.productiveFeature
+	columnsList += ["isProductive"+productiveFeature, "isOOF"+productiveFeature, "hasStopsIn"+productiveFeature]
+
+	// add columns with mutations
+	if assemblingFeature != "CDR3" {
+		mutationVFeature := featureSpec.mutationVFeature
+		columnsList += ["nMutations"+mutationVFeature, "aaMutations"+mutationVFeature, "nMutationsCount"+mutationVFeature,
+						"aaMutationsCount"+mutationVFeature, "nMutationsRate"+mutationVFeature, "aaMutationsRate"+mutationVFeature,
+						"nMutationsFR4", "aaMutationsFR4"]
+	}
+
 	// filter pfconvParams by column name and get a list of fields from it
-	pfconvParams := pfconvParamsLib.getColumns(blockId)
+	pfconvParams := pfconvParamsLib.getColumns(blockId, {assemblingFeature: assemblingFeature, imputed: imputed})
 
 	columns := []
 	for col in columnsList {
 		getColumn := filter(pfconvParams.columns, func(item) { return item.column ==  col})
 		columns += getColumn
+	}
+
+	// if UMI in data make visibility of "readCount" and "readFraction" columns optional
+	targetColumns := ["readCount", "readFraction"]
+
+	if hasUmi {
+		for column in columns {
+			if contains(targetColumns, column["column"]) {
+				column["spec"]["annotations"]["pl7.app/table/visibility"] = "optional"
+			}
+		}
 	}
 
 	// create axes fields
@@ -99,6 +154,10 @@ self.body(func(inputs) {
 			"columns": columns,
 			"storageFormat": "Binary",
 			"partitionKeyLength": 0
+		},
+		featureParams: {
+			assemblingFeature: assemblingFeature,
+			imputed: imputed
 		}
 	}
 })

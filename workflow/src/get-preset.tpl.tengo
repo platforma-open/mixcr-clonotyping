@@ -44,7 +44,7 @@ self.body(func(inputs) {
 	}
 
 
-	mixcr.addAdditionalColumnArgs(mixcrExportPresetCmdBuilder)
+	mixcr.addAdditionalColumnArgs(mixcrExportPresetCmdBuilder, {assemblingFeature: "CDR3", imputed: false})
 
 	if !is_undefined(species) {
 		mixcrExportPresetCmdBuilder.arg("--species").arg(species)

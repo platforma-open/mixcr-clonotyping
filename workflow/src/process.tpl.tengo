@@ -22,11 +22,13 @@ self.awaitState("params", "ResourceReady")
 self.awaitState("inputSpec", "ResourceReady")
 self.awaitState("presetContent", "ResourceReady")
 self.awaitState("pfconvParams", "ResourceReady")
+self.awaitState("featureParams", "ResourceReady")
 
 self.body(func(inputs) {
 	params := inputs.params
 	preset := inputs.preset
 	inputSpec := inputs.inputSpec
+	featureParams := inputs.featureParams
 	species := params.species
 	limitInput := params.limitInput
 	blockId := params.blockId
@@ -149,7 +151,8 @@ self.body(func(inputs) {
 				species: species,
 				limitInput: limitInput,
 				fileExtension: fileExtension,
-				reports: reports
+				reports: reports,
+				featureParams: featureParams
 			},
 			presetContent: presetContent,
 			pfconvParams: purifiedPfconvCfg
