@@ -75,6 +75,7 @@ wf.body(func(args) {
 		specs: specsContent
 	})
 	pfconvParams := calculatePfconvParams.output("params", 24 * 60 * 60 * 1000)
+	featureParams := calculatePfconvParams.output("featureParams", 24 * 60 * 60 * 1000)
 
 	runMixcr := render.createEphemeral(processTpl, {
 		preset: presetResource,
@@ -85,6 +86,7 @@ wf.body(func(args) {
 			blockId: blockId,
 			presetCommonName: args.presetCommonName
 		}),
+		featureParams: featureParams,
 		pfconvParams: pfconvParams,
 		inputSpec: input.getFutureInputField("spec"),
 		inputData: input.getFutureInputField("data")
