@@ -37,14 +37,14 @@ catalogs:
       specifier: 4.7.0-133-develop
       version: 4.7.0-133-develop
     '@platforma-open/milaboratories.software-small-binaries':
-      specifier: ^1.14.6
-      version: 1.14.6
+      specifier: ^1.15.0
+      version: 1.15.0
     '@platforma-sdk/block-tools':
       specifier: ^2.4.11
       version: 2.4.11
     '@platforma-sdk/model':
-      specifier: ^1.13.5
-      version: 1.13.5
+      specifier: ^1.20.0
+      version: 1.20.0
     '@platforma-sdk/tengo-builder':
       specifier: ^1.17.3
       version: 1.17.3
@@ -52,8 +52,8 @@ catalogs:
       specifier: ^1.20.3
       version: 1.20.3
     '@platforma-sdk/ui-vue':
-      specifier: ^1.20.2
-      version: 1.20.2
+      specifier: ^1.20.4
+      version: 1.20.4
     '@platforma-sdk/workflow-tengo':
       specifier: ^2.8.1
       version: 2.8.1
@@ -76,11 +76,11 @@ catalogs:
       specifier: ^3.11.0
       version: 3.11.0
     vite:
-      specifier: ^6.0.1
-      version: 6.0.1
+      specifier: ^6.0.3
+      version: 6.0.3
     vitest:
-      specifier: ^2.1.6
-      version: 2.1.6
+      specifier: ^2.1.8
+      version: 2.1.8
     vue:
       specifier: ^3.5.13
       version: 3.5.13
@@ -88,8 +88,8 @@ catalogs:
       specifier: ^2.1.10
       version: 2.1.10
     zod:
-      specifier: ^3.23.8
-      version: 3.23.8
+      specifier: ^3.24.1
+      version: 3.24.1
 
 importers:
 
@@ -115,7 +115,7 @@ importers:
         version: link:../workflow
       '@platforma-sdk/model':
         specifier: 'catalog:'
-        version: 1.13.5
+        version: 1.20.0
     devDependencies:
       '@platforma-sdk/block-tools':
         specifier: 'catalog:'
@@ -125,10 +125,10 @@ importers:
     dependencies:
       '@platforma-sdk/model':
         specifier: 'catalog:'
-        version: 1.13.5
+        version: 1.20.0
       zod:
         specifier: 'catalog:'
-        version: 3.23.8
+        version: 3.24.1
     devDependencies:
       '@platforma-sdk/block-tools':
         specifier: 'catalog:'
@@ -141,10 +141,10 @@ importers:
         version: 5.5.4
       vite:
         specifier: 'catalog:'
-        version: 6.0.1(@types/node@22.7.5)(yaml@2.6.1)
+        version: 6.0.3(@types/node@22.7.5)(yaml@2.6.1)
       vitest:
         specifier: 'catalog:'
-        version: 2.1.6(@types/node@22.7.5)(yaml@2.6.1)
+        version: 2.1.8(@types/node@22.7.5)
 
   test:
     dependencies:
@@ -159,7 +159,7 @@ importers:
         version: 1.8.2
       '@platforma-sdk/model':
         specifier: 'catalog:'
-        version: 1.13.5
+        version: 1.20.0
       this-block:
         specifier: workspace:@platforma-open/milaboratories.mixcr-clonotyping@*
         version: link:../block
@@ -172,7 +172,7 @@ importers:
         version: 5.5.4
       vitest:
         specifier: 'catalog:'
-        version: 2.1.6(@types/node@22.7.5)(yaml@2.6.1)
+        version: 2.1.8(@types/node@22.7.5)
 
   ui:
     dependencies:
@@ -196,10 +196,10 @@ importers:
         version: link:../model
       '@platforma-sdk/model':
         specifier: 'catalog:'
-        version: 1.13.5
+        version: 1.20.0
       '@platforma-sdk/ui-vue':
         specifier: 'catalog:'
-        version: 1.20.2(typescript@5.5.4)
+        version: 1.20.4(typescript@5.5.4)
       '@vueuse/core':
         specifier: 'catalog:'
         version: 12.0.0(typescript@5.5.4)
@@ -211,20 +211,20 @@ importers:
         version: 3.5.13(typescript@5.5.4)
       zod:
         specifier: 'catalog:'
-        version: 3.23.8
+        version: 3.24.1
     devDependencies:
       '@vitejs/plugin-vue':
         specifier: 'catalog:'
-        version: 5.2.1(vite@6.0.1(@types/node@22.7.5)(yaml@2.6.1))(vue@3.5.13(typescript@5.5.4))
+        version: 5.2.1(vite@6.0.3(@types/node@22.7.5)(yaml@2.6.1))(vue@3.5.13(typescript@5.5.4))
       typescript:
         specifier: 'catalog:'
         version: 5.5.4
       vite:
         specifier: 'catalog:'
-        version: 6.0.1(@types/node@22.7.5)(yaml@2.6.1)
+        version: 6.0.3(@types/node@22.7.5)(yaml@2.6.1)
       vitest:
         specifier: 'catalog:'
-        version: 2.1.6(@types/node@22.7.5)(yaml@2.6.1)
+        version: 2.1.8(@types/node@22.7.5)
       vue-tsc:
         specifier: 'catalog:'
         version: 2.1.10(typescript@5.5.4)
@@ -239,7 +239,7 @@ importers:
         version: 4.7.0-133-develop
       '@platforma-open/milaboratories.software-small-binaries':
         specifier: 'catalog:'
-        version: 1.14.6
+        version: 1.15.0
       '@platforma-sdk/tengo-builder':
         specifier: 'catalog:'
         version: 1.17.3
@@ -254,7 +254,7 @@ importers:
         version: 5.5.4
       vitest:
         specifier: 'catalog:'
-        version: 2.1.6(@types/node@22.7.5)(yaml@2.6.1)
+        version: 2.1.8(@types/node@22.7.5)
 
 packages:
 
@@ -1077,9 +1077,6 @@ packages:
   '@milaboratories/pl-model-common@1.10.0':
     resolution: {integrity: sha512-w8PsqfBAJIS6cahJu5lbF4TglpK0Wbi9BERQk0zqNiiPwxHpDPimWzIZ1eZpA9mKCH03qp6uXXnuTTZuanNnWw==}
 
-  '@milaboratories/pl-model-common@1.6.4':
-    resolution: {integrity: sha512-3iln1uplgk99CaF5ACshwSOd5JVR66SEug+UYDV/0SDWnAiCLfRad5896KnoXZfB9UEbLZU7AE0NW+dMCMVNZg==}
-
   '@milaboratories/pl-model-middle-layer@1.6.2':
     resolution: {integrity: sha512-0utwNRv8M/2rgv9Zlt5zTixUEyBjxJyC6GthxAgVHX28U5TCWfi51K6A3FK9dDqVBhRnaHYU9+dV6P0m3Xuskw==}
 
@@ -1106,8 +1103,8 @@ packages:
   '@milaboratories/ts-helpers@1.1.3':
     resolution: {integrity: sha512-6eBGVodry75ZQlg7n9oPEpDblu/5mHW3Tci7smOt/Nd7IH1zSrZRcNUc18oGY1nj1Vx+Kx+TkVw+9rIgp6HVVg==}
 
-  '@milaboratories/uikit@2.2.32':
-    resolution: {integrity: sha512-lkAObxJG0GuxWzLbVKYp5c9dg2856iKDg6RrsE5MLCNz1XVApLeFDmT51h4HxPivLs1Cm2DIPTuNhwHUL1a35A==}
+  '@milaboratories/uikit@2.2.33':
+    resolution: {integrity: sha512-gKrYZpAfda9TB8AbjpnFRslk0AfGrUFpcx0mrIq+wfGaxF8jx8i7A95a1RVvdkJOGfZe3rEMJQpmyxkKKdwCeQ==}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -1148,15 +1145,12 @@ packages:
   '@platforma-open/milaboratories.software-mixcr@4.7.0-133-develop':
     resolution: {integrity: sha512-b7jnFwjbO+tmlCEstILbTqVYYF3a5tYk2albcWNsfrJW8oP+of1KIBVCKMKVBr0UyshmsFjOLtLyrtLEa/ObGQ==}
 
-  '@platforma-open/milaboratories.software-small-binaries@1.14.6':
-    resolution: {integrity: sha512-d7cbFNHb6/1O4wWNlvjTVlTTsIelafnt/niAe8AZNjxoM0ivbE8bR4jnTUXaXwURjUzwV/LI5sk39kJelZxsMA==}
+  '@platforma-open/milaboratories.software-small-binaries@1.15.0':
+    resolution: {integrity: sha512-svYI5Sa0hEcMH5sVZ5AQ3oVYd7/jFnR/bC8/lsug4KGbg5lWdfcsm1wGvuXWmz4beQwKgaWknN+d6vQZ+wcngw==}
 
   '@platforma-sdk/block-tools@2.4.11':
     resolution: {integrity: sha512-8l0hfQDsJwoDQqBaPxpPvZ36UwOcf9fKCXQZkOjT3xsVHCNpEPjGYQYtfwQmCDX6zNkJw1d4yw+DS2pufiauvw==}
     hasBin: true
-
-  '@platforma-sdk/model@1.13.5':
-    resolution: {integrity: sha512-1cL9eSZf/G9J/EuUro3UZ1xU3VtoFuffFwaffLY50mYw3UGjxQMLKWMuAwIEKje/cEbzZQZYMD8gd0IXUP7mIA==}
 
   '@platforma-sdk/model@1.20.0':
     resolution: {integrity: sha512-CYytp2ogD/5oY/FECCUZOV2u3RRE6YBBGKjuVhmrN+Y8mfvStn6j99DaW5ka/PTXuRPpycEYQukXYz06WTY2Nw==}
@@ -1168,8 +1162,8 @@ packages:
   '@platforma-sdk/test@1.20.3':
     resolution: {integrity: sha512-5e2UG8few+bm8QPiz7Bp8Fm9gg3om2HkJ/j7mFNSb+BB7qcVCN+5kaujfq0kAWsblXqS0Yce3HhCCyFnYn2IVg==}
 
-  '@platforma-sdk/ui-vue@1.20.2':
-    resolution: {integrity: sha512-fOL2ZYRQPOHHWqDJiWcM7RA6gwFRFndmi7EpcEWS5MQ18k5NrHIQxk3a5kjaFydMoZeheU1Crm6CQmqCfWzRlA==}
+  '@platforma-sdk/ui-vue@1.20.4':
+    resolution: {integrity: sha512-FpzBNVjFvw+ZWYW7EAZwMibE06ayqYLMpIho9nWgIl4ZLa92fN6IqRIKRr7B2szbdDf+ZkSU+rnuoKUarLwsTA==}
 
   '@platforma-sdk/workflow-tengo@2.8.1':
     resolution: {integrity: sha512-6u44uydBsZsWF0xhrFquS66n53/d+E2pIteKyZcPuszyCg1KPSIC/s6K0XX2sXy0CxwZ/3PqjXJndX2DWdQgyg==}
@@ -1534,22 +1528,8 @@ packages:
       vite: ^5.0.0 || ^6.0.0
       vue: ^3.2.25
 
-  '@vitest/expect@2.1.6':
-    resolution: {integrity: sha512-9M1UR9CAmrhJOMoSwVnPh2rELPKhYo0m/CSgqw9PyStpxtkwhmdM6XYlXGKeYyERY1N6EIuzkQ7e3Lm1WKCoUg==}
-
   '@vitest/expect@2.1.8':
     resolution: {integrity: sha512-8ytZ/fFHq2g4PJVAtDX57mayemKgDR6X3Oa2Foro+EygiOJHUXhCqBAAKQYYajZpFoIfvBCF1j6R6IYRSIUFuw==}
-
-  '@vitest/mocker@2.1.6':
-    resolution: {integrity: sha512-MHZp2Z+Q/A3am5oD4WSH04f9B0T7UvwEb+v5W0kCYMhtXGYbdyl2NUk1wdSMqGthmhpiThPDp/hEoVwu16+u1A==}
-    peerDependencies:
-      msw: ^2.4.9
-      vite: ^5.0.0 || ^6.0.0
-    peerDependenciesMeta:
-      msw:
-        optional: true
-      vite:
-        optional: true
 
   '@vitest/mocker@2.1.8':
     resolution: {integrity: sha512-7guJ/47I6uqfttp33mgo6ga5Gr1VnL58rcqYKyShoRK9ebu8T5Rs6HN3s1NABiBeVTdWNrwUMcHH54uXZBN4zA==}
@@ -1562,32 +1542,17 @@ packages:
       vite:
         optional: true
 
-  '@vitest/pretty-format@2.1.6':
-    resolution: {integrity: sha512-exZyLcEnHgDMKc54TtHca4McV4sKT+NKAe9ix/yhd/qkYb/TP8HTyXRFDijV19qKqTZM0hPL4753zU/U8L/gAA==}
-
   '@vitest/pretty-format@2.1.8':
     resolution: {integrity: sha512-9HiSZ9zpqNLKlbIDRWOnAWqgcA7xu+8YxXSekhr0Ykab7PAYFkhkwoqVArPOtJhPmYeE2YHgKZlj3CP36z2AJQ==}
-
-  '@vitest/runner@2.1.6':
-    resolution: {integrity: sha512-SjkRGSFyrA82m5nz7To4CkRSEVWn/rwQISHoia/DB8c6IHIhaE/UNAo+7UfeaeJRE979XceGl00LNkIz09RFsA==}
 
   '@vitest/runner@2.1.8':
     resolution: {integrity: sha512-17ub8vQstRnRlIU5k50bG+QOMLHRhYPAna5tw8tYbj+jzjcspnwnwtPtiOlkuKC4+ixDPTuLZiqiWWQ2PSXHVg==}
 
-  '@vitest/snapshot@2.1.6':
-    resolution: {integrity: sha512-5JTWHw8iS9l3v4/VSuthCndw1lN/hpPB+mlgn1BUhFbobeIUj1J1V/Bj2t2ovGEmkXLTckFjQddsxS5T6LuVWw==}
-
   '@vitest/snapshot@2.1.8':
     resolution: {integrity: sha512-20T7xRFbmnkfcmgVEz+z3AU/3b0cEzZOt/zmnvZEctg64/QZbSDJEVm9fLnnlSi74KibmRsO9/Qabi+t0vCRPg==}
 
-  '@vitest/spy@2.1.6':
-    resolution: {integrity: sha512-oTFObV8bd4SDdRka5O+mSh5w9irgx5IetrD5i+OsUUsk/shsBoHifwCzy45SAORzAhtNiprUVaK3hSCCzZh1jQ==}
-
   '@vitest/spy@2.1.8':
     resolution: {integrity: sha512-5swjf2q95gXeYPevtW0BLk6H8+bPlMb4Vw/9Em4hFxDcaOxS+e0LOX4yqNxoHzMR2akEB2xfpnWUzkZokmgWDg==}
-
-  '@vitest/utils@2.1.6':
-    resolution: {integrity: sha512-ixNkFy3k4vokOUTU2blIUvOgKq/N2PW8vKIjZZYsGJCMX69MRa9J2sKqX5hY/k5O5Gty3YJChepkqZ3KM9LyIQ==}
 
   '@vitest/utils@2.1.8':
     resolution: {integrity: sha512-dwSoui6djdwbfFmIgbIjX2ZhIoG7Ex/+xpxyiEgIGzjliY8xGkcpITKTlp6B4MgtGkF2ilvm97cPM96XZaAgcA==}
@@ -3002,11 +2967,6 @@ packages:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
     hasBin: true
 
-  vite-node@2.1.6:
-    resolution: {integrity: sha512-DBfJY0n9JUwnyLxPSSUmEePT21j8JZp/sR9n+/gBwQU6DcQOioPdb8/pibWfXForbirSagZCilseYIwaL3f95A==}
-    engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
-    hasBin: true
-
   vite-node@2.1.8:
     resolution: {integrity: sha512-uPAwSr57kYjAUux+8E2j0q0Fxpn8M9VoyfGiRI8Kfktz9NcYMCenwY5RnZxnF1WTu3TGiYipirIzacLL3VVGFg==}
     engines: {node: ^18.0.0 || >=20.0.0}
@@ -3043,8 +3003,8 @@ packages:
       terser:
         optional: true
 
-  vite@6.0.1:
-    resolution: {integrity: sha512-Ldn6gorLGr4mCdFnmeAOLweJxZ34HjKnDm4HGo6P66IEqTxQb36VEdFJQENKxWjupNfoIjvRUnswjn1hpYEpjQ==}
+  vite@6.0.3:
+    resolution: {integrity: sha512-Cmuo5P0ENTN6HxLSo6IHsjCLn/81Vgrp81oaiFFMRa8gGDj5xEjIcEpf2ZymZtZR8oU0P2JX5WuUp/rlXcHkAw==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
     hasBin: true
     peerDependencies:
@@ -3081,31 +3041,6 @@ packages:
       tsx:
         optional: true
       yaml:
-        optional: true
-
-  vitest@2.1.6:
-    resolution: {integrity: sha512-isUCkvPL30J4c5O5hgONeFRsDmlw6kzFEdLQHLezmDdKQHy8Ke/B/dgdTMEgU0vm+iZ0TjW8GuK83DiahBoKWQ==}
-    engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
-    hasBin: true
-    peerDependencies:
-      '@edge-runtime/vm': '*'
-      '@types/node': ^18.0.0 || ^20.0.0 || >=22.0.0
-      '@vitest/browser': 2.1.6
-      '@vitest/ui': 2.1.6
-      happy-dom: '*'
-      jsdom: '*'
-    peerDependenciesMeta:
-      '@edge-runtime/vm':
-        optional: true
-      '@types/node':
-        optional: true
-      '@vitest/browser':
-        optional: true
-      '@vitest/ui':
-        optional: true
-      happy-dom:
-        optional: true
-      jsdom:
         optional: true
 
   vitest@2.1.8:
@@ -3234,6 +3169,9 @@ packages:
 
   zod@3.23.8:
     resolution: {integrity: sha512-XBx9AXhXktjUqnepgTiE5flcKIYWi/rme0Eaj+5Y0lftuGBq+jyRu/md4WnuxqgP1ubdpNCsYEYPxrzVHD8d6g==}
+
+  zod@3.24.1:
+    resolution: {integrity: sha512-muH7gBL9sI1nciMZV67X5fTKKBLtwpZ5VBp1vsOQzj1MhrBZ4wlVCm3gedKZWLp0Oyel8sIGfeiz54Su+OVT+A==}
 
 snapshots:
 
@@ -4420,10 +4358,6 @@ snapshots:
     dependencies:
       zod: 3.23.8
 
-  '@milaboratories/pl-model-common@1.6.4':
-    dependencies:
-      zod: 3.23.8
-
   '@milaboratories/pl-model-middle-layer@1.6.2':
     dependencies:
       '@milaboratories/pl-model-common': 1.10.0
@@ -4464,7 +4398,7 @@ snapshots:
     dependencies:
       denque: 2.1.0
 
-  '@milaboratories/uikit@2.2.32(typescript@5.5.4)':
+  '@milaboratories/uikit@2.2.33(typescript@5.5.4)':
     dependencies:
       vue: 3.5.13(typescript@5.5.4)
     transitivePeerDependencies:
@@ -4545,7 +4479,7 @@ snapshots:
 
   '@platforma-open/milaboratories.software-mixcr@4.7.0-133-develop': {}
 
-  '@platforma-open/milaboratories.software-small-binaries@1.14.6': {}
+  '@platforma-open/milaboratories.software-small-binaries@1.15.0': {}
 
   '@platforma-sdk/block-tools@2.4.11':
     dependencies:
@@ -4567,12 +4501,6 @@ snapshots:
     transitivePeerDependencies:
       - aws-crt
       - supports-color
-
-  '@platforma-sdk/model@1.13.5':
-    dependencies:
-      '@milaboratories/pl-model-common': 1.6.4
-      utility-types: 3.11.0
-      zod: 3.23.8
 
   '@platforma-sdk/model@1.20.0':
     dependencies:
@@ -4615,7 +4543,7 @@ snapshots:
       - supports-color
       - terser
 
-  '@platforma-sdk/ui-vue@1.20.2(typescript@5.5.4)':
+  '@platforma-sdk/ui-vue@1.20.4(typescript@5.5.4)':
     dependencies:
       '@ag-grid-community/client-side-row-model': 32.3.3
       '@ag-grid-community/core': 32.3.3
@@ -4633,7 +4561,7 @@ snapshots:
       '@ag-grid-enterprise/rich-select': 32.3.3
       '@ag-grid-enterprise/server-side-row-model': 32.3.3
       '@ag-grid-enterprise/side-bar': 32.3.3
-      '@milaboratories/uikit': 2.2.32(typescript@5.5.4)
+      '@milaboratories/uikit': 2.2.33(typescript@5.5.4)
       '@platforma-sdk/model': 1.20.0
       canonicalize: 2.0.0
       lru-cache: 11.0.2
@@ -4644,7 +4572,7 @@ snapshots:
   '@platforma-sdk/workflow-tengo@2.8.1':
     dependencies:
       '@milaboratories/software-pframes-conv': 2.1.2
-      '@platforma-open/milaboratories.software-small-binaries': 1.14.6
+      '@platforma-open/milaboratories.software-small-binaries': 1.15.0
 
   '@protobuf-ts/grpc-transport@2.9.4(@grpc/grpc-js@1.12.4)':
     dependencies:
@@ -5091,17 +5019,10 @@ snapshots:
 
   '@types/web-bluetooth@0.0.20': {}
 
-  '@vitejs/plugin-vue@5.2.1(vite@6.0.1(@types/node@22.7.5)(yaml@2.6.1))(vue@3.5.13(typescript@5.5.4))':
+  '@vitejs/plugin-vue@5.2.1(vite@6.0.3(@types/node@22.7.5)(yaml@2.6.1))(vue@3.5.13(typescript@5.5.4))':
     dependencies:
-      vite: 6.0.1(@types/node@22.7.5)(yaml@2.6.1)
+      vite: 6.0.3(@types/node@22.7.5)(yaml@2.6.1)
       vue: 3.5.13(typescript@5.5.4)
-
-  '@vitest/expect@2.1.6':
-    dependencies:
-      '@vitest/spy': 2.1.6
-      '@vitest/utils': 2.1.6
-      chai: 5.1.2
-      tinyrainbow: 1.2.0
 
   '@vitest/expect@2.1.8':
     dependencies:
@@ -5109,14 +5030,6 @@ snapshots:
       '@vitest/utils': 2.1.8
       chai: 5.1.2
       tinyrainbow: 1.2.0
-
-  '@vitest/mocker@2.1.6(vite@6.0.1(@types/node@22.7.5)(yaml@2.6.1))':
-    dependencies:
-      '@vitest/spy': 2.1.6
-      estree-walker: 3.0.3
-      magic-string: 0.30.12
-    optionalDependencies:
-      vite: 6.0.1(@types/node@22.7.5)(yaml@2.6.1)
 
   '@vitest/mocker@2.1.8(vite@5.4.11(@types/node@22.7.5))':
     dependencies:
@@ -5126,28 +5039,13 @@ snapshots:
     optionalDependencies:
       vite: 5.4.11(@types/node@22.7.5)
 
-  '@vitest/pretty-format@2.1.6':
-    dependencies:
-      tinyrainbow: 1.2.0
-
   '@vitest/pretty-format@2.1.8':
     dependencies:
       tinyrainbow: 1.2.0
 
-  '@vitest/runner@2.1.6':
-    dependencies:
-      '@vitest/utils': 2.1.6
-      pathe: 1.1.2
-
   '@vitest/runner@2.1.8':
     dependencies:
       '@vitest/utils': 2.1.8
-      pathe: 1.1.2
-
-  '@vitest/snapshot@2.1.6':
-    dependencies:
-      '@vitest/pretty-format': 2.1.6
-      magic-string: 0.30.12
       pathe: 1.1.2
 
   '@vitest/snapshot@2.1.8':
@@ -5156,19 +5054,9 @@ snapshots:
       magic-string: 0.30.12
       pathe: 1.1.2
 
-  '@vitest/spy@2.1.6':
-    dependencies:
-      tinyspy: 3.0.2
-
   '@vitest/spy@2.1.8':
     dependencies:
       tinyspy: 3.0.2
-
-  '@vitest/utils@2.1.6':
-    dependencies:
-      '@vitest/pretty-format': 2.1.6
-      loupe: 3.1.2
-      tinyrainbow: 1.2.0
 
   '@vitest/utils@2.1.8':
     dependencies:
@@ -5287,7 +5175,7 @@ snapshots:
 
   agent-base@6.0.2:
     dependencies:
-      debug: 4.3.7(supports-color@8.1.1)
+      debug: 4.4.0(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -5872,7 +5760,7 @@ snapshots:
   https-proxy-agent@5.0.1:
     dependencies:
       agent-base: 6.0.2
-      debug: 4.3.7(supports-color@8.1.1)
+      debug: 4.4.0(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -6609,31 +6497,10 @@ snapshots:
 
   uuid@9.0.1: {}
 
-  vite-node@2.1.6(@types/node@22.7.5)(yaml@2.6.1):
-    dependencies:
-      cac: 6.7.14
-      debug: 4.3.7(supports-color@8.1.1)
-      es-module-lexer: 1.5.4
-      pathe: 1.1.2
-      vite: 6.0.1(@types/node@22.7.5)(yaml@2.6.1)
-    transitivePeerDependencies:
-      - '@types/node'
-      - jiti
-      - less
-      - lightningcss
-      - sass
-      - sass-embedded
-      - stylus
-      - sugarss
-      - supports-color
-      - terser
-      - tsx
-      - yaml
-
   vite-node@2.1.8(@types/node@22.7.5):
     dependencies:
       cac: 6.7.14
-      debug: 4.3.7(supports-color@8.1.1)
+      debug: 4.4.0(supports-color@8.1.1)
       es-module-lexer: 1.5.4
       pathe: 1.1.2
       vite: 5.4.11(@types/node@22.7.5)
@@ -6657,7 +6524,7 @@ snapshots:
       '@types/node': 22.7.5
       fsevents: 2.3.3
 
-  vite@6.0.1(@types/node@22.7.5)(yaml@2.6.1):
+  vite@6.0.3(@types/node@22.7.5)(yaml@2.6.1):
     dependencies:
       esbuild: 0.24.0
       postcss: 8.4.49
@@ -6666,44 +6533,6 @@ snapshots:
       '@types/node': 22.7.5
       fsevents: 2.3.3
       yaml: 2.6.1
-
-  vitest@2.1.6(@types/node@22.7.5)(yaml@2.6.1):
-    dependencies:
-      '@vitest/expect': 2.1.6
-      '@vitest/mocker': 2.1.6(vite@6.0.1(@types/node@22.7.5)(yaml@2.6.1))
-      '@vitest/pretty-format': 2.1.6
-      '@vitest/runner': 2.1.6
-      '@vitest/snapshot': 2.1.6
-      '@vitest/spy': 2.1.6
-      '@vitest/utils': 2.1.6
-      chai: 5.1.2
-      debug: 4.3.7(supports-color@8.1.1)
-      expect-type: 1.1.0
-      magic-string: 0.30.12
-      pathe: 1.1.2
-      std-env: 3.8.0
-      tinybench: 2.9.0
-      tinyexec: 0.3.1
-      tinypool: 1.0.1
-      tinyrainbow: 1.2.0
-      vite: 6.0.1(@types/node@22.7.5)(yaml@2.6.1)
-      vite-node: 2.1.6(@types/node@22.7.5)(yaml@2.6.1)
-      why-is-node-running: 2.3.0
-    optionalDependencies:
-      '@types/node': 22.7.5
-    transitivePeerDependencies:
-      - jiti
-      - less
-      - lightningcss
-      - msw
-      - sass
-      - sass-embedded
-      - stylus
-      - sugarss
-      - supports-color
-      - terser
-      - tsx
-      - yaml
 
   vitest@2.1.8(@types/node@22.7.5):
     dependencies:
@@ -6715,7 +6544,7 @@ snapshots:
       '@vitest/spy': 2.1.8
       '@vitest/utils': 2.1.8
       chai: 5.1.2
-      debug: 4.3.7(supports-color@8.1.1)
+      debug: 4.4.0(supports-color@8.1.1)
       expect-type: 1.1.0
       magic-string: 0.30.12
       pathe: 1.1.2
@@ -6855,3 +6684,5 @@ snapshots:
       fd-slicer: 1.1.0
 
   zod@3.23.8: {}
+
+  zod@3.24.1: {}
