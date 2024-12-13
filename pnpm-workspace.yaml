@@ -16,13 +16,13 @@ catalog:
   '@milaboratories/helpers': ^1.6.10
 
   '@milaboratories/software-pframes-conv': 2.1.2
-  '@platforma-open/milaboratories.software-small-binaries': ^1.14.6
+  '@platforma-open/milaboratories.software-small-binaries': ^1.15.0
   '@platforma-open/milaboratories.software-mixcr': 4.7.0-133-develop
 
   'vue': ^3.5.13
   'vue-tsc': ^2.1.10
 
-  'zod': ^3.23.8
+  'zod': ^3.24.1
   'utility-types': ^3.11.0
 
   'typescript': ~5.5.4
