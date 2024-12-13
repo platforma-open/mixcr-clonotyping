@@ -25,8 +25,8 @@ catalogs:
       specifier: ^1.6.10
       version: 1.6.10
     '@milaboratories/software-pframes-conv':
-      specifier: 2.0.4
-      version: 2.0.4
+      specifier: 2.1.2
+      version: 2.1.2
     '@platforma-open/milaboratories.samples-and-data':
       specifier: ^1.8.8
       version: 1.8.8
@@ -233,7 +233,7 @@ importers:
     devDependencies:
       '@milaboratories/software-pframes-conv':
         specifier: 'catalog:'
-        version: 2.0.4
+        version: 2.1.2
       '@platforma-open/milaboratories.software-mixcr':
         specifier: 'catalog:'
         version: 4.7.0-133-develop
@@ -1091,9 +1091,6 @@ packages:
 
   '@milaboratories/resolve-helper@1.0.2':
     resolution: {integrity: sha512-jPafLQuJmtU+be+Ie72RbT7gvP4FDnGX1feebn1OG7eHAp8gIKnrz8mVQlJ6zaIn7+GR3zTzh8QSdb7AEayLBQ==}
-
-  '@milaboratories/software-pframes-conv@2.0.4':
-    resolution: {integrity: sha512-GUGa5SK1mJtpkrzFMq6hd/0e/b8qHSYfTz9b5I4gJnLEPLFSDExHw8YAqEG/le0c6f9zIY4TKNZtjPGy7wRT9w==}
 
   '@milaboratories/software-pframes-conv@2.1.2':
     resolution: {integrity: sha512-wDQEurhw7XD74WmGt3YtBAT38A0zPsMrN4ayYvUBOCPl9wvhkttGWQyaF/ACEP2ZEpM3mQMHsyONS8+PdftmbQ==}
@@ -4453,8 +4450,6 @@ snapshots:
       - supports-color
 
   '@milaboratories/resolve-helper@1.0.2': {}
-
-  '@milaboratories/software-pframes-conv@2.0.4': {}
 
   '@milaboratories/software-pframes-conv@2.1.2': {}
 
