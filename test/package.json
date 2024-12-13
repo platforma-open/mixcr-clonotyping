@@ -10,8 +10,10 @@
   "keywords": [],
   "dependencies": {
     "this-block": "workspace:@platforma-open/milaboratories.mixcr-clonotyping@*",
+    "@platforma-open/milaboratories.mixcr-clonotyping.model": "workspace:*",
     "@platforma-open/milaboratories.samples-and-data.model": "catalog:",
-    "@platforma-open/milaboratories.samples-and-data": "catalog:"
+    "@platforma-open/milaboratories.samples-and-data": "catalog:",
+    "@platforma-sdk/model": "catalog:"
   },
   "devDependencies": {
     "@platforma-sdk/test": "catalog:",

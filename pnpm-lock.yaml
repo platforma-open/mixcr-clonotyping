@@ -148,12 +148,18 @@ importers:
 
   test:
     dependencies:
+      '@platforma-open/milaboratories.mixcr-clonotyping.model':
+        specifier: workspace:*
+        version: link:../model
       '@platforma-open/milaboratories.samples-and-data':
         specifier: 'catalog:'
         version: 1.8.1
       '@platforma-open/milaboratories.samples-and-data.model':
         specifier: 'catalog:'
         version: 1.8.0
+      '@platforma-sdk/model':
+        specifier: 'catalog:'
+        version: 1.13.5
       this-block:
         specifier: workspace:@platforma-open/milaboratories.mixcr-clonotyping@*
         version: link:../block
