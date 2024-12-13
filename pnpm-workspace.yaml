@@ -7,12 +7,12 @@ packages:
 
 catalog:
   '@platforma-sdk/workflow-tengo': ^2.8.1
-  '@platforma-sdk/model': ^1.20.0
-  '@platforma-sdk/ui-vue': ^1.20.4
+  '@platforma-sdk/model': ^1.20.6
+  '@platforma-sdk/ui-vue': ^1.20.6
   '@platforma-sdk/tengo-builder': ^1.17.3
-  '@platforma-sdk/block-tools': ^2.4.11
+  '@platforma-sdk/block-tools': ^2.4.12
 
-  '@platforma-sdk/test': ^1.20.3
+  '@platforma-sdk/test': ^1.20.6
   '@milaboratories/helpers': ^1.6.10
 
   '@milaboratories/software-pframes-conv': 2.1.2
@@ -22,7 +22,7 @@ catalog:
   'vue': ^3.5.13
   'vue-tsc': ^2.1.10
 
-  'zod': ^3.24.1
+  'zod': ~3.23.8
   'utility-types': ^3.11.0
 
   'typescript': ~5.5.4
