@@ -6,13 +6,13 @@ packages:
   - test
 
 catalog:
-  '@platforma-sdk/workflow-tengo': ^2.8.1
+  '@platforma-sdk/workflow-tengo': ^2.8.2
   '@platforma-sdk/model': ^1.20.6
-  '@platforma-sdk/ui-vue': ^1.20.6
+  '@platforma-sdk/ui-vue': ^1.20.7
   '@platforma-sdk/tengo-builder': ^1.17.3
   '@platforma-sdk/block-tools': ^2.4.12
 
-  '@platforma-sdk/test': ^1.20.6
+  '@platforma-sdk/test': ^1.20.8
   '@milaboratories/helpers': ^1.6.10
 
   '@milaboratories/software-pframes-conv': 2.1.2
