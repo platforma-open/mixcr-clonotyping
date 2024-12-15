@@ -42,13 +42,13 @@ const data = reactive<{
   sampleReportOpen: boolean;
   selectedSample: PlId | undefined;
 }>({
-  settingsOpen: app.outputValues.started === false,
+  settingsOpen: app.model.outputs.started === false,
   sampleReportOpen: false,
   selectedSample: undefined
 });
 
 watch(
-  () => app.outputValues.started,
+  () => app.model.outputs.started,
   (newVal, oldVal) => {
     if (oldVal === false && newVal === true) data.settingsOpen = false;
     if (oldVal === true && newVal === false) data.settingsOpen = true;
@@ -176,20 +176,20 @@ const gridOptions: GridOptions<MiXCRResult> = {
   <PlSlideModal
     v-model="data.settingsOpen"
     :shadow="true"
-    :close-on-outside-click="app.outputValues.started"
+    :close-on-outside-click="app.model.outputs.started"
   >
     <template #title>Settings</template>
     <SettingsPanel />
   </PlSlideModal>
   <PlSlideModal
     v-model="data.sampleReportOpen"
-    :close-on-outside-click="app.outputValues.started"
+    :close-on-outside-click="app.model.outputs.started"
     width="80%"
   >
     <template #title>
       Results for
       {{
-        (data.selectedSample ? app.outputValues.sampleLabels?.[data.selectedSample] : undefined) ??
+        (data.selectedSample ? app.model.outputs.sampleLabels?.[data.selectedSample] : undefined) ??
         '...'
       }}
     </template>
