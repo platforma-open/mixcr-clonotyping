@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 1.7.0
+
+### Minor Changes
+
+- 50dc3f7: chore: bump version
+
 ## 1.6.1
 
 ### Patch Changes
