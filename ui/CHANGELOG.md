@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.6.5
+
+### Patch Changes
+
+- b27bcb1: add PlAgCellStatusTag (need update platforma deps)
+
 ## 1.6.4
 
 ### Patch Changes
