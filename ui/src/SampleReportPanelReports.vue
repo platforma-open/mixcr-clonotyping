@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { PlId } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
-import { useApp } from './app';
 import {
   PlBtnGroup,
   PlContainer,
@@ -9,6 +8,7 @@ import {
   SimpleOption
 } from '@platforma-sdk/ui-vue';
 import { computed, reactive } from 'vue';
+import { useApp } from './app';
 
 const props = defineProps<{
   sampleId: PlId;
@@ -25,9 +25,10 @@ const app = useApp();
 
 const reportHandle = computed(() => {
   const sampleId = props.sampleId;
-  return app.model.outputs?.reports?.data?.find(
-    (d) => d.key[0] === sampleId && d.key[1] === data.currentReport && d.key[2] === 'txt'
-  )?.value?.handle;
+  return app.model.outputs.reports?.data?.find(
+    d => d.key[0] === sampleId &&
+      d.key[1] === data.currentReport &&
+      d.key[2] === 'txt')?.value?.handle;
 });
 
 const reportContent = computed(
