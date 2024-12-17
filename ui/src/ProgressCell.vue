@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ICellRendererParams } from '@ag-grid-community/core';
 import { ProgressPattern } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
+import { ICellRendererParams } from 'ag-grid-enterprise';
 import { computed, unref } from 'vue';
 import { MiXCRResult } from './results';
 
@@ -72,10 +72,7 @@ const canShowBackground = computed(
   <div :class="{ 'progress-cell__white-bg': canShowBackground }" class="progress-cell">
     <div class="progress-cell__indicator" :style="{ width: parsed.percentage + '%' }"></div>
     <div class="progress-cell__body">
-      <div
-        :class="{ 'progress-cell__stage--queued': parsed.stage === 'Queued' }"
-        class="progress-cell__stage"
-      >
+      <div :class="{ 'progress-cell__stage--queued': parsed.stage === 'Queued' }" class="progress-cell__stage">
         {{ parsed.stage }}
       </div>
       <div class="progress-cell__percentage">{{ parsed.etaLabel ?? parsed.percentageLabel }}</div>
@@ -94,6 +91,7 @@ const canShowBackground = computed(
   /* border-left: 1px solid var(--border-color-div-grey);
     border-right: 1px solid var(--border-color-div-grey); */
 }
+
 .progress-cell__white-bg {
   background-color: #fff;
 }

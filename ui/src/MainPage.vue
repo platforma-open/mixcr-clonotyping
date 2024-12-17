@@ -1,27 +1,27 @@
 <script setup lang="ts">
-import { AgGridVue } from '@ag-grid-community/vue3';
+import { AgGridVue } from 'ag-grid-vue3';
 
-import { ClientSideRowModelModule } from '@ag-grid-community/client-side-row-model';
+import type { PlId, Qc } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
 import {
-  ColDef,
+  AgGridTheme,
+  makeRowNumberColDef,
+  PlAgCellStatusTag,
+  PlAgOverlayLoading,
+  PlAgOverlayNoRows,
+  PlAgTextAndButtonCell,
+  PlBlockPage,
+  PlBtnGhost,
+  PlMaskIcon24,
+  PlSlideModal
+} from '@platforma-sdk/ui-vue';
+import { refDebounced, whenever } from '@vueuse/core';
+import {
+  ClientSideRowModelModule, ColDef,
   GridApi,
   GridOptions,
   GridReadyEvent,
   ModuleRegistry
-} from '@ag-grid-community/core';
-import type { PlId, Qc } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
-import {
-  AgGridTheme,
-  PlAgOverlayLoading,
-  PlAgOverlayNoRows,
-  PlBlockPage,
-  PlBtnGhost,
-  PlMaskIcon24,
-  PlSlideModal,
-  PlAgTextAndButtonCell,
-  PlAgCellStatusTag
-} from '@platforma-sdk/ui-vue';
-import { refDebounced, whenever } from '@vueuse/core';
+} from 'ag-grid-enterprise';
 import { reactive, shallowRef, watch } from 'vue';
 import AlignmentStatsCell from './AlignmentStatsCell.vue';
 import { useApp } from './app';
@@ -81,6 +81,7 @@ const defaultColumnDef: ColDef = {
 };
 
 const columnDefs: ColDef[] = [
+  makeRowNumberColDef(),
   {
     colId: 'label',
     field: 'label',
@@ -181,33 +182,17 @@ const gridOptions: GridOptions<MiXCRResult> = {
       </PlBtnGhost>
     </template>
     <div :style="{ flex: 1 }">
-      <AgGridVue
-        :theme="AgGridTheme"
-        :style="{ height: '100%' }"
-        :rowData="result"
-        :defaultColDef="defaultColumnDef"
-        :columnDefs="columnDefs"
-        :grid-options="gridOptions"
-        :loadingOverlayComponentParams="{ notReady: true }"
-        :loadingOverlayComponent="PlAgOverlayLoading"
-        :noRowsOverlayComponent="PlAgOverlayNoRows"
-        @grid-ready="onGridReady"
-      />
+      <AgGridVue :theme="AgGridTheme" :style="{ height: '100%' }" :rowData="result" :defaultColDef="defaultColumnDef"
+        :columnDefs="columnDefs" :grid-options="gridOptions" :loadingOverlayComponentParams="{ notReady: true }"
+        :loadingOverlayComponent="PlAgOverlayLoading" :noRowsOverlayComponent="PlAgOverlayNoRows"
+        @grid-ready="onGridReady" />
     </div>
   </PlBlockPage>
-  <PlSlideModal
-    v-model="data.settingsOpen"
-    :shadow="true"
-    :close-on-outside-click="app.model.outputs.started"
-  >
+  <PlSlideModal v-model="data.settingsOpen" :shadow="true" :close-on-outside-click="app.model.outputs.started">
     <template #title>Settings</template>
     <SettingsPanel />
   </PlSlideModal>
-  <PlSlideModal
-    v-model="data.sampleReportOpen"
-    :close-on-outside-click="app.model.outputs.started"
-    width="80%"
-  >
+  <PlSlideModal v-model="data.sampleReportOpen" :close-on-outside-click="app.model.outputs.started" width="80%">
     <template #title>
       Results for
       {{

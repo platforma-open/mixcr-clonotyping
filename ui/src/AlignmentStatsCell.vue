@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ICellRendererParams } from '@ag-grid-community/core';
-import { MiXCRResult } from './results';
+import { ICellRendererParams } from 'ag-grid-enterprise';
 import AlignmentRow from './components/AlignmentRow.vue';
+import { MiXCRResult } from './results';
 
 defineProps<{
     params: ICellRendererParams<MiXCRResult>;
