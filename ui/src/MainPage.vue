@@ -1,14 +1,8 @@
 <script setup lang="ts">
-import { AgGridVue } from '@ag-grid-community/vue3';
+import { AgGridVue } from 'ag-grid-vue3';
 
-import { ClientSideRowModelModule } from '@ag-grid-community/client-side-row-model';
-import {
-  ColDef,
-  GridApi,
-  GridOptions,
-  GridReadyEvent,
-  ModuleRegistry
-} from '@ag-grid-community/core';
+import { ClientSideRowModelModule } from 'ag-grid-enterprise';
+import { ColDef, GridApi, GridOptions, GridReadyEvent, ModuleRegistry } from 'ag-grid-enterprise';
 import type { PlId, Qc } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
 import {
   AgGridTheme,
@@ -19,7 +13,9 @@ import {
   PlMaskIcon24,
   PlSlideModal,
   PlAgTextAndButtonCell,
-  PlAgCellStatusTag
+  PlAgCellStatusTag,
+  makeRowNumberColDef,
+  autoSizeRowNumberColumn
 } from '@platforma-sdk/ui-vue';
 import { refDebounced, whenever } from '@vueuse/core';
 import { reactive, shallowRef, watch } from 'vue';
@@ -72,6 +68,7 @@ const qcPriority = { OK: 0, WARN: 1, ALERT: 2 };
 const gridApi = shallowRef<GridApi<any>>();
 const onGridReady = (params: GridReadyEvent) => {
   gridApi.value = params.api;
+  autoSizeRowNumberColumn(params.api);
 };
 
 const defaultColumnDef: ColDef = {
@@ -81,6 +78,7 @@ const defaultColumnDef: ColDef = {
 };
 
 const columnDefs: ColDef[] = [
+  makeRowNumberColDef(),
   {
     colId: 'label',
     field: 'label',
