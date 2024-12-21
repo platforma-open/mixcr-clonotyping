@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.6.6
+
+### Patch Changes
+
+- b59aa03: added PlAgCellProgress
+
 ## 1.6.5
 
 ### Patch Changes
