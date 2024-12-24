@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 1.9.7
+
+### Patch Changes
+
+- e1fe8bf: revert exec braces
+
 ## 1.9.6
 
 ### Patch Changes
