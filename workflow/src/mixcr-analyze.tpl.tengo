@@ -108,9 +108,7 @@ self.body(func(inputs) {
 			}
 			mixcrCmdBuilder.addFile("input_" + r + "." + fileExtension, inputFile)
 		}
-		// We need to escape { and } characters, or else platforma will try to eval these expressions
-		// and fail with error.
-		mixcrCmdBuilder.arg("input_\\{\\{R\\}\\}." + fileExtension)
+		mixcrCmdBuilder.arg("input_{{R}}." + fileExtension)
 	} else if inputDataMeta.keyLength == 2 {
 		for sKey, inputFile in inputData.inputs() {
 			key := json.decode(sKey)
@@ -127,9 +125,7 @@ self.body(func(inputs) {
 			}
 			mixcrCmdBuilder.addFile("input_L" + lane + "_" + r + "." + fileExtension, inputFile)
 		}
-		// We need to escape { and } characters, or else platforma will try to eval these expressions
-		// and fail with error.
-		mixcrCmdBuilder.arg("input_L\\{\\{n\\}\\}_\\{\\{R\\}\\}." + fileExtension)
+		mixcrCmdBuilder.arg("input_L{{n}}_{{R}}." + fileExtension)
 	} else {
 		ll.panic("too many axes / not supported")
 	}
