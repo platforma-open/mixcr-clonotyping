@@ -1,5 +1,15 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 1.7.3
+
+### Patch Changes
+
+- 02b681a: use PlChartStackedBar component
+- Updated dependencies [02b681a]
+  - @platforma-open/milaboratories.mixcr-clonotyping.ui@1.6.7
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.4.3
+  - @platforma-open/milaboratories.mixcr-clonotyping.workflow@1.9.5
+
 ## 1.7.2
 
 ### Patch Changes

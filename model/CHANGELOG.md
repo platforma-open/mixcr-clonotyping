@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.4.3
+
+### Patch Changes
+
+- 02b681a: use PlChartStackedBar component
+
 ## 1.4.2
 
 ### Patch Changes
