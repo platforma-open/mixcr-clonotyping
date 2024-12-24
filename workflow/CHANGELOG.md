@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 1.9.6
+
+### Patch Changes
+
+- a6f9198: wf: escape braces or else backend will try to eval these expressions and fail with error
+
 ## 1.9.5
 
 ### Patch Changes
