@@ -19,13 +19,14 @@ import {
 } from '@platforma-sdk/ui-vue';
 import { refDebounced, whenever } from '@vueuse/core';
 import { reactive, shallowRef, watch } from 'vue';
-import AlignmentStatsCell from './AlignmentStatsCell.vue';
 import { useApp } from './app';
-import ChainsStatsCell from './ChainsStatsCell.vue';
 import ProgressCell from './ProgressCell.vue';
 import { MiXCRResult, MiXCRResultsFull } from './results';
 import SampleReportPanel from './SampleReportPanel.vue';
 import SettingsPanel from './SettingsPanel.vue';
+import { getAlignmentChartSettings } from './charts/alignmentChartSettings';
+import { getChainsChartSettings } from './charts/chainsChartSettings';
+import { PlAgChartStackedBarCell } from '@platforma-sdk/ui-vue';
 
 const app = useApp();
 
@@ -124,27 +125,35 @@ const columnDefs: ColDef[] = [
   },
   {
     colId: 'alignmentStats',
-    field: 'alignReport',
-    cellRenderer: 'AlignmentStatsCell',
     headerName: 'Alignments',
     flex: 1,
     cellStyle: {
       '--ag-cell-horizontal-padding': '12px'
-      // '--ag-cell-horizontal-border': 'solid rgb(150, 150, 200);',
-      // 'border-width': '0'
-    }
+    },
+    cellRendererSelector: (cellData) => {
+      const value = getAlignmentChartSettings(cellData.data.alignReport);
+      return {
+        component: PlAgChartStackedBarCell,
+        params: { value }
+      };
+    },
   },
   {
     colId: 'chainsStats',
-    field: 'alignReport',
-    cellRenderer: 'ChainsStatsCell',
     headerName: 'Chains',
     flex: 1,
     cellStyle: {
       '--ag-cell-horizontal-padding': '12px'
       // '--ag-cell-horizontal-border': 'solid rgb(150, 150, 200);',
       // 'border-width': '0'
-    }
+    },
+    cellRendererSelector: (cellData) => {
+      const value = getChainsChartSettings(cellData.data.alignReport);
+      return {
+        component: PlAgChartStackedBarCell,
+        params: { value }
+      };
+    },
   }
 ];
 
@@ -159,9 +168,7 @@ const gridOptions: GridOptions<MiXCRResult> = {
     data.sampleReportOpen = data.selectedSample !== undefined;
   },
   components: {
-    AlignmentStatsCell,
     ProgressCell,
-    ChainsStatsCell,
     PlAgTextAndButtonCell
   }
 };
