@@ -1,5 +1,13 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.test
 
+## 1.3.4
+
+### Patch Changes
+
+- 9454329: Update ui-vue to 1.21.21, model to 1.21.20
+- Updated dependencies [9454329]
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.4.4
+
 ## 1.3.3
 
 ### Patch Changes
