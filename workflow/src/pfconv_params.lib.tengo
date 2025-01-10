@@ -1,15 +1,24 @@
 ll := import("@platforma-sdk/workflow-tengo:ll")
 getFeature := import(":check-feature")
+text := import("text")
 
 getColumns := func(blockId, featureParams) {
   assemblingFeature := featureParams.assemblingFeature
   imputed := featureParams.imputed
+  cellTags := featureParams.cellTags
   featureSpec := getFeature.getProductiveFeature(assemblingFeature, imputed)
   productiveFeature := featureSpec.productiveFeature
   mutationVFeature := featureSpec.mutationVFeature
   addColumns := true
   if assemblingFeature == "CDR3" {
     addColumns = false
+  }
+
+  cellTagsList := []
+  if len(cellTags) > 0 {
+    for tag in cellTags {
+    
+    }
   }
   cols := {
     "axes": [
@@ -26,18 +35,6 @@ getColumns := func(blockId, featureParams) {
             "pl7.app/label": "Clone id",
             "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "90000"
-          }
-        }
-      }, {
-        "column": "tagValueCELL",
-        "naRegex": "",
-        "spec": {
-          "name": "pl7.app/vdj/tagValueCELL",
-          "type": "String",
-          "annotations": {
-            "pl7.app/label": "Cell tag",
-            "pl7.app/table/visibility": "default",
-            "pl7.app/table/orderPriority": "100000"
           }
         }
       }
@@ -1236,6 +1233,35 @@ getColumns := func(blockId, featureParams) {
       cols["columns"] = cols["columns"] + featureColumns + featureColumnsImputed
     } else {
       cols["columns"] = cols["columns"] + featureColumns + mutationColumns
+    }
+
+    cellTagsList := []
+    label := undefined
+    priority := 100000
+    if len(cellTags) > 0 {
+      for tag in cellTags {
+        if tag == "CELL" {
+          label = "Cell tag"
+        } else {
+          label = text.to_title(tag[:4]) + " " + text.to_lower(tag[4:])
+        }
+        cols.axes += [
+          {
+            "column": "tagValue" + tag,
+            "naRegex": "",
+            "spec": {
+              "name": "pl7.app/vdj/tagValueCELL",
+              "type": "String",
+              "annotations": {
+                "pl7.app/label": label,
+                "pl7.app/table/visibility": "default",
+                "pl7.app/table/orderPriority": string(priority)
+              }
+            }
+          }
+        ]
+        priority -= 1
+      }
     }
   }
 	return cols

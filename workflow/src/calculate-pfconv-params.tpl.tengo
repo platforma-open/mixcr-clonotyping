@@ -87,8 +87,12 @@ self.body(func(inputs) {
 	// add columns with frameworks, cdrs sequences
 	for feature in specs.coveredFeaturesOnExport {
 		if imputed {
-			columnsList += ["nSeqImputed"+feature, "aaSeqImputed"+feature, 
-							"nSeq"+feature, "aaSeq"+feature]
+			if feature == "CDR3" {
+				columnsList += ["nSeq"+feature, "aaSeq"+feature]
+			} else {
+				columnsList += ["nSeqImputed"+feature, "aaSeqImputed"+feature, 
+								"nSeq"+feature, "aaSeq"+feature]
+			}
 		} else {
 			columnsList += ["nSeq"+feature, "aaSeq"+feature]
 		}
@@ -121,7 +125,7 @@ self.body(func(inputs) {
 	}
 
 	// filter pfconvParams by column name and get a list of fields from it
-	pfconvParams := pfconvParamsLib.getColumns(blockId, {assemblingFeature: assemblingFeature, imputed: imputed})
+	pfconvParams := pfconvParamsLib.getColumns(blockId, {assemblingFeature: assemblingFeature, imputed: imputed, cellTags: specs.cellTags})
 
 	columns := []
 	for col in columnsList {

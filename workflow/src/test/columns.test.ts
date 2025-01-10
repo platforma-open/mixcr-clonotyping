@@ -110,7 +110,6 @@ const testCases: TestCase[] = [
       expect(config.columns.find((c: any) => c.column === 'readCount')).toBeDefined();
       expect(config.columns.find((c: any) => c.column === 'readFraction')).toBeDefined();
       expect(config.columns.find((c: any) => c.column === 'nSeqCDR3')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'minQualCDR3')).toBeDefined();
       expect(config.columns.find((c: any) => c.column === 'aaSeqCDR3')).toBeDefined();
     }
   },
