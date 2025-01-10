@@ -31,7 +31,7 @@
       "support": "mailto:support@milaboratories.com",
       "description": "Extract TCR / BCR clonotypes from next-generation sequencing data",
       "longDescription": "file:../docs/description.md",
-      "changelog": "file:../CHANGELOG.md",
+      "changelog": "file:./CHANGELOG.md",
       "tags": [
         "upstream",
         "airr",
