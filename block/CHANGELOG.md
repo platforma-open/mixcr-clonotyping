@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 1.7.7
+
+### Patch Changes
+
+- 983fedf: chore: fix changelog
+
 ## 1.7.6
 
 ### Patch Changes
