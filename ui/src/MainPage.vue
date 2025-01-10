@@ -1,15 +1,9 @@
 <script setup lang="ts">
-import { AgGridVue } from '@ag-grid-community/vue3';
+import { AgGridVue } from 'ag-grid-vue3';
 
-import { ClientSideRowModelModule } from '@ag-grid-community/client-side-row-model';
-import {
-  ColDef,
-  GridApi,
-  GridOptions,
-  GridReadyEvent,
-  ModuleRegistry
-} from '@ag-grid-community/core';
-import { PlId } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
+import { ClientSideRowModelModule } from 'ag-grid-enterprise';
+import { ColDef, GridApi, GridOptions, GridReadyEvent, ModuleRegistry } from 'ag-grid-enterprise';
+import type { PlId, Qc } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
 import {
   AgGridTheme,
   PlAgOverlayLoading,
@@ -18,17 +12,21 @@ import {
   PlBtnGhost,
   PlMaskIcon24,
   PlSlideModal,
-  PlAgTextAndButtonCell
+  PlAgTextAndButtonCell,
+  PlAgCellStatusTag,
+  makeRowNumberColDef,
+  autoSizeRowNumberColumn
 } from '@platforma-sdk/ui-vue';
 import { refDebounced, whenever } from '@vueuse/core';
 import { reactive, shallowRef, watch } from 'vue';
-import AlignmentStatsCell from './AlignmentStatsCell.vue';
 import { useApp } from './app';
-import ChainsStatsCell from './ChainsStatsCell.vue';
 import ProgressCell from './ProgressCell.vue';
 import { MiXCRResult, MiXCRResultsFull } from './results';
 import SampleReportPanel from './SampleReportPanel.vue';
 import SettingsPanel from './SettingsPanel.vue';
+import { getAlignmentChartSettings } from './charts/alignmentChartSettings';
+import { getChainsChartSettings } from './charts/chainsChartSettings';
+import { PlAgChartStackedBarCell } from '@platforma-sdk/ui-vue';
 
 const app = useApp();
 
@@ -42,13 +40,13 @@ const data = reactive<{
   sampleReportOpen: boolean;
   selectedSample: PlId | undefined;
 }>({
-  settingsOpen: app.outputValues.started === false,
+  settingsOpen: app.model.outputs.started === false,
   sampleReportOpen: false,
   selectedSample: undefined
 });
 
 watch(
-  () => app.outputValues.started,
+  () => app.model.outputs.started,
   (newVal, oldVal) => {
     if (oldVal === false && newVal === true) data.settingsOpen = false;
     if (oldVal === true && newVal === false) data.settingsOpen = true;
@@ -66,9 +64,12 @@ whenever(
 
 ModuleRegistry.registerModules([ClientSideRowModelModule]);
 
+const qcPriority = { OK: 0, WARN: 1, ALERT: 2 };
+
 const gridApi = shallowRef<GridApi<any>>();
 const onGridReady = (params: GridReadyEvent) => {
   gridApi.value = params.api;
+  autoSizeRowNumberColumn(params.api);
 };
 
 const defaultColumnDef: ColDef = {
@@ -78,6 +79,7 @@ const defaultColumnDef: ColDef = {
 };
 
 const columnDefs: ColDef[] = [
+  makeRowNumberColDef(),
   {
     colId: 'label',
     field: 'label',
@@ -98,33 +100,60 @@ const columnDefs: ColDef[] = [
     cellStyle: {
       '--ag-cell-horizontal-padding': '0px',
       '--ag-cell-vertical-padding': '0px'
-      // '--ag-cell-horizontal-border': 'solid rgb(150, 150, 200);',
-      // 'border-width': '0'
+    }
+  },
+  {
+    colId: 'qc',
+    field: 'qc',
+    width: 96,
+    cellRendererSelector: (cellData) => {
+      const type = (cellData.data.qc as MiXCRResult['qc'])?.reduce(
+        (result: Qc[number]['status'], item) =>
+          qcPriority[item.status] > qcPriority[result] ? item.status : result,
+        'OK'
+      );
+      return {
+        component: PlAgCellStatusTag,
+        params: { type }
+      };
+    },
+    headerName: 'Quality',
+    cellStyle: {
+      '--ag-cell-horizontal-padding': '0px',
+      '--ag-cell-vertical-padding': '0px'
     }
   },
   {
     colId: 'alignmentStats',
-    field: 'alignReport',
-    cellRenderer: 'AlignmentStatsCell',
     headerName: 'Alignments',
     flex: 1,
     cellStyle: {
       '--ag-cell-horizontal-padding': '12px'
-      // '--ag-cell-horizontal-border': 'solid rgb(150, 150, 200);',
-      // 'border-width': '0'
-    }
+    },
+    cellRendererSelector: (cellData) => {
+      const value = getAlignmentChartSettings(cellData.data.alignReport);
+      return {
+        component: PlAgChartStackedBarCell,
+        params: { value }
+      };
+    },
   },
   {
     colId: 'chainsStats',
-    field: 'alignReport',
-    cellRenderer: 'ChainsStatsCell',
     headerName: 'Chains',
     flex: 1,
     cellStyle: {
       '--ag-cell-horizontal-padding': '12px'
       // '--ag-cell-horizontal-border': 'solid rgb(150, 150, 200);',
       // 'border-width': '0'
-    }
+    },
+    cellRendererSelector: (cellData) => {
+      const value = getChainsChartSettings(cellData.data.alignReport);
+      return {
+        component: PlAgChartStackedBarCell,
+        params: { value }
+      };
+    },
   }
 ];
 
@@ -139,9 +168,7 @@ const gridOptions: GridOptions<MiXCRResult> = {
     data.sampleReportOpen = data.selectedSample !== undefined;
   },
   components: {
-    AlignmentStatsCell,
     ProgressCell,
-    ChainsStatsCell,
     PlAgTextAndButtonCell
   }
 };
@@ -176,20 +203,20 @@ const gridOptions: GridOptions<MiXCRResult> = {
   <PlSlideModal
     v-model="data.settingsOpen"
     :shadow="true"
-    :close-on-outside-click="app.outputValues.started"
+    :close-on-outside-click="app.model.outputs.started"
   >
     <template #title>Settings</template>
     <SettingsPanel />
   </PlSlideModal>
   <PlSlideModal
     v-model="data.sampleReportOpen"
-    :close-on-outside-click="app.outputValues.started"
+    :close-on-outside-click="app.model.outputs.started"
     width="80%"
   >
     <template #title>
       Results for
       {{
-        (data.selectedSample ? app.outputValues.sampleLabels?.[data.selectedSample] : undefined) ??
+        (data.selectedSample ? app.model.outputs.sampleLabels?.[data.selectedSample] : undefined) ??
         '...'
       }}
     </template>

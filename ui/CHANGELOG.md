@@ -1,5 +1,39 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.6.8
+
+### Patch Changes
+
+- 9454329: Update ui-vue to 1.21.21, model to 1.21.20
+- Updated dependencies [9454329]
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.4.4
+
+## 1.6.7
+
+### Patch Changes
+
+- 02b681a: use PlChartStackedBar component
+- Updated dependencies [02b681a]
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.4.3
+
+## 1.6.6
+
+### Patch Changes
+
+- b59aa03: added PlAgCellProgress
+
+## 1.6.5
+
+### Patch Changes
+
+- b27bcb1: add PlAgCellStatusTag (need update platforma deps)
+
+## 1.6.4
+
+### Patch Changes
+
+- 3547353: Dependancy versions bump, compatibility fixes
+
 ## 1.6.3
 
 ### Patch Changes

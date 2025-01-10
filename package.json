@@ -34,8 +34,5 @@
         "@milaboratories/uikit": "file:/Users/poslavskysv/Projects/milab/platforma/platforma-sdk/lib/ui/uikit/package.tgz"
       }
     }
-  },
-  "pnpm": {
-    "overrides": {}
   }
 }

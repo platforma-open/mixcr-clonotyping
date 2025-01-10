@@ -1,5 +1,29 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 1.9.8
+
+### Patch Changes
+
+- 9454329: Update ui-vue to 1.21.21, model to 1.21.20
+
+## 1.9.7
+
+### Patch Changes
+
+- e1fe8bf: revert exec braces
+
+## 1.9.6
+
+### Patch Changes
+
+- a6f9198: wf: escape braces or else backend will try to eval these expressions and fail with error
+
+## 1.9.5
+
+### Patch Changes
+
+- 02b681a: use PlChartStackedBar component
+
 ## 1.9.4
 
 ### Patch Changes

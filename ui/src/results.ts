@@ -24,12 +24,12 @@ export type MiXCRResult = {
 export const MiXCRResultsMap = computed(() => {
   const app = useApp();
 
-  const sampleLabels = app.outputValues.sampleLabels;
+  const sampleLabels = app.model.outputs.sampleLabels;
   if (sampleLabels === undefined) return undefined;
 
   // keys for qc's are calculated as soon as input data have locked inputs
   // (as early as possible to tell the list of samples we are analyzing here)
-  const qc = app.outputValues.qc;
+  const qc = app.model.outputs.qc;
   if (qc === undefined) return undefined;
 
   const resultMap = new Map<string, MiXCRResult>();
@@ -51,14 +51,14 @@ export const MiXCRResultsMap = computed(() => {
     result.qc = ReactiveFileContent.getContentJson(qcData.value.handle, Qc).value;
   }
 
-  const logs = app.outputValues.logs;
+  const logs = app.model.outputs.logs;
   if (logs)
     for (const logData of logs.data) {
       const sampleId = logData.key[0] as string;
       if (resultMap.get(sampleId)) resultMap.get(sampleId)!.logHandle = logData.value;
     }
 
-  const reports = app.outputValues.reports;
+  const reports = app.model.outputs.reports;
 
   if (reports)
     for (const report of reports.data) {

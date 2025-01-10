@@ -1,6 +1,5 @@
-import { ImportFileHandle, PlRef, Ref, ValueType } from '@platforma-sdk/model';
-import { ZodAnyDef, ZodSchema, z } from 'zod';
-import { PlId } from './helpers';
+import { ImportFileHandle, PlRef } from '@platforma-sdk/model';
+import { z } from 'zod';
 
 const Species = z.union([
   z.literal('hsa'),
@@ -25,16 +24,14 @@ export type PresetFile = z.infer<typeof PresetFile>;
 export const Preset = z.discriminatedUnion('type', [PresetName, PresetFile]);
 export type Preset = z.infer<typeof Preset>;
 
-export const BlockArgsValid = z
-  .object({
-    input: PlRef,
-    preset: Preset,
-    species: z.string().optional(),
-    limitInput: z.number().int().optional(),
-    title: z.string().optional(),
-    presetCommonName: z.string().optional()
-  })
-  .strict();
+export const BlockArgsValid = z.object({
+  input: PlRef,
+  preset: Preset,
+  species: z.string().optional(),
+  limitInput: z.number().int().optional(),
+  title: z.string().optional(),
+  presetCommonName: z.string().optional()
+});
 export type BlockArgsValid = z.infer<typeof BlockArgsValid>;
 
 export const BlockArgs = BlockArgsValid.partial({ input: true, preset: true });

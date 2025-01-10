@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { MiXCRResult } from './results';
-import AlignmentRow from './components/AlignmentRow.vue';
-import ChainRow from './components/ChainRow.vue';
+import AlignmentsChart from './charts/AlignmentsChart.vue';
+import ChainsChart from './charts/ChainsChart.vue';
 
 defineProps<{
     sampleData: MiXCRResult
@@ -9,8 +9,6 @@ defineProps<{
 </script>
 
 <template>
-    <h4>Alignments</h4>
-    <AlignmentRow size="large" :align-report="sampleData.alignReport" />
-    <h4>Chain Usage</h4>
-    <ChainRow size="large" :align-report="sampleData.alignReport" />
+    <AlignmentsChart :align-report="sampleData.alignReport" />
+    <ChainsChart :align-report="sampleData.alignReport" />
 </template>

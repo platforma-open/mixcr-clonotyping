@@ -1,14 +1,17 @@
 <script lang="ts" setup>
-import QualityLabel from './QualityLabel.vue';
 import { computed, reactive } from 'vue';
-import { QcCheckResult, QcCheckDescriptions } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
+import {
+  QcCheckResult,
+  QcCheckDescriptions
+} from '@platforma-open/milaboratories.mixcr-clonotyping.model';
+import { PlStatusTag, PlStatusTagType } from '@platforma-sdk/ui-vue';
 
 const props = defineProps<{
   value: QcCheckResult;
 }>();
 
 const data = reactive({
-  expanded: false,
+  expanded: false
 });
 
 const description = computed(() => {
@@ -20,11 +23,12 @@ const description = computed(() => {
 <template>
   <div class="qc-section" :class="{ expanded: data.expanded }">
     <div class="qc-section__status" @click.stop="data.expanded = !data.expanded">
-      <quality-label :level="value.status" />
+      <PlStatusTag :type="value.status" />
     </div>
     <div class="qc-section__text">
-      <div class="qc-section__label" @click.stop="data.expanded = !data.expanded">{{ value.check.label }}: {{
-        value.payload.printedValue }}</div>
+      <div class="qc-section__label" @click.stop="data.expanded = !data.expanded">
+        {{ value.check.label }}: {{ value.payload.printedValue }}
+      </div>
       <div class="qc-section__description">{{ description }}</div>
     </div>
   </div>
@@ -83,5 +87,9 @@ const description = computed(() => {
 .qc-section.expanded {
   --display: block;
   --bg: var(--bg-base-light);
+}
+
+.qc-section .pl-status-tag {
+  cursor: pointer;
 }
 </style>
