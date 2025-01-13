@@ -245,7 +245,7 @@ getColumns := func(blockId, featureParams) {
           "annotations": {
             "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "FR1 nt",
-            "pl7.app/table/visibility": "default",
+            "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "18000"
           }
         }
@@ -284,7 +284,7 @@ getColumns := func(blockId, featureParams) {
           "annotations": {
             "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "FR2 nt",
-            "pl7.app/table/visibility": "default",
+            "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "17000"
           }
         }
@@ -323,7 +323,7 @@ getColumns := func(blockId, featureParams) {
           "annotations": {
             "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "FR3 nt",
-            "pl7.app/table/visibility": "default",
+            "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "16000"
           }
         }
@@ -362,7 +362,7 @@ getColumns := func(blockId, featureParams) {
           "annotations": {
             "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "FR4 nt",
-            "pl7.app/table/visibility": "default",
+            "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "15000"
           }
         }
@@ -401,7 +401,7 @@ getColumns := func(blockId, featureParams) {
           "annotations": {
             "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "CDR1 nt",
-            "pl7.app/table/visibility": "default",
+            "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "17500"
           }
         }
@@ -440,7 +440,7 @@ getColumns := func(blockId, featureParams) {
           "annotations": {
             "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "CDR2 nt",
-            "pl7.app/table/visibility": "default",
+            "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "16500"
           }
         }
@@ -632,7 +632,7 @@ getColumns := func(blockId, featureParams) {
           "annotations": {
             "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "CDR3 aa",
-            "pl7.app/table/visibility": "optional",
+            "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "12000"
           }
         }
@@ -651,7 +651,7 @@ getColumns := func(blockId, featureParams) {
           "annotations": {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "FR1 imputed nt",
-            "pl7.app/table/visibility": "default",
+            "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "11000"
           }
         }
@@ -670,7 +670,7 @@ getColumns := func(blockId, featureParams) {
           "annotations": {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "FR2 imputed nt",
-            "pl7.app/table/visibility": "default",
+            "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "10000"
           }
         }
@@ -689,7 +689,7 @@ getColumns := func(blockId, featureParams) {
           "annotations": {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "FR3 imputed nt",
-            "pl7.app/table/visibility": "default",
+            "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "9000"
           }
         }
@@ -708,7 +708,7 @@ getColumns := func(blockId, featureParams) {
           "annotations": {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "FR4 imputed nt",
-            "pl7.app/table/visibility": "default",
+            "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "8000"
           }
         }
@@ -727,7 +727,7 @@ getColumns := func(blockId, featureParams) {
           "annotations": {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "CDR1 imputed nt",
-            "pl7.app/table/visibility": "default",
+            "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "10500"
           }
         }
@@ -746,7 +746,7 @@ getColumns := func(blockId, featureParams) {
           "annotations": {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "CDR2 imputed nt",
-            "pl7.app/table/visibility": "default",
+            "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "9500"
           }
         }
@@ -765,7 +765,7 @@ getColumns := func(blockId, featureParams) {
           "annotations": {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "CDR3 imputed nt",
-            "pl7.app/table/visibility": "default",
+            "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "8500"
           }
         }
@@ -784,7 +784,7 @@ getColumns := func(blockId, featureParams) {
           "annotations": {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "FR1 imputed aa",
-            "pl7.app/table/visibility": "default",
+            "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "7500"
           }
         }
@@ -803,7 +803,7 @@ getColumns := func(blockId, featureParams) {
           "annotations": {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "FR2 imputed aa",
-            "pl7.app/table/visibility": "default",
+            "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "6500"
           }
         }
@@ -822,7 +822,7 @@ getColumns := func(blockId, featureParams) {
           "annotations": {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "FR3 imputed aa",
-            "pl7.app/table/visibility": "default",
+            "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "5500"
           }
         }
@@ -841,7 +841,7 @@ getColumns := func(blockId, featureParams) {
           "annotations": {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "FR4 imputed aa",
-            "pl7.app/table/visibility": "default",
+            "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "4500"
           }
         }
@@ -860,7 +860,7 @@ getColumns := func(blockId, featureParams) {
           "annotations": {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "CDR1 imputed aa",
-            "pl7.app/table/visibility": "default",
+            "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "7000"
           }
         }
@@ -879,7 +879,7 @@ getColumns := func(blockId, featureParams) {
           "annotations": {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "CDR2 imputed aa",
-            "pl7.app/table/visibility": "default",
+            "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "6000"
           }
         }
@@ -898,7 +898,7 @@ getColumns := func(blockId, featureParams) {
           "annotations": {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "CDR3 imputed aa",
-            "pl7.app/table/visibility": "default",
+            "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "5000"
           }
         }
@@ -1047,7 +1047,7 @@ getColumns := func(blockId, featureParams) {
           "annotations": {
             "pl7.app/vdj/imputed": "false",
             "pl7.app/label": assemblingFeature + " nt",
-            "pl7.app/table/visibility": "optional",
+            "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "11000"
           }
         }
@@ -1066,7 +1066,7 @@ getColumns := func(blockId, featureParams) {
           "annotations": {
             "pl7.app/vdj/imputed": "false",
             "pl7.app/label": assemblingFeature + " aa",
-            "pl7.app/table/visibility": "optional",
+            "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "10500"
           }
         }
@@ -1085,7 +1085,7 @@ getColumns := func(blockId, featureParams) {
           "annotations": {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": assemblingFeature + " imputed nt",
-            "pl7.app/table/visibility": "optional",
+            "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "4000"
           }
         }
@@ -1104,7 +1104,7 @@ getColumns := func(blockId, featureParams) {
           "annotations": {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": assemblingFeature + " imputed aa",
-            "pl7.app/table/visibility": "optional",
+            "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "3500"
           }
         }
@@ -1226,6 +1226,65 @@ getColumns := func(blockId, featureParams) {
             "pl7.app/label": "AA mutations rate in V gene",
             "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "100"
+          }
+        }
+      }, {
+        "column": "nMutationsCountFR4",
+        "id": "n-mutations-count-fr4",
+        "allowNA": true,
+        "naRegex": "region_not_covered",
+        "spec": {
+          "valueType": "Int",
+          "name": "pl7.app/vdj/sequence/nMutationsCount",
+          "annotations": {
+            "pl7.app/label": "Nt mutations count in J gene",
+            "pl7.app/table/visibility": "optional",
+            "pl7.app/table/orderPriority": "60"
+          }
+        }
+      },
+      {
+        "column": "aaMutationsCountFR4",
+        "id": "aa-mutations-count-fr4",
+        "allowNA": true,
+        "naRegex": "region_not_covered",
+        "spec": {
+          "valueType": "Int",
+          "name": "pl7.app/vdj/sequence/aaMutationsCount",
+          "annotations": {
+            "pl7.app/label": "AA mutations count in J gene",
+            "pl7.app/table/visibility": "optional",
+            "pl7.app/table/orderPriority": "50"
+          }
+        }
+      },
+      {
+        "column": "nMutationsRateFR4",
+        "id": "n-mutations-rate-fr4",
+        "allowNA": true,
+        "naRegex": "region_not_covered",
+        "spec": {
+          "valueType": "Double",
+          "name": "pl7.app/vdj/sequence/nMutationsRate",
+          "annotations": {
+            "pl7.app/label": "Nt mutations rate in J gene",
+            "pl7.app/table/visibility": "optional",
+            "pl7.app/table/orderPriority": "40"
+          }
+        }
+      },
+      {
+        "column": "aaMutationsRateFR4",
+        "id": "aa-mutations-rate-fr4",
+        "allowNA": true,
+        "naRegex": "region_not_covered",
+        "spec": {
+          "valueType": "Double",
+          "name": "pl7.app/vdj/sequence/aaMutationsRate",
+          "annotations": {
+            "pl7.app/label": "AA mutations rate in J gene",
+            "pl7.app/table/visibility": "optional",
+            "pl7.app/table/orderPriority": "30"
           }
         }
       }]

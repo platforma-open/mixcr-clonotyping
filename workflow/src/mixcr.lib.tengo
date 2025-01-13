@@ -26,7 +26,13 @@ addAdditionalColumnArgs := func(mixcrCmdBuilder, featureParams) {
 		arg("--append-export-clones-field").
 		arg("-nFeature").arg("DRegion").arg("germline").
 		arg("--append-export-clones-field").
-		arg("-nFeature").arg("JRegion").arg("germline")
+		arg("-nFeature").arg("JRegion").arg("germline").
+		arg("--append-export-clones-field").
+		arg("-isProductive").arg("CDR3").
+		arg("--append-export-clones-field").
+		arg("-isOOF").arg("CDR3").
+		arg("--append-export-clones-field").
+		arg("-hasStops").arg("CDR3")
 
 	
 	if addColumns {
@@ -72,6 +78,14 @@ addAdditionalColumnArgs := func(mixcrCmdBuilder, featureParams) {
 				arg("-nMutations").arg("FR4").
 				arg("--append-export-clones-field").
 				arg("-aaMutations").arg("FR4").
+				arg("--append-export-clones-field").
+				arg("-nMutationsCount").arg("FR4").
+				arg("--append-export-clones-field").
+				arg("-aaMutationsCount").arg("FR4").
+				arg("--append-export-clones-field").
+				arg("-nMutationsRate").arg("FR4").
+				arg("--append-export-clones-field").
+				arg("-aaMutationsRate").arg("FR4").
 				arg("--append-export-clones-field").
 				arg("-nMutationsCount").arg(mutationVFeature).
 				arg("--append-export-clones-field").

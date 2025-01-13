@@ -121,7 +121,7 @@ self.body(func(inputs) {
 		mutationVFeature := featureSpec.mutationVFeature
 		columnsList += ["nMutations"+mutationVFeature, "aaMutations"+mutationVFeature, "nMutationsCount"+mutationVFeature,
 						"aaMutationsCount"+mutationVFeature, "nMutationsRate"+mutationVFeature, "aaMutationsRate"+mutationVFeature,
-						"nMutationsFR4", "aaMutationsFR4"]
+						"nMutationsFR4", "aaMutationsFR4", "nMutationsCountFR4", "aaMutationsCountFR4", "nMutationsRateFR4", "aaMutationsRateFR4"]
 	}
 
 	// filter pfconvParams by column name and get a list of fields from it
