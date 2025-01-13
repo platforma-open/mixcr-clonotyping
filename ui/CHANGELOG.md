@@ -1,5 +1,16 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.7.0
+
+### Minor Changes
+
+- 8652c07: new columns added
+
+### Patch Changes
+
+- Updated dependencies [8652c07]
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.5.0
+
 ## 1.6.8
 
 ### Patch Changes

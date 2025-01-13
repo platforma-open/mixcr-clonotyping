@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.5.0
+
+### Minor Changes
+
+- 8652c07: new columns added
+
 ## 1.4.4
 
 ### Patch Changes
