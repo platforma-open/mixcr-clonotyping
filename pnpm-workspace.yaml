@@ -8,11 +8,11 @@ packages:
 catalog:
   '@platforma-sdk/workflow-tengo': ^2.9.6
   '@platforma-sdk/model': ^1.21.20
-  '@platforma-sdk/ui-vue': ^1.21.24
+  '@platforma-sdk/ui-vue': ^1.21.25
   '@platforma-sdk/tengo-builder': ^1.17.5
-  '@platforma-sdk/block-tools': ^2.5.3
+  '@platforma-sdk/block-tools': ^2.5.5
 
-  '@platforma-sdk/test': ^1.21.22
+  '@platforma-sdk/test': ^1.21.28
   '@milaboratories/helpers': ^1.6.11
 
   '@milaboratories/software-pframes-conv': 2.1.5
@@ -32,6 +32,7 @@ catalog:
   'vite': ^6.0.7
   'vitest': ^2.1.8
   '@vitejs/plugin-vue': ^5.2.1
+  'rollup-plugin-sourcemaps2': ^0.4.3
 
   '@vueuse/core': ^12.4.0
 
@@ -42,5 +43,5 @@ catalog:
 
   # other blocks used in tests
 
-  '@platforma-open/milaboratories.samples-and-data': ^1.9.4
+  '@platforma-open/milaboratories.samples-and-data': ^1.9.5
   '@platforma-open/milaboratories.samples-and-data.model': ^1.9.0

@@ -25,6 +25,7 @@
     "typescript": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:",
-    "vue-tsc": "catalog:"
+    "vue-tsc": "catalog:",
+    "rollup-plugin-sourcemaps2": "catalog:"
   }
 }
