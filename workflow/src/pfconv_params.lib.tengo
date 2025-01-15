@@ -17,20 +17,20 @@ getColumns := func(blockId, featureParams) {
   cellTagsList := []
   if len(cellTags) > 0 {
     for tag in cellTags {
-    
+
     }
   }
   cols := {
-    "axes": [
+    axes: [
       {
-        "column": "cloneId",
-        "spec": {
-          "name": "pl7.app/vdj/cloneId",
-          "type": "Long",
-          "domain": {
+        column: "cloneId",
+        spec: {
+          name: "pl7.app/vdj/cloneId",
+          type: "Long",
+          domain: {
             "pl7.app/blockId": blockId
           },
-          "annotations": {
+          annotations: {
             "pl7.app/min": "0",
             "pl7.app/label": "Clone id",
             "pl7.app/table/visibility": "optional",
@@ -39,16 +39,16 @@ getColumns := func(blockId, featureParams) {
         }
       }
     ],
-    "columns": [
+    columns: [
       {
-        "column": "cellGroup",
-        "id": "cell-group",
-        "naRegex": "undefined|contamination",
-        "allowNA": true,
-        "spec": {
-          "name": "pl7.app/vdj/cellGroup",
-          "valueType": "Long",
-          "annotations": {
+        column: "cellGroup",
+        id: "cell-group",
+        naRegex: "undefined|contamination",
+        allowNA: true,
+        spec: {
+          name: "pl7.app/vdj/cellGroup",
+          valueType: "Long",
+          annotations: {
             "pl7.app/min": "0",
             "pl7.app/label": "Cell group number",
             "pl7.app/table/visibility": "default",
@@ -57,13 +57,13 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "readCount",
-        "id": "read-count",
-        "allowNA": false,
-        "spec": {
-          "name": "pl7.app/vdj/readCount",
-          "valueType": "Long",
-          "annotations": {
+        column: "readCount",
+        id: "read-count",
+        allowNA: false,
+        spec: {
+          name: "pl7.app/vdj/readCount",
+          valueType: "Long",
+          annotations: {
             "pl7.app/min": "1",
             "pl7.app/label": "Number Of Reads",
             "pl7.app/table/visibility": "default",
@@ -72,13 +72,13 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "readFraction",
-        "id": "read-fraction",
-        "allowNA": false,
-        "spec": {
-          "name": "pl7.app/vdj/readFraction",
-          "valueType": "Double",
-          "annotations": {
+        column: "readFraction",
+        id: "read-fraction",
+        allowNA: false,
+        spec: {
+          name: "pl7.app/vdj/readFraction",
+          valueType: "Double",
+          annotations: {
             "pl7.app/min": "0",
             "pl7.app/max": "1",
             "pl7.app/label": "Fraction of reads",
@@ -88,13 +88,13 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "uniqueMoleculeCount",
-        "id": "umi-count",
-        "allowNA": false,
-        "spec": {
-          "name": "pl7.app/vdj/uniqueMoleculeCount",
-          "valueType": "Long",
-          "annotations": {
+        column: "uniqueMoleculeCount",
+        id: "umi-count",
+        allowNA: false,
+        spec: {
+          name: "pl7.app/vdj/uniqueMoleculeCount",
+          valueType: "Long",
+          annotations: {
             "pl7.app/min": "1",
             "pl7.app/label": "Number of UMI",
             "pl7.app/table/visibility": "default",
@@ -103,13 +103,13 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "uniqueMoleculeFraction",
-        "id": "umi-fraction",
-        "allowNA": false,
-        "spec": {
-          "name": "pl7.app/vdj/uniqueMoleculeFraction",
-          "valueType": "Double",
-          "annotations": {
+        column: "uniqueMoleculeFraction",
+        id: "umi-fraction",
+        allowNA: false,
+        spec: {
+          name: "pl7.app/vdj/uniqueMoleculeFraction",
+          valueType: "Double",
+          annotations: {
             "pl7.app/min": "0",
             "pl7.app/max": "1",
             "pl7.app/label": "Fraction of UMI",
@@ -119,18 +119,18 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "targetSequences",
-        "id": "n-seq-clonal-sequences",
-        "naRegex": "",
-        "allowNA": false,
-        "spec": {
-          "name": "pl7.app/vdj/sequence",
-          "valueType": "String",
-          "domain": {
+        column: "targetSequences",
+        id: "n-seq-clonal-sequences",
+        naRegex: "",
+        allowNA: false,
+        spec: {
+          name: "pl7.app/vdj/sequence",
+          valueType: "String",
+          domain: {
             "pl7.app/vdj/sequence": "clonalSequence",
             "pl7.app/alphabet": "nucleotide"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/type": "sequence",
             "pl7.app/label": "Clonal sequences",
             "pl7.app/table/visibility": "default",
@@ -139,18 +139,18 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "targetQualities",
-        "id": "clonal-qualities",
-        "naRegex": "",
-        "allowNA": false,
-        "spec": {
-          "name": "pl7.app/vdj/sequenceQuality",
-          "valueType": "String",
-          "domain": {
+        column: "targetQualities",
+        id: "clonal-qualities",
+        naRegex: "",
+        allowNA: false,
+        spec: {
+          name: "pl7.app/vdj/sequenceQuality",
+          valueType: "String",
+          domain: {
             "pl7.app/vdj/quality": "clonalQuality"
           },
-          "annotations": {
-            "type": "quality string",
+          annotations: {
+            type: "quality string",
             "pl7.app/label": "Clonal qualities",
             "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "4000"
@@ -158,18 +158,18 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "bestVHit",
-        "id": "best-v-hit",
-        "naRegex": "",
-        "allowNA": false,
-        "spec": {
-          "name": "pl7.app/vdj/geneHit",
-          "valueType": "String",
-          "domain": {
+        column: "bestVHit",
+        id: "best-v-hit",
+        naRegex: "",
+        allowNA: false,
+        spec: {
+          name: "pl7.app/vdj/geneHit",
+          valueType: "String",
+          domain: {
             "pl7.app/vdj/reference": "VGene"
           },
-          "annotations": {
-            "type": "V gene name",
+          annotations: {
+            type: "V gene name",
             "pl7.app/label": "Best V hit",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "21000"
@@ -177,17 +177,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "bestDHit",
-        "id": "best-d-hit",
-        "naRegex": "region_not_covered",
-        "spec": {
-          "name": "pl7.app/vdj/geneHit",
-          "valueType": "String",
-          "domain": {
+        column: "bestDHit",
+        id: "best-d-hit",
+        naRegex: "region_not_covered",
+        spec: {
+          name: "pl7.app/vdj/geneHit",
+          valueType: "String",
+          domain: {
             "pl7.app/vdj/reference": "DGene"
           },
-          "annotations": {
-            "type": "D gene name",
+          annotations: {
+            type: "D gene name",
             "pl7.app/label": "Best D hit",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "20500"
@@ -195,18 +195,18 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "bestJHit",
-        "id": "best-j-hit",
-        "naRegex": "region_not_covered",
-        "allowNA": false,
-        "spec": {
-          "name": "pl7.app/vdj/geneHit",
-          "valueType": "String",
-          "domain": {
+        column: "bestJHit",
+        id: "best-j-hit",
+        naRegex: "region_not_covered",
+        allowNA: false,
+        spec: {
+          name: "pl7.app/vdj/geneHit",
+          valueType: "String",
+          domain: {
             "pl7.app/vdj/reference": "JGene"
           },
-          "annotations": {
-            "type": "J gene name",
+          annotations: {
+            type: "J gene name",
             "pl7.app/label": "Best J hit",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "20000"
@@ -214,17 +214,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "bestCHit",
-        "id": "best-c-hit",
-        "naRegex": "region_not_covered",
-        "spec": {
-          "name": "pl7.app/vdj/geneHit",
-          "valueType": "String",
-          "domain": {
+        column: "bestCHit",
+        id: "best-c-hit",
+        naRegex: "region_not_covered",
+        spec: {
+          name: "pl7.app/vdj/geneHit",
+          valueType: "String",
+          domain: {
             "pl7.app/vdj/reference": "CGene"
           },
-          "annotations": {
-            "type": "C gene name",
+          annotations: {
+            type: "C gene name",
             "pl7.app/label": "Best C hit",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "19500"
@@ -232,17 +232,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "nSeqFR1",
-        "id": "n-seq-fr1",
-        "naRegex": "region_not_covered",
-        "spec": {
-          "name": "pl7.app/vdj/sequence",
-          "valueType": "String",
-          "domain": {
+        column: "nSeqFR1",
+        id: "n-seq-fr1",
+        naRegex: "region_not_covered",
+        spec: {
+          name: "pl7.app/vdj/sequence",
+          valueType: "String",
+          domain: {
             "pl7.app/vdj/feature": "FR1",
             "pl7.app/alphabet": "nucleotide"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "FR1 nt",
             "pl7.app/table/visibility": "optional",
@@ -251,17 +251,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "minQualFR1",
-        "id": "min-qual-fr1",
-        "naRegex": "region_not_covered",
-        "spec": {
-          "name": "pl7.app/vdj/sequenceQuality",
-          "valueType": "Int",
-          "domain": {
+        column: "minQualFR1",
+        id: "min-qual-fr1",
+        naRegex: "region_not_covered",
+        spec: {
+          name: "pl7.app/vdj/sequenceQuality",
+          valueType: "Int",
+          domain: {
             "pl7.app/vdj/quality": "minQuality",
             "pl7.app/vdj/feature": "FR1"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/min": "0",
             "pl7.app/max": "50",
             "pl7.app/label": "Min quality FR1",
@@ -271,17 +271,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "nSeqFR2",
-        "id": "n-seq-fr2",
-        "naRegex": "region_not_covered",
-        "spec": {
-          "name": "pl7.app/vdj/sequence",
-          "valueType": "String",
-          "domain": {
+        column: "nSeqFR2",
+        id: "n-seq-fr2",
+        naRegex: "region_not_covered",
+        spec: {
+          name: "pl7.app/vdj/sequence",
+          valueType: "String",
+          domain: {
             "pl7.app/vdj/feature": "FR2",
             "pl7.app/alphabet": "nucleotide"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "FR2 nt",
             "pl7.app/table/visibility": "optional",
@@ -290,17 +290,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "minQualFR2",
-        "id": "min-qual-fr2",
-        "naRegex": "region_not_covered",
-        "spec": {
-          "name": "pl7.app/vdj/sequenceQuality",
-          "valueType": "Int",
-          "domain": {
+        column: "minQualFR2",
+        id: "min-qual-fr2",
+        naRegex: "region_not_covered",
+        spec: {
+          name: "pl7.app/vdj/sequenceQuality",
+          valueType: "Int",
+          domain: {
             "pl7.app/vdj/quality": "minQuality",
             "pl7.app/vdj/feature": "FR2"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/min": "0",
             "pl7.app/max": "50",
             "pl7.app/label": "Min quality FR2",
@@ -310,17 +310,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "nSeqFR3",
-        "id": "n-seq-fr3",
-        "naRegex": "region_not_covered",
-        "spec": {
-          "name": "pl7.app/vdj/sequence",
-          "valueType": "String",
-          "domain": {
+        column: "nSeqFR3",
+        id: "n-seq-fr3",
+        naRegex: "region_not_covered",
+        spec: {
+          name: "pl7.app/vdj/sequence",
+          valueType: "String",
+          domain: {
             "pl7.app/vdj/feature": "FR3",
             "pl7.app/alphabet": "nucleotide"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "FR3 nt",
             "pl7.app/table/visibility": "optional",
@@ -329,17 +329,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "minQualFR3",
-        "id": "min-qual-fr3",
-        "naRegex": "region_not_covered",
-        "spec": {
-          "name": "pl7.app/vdj/sequenceQuality",
-          "valueType": "Int",
-          "domain": {
+        column: "minQualFR3",
+        id: "min-qual-fr3",
+        naRegex: "region_not_covered",
+        spec: {
+          name: "pl7.app/vdj/sequenceQuality",
+          valueType: "Int",
+          domain: {
             "pl7.app/vdj/quality": "minQuality",
             "pl7.app/vdj/feature": "FR3"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/min": "0",
             "pl7.app/max": "50",
             "pl7.app/label": "Min quality FR3",
@@ -349,17 +349,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "nSeqFR4",
-        "id": "n-seq-fr4",
-        "naRegex": "region_not_covered",
-        "spec": {
-          "name": "pl7.app/vdj/sequence",
-          "valueType": "String",
-          "domain": {
+        column: "nSeqFR4",
+        id: "n-seq-fr4",
+        naRegex: "region_not_covered",
+        spec: {
+          name: "pl7.app/vdj/sequence",
+          valueType: "String",
+          domain: {
             "pl7.app/vdj/feature": "FR4",
             "pl7.app/alphabet": "nucleotide"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "FR4 nt",
             "pl7.app/table/visibility": "optional",
@@ -368,17 +368,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "minQualFR4",
-        "id": "min-qual-fr4",
-        "naRegex": "region_not_covered",
-        "spec": {
-          "name": "pl7.app/vdj/sequenceQuality",
-          "valueType": "Int",
-          "domain": {
+        column: "minQualFR4",
+        id: "min-qual-fr4",
+        naRegex: "region_not_covered",
+        spec: {
+          name: "pl7.app/vdj/sequenceQuality",
+          valueType: "Int",
+          domain: {
             "pl7.app/vdj/quality": "minQuality",
             "pl7.app/vdj/feature": "FR4"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/min": "0",
             "pl7.app/max": "50",
             "pl7.app/label": "Min quality FR4",
@@ -388,17 +388,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "nSeqCDR1",
-        "id": "n-seq-cdr1",
-        "naRegex": "region_not_covered",
-        "spec": {
-          "name": "pl7.app/vdj/sequence",
-          "valueType": "String",
-          "domain": {
+        column: "nSeqCDR1",
+        id: "n-seq-cdr1",
+        naRegex: "region_not_covered",
+        spec: {
+          name: "pl7.app/vdj/sequence",
+          valueType: "String",
+          domain: {
             "pl7.app/vdj/feature": "CDR1",
             "pl7.app/alphabet": "nucleotide"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "CDR1 nt",
             "pl7.app/table/visibility": "optional",
@@ -407,17 +407,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "minQualCDR1",
-        "id": "min-qual-cdr1",
-        "naRegex": "region_not_covered",
-        "spec": {
-          "name": "pl7.app/vdj/minQualCDR1",
-          "valueType": "Int",
-          "domain": {
+        column: "minQualCDR1",
+        id: "min-qual-cdr1",
+        naRegex: "region_not_covered",
+        spec: {
+          name: "pl7.app/vdj/minQualCDR1",
+          valueType: "Int",
+          domain: {
             "pl7.app/vdj/quality": "minQuality",
             "pl7.app/vdj/feature": "CDR1"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/min": "0",
             "pl7.app/max": "50",
             "pl7.app/label": "Min quality CDR1",
@@ -427,17 +427,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "nSeqCDR2",
-        "id": "n-seq-cdr2",
-        "naRegex": "region_not_covered",
-        "spec": {
-          "name": "pl7.app/vdj/sequence",
-          "valueType": "String",
-          "domain": {
+        column: "nSeqCDR2",
+        id: "n-seq-cdr2",
+        naRegex: "region_not_covered",
+        spec: {
+          name: "pl7.app/vdj/sequence",
+          valueType: "String",
+          domain: {
             "pl7.app/vdj/feature": "CDR2",
             "pl7.app/alphabet": "nucleotide"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "CDR2 nt",
             "pl7.app/table/visibility": "optional",
@@ -446,17 +446,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "minQualCDR2",
-        "id": "min-qual-cdr2",
-        "naRegex": "region_not_covered",
-        "spec": {
-          "name": "pl7.app/vdj/sequenceQuality",
-          "valueType": "Int",
-          "domain": {
+        column: "minQualCDR2",
+        id: "min-qual-cdr2",
+        naRegex: "region_not_covered",
+        spec: {
+          name: "pl7.app/vdj/sequenceQuality",
+          valueType: "Int",
+          domain: {
             "pl7.app/vdj/quality": "minQuality",
             "pl7.app/vdj/feature": "CDR2"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/min": "0",
             "pl7.app/max": "50",
             "pl7.app/label": "Min quality CDR2",
@@ -466,17 +466,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "nSeqCDR3",
-        "id": "n-seq-cdr3",
-        "naRegex": "region_not_covered",
-        "spec": {
-          "valueType": "String",
-          "name": "pl7.app/vdj/sequence",
-          "domain": {
+        column: "nSeqCDR3",
+        id: "n-seq-cdr3",
+        naRegex: "region_not_covered",
+        spec: {
+          valueType: "String",
+          name: "pl7.app/vdj/sequence",
+          domain: {
             "pl7.app/vdj/feature": "CDR3",
             "pl7.app/alphabet": "nucleotide"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "CDR3 nt",
             "pl7.app/table/visibility": "default",
@@ -485,17 +485,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "minQualCDR3",
-        "id": "min-qual-cdr3",
-        "naRegex": "region_not_covered",
-        "spec": {
-          "name": "pl7.app/vdj/sequenceQuality",
-          "valueType": "Int",
-          "domain": {
+        column: "minQualCDR3",
+        id: "min-qual-cdr3",
+        naRegex: "region_not_covered",
+        spec: {
+          name: "pl7.app/vdj/sequenceQuality",
+          valueType: "Int",
+          domain: {
             "pl7.app/vdj/quality": "minQuality",
             "pl7.app/vdj/feature": "CDR3"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/min": "0",
             "pl7.app/max": "50",
             "pl7.app/label": "Min quality CDR3",
@@ -505,17 +505,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "aaSeqFR1",
-        "id": "aa-seq-fr1",
-        "naRegex": "region_not_covered",
-        "spec": {
-          "valueType": "String",
-          "name": "pl7.app/vdj/sequence",
-          "domain": {
+        column: "aaSeqFR1",
+        id: "aa-seq-fr1",
+        naRegex: "region_not_covered",
+        spec: {
+          valueType: "String",
+          name: "pl7.app/vdj/sequence",
+          domain: {
             "pl7.app/vdj/feature": "FR1",
             "pl7.app/alphabet": "aminoacid"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "FR1 aa",
             "pl7.app/table/visibility": "optional",
@@ -524,17 +524,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "aaSeqFR2",
-        "id": "aa-seq-fr2",
-        "naRegex": "region_not_covered",
-        "spec": {
-          "valueType": "String",
-          "name": "pl7.app/vdj/sequence",
-          "domain": {
+        column: "aaSeqFR2",
+        id: "aa-seq-fr2",
+        naRegex: "region_not_covered",
+        spec: {
+          valueType: "String",
+          name: "pl7.app/vdj/sequence",
+          domain: {
             "pl7.app/vdj/feature": "FR2",
             "pl7.app/alphabet": "aminoacid"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "FR2 aa",
             "pl7.app/table/visibility": "optional",
@@ -543,17 +543,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "aaSeqFR3",
-        "id": "aa-seq-fr3",
-        "naRegex": "region_not_covered",
-        "spec": {
-          "valueType": "String",
-          "name": "pl7.app/vdj/sequence",
-          "domain": {
+        column: "aaSeqFR3",
+        id: "aa-seq-fr3",
+        naRegex: "region_not_covered",
+        spec: {
+          valueType: "String",
+          name: "pl7.app/vdj/sequence",
+          domain: {
             "pl7.app/vdj/feature": "FR3",
             "pl7.app/alphabet": "aminoacid"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "FR3 aa",
             "pl7.app/table/visibility": "optional",
@@ -562,17 +562,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "aaSeqFR4",
-        "id": "aa-seq-fr4",
-        "naRegex": "region_not_covered",
-        "spec": {
-          "valueType": "String",
-          "name": "pl7.app/vdj/sequence",
-          "domain": {
+        column: "aaSeqFR4",
+        id: "aa-seq-fr4",
+        naRegex: "region_not_covered",
+        spec: {
+          valueType: "String",
+          name: "pl7.app/vdj/sequence",
+          domain: {
             "pl7.app/vdj/feature": "FR4",
             "pl7.app/alphabet": "aminoacid"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "FR4 aa",
             "pl7.app/table/visibility": "optional",
@@ -581,17 +581,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "aaSeqCDR1",
-        "id": "aa-seq-cdr1",
-        "naRegex": "region_not_covered",
-        "spec": {
-          "valueType": "String",
-          "name": "pl7.app/vdj/sequence",
-          "domain": {
+        column: "aaSeqCDR1",
+        id: "aa-seq-cdr1",
+        naRegex: "region_not_covered",
+        spec: {
+          valueType: "String",
+          name: "pl7.app/vdj/sequence",
+          domain: {
             "pl7.app/vdj/feature": "CDR1",
             "pl7.app/alphabet": "aminoacid"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "CDR1 aa",
             "pl7.app/table/visibility": "optional",
@@ -600,17 +600,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "aaSeqCDR2",
-        "id": "aa-seq-cdr2",
-        "naRegex": "region_not_covered",
-        "spec": {
-          "valueType": "String",
-          "name": "pl7.app/vdj/sequence",
-          "domain": {
+        column: "aaSeqCDR2",
+        id: "aa-seq-cdr2",
+        naRegex: "region_not_covered",
+        spec: {
+          valueType: "String",
+          name: "pl7.app/vdj/sequence",
+          domain: {
             "pl7.app/vdj/feature": "CDR2",
             "pl7.app/alphabet": "aminoacid"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "CDR2 aa",
             "pl7.app/table/visibility": "optional",
@@ -619,17 +619,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "aaSeqCDR3",
-        "id": "aa-seq-cdr3",
-        "naRegex": "region_not_covered",
-        "spec": {
-          "valueType": "String",
-          "name": "pl7.app/vdj/sequence",
-          "domain": {
+        column: "aaSeqCDR3",
+        id: "aa-seq-cdr3",
+        naRegex: "region_not_covered",
+        spec: {
+          valueType: "String",
+          name: "pl7.app/vdj/sequence",
+          domain: {
             "pl7.app/vdj/feature": "CDR3",
             "pl7.app/alphabet": "aminoacid"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "CDR3 aa",
             "pl7.app/table/visibility": "default",
@@ -638,17 +638,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "nSeqImputedFR1",
-        "id": "n-seq-imputed-fr1",
-        "naRegex": "",
-        "spec": {
-          "name": "pl7.app/vdj/sequence",
-          "valueType": "String",
-          "domain": {
+        column: "nSeqImputedFR1",
+        id: "n-seq-imputed-fr1",
+        naRegex: "",
+        spec: {
+          name: "pl7.app/vdj/sequence",
+          valueType: "String",
+          domain: {
             "pl7.app/vdj/feature": "FR1",
             "pl7.app/alphabet": "nucleotide"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "FR1 imputed nt",
             "pl7.app/table/visibility": "optional",
@@ -657,17 +657,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "nSeqImputedFR2",
-        "id": "n-seq-imputed-fr2",
-        "naRegex": "",
-        "spec": {
-          "name": "pl7.app/vdj/sequence",
-          "valueType": "String",
-          "domain": {
+        column: "nSeqImputedFR2",
+        id: "n-seq-imputed-fr2",
+        naRegex: "",
+        spec: {
+          name: "pl7.app/vdj/sequence",
+          valueType: "String",
+          domain: {
             "pl7.app/vdj/feature": "FR2",
             "pl7.app/alphabet": "nucleotide"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "FR2 imputed nt",
             "pl7.app/table/visibility": "optional",
@@ -676,17 +676,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "nSeqImputedFR3",
-        "id": "n-seq-imputed-fr3",
-        "naRegex": "",
-        "spec": {
-          "name": "pl7.app/vdj/sequence",
-          "valueType": "String",
-          "domain": {
+        column: "nSeqImputedFR3",
+        id: "n-seq-imputed-fr3",
+        naRegex: "",
+        spec: {
+          name: "pl7.app/vdj/sequence",
+          valueType: "String",
+          domain: {
             "pl7.app/vdj/feature": "FR3",
             "pl7.app/alphabet": "nucleotide"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "FR3 imputed nt",
             "pl7.app/table/visibility": "optional",
@@ -695,17 +695,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "nSeqImputedFR4",
-        "id": "n-seq-imputed-fr4",
-        "naRegex": "",
-        "spec": {
-          "name": "pl7.app/vdj/sequence",
-          "valueType": "String",
-          "domain": {
+        column: "nSeqImputedFR4",
+        id: "n-seq-imputed-fr4",
+        naRegex: "",
+        spec: {
+          name: "pl7.app/vdj/sequence",
+          valueType: "String",
+          domain: {
             "pl7.app/vdj/feature": "FR4",
             "pl7.app/alphabet": "nucleotide"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "FR4 imputed nt",
             "pl7.app/table/visibility": "optional",
@@ -714,17 +714,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "nSeqImputedCDR1",
-        "id": "n-seq-imputed-cdr1",
-        "naRegex": "",
-        "spec": {
-          "name": "pl7.app/vdj/sequence",
-          "valueType": "String",
-          "domain": {
+        column: "nSeqImputedCDR1",
+        id: "n-seq-imputed-cdr1",
+        naRegex: "",
+        spec: {
+          name: "pl7.app/vdj/sequence",
+          valueType: "String",
+          domain: {
             "pl7.app/vdj/feature": "CDR1",
             "pl7.app/alphabet": "nucleotide"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "CDR1 imputed nt",
             "pl7.app/table/visibility": "optional",
@@ -733,17 +733,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "nSeqImputedCDR2",
-        "id": "n-seq-imputed-cdr2",
-        "naRegex": "",
-        "spec": {
-          "name": "pl7.app/vdj/sequence",
-          "valueType": "String",
-          "domain": {
+        column: "nSeqImputedCDR2",
+        id: "n-seq-imputed-cdr2",
+        naRegex: "",
+        spec: {
+          name: "pl7.app/vdj/sequence",
+          valueType: "String",
+          domain: {
             "pl7.app/vdj/feature": "CDR2",
             "pl7.app/alphabet": "nucleotide"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "CDR2 imputed nt",
             "pl7.app/table/visibility": "optional",
@@ -752,17 +752,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "nSeqImputedCDR3",
-        "id": "n-seq-imputed-CDR3",
-        "naRegex": "",
-        "spec": {
-          "name": "pl7.app/vdj/sequence",
-          "valueType": "String",
-          "domain": {
+        column: "nSeqImputedCDR3",
+        id: "n-seq-imputed-CDR3",
+        naRegex: "",
+        spec: {
+          name: "pl7.app/vdj/sequence",
+          valueType: "String",
+          domain: {
             "pl7.app/vdj/feature": "CDR3",
             "pl7.app/alphabet": "nucleotide"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "CDR3 imputed nt",
             "pl7.app/table/visibility": "optional",
@@ -771,17 +771,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "aaSeqImputedFR1",
-        "id": "aa-seq-imputed-fr1",
-        "naRegex": "",
-        "spec": {
-          "valueType": "String",
-          "name": "pl7.app/vdj/sequence",
-          "domain": {
+        column: "aaSeqImputedFR1",
+        id: "aa-seq-imputed-fr1",
+        naRegex: "",
+        spec: {
+          valueType: "String",
+          name: "pl7.app/vdj/sequence",
+          domain: {
             "pl7.app/vdj/feature": "FR1",
             "pl7.app/alphabet": "aminoacid"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "FR1 imputed aa",
             "pl7.app/table/visibility": "optional",
@@ -790,17 +790,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "aaSeqImputedFR2",
-        "id": "aa-seq-imputed-fr2",
-        "naRegex": "",
-        "spec": {
-          "valueType": "String",
-          "name": "pl7.app/vdj/sequence",
-          "domain": {
+        column: "aaSeqImputedFR2",
+        id: "aa-seq-imputed-fr2",
+        naRegex: "",
+        spec: {
+          valueType: "String",
+          name: "pl7.app/vdj/sequence",
+          domain: {
             "pl7.app/vdj/feature": "FR2",
             "pl7.app/alphabet": "aminoacid"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "FR2 imputed aa",
             "pl7.app/table/visibility": "optional",
@@ -809,17 +809,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "aaSeqImputedFR3",
-        "id": "aa-seq-imputed-fr3",
-        "naRegex": "",
-        "spec": {
-          "valueType": "String",
-          "name": "pl7.app/vdj/sequence",
-          "domain": {
+        column: "aaSeqImputedFR3",
+        id: "aa-seq-imputed-fr3",
+        naRegex: "",
+        spec: {
+          valueType: "String",
+          name: "pl7.app/vdj/sequence",
+          domain: {
             "pl7.app/vdj/feature": "FR3",
             "pl7.app/alphabet": "aminoacid"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "FR3 imputed aa",
             "pl7.app/table/visibility": "optional",
@@ -828,17 +828,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "aaSeqImputedFR4",
-        "id": "aa-seq-imputed-fr4",
-        "naRegex": "",
-        "spec": {
-          "valueType": "String",
-          "name": "pl7.app/vdj/sequence",
-          "domain": {
+        column: "aaSeqImputedFR4",
+        id: "aa-seq-imputed-fr4",
+        naRegex: "",
+        spec: {
+          valueType: "String",
+          name: "pl7.app/vdj/sequence",
+          domain: {
             "pl7.app/vdj/feature": "FR4",
             "pl7.app/alphabet": "aminoacid"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "FR4 imputed aa",
             "pl7.app/table/visibility": "optional",
@@ -847,17 +847,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "aaSeqImputedCDR1",
-        "id": "aa-seq-imputed-cdr1",
-        "naRegex": "",
-        "spec": {
-          "valueType": "String",
-          "name": "pl7.app/vdj/sequence",
-          "domain": {
+        column: "aaSeqImputedCDR1",
+        id: "aa-seq-imputed-cdr1",
+        naRegex: "",
+        spec: {
+          valueType: "String",
+          name: "pl7.app/vdj/sequence",
+          domain: {
             "pl7.app/vdj/feature": "CDR1",
             "pl7.app/alphabet": "aminoacid"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "CDR1 imputed aa",
             "pl7.app/table/visibility": "optional",
@@ -866,17 +866,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "aaSeqImputedCDR2",
-        "id": "aa-seq-imputed-cdr2",
-        "naRegex": "",
-        "spec": {
-          "valueType": "String",
-          "name": "pl7.app/vdj/sequence",
-          "domain": {
+        column: "aaSeqImputedCDR2",
+        id: "aa-seq-imputed-cdr2",
+        naRegex: "",
+        spec: {
+          valueType: "String",
+          name: "pl7.app/vdj/sequence",
+          domain: {
             "pl7.app/vdj/feature": "CDR2",
             "pl7.app/alphabet": "aminoacid"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "CDR2 imputed aa",
             "pl7.app/table/visibility": "optional",
@@ -885,17 +885,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "aaSeqImputedCDR3",
-        "id": "aa-seq-imputed-CDR3",
-        "naRegex": "",
-        "spec": {
-          "valueType": "String",
-          "name": "pl7.app/vdj/sequence",
-          "domain": {
+        column: "aaSeqImputedCDR3",
+        id: "aa-seq-imputed-CDR3",
+        naRegex: "",
+        spec: {
+          valueType: "String",
+          name: "pl7.app/vdj/sequence",
+          domain: {
             "pl7.app/vdj/feature": "CDR3",
             "pl7.app/alphabet": "aminoacid"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": "CDR3 imputed aa",
             "pl7.app/table/visibility": "optional",
@@ -904,13 +904,13 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "isotype",
-        "id": "isotype",
-        "naRegex": "",
-        "spec": {
-          "valueType": "String",
-          "name": "pl7.app/vdj/isotype",
-          "annotations": {
+        column: "isotype",
+        id: "isotype",
+        naRegex: "",
+        spec: {
+          valueType: "String",
+          name: "pl7.app/vdj/isotype",
+          annotations: {
             "pl7.app/label": "IG isotype",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "19000"
@@ -918,14 +918,14 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "topChains",
-        "id": "top-chains",
-        "naRegex": "",
-        "allowNA": false,
-        "spec": {
-          "valueType": "String",
-          "name": "pl7.app/vdj/chain",
-          "annotations": {
+        column: "topChains",
+        id: "top-chains",
+        naRegex: "",
+        allowNA: false,
+        spec: {
+          valueType: "String",
+          name: "pl7.app/vdj/chain",
+          annotations: {
             "pl7.app/label": "Chain",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "21500"
@@ -933,13 +933,13 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "isProductive" + productiveFeature,
-        "id": "is-productive-" + assemblingFeature,
-        "allowNA": false,
-        "spec": {
-          "valueType": "String",
-          "name": "pl7.app/vdj/sequence/productive",
-          "annotations": {
+        column: "isProductive" + productiveFeature,
+        id: "is-productive-" + assemblingFeature,
+        allowNA: false,
+        spec: {
+          valueType: "String",
+          name: "pl7.app/vdj/sequence/productive",
+          annotations: {
             "pl7.app/label": "Productive",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "21400"
@@ -947,13 +947,13 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "isOOF" + productiveFeature,
-        "id": "is-oof-" + assemblingFeature,
-        "allowNA": false,
-        "spec": {
-          "valueType": "String",
-          "name": "pl7.app/vdj/sequence/containsOOF",
-          "annotations": {
+        column: "isOOF" + productiveFeature,
+        id: "is-oof-" + assemblingFeature,
+        allowNA: false,
+        spec: {
+          valueType: "String",
+          name: "pl7.app/vdj/sequence/containsOOF",
+          annotations: {
             "pl7.app/label": "Contains OOF",
             "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "20"
@@ -961,13 +961,13 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "hasStopsIn" + productiveFeature,
-        "id": "has-stops-in-" + assemblingFeature,
-        "allowNA": false,
-        "spec": {
-          "valueType": "String",
-          "name": "pl7.app/vdj/sequence/containsStopCodons",
-          "annotations": {
+        column: "hasStopsIn" + productiveFeature,
+        id: "has-stops-in-" + assemblingFeature,
+        allowNA: false,
+        spec: {
+          valueType: "String",
+          name: "pl7.app/vdj/sequence/containsStopCodons",
+          annotations: {
             "pl7.app/label": "Contains stop codons",
             "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "10"
@@ -975,16 +975,16 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "nSeqVRegionOfGermline",
-        "id": "n-seq-vregion-germline",
-        "spec": {
-          "name": "pl7.app/vdj/sequence",
-          "valueType": "String",
-          "domain": {
+        column: "nSeqVRegionOfGermline",
+        id: "n-seq-vregion-germline",
+        spec: {
+          name: "pl7.app/vdj/sequence",
+          valueType: "String",
+          domain: {
             "pl7.app/vdj/feature": "VRegion",
             "pl7.app/alphabet": "nucleotide"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "V germline",
             "pl7.app/table/visibility": "optional",
@@ -993,16 +993,16 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "nSeqDRegionOfGermline",
-        "id": "n-seq-dregion-germline",
-        "spec": {
-          "name": "pl7.app/vdj/sequence",
-          "valueType": "String",
-          "domain": {
+        column: "nSeqDRegionOfGermline",
+        id: "n-seq-dregion-germline",
+        spec: {
+          name: "pl7.app/vdj/sequence",
+          valueType: "String",
+          domain: {
             "pl7.app/vdj/feature": "DRegion",
             "pl7.app/alphabet": "nucleotide"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "D germline",
             "pl7.app/table/visibility": "optional",
@@ -1011,16 +1011,16 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "nSeqJRegionOfGermline",
-        "id": "n-seq-jregion-germline",
-        "spec": {
-          "name": "pl7.app/vdj/sequence",
-          "valueType": "String",
-          "domain": {
+        column: "nSeqJRegionOfGermline",
+        id: "n-seq-jregion-germline",
+        spec: {
+          name: "pl7.app/vdj/sequence",
+          valueType: "String",
+          domain: {
             "pl7.app/vdj/feature": "JRegion",
             "pl7.app/alphabet": "nucleotide"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "false",
             "pl7.app/label": "J germline",
             "pl7.app/table/visibility": "optional",
@@ -1029,22 +1029,22 @@ getColumns := func(blockId, featureParams) {
         }
       }
     ],
-    "storageFormat": "Binary",
-    "partitionKeyLength": 0
+    storageFormat: "Binary",
+    partitionKeyLength: 0
   }
   if addColumns {
     featureColumns := [{
-        "column": "nSeq" + assemblingFeature,
-        "id": "n-seq-" + assemblingFeature,
-        "naRegex": "region_not_covered",
-        "spec": {
-          "valueType": "String",
-          "name": "pl7.app/vdj/sequence",
-          "domain": {
+        column: "nSeq" + assemblingFeature,
+        id: "n-seq-" + assemblingFeature,
+        naRegex: "region_not_covered",
+        spec: {
+          valueType: "String",
+          name: "pl7.app/vdj/sequence",
+          domain: {
             "pl7.app/vdj/feature": assemblingFeature,
             "pl7.app/alphabet": "nucleotide"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "false",
             "pl7.app/label": assemblingFeature + " nt",
             "pl7.app/table/visibility": "default",
@@ -1053,17 +1053,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "aaSeq" + assemblingFeature,
-        "id": "aa-seq-" + assemblingFeature,
-        "naRegex": "region_not_covered",
-        "spec": {
-          "valueType": "String",
-          "name": "pl7.app/vdj/sequence",
-          "domain": {
+        column: "aaSeq" + assemblingFeature,
+        id: "aa-seq-" + assemblingFeature,
+        naRegex: "region_not_covered",
+        spec: {
+          valueType: "String",
+          name: "pl7.app/vdj/sequence",
+          domain: {
             "pl7.app/vdj/feature": assemblingFeature,
             "pl7.app/alphabet": "aminoacid"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "false",
             "pl7.app/label": assemblingFeature + " aa",
             "pl7.app/table/visibility": "default",
@@ -1072,17 +1072,17 @@ getColumns := func(blockId, featureParams) {
         }
       }]
     featureColumnsImputed := [{
-        "column": "nSeqImputed" + assemblingFeature,
-        "id": "n-seq-imputed-" + assemblingFeature,
-        "naRegex": "",
-        "spec": {
-          "name": "pl7.app/vdj/sequence",
-          "valueType": "String",
-          "domain": {
+        column: "nSeqImputed" + assemblingFeature,
+        id: "n-seq-imputed-" + assemblingFeature,
+        naRegex: "",
+        spec: {
+          name: "pl7.app/vdj/sequence",
+          valueType: "String",
+          domain: {
             "pl7.app/vdj/feature": assemblingFeature,
             "pl7.app/alphabet": "nucleotide"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": assemblingFeature + " imputed nt",
             "pl7.app/table/visibility": "default",
@@ -1091,17 +1091,17 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "aaSeqImputed" + assemblingFeature,
-        "id": "aa-seq-imputed-" + assemblingFeature,
-        "naRegex": "",
-        "spec": {
-          "valueType": "String",
-          "name": "pl7.app/vdj/sequence",
-          "domain": {
+        column: "aaSeqImputed" + assemblingFeature,
+        id: "aa-seq-imputed-" + assemblingFeature,
+        naRegex: "",
+        spec: {
+          valueType: "String",
+          name: "pl7.app/vdj/sequence",
+          domain: {
             "pl7.app/vdj/feature": assemblingFeature,
             "pl7.app/alphabet": "aminoacid"
           },
-          "annotations": {
+          annotations: {
             "pl7.app/vdj/imputed": "true",
             "pl7.app/label": assemblingFeature + " imputed aa",
             "pl7.app/table/visibility": "default",
@@ -1110,14 +1110,14 @@ getColumns := func(blockId, featureParams) {
         }
       }]
     mutationColumns := [{
-        "column": "nMutations" + mutationVFeature,
-        "id": "n-mutations-" + assemblingFeature,
-        "allowNA": true,
-        "naRegex": "None",
-        "spec": {
-          "valueType": "String",
-          "name": "pl7.app/vdj/sequence/nMutations",
-          "annotations": {
+        column: "nMutations" + mutationVFeature,
+        id: "n-mutations-" + assemblingFeature,
+        allowNA: true,
+        naRegex: "None",
+        spec: {
+          valueType: "String",
+          name: "pl7.app/vdj/sequence/nMutations",
+          annotations: {
             "pl7.app/label": "Nt mutations in V gene",
             "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "50"
@@ -1125,14 +1125,14 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "aaMutations" + mutationVFeature,
-        "id": "aa-mutations-" + assemblingFeature,
-        "allowNA": true,
-        "naRegex": "None",
-        "spec": {
-          "valueType": "String",
-          "name": "pl7.app/vdj/sequence/aaMutations",
-          "annotations": {
+        column: "aaMutations" + mutationVFeature,
+        id: "aa-mutations-" + assemblingFeature,
+        allowNA: true,
+        naRegex: "None",
+        spec: {
+          valueType: "String",
+          name: "pl7.app/vdj/sequence/aaMutations",
+          annotations: {
             "pl7.app/label": "AA mutations in V gene",
             "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "60"
@@ -1140,14 +1140,14 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "nMutationsFR4",
-        "id": "n-mutations-FR4",
-        "allowNA": true,
-        "naRegex": "None",
-        "spec": {
-          "valueType": "String",
-          "name": "pl7.app/vdj/sequence/nMutations",
-          "annotations": {
+        column: "nMutationsFR4",
+        id: "n-mutations-FR4",
+        allowNA: true,
+        naRegex: "None",
+        spec: {
+          valueType: "String",
+          name: "pl7.app/vdj/sequence/nMutations",
+          annotations: {
             "pl7.app/label": "Nt mutations in J gene",
             "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "30"
@@ -1155,14 +1155,14 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "aaMutationsFR4",
-        "id": "aa-mutations-FR4",
-        "allowNA": true,
-        "naRegex": "None",
-        "spec": {
-          "valueType": "String",
-          "name": "pl7.app/vdj/sequence/aaMutations",
-          "annotations": {
+        column: "aaMutationsFR4",
+        id: "aa-mutations-FR4",
+        allowNA: true,
+        naRegex: "None",
+        spec: {
+          valueType: "String",
+          name: "pl7.app/vdj/sequence/aaMutations",
+          annotations: {
             "pl7.app/label": "AA mutations in J gene",
             "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "40"
@@ -1170,14 +1170,14 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "nMutationsCount" + mutationVFeature,
-        "id": "n-mutations-count-" + assemblingFeature,
-        "allowNA": true,
-        "naRegex": "region_not_covered",
-        "spec": {
-          "valueType": "Int",
-          "name": "pl7.app/vdj/sequence/nMutationsCount",
-          "annotations": {
+        column: "nMutationsCount" + mutationVFeature,
+        id: "n-mutations-count-" + assemblingFeature,
+        allowNA: true,
+        naRegex: "region_not_covered",
+        spec: {
+          valueType: "Int",
+          name: "pl7.app/vdj/sequence/nMutationsCount",
+          annotations: {
             "pl7.app/label": "Nt mutations count in V gene",
             "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "70"
@@ -1185,14 +1185,14 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "aaMutationsCount" + mutationVFeature,
-        "id": "aa-mutations-count-" + assemblingFeature,
-        "allowNA": true,
-        "naRegex": "region_not_covered",
-        "spec": {
-          "valueType": "Int",
-          "name": "pl7.app/vdj/sequence/aaMutationsCount",
-          "annotations": {
+        column: "aaMutationsCount" + mutationVFeature,
+        id: "aa-mutations-count-" + assemblingFeature,
+        allowNA: true,
+        naRegex: "region_not_covered",
+        spec: {
+          valueType: "Int",
+          name: "pl7.app/vdj/sequence/aaMutationsCount",
+          annotations: {
             "pl7.app/label": "AA mutations count in V gene",
             "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "80"
@@ -1200,14 +1200,14 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "nMutationsRate" + mutationVFeature,
-        "id": "n-mutations-rate-" + assemblingFeature,
-        "allowNA": true,
-        "naRegex": "region_not_covered",
-        "spec": {
-          "valueType": "Double",
-          "name": "pl7.app/vdj/sequence/nMutationsRate",
-          "annotations": {
+        column: "nMutationsRate" + mutationVFeature,
+        id: "n-mutations-rate-" + assemblingFeature,
+        allowNA: true,
+        naRegex: "region_not_covered",
+        spec: {
+          valueType: "Double",
+          name: "pl7.app/vdj/sequence/nMutationsRate",
+          annotations: {
             "pl7.app/label": "Nt mutations rate in V gene",
             "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "90"
@@ -1215,28 +1215,28 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "aaMutationsRate" + mutationVFeature,
-        "id": "aa-mutations-rate-" + assemblingFeature,
-        "allowNA": true,
-        "naRegex": "region_not_covered",
-        "spec": {
-          "valueType": "Double",
-          "name": "pl7.app/vdj/sequence/aaMutationsRate",
-          "annotations": {
+        column: "aaMutationsRate" + mutationVFeature,
+        id: "aa-mutations-rate-" + assemblingFeature,
+        allowNA: true,
+        naRegex: "region_not_covered",
+        spec: {
+          valueType: "Double",
+          name: "pl7.app/vdj/sequence/aaMutationsRate",
+          annotations: {
             "pl7.app/label": "AA mutations rate in V gene",
             "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "100"
           }
         }
       }, {
-        "column": "nMutationsCountFR4",
-        "id": "n-mutations-count-fr4",
-        "allowNA": true,
-        "naRegex": "region_not_covered",
-        "spec": {
-          "valueType": "Int",
-          "name": "pl7.app/vdj/sequence/nMutationsCount",
-          "annotations": {
+        column: "nMutationsCountFR4",
+        id: "n-mutations-count-fr4",
+        allowNA: true,
+        naRegex: "region_not_covered",
+        spec: {
+          valueType: "Int",
+          name: "pl7.app/vdj/sequence/nMutationsCount",
+          annotations: {
             "pl7.app/label": "Nt mutations count in J gene",
             "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "60"
@@ -1244,14 +1244,14 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "aaMutationsCountFR4",
-        "id": "aa-mutations-count-fr4",
-        "allowNA": true,
-        "naRegex": "region_not_covered",
-        "spec": {
-          "valueType": "Int",
-          "name": "pl7.app/vdj/sequence/aaMutationsCount",
-          "annotations": {
+        column: "aaMutationsCountFR4",
+        id: "aa-mutations-count-fr4",
+        allowNA: true,
+        naRegex: "region_not_covered",
+        spec: {
+          valueType: "Int",
+          name: "pl7.app/vdj/sequence/aaMutationsCount",
+          annotations: {
             "pl7.app/label": "AA mutations count in J gene",
             "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "50"
@@ -1259,14 +1259,14 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "nMutationsRateFR4",
-        "id": "n-mutations-rate-fr4",
-        "allowNA": true,
-        "naRegex": "region_not_covered",
-        "spec": {
-          "valueType": "Double",
-          "name": "pl7.app/vdj/sequence/nMutationsRate",
-          "annotations": {
+        column: "nMutationsRateFR4",
+        id: "n-mutations-rate-fr4",
+        allowNA: true,
+        naRegex: "region_not_covered",
+        spec: {
+          valueType: "Double",
+          name: "pl7.app/vdj/sequence/nMutationsRate",
+          annotations: {
             "pl7.app/label": "Nt mutations rate in J gene",
             "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "40"
@@ -1274,14 +1274,14 @@ getColumns := func(blockId, featureParams) {
         }
       },
       {
-        "column": "aaMutationsRateFR4",
-        "id": "aa-mutations-rate-fr4",
-        "allowNA": true,
-        "naRegex": "region_not_covered",
-        "spec": {
-          "valueType": "Double",
-          "name": "pl7.app/vdj/sequence/aaMutationsRate",
-          "annotations": {
+        column: "aaMutationsRateFR4",
+        id: "aa-mutations-rate-fr4",
+        allowNA: true,
+        naRegex: "region_not_covered",
+        spec: {
+          valueType: "Double",
+          name: "pl7.app/vdj/sequence/aaMutationsRate",
+          annotations: {
             "pl7.app/label": "AA mutations rate in J gene",
             "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "30"
@@ -1289,9 +1289,9 @@ getColumns := func(blockId, featureParams) {
         }
       }]
     if imputed {
-      cols["columns"] = cols["columns"] + featureColumns + featureColumnsImputed
+      cols.columns = cols.columns + featureColumns + featureColumnsImputed
     } else {
-      cols["columns"] = cols["columns"] + featureColumns + mutationColumns
+      cols.columns = cols.columns + featureColumns + mutationColumns
     }
 
     cellTagsList := []
@@ -1306,12 +1306,12 @@ getColumns := func(blockId, featureParams) {
         }
         cols.axes += [
           {
-            "column": "tagValue" + tag,
-            "naRegex": "",
-            "spec": {
-              "name": "pl7.app/vdj/tagValueCELL",
-              "type": "String",
-              "annotations": {
+            column: "tagValue" + tag,
+            naRegex: "",
+            spec: {
+              name: "pl7.app/vdj/tagValueCELL",
+              type: "String",
+              annotations: {
                 "pl7.app/label": label,
                 "pl7.app/table/visibility": "default",
                 "pl7.app/table/orderPriority": string(priority)

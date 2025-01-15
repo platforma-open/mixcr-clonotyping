@@ -9,9 +9,9 @@ json := import("json")
 
 // self.validateInputs({
 // 	"__options__,closed": "",
-// 	"request": {
+// 	request: {
 // 		"__options__,closed": "",
-// 		"blockId": ["not", validation.resource()],
+// 		blockId: ["not", validation.resource()],
 // 		"specs,omitempty": ["not", validation.resource()]
 // 	}
 // })
@@ -61,7 +61,7 @@ self.body(func(inputs) {
 	imputed := false
 	assemblingFeature := undefined
 	if !is_undefined(specs.assemblingFeature) {
-		assemblingFeature = specs["assemblingFeature"][0]
+		assemblingFeature = specs.assemblingFeature[0]
 	} else {
 		assemblingFeature = "VDJRegion"
 		imputed = true
@@ -90,7 +90,7 @@ self.body(func(inputs) {
 			if feature == "CDR3" {
 				columnsList += ["nSeq"+feature, "aaSeq"+feature]
 			} else {
-				columnsList += ["nSeqImputed"+feature, "aaSeqImputed"+feature, 
+				columnsList += ["nSeqImputed"+feature, "aaSeqImputed"+feature,
 								"nSeq"+feature, "aaSeq"+feature]
 			}
 		} else {
@@ -101,7 +101,7 @@ self.body(func(inputs) {
 	// add columns with covered feature sequences
 	if assemblingFeature != "CDR3" {
 		if imputed {
-			columnsList += ["nSeqImputed"+assemblingFeature, "aaSeqImputed"+assemblingFeature, 
+			columnsList += ["nSeqImputed"+assemblingFeature, "aaSeqImputed"+assemblingFeature,
 							"nSeq"+assemblingFeature, "aaSeq"+assemblingFeature]
 		} else {
 			columnsList += ["nSeq"+assemblingFeature, "aaSeq"+assemblingFeature]
@@ -138,8 +138,8 @@ self.body(func(inputs) {
 
 	if hasUmi {
 		for column in columns {
-			if contains(targetColumns, column["column"]) {
-				column["spec"]["annotations"]["pl7.app/table/visibility"] = "optional"
+			if contains(targetColumns, column.column) {
+				column.spec.annotations["pl7.app/table/visibility"] = "optional"
 			}
 		}
 	}
@@ -154,10 +154,10 @@ self.body(func(inputs) {
 
 	return {
 		params: {
-			"axes": axes,
-			"columns": columns,
-			"storageFormat": "Binary",
-			"partitionKeyLength": 0
+			axes: axes,
+			columns: columns,
+			storageFormat: "Binary",
+			partitionKeyLength: 0
 		},
 		featureParams: {
 			assemblingFeature: assemblingFeature,
