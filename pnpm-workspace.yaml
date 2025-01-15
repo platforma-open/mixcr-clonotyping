@@ -18,6 +18,7 @@ catalog:
   '@milaboratories/software-pframes-conv': 2.1.5
   '@platforma-open/milaboratories.software-small-binaries': ^1.15.6
   '@platforma-open/milaboratories.software-mixcr': 4.7.0-133-develop
+  '@platforma-open/milaboratories.software-ptransform': ^1.1.0
 
   'vue': ^3.5.13
   'vue-tsc': ^2.2.0

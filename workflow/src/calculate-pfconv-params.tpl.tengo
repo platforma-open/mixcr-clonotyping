@@ -1,6 +1,7 @@
 // calculate-pfconv-params
 self := import("@platforma-sdk/workflow-tengo:tpl")
 // validation := import("@platforma-sdk/workflow-tengo:validation")
+maps := import("@platforma-sdk/workflow-tengo:maps")
 
 pfconvParamsLib := import(":pfconv_params")
 getFeature := import(":check-feature")
@@ -17,6 +18,15 @@ json := import("json")
 // })
 
 self.defineOutputs("params", "featureParams")
+
+toCombinedDomainKey := func(spec) {
+	result := [spec.name]
+	// getKeys sort keys
+	for domain in maps.getKeys(spec.domain) {
+		result = append(result, [domain, spec.domain[domain]])
+	}
+	return result
+}
 
 self.body(func(inputs) {
 
@@ -77,7 +87,7 @@ self.body(func(inputs) {
 		columnsList += ["uniqueMoleculeCount", "uniqueMoleculeFraction", "readCount", "readFraction"]
 	}
 
-	//filter columns by fieldsToColumns
+	// filter columns by fieldsToColumns
 	for field in preset.exportClones.fields {
 		if !is_undefined(fieldsToColumns[field.field]) {
 			columnsList = append(columnsList, fieldsToColumns[field.field])
@@ -100,11 +110,9 @@ self.body(func(inputs) {
 
 	// add columns with covered feature sequences
 	if assemblingFeature != "CDR3" {
+		columnsList += ["nSeq"+assemblingFeature, "aaSeq"+assemblingFeature]
 		if imputed {
-			columnsList += ["nSeqImputed"+assemblingFeature, "aaSeqImputed"+assemblingFeature,
-				"nSeq"+assemblingFeature, "aaSeq"+assemblingFeature]
-		} else {
-			columnsList += ["nSeq"+assemblingFeature, "aaSeq"+assemblingFeature]
+			columnsList += ["nSeqImputed"+assemblingFeature, "aaSeqImputed"+assemblingFeature]
 		}
 	}
 
@@ -127,10 +135,31 @@ self.body(func(inputs) {
 	// filter pfconvParams by column name and get a list of fields from it
 	pfconvParams := pfconvParamsLib.getColumns(blockId, {assemblingFeature: assemblingFeature, imputed: imputed, cellTags: specs.cellTags})
 
+	// column (i.e. in tsv) -> pfconv params
+	columnsMap := {}
+	axesMap := {}
+	for col in pfconvParams.columns {
+		columnsMap[col.column] = col
+	}
+	for axis in pfconvParams.axes {
+		axesMap[axis.column] = axis
+	}
+
 	columns := []
 	for col in columnsList {
-		getColumn := filter(pfconvParams.columns, func(item) { return item.column ==  col})
-		columns += getColumn
+		// getColumn := filter(pfconvParams.columns, func(item) { return item.column == col})
+		columns += [columnsMap[col]] // getColumn
+	}
+
+	clonotypeKeyColumns := ["nSeq"+assemblingFeature]
+	if specs.splitByV {
+		clonotypeKeyColumns = append(clonotypeKeyColumns, "bestVHit")
+	}
+	if specs.splitByJ {
+		clonotypeKeyColumns = append(clonotypeKeyColumns, "bestJHit")
+	}
+	if specs.splitByC {
+		clonotypeKeyColumns = append(clonotypeKeyColumns, "bestCHit")
 	}
 
 	// if UMI in data make visibility of "readCount" and "readFraction" columns optional
@@ -147,7 +176,7 @@ self.body(func(inputs) {
 	// create axes fields
 	axes := []
 	if len(specs.cellTags) == 0 {
-		axes = filter(pfconvParams.axes, func(item) { return item.column == "cloneId" })
+		axes = [axesMap["cloneId"]] // filter(pfconvParams.axes, func(item) { return item.column == "cloneId" })
 	} else {
 		axes = pfconvParams.axes
 	}
@@ -159,6 +188,7 @@ self.body(func(inputs) {
 			storageFormat: "Binary",
 			partitionKeyLength: 0
 		},
+		clonotypeKeyColumns: clonotypeKeyColumns,
 		featureParams: {
 			assemblingFeature: assemblingFeature,
 			imputed: imputed

@@ -14,12 +14,6 @@ getColumns := func(blockId, featureParams) {
 		addColumns = false
 	}
 
-	cellTagsList := []
-	if len(cellTags) > 0 {
-		for tag in cellTags {
-
-		}
-	}
 	cols := {
 		axes: [
 			{
