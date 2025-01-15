@@ -4,7 +4,7 @@ text := import("text")
 getProductiveFeature := func(assemblingFeature, imputed) {
 	productiveFeature := undefined
 	mutationVFeature := assemblingFeature
-    if assemblingFeature == "CDR3" || imputed {
+	if assemblingFeature == "CDR3" || imputed {
 		productiveFeature = "CDR3"
 	} else if assemblingFeature == "VDJRegion" {
 		productiveFeature = "VDJRegion(0,-1)"
@@ -19,7 +19,7 @@ getProductiveFeature := func(assemblingFeature, imputed) {
 			mutationVFeature = "{"+splittedFeature[0]+":FR3End}"
 		}
 	}
-    return {
+	return {
 		productiveFeature: productiveFeature,
 		mutationVFeature: mutationVFeature
 	}

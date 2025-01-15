@@ -35,12 +35,12 @@ self.body(func(inputs) {
 
 	// contains function
 	contains := func(list, value) {
-    for item in list {
-        if item == value {
-            return true
-        	}
-    	}
-    return false
+		for item in list {
+			if item == value {
+				return true
+			}
+		}
+		return false
 	}
 
 	fieldsToColumns := {
@@ -91,7 +91,7 @@ self.body(func(inputs) {
 				columnsList += ["nSeq"+feature, "aaSeq"+feature]
 			} else {
 				columnsList += ["nSeqImputed"+feature, "aaSeqImputed"+feature,
-								"nSeq"+feature, "aaSeq"+feature]
+					"nSeq"+feature, "aaSeq"+feature]
 			}
 		} else {
 			columnsList += ["nSeq"+feature, "aaSeq"+feature]
@@ -102,7 +102,7 @@ self.body(func(inputs) {
 	if assemblingFeature != "CDR3" {
 		if imputed {
 			columnsList += ["nSeqImputed"+assemblingFeature, "aaSeqImputed"+assemblingFeature,
-							"nSeq"+assemblingFeature, "aaSeq"+assemblingFeature]
+				"nSeq"+assemblingFeature, "aaSeq"+assemblingFeature]
 		} else {
 			columnsList += ["nSeq"+assemblingFeature, "aaSeq"+assemblingFeature]
 		}
@@ -120,8 +120,8 @@ self.body(func(inputs) {
 	if assemblingFeature != "CDR3" {
 		mutationVFeature := featureSpec.mutationVFeature
 		columnsList += ["nMutations"+mutationVFeature, "aaMutations"+mutationVFeature, "nMutationsCount"+mutationVFeature,
-						"aaMutationsCount"+mutationVFeature, "nMutationsRate"+mutationVFeature, "aaMutationsRate"+mutationVFeature,
-						"nMutationsFR4", "aaMutationsFR4", "nMutationsCountFR4", "aaMutationsCountFR4", "nMutationsRateFR4", "aaMutationsRateFR4"]
+			"aaMutationsCount"+mutationVFeature, "nMutationsRate"+mutationVFeature, "aaMutationsRate"+mutationVFeature,
+			"nMutationsFR4", "aaMutationsFR4", "nMutationsCountFR4", "aaMutationsCountFR4", "nMutationsRateFR4", "aaMutationsRateFR4"]
 	}
 
 	// filter pfconvParams by column name and get a list of fields from it

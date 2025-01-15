@@ -34,7 +34,7 @@ addAdditionalColumnArgs := func(mixcrCmdBuilder, featureParams) {
 		arg("--append-export-clones-field").
 		arg("-hasStops").arg("CDR3")
 
-	
+
 	if addColumns {
 		if imputed {
 			mixcrCmdBuilder.
