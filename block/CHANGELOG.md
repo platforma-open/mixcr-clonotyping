@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 1.8.1
+
+### Patch Changes
+
+- 7632e59: pfconv update
+
 ## 1.8.0
 
 ### Minor Changes
