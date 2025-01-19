@@ -10,13 +10,13 @@ getProductiveFeature := func(assemblingFeature, imputed) {
 		productiveFeature = "VDJRegion(0,-1)"
 		mutationVFeature = "{FR1Begin:FR3End}"
 	} else {
-		splittedFeature := text.split(assemblingFeature, "_to_")
+		splittedFeature := text.split(assemblingFeature, "_TO_")
 		if splittedFeature[1] == "FR4" {
-			productiveFeature = assemblingFeature + "(0,-1)"
-			mutationVFeature = "{"+splittedFeature[0]+":FR3End}"
+			productiveFeature = "{"+splittedFeature[0] + "Begin:FR4End(-1)}"
+			mutationVFeature = "{"+splittedFeature[0]+"Begin:FR3End}"
 		} else {
 			productiveFeature = assemblingFeature
-			mutationVFeature = "{"+splittedFeature[0]+":FR3End}"
+			mutationVFeature = "{"+splittedFeature[0]+"Begin:FR3End}"
 		}
 	}
     return {
