@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 1.11.0
+
+### Minor Changes
+
+- 53900ff: productive feature bug correction
+
 ## 1.10.0
 
 ### Minor Changes
