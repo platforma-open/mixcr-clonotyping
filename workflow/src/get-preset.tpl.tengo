@@ -9,8 +9,8 @@ mixcr := import(":mixcr")
 
 self.validateInputs({
 	"__options__,closed": "",
-	"preset": "any",
-	"params": {
+	preset: "any",
+	params: {
 		"__options__,closed": "",
 		"species,omitempty": "string"
 	}
