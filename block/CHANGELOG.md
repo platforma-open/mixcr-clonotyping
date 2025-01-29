@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 1.8.4
+
+### Patch Changes
+
+- 29ff040: MILAB-680
+
 ## 1.8.3
 
 ### Patch Changes
