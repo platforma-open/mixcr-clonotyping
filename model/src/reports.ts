@@ -9,7 +9,7 @@ export const ImmuneChain = z.union([
   z.literal('TRD'),
   z.literal('IGH'),
   z.literal('IGK'),
-  z.literal('IGL')
+  z.literal('IGL'),
 ]);
 
 export type ImmuneChain = z.infer<typeof ImmuneChain>;
@@ -26,7 +26,7 @@ export const NotAlignedReason = z.union([
   z.literal('VAndJOnDifferentTargets'),
   z.literal('LowTotalScore'),
   z.literal('NoBarcode'),
-  z.literal('SampleNotMatched')
+  z.literal('SampleNotMatched'),
 ]);
 export type NotAlignedReason = z.infer<typeof NotAlignedReason>;
 
@@ -38,7 +38,7 @@ export const AlignmentChannel = z.union([
   z.literal('NoJHits'),
   z.literal('VAndJOnDifferentTargets'),
   z.literal('LowTotalScore'),
-  z.literal('NoBarcode')
+  z.literal('NoBarcode'),
 ]);
 export type AlignmentChannel = z.infer<typeof AlignmentChannel>;
 
@@ -51,7 +51,7 @@ export const AlignmentChannels = [
   'NoJHits',
   'VAndJOnDifferentTargets',
   'LowTotalScore',
-  'NoBarcode'
+  'NoBarcode',
 ] satisfies AlignmentChannel[];
 
 export const AlignmentChannelLabels = {
@@ -64,7 +64,7 @@ export const AlignmentChannelLabels = {
   VAndJOnDifferentTargets: 'No target with both V and J',
   LowTotalScore: 'Low total score',
   NoBarcode: 'Absent barcode',
-  SampleNotMatched: 'Sample not matched'
+  SampleNotMatched: 'Sample not matched',
 } satisfies Record<NotAlignedReason | AlignmentChannel, string>;
 
 export const AlignmentChannelColors = {
@@ -77,55 +77,55 @@ export const AlignmentChannelColors = {
   VAndJOnDifferentTargets: '#B8397A',
   LowTotalScore: '#7E2583',
   NoBarcode: '#4B1979',
-  SampleNotMatched: '#2B125C'
+  SampleNotMatched: '#2B125C',
 } satisfies Record<NotAlignedReason | AlignmentChannel, string>;
 
 export const AlignmentChainColors = {
   '': {
     total: '#A9A9A9',
     hasStops: '#A9A9A9',
-    isOOF: '#A9A9A9'
+    isOOF: '#A9A9A9',
   },
-  TRA: {
+  'TRA': {
     total: '#105BCC',
     hasStops: '#2D93FA',
-    isOOF: '#99CCFF'
+    isOOF: '#99CCFF',
   },
-  TRAD: {
+  'TRAD': {
     total: '#105BCC',
     hasStops: '#2D93FA',
-    isOOF: '#99CCFF'
+    isOOF: '#99CCFF',
   },
-  TRB: {
+  'TRB': {
     total: '#198020',
     hasStops: '#42B842',
-    isOOF: '#99E099'
+    isOOF: '#99E099',
   },
-  TRD: {
+  'TRD': {
     total: '#068A94',
     hasStops: '#27C2C2',
-    isOOF: '#90E0E0'
+    isOOF: '#90E0E0',
   },
-  TRG: {
+  'TRG': {
     total: '#5F31CC',
     hasStops: '#845CFF',
-    isOOF: '#C1ADFF'
+    isOOF: '#C1ADFF',
   },
-  IGH: {
+  'IGH': {
     total: '#AD3757',
     hasStops: '#F05670',
-    isOOF: '#FFADBA'
+    isOOF: '#FFADBA',
   },
-  IGL: {
+  'IGL': {
     total: '#C26A27',
     hasStops: '#FF9429',
-    isOOF: '#FFCB8F'
+    isOOF: '#FFCB8F',
   },
-  IGK: {
+  'IGK': {
     total: '#A324B2',
     hasStops: '#E553E5',
-    isOOF: '#FAAAFA'
-  }
+    isOOF: '#FAAAFA',
+  },
 } satisfies Record<ImmuneChain, Record<'total' | 'hasStops' | 'isOOF', string>>;
 
 export const CoveregeGeneFeature = z.union([
@@ -134,7 +134,7 @@ export const CoveregeGeneFeature = z.union([
   z.literal('CDR2_TO_FR4'),
   z.literal('FR2_TO_FR4'),
   z.literal('CDR1_TO_FR4'),
-  z.literal('VDJRegion')
+  z.literal('VDJRegion'),
 ]);
 export type CoveregeGeneFeature = z.infer<typeof CoveregeGeneFeature>;
 
@@ -144,20 +144,20 @@ export const CoveregeGeneFeatureLabel = {
   FR2_TO_FR4: 'FR2 to FR4',
   CDR2_TO_FR4: 'CDR2 to FR4',
   FR3_TO_FR4: 'FR3 to FR4',
-  VDJRegion: 'Full VDJRegion'
+  VDJRegion: 'Full VDJRegion',
 } satisfies Record<CoveregeGeneFeature, string>;
 
 const ChainUsageEntry = z.object({
   total: z.number().int(),
   nonFunctional: z.number().int(),
   isOOF: z.number().int(),
-  hasStops: z.number().int()
+  hasStops: z.number().int(),
 });
 
 const ChainUsage = z.object({
   chimeras: z.number().int(),
   total: z.number().int(),
-  chains: z.record(ImmuneChain, ChainUsageEntry)
+  chains: z.record(ImmuneChain, ChainUsageEntry),
 });
 
 export const AlignReport = z.object({
@@ -180,14 +180,14 @@ export const AlignReport = z.object({
   realignedWithForcedNonFloatingRightBoundInLeftRead: z.number().int(),
   realignedWithForcedNonFloatingLeftBoundInRightRead: z.number().int(),
   chainUsage: ChainUsage,
-  coverage: z.record(CoveregeGeneFeature, z.number().int())
+  coverage: z.record(CoveregeGeneFeature, z.number().int()),
 });
 export type AlignReport = z.infer<typeof AlignReport>;
 
 export function extractAlignmentChannels(report: AlignReport): [AlignmentChannel, number][] {
   return AlignmentChannels.map((cId) => [
     cId,
-    cId === 'Success' ? report.aligned : report.notAlignedReasons[cId] ?? 0
+    cId === 'Success' ? report.aligned : report.notAlignedReasons[cId] ?? 0,
   ]);
 }
 
@@ -218,11 +218,12 @@ export const AssembleReport = z.object({
   readsFilteredInFineFiltering: RoundedToInt,
 
   clonesFilteredInPostFiltering: z.number().int(),
-  readsFilteredInPostFiltering: RoundedToInt
+  readsFilteredInPostFiltering: RoundedToInt,
 });
 export type AssembleReport = z.infer<typeof AssembleReport>;
 
-const Reports = z.object({
-  align: AlignReport,
-  assemble: AssembleReport
-});
+// @TODO (unused)
+// const Reports = z.object({
+//   align: AlignReport,
+//   assemble: AssembleReport,
+// });

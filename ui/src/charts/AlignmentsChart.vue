@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { AlignReport } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
+import type { AlignReport } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
 import {
   PlChartStackedBar,
 } from '@platforma-sdk/ui-vue';

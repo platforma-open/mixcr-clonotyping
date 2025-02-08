@@ -6,7 +6,7 @@ export const QcCheck = z.object({
   type: z.string(), // @TODO union?
   upper: z.number().optional(),
   middle: z.number().optional(),
-  label: z.string()
+  label: z.string(),
 });
 export type QcCheck = z.infer<typeof QcCheck>;
 
@@ -17,8 +17,8 @@ export const QcCheckResult = z.object({
   payload: z.object({
     printedValue: z.coerce.string().optional(),
     value: z.coerce.string().optional(),
-    labelOverride: z.coerce.string().optional()
-  })
+    labelOverride: z.coerce.string().optional(),
+  }),
 });
 export type QcCheckResult = z.infer<typeof QcCheckResult>;
 
@@ -30,14 +30,14 @@ export const QcCheckDescriptions = {
   SuccessfullyAlignedReads:
     'Sequencing reads that have been accurately mapped to their respective V, D, and J gene segments during the alignment process. This metric is crucial for assessing data quality. Low rate of aligned reads is a strong signal of either wet lab problems or misused analysis settings.',
   OffTargetReads:
-    'Sequencing reads that do not map on T or B cell receptor gene segments. High rate of off-target reads may be a result of:\n' +
-    '\n' +
-    'primers mis-annealing to a non-target loci;\n' +
-    'DNA contamination in RNA material;\n' +
-    'other protocol and/or wet lab issues;\n' +
-    'wrong choice of species in analysis settings (e.g. you have a cat library while used a human reference library).\n' +
-    '\n' +
-    'In order to troubleshoot, one can rerun alignment and save not aligned reads into separate files. Then pick a few random non-aligned sequences and BLAST them to identify whether they are coming from contamination / non-target loci or aligned to different species. If there are no BLAST hits, check whether the sequences are artificial (e.g. adapters).\n',
+    'Sequencing reads that do not map on T or B cell receptor gene segments. High rate of off-target reads may be a result of:\n'
+    + '\n'
+    + 'primers mis-annealing to a non-target loci;\n'
+    + 'DNA contamination in RNA material;\n'
+    + 'other protocol and/or wet lab issues;\n'
+    + 'wrong choice of species in analysis settings (e.g. you have a cat library while used a human reference library).\n'
+    + '\n'
+    + 'In order to troubleshoot, one can rerun alignment and save not aligned reads into separate files. Then pick a few random non-aligned sequences and BLAST them to identify whether they are coming from contamination / non-target loci or aligned to different species. If there are no BLAST hits, check whether the sequences are artificial (e.g. adapters).\n',
   ReadsWithNoVOrJHits: `Sequencing reads that cover either V or J region but not both of them simultaneously. There might be several reasons for that. One common reason is incorrect orientation of reads, typically caused by some pre-processing of the input data performed before MiXCR. A common example is pre-processing with external tools like MiGEC, which is a legacy tool for handling UMIs and demultiplexing. MiGEC reverse complements one of the reads, thus requiring running MiXCR with -OreadsLayout=Collinear option.
 
 Another reason is a very low sequencing quality in one of the reads when sequencing has completely failed.
@@ -45,7 +45,7 @@ Another reason is a very low sequencing quality in one of the reads when sequenc
 Finally, it might be a wrong use of the analysis preset: if the input data is randomly fragmented (RNA-, Exome-Seq, 10x etc.) and the used preset is designed for amplicon libraries, you would see a high percentage here (since with amplicon settings MiXCR drops all reads that do not full cover CDR3 region). So check and use an appropriate preset for fragmented data.
 `,
   ReadsWithNoBarcode:
-    "For barcoded data means that barcodes can't be extracted using the specified tag pattern. For custom library preparation protocols, the first thing to check is that a correct tag pattern and/or a correct analysis preset are used. If the library is unstranded, one should use either --tag-parse-unstranded option or change the preset accordingly. Finally, the quality of data may be low, so that tags can't be parsed because of too many sequencing errors.",
+    'For barcoded data means that barcodes can\'t be extracted using the specified tag pattern. For custom library preparation protocols, the first thing to check is that a correct tag pattern and/or a correct analysis preset are used. If the library is unstranded, one should use either --tag-parse-unstranded option or change the preset accordingly. Finally, the quality of data may be low, so that tags can\'t be parsed because of too many sequencing errors.',
   OverlappedReadsMoreBetter: `Paired-end sequencing reads that overlap, meaning that the ends of the forward and reverse reads extend into the same region of the DNA fragment they were sequenced from.
 
 For the full-length amplicon protocols sequenced with 250+250 or 300+300, one expects a high rate of overlapped reads to cover the complete VDJ rearrangement. Low overlap rate in such case may signal about various problems in the wet lab e.g. poor sequencing quality or size selection.

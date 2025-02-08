@@ -1,10 +1,9 @@
+import type {
+  InferHrefType } from '@platforma-sdk/model';
 import {
   BlockModel,
-  InferHrefType,
   It,
   MainOutputs,
-  Option,
-  Ref,
   StagingOutputs,
   getImportProgress,
   getResourceField,
@@ -12,7 +11,7 @@ import {
   isPColumnSpec,
   mapResourceFields,
   parseResourceMap,
-  type InferOutputsType
+  type InferOutputsType,
 } from '@platforma-sdk/model';
 import { BlockArgs, BlockArgsValid } from './args';
 import { ProgressPrefix } from './progress';
@@ -22,21 +21,21 @@ export const platforma = BlockModel.create('Heavy')
   .withArgs<BlockArgs>({})
 
   .retentiveOutput('presets', (ctx) =>
-    ctx.prerun?.resolve({ field: 'presets', assertFieldType: 'Input' })?.getFileHandle()
+    ctx.prerun?.resolve({ field: 'presets', assertFieldType: 'Input' })?.getFileHandle(),
   )
 
   .retentiveOutput('preset', (ctx) =>
     ctx.prerun
       ?.resolve({ field: 'preset', assertFieldType: 'Input', allowPermanentAbsence: true })
-      ?.getDataAsJson<any>()
+      ?.getDataAsJson<string>(),
   )
 
   .output('qc', (ctx) =>
-    parseResourceMap(ctx.outputs?.resolve('qc'), (acc) => acc.getFileHandle(), true)
+    parseResourceMap(ctx.outputs?.resolve('qc'), (acc) => acc.getFileHandle(), true),
   )
 
   .output('reports', (ctx) =>
-    parseResourceMap(ctx.outputs?.resolve('reports'), (acc) => acc.getFileHandle(), false)
+    parseResourceMap(ctx.outputs?.resolve('reports'), (acc) => acc.getFileHandle(), false),
   )
 
   .output('logs', (ctx) => {
@@ -50,7 +49,7 @@ export const platforma = BlockModel.create('Heavy')
       ? parseResourceMap(
           ctx.outputs?.resolve('logs'),
           (acc) => acc.getProgressLog(ProgressPrefix),
-          false
+          false,
         )
       : undefined;
   })
@@ -59,8 +58,8 @@ export const platforma = BlockModel.create('Heavy')
 
   .output('done', (ctx) => {
     return ctx.outputs !== undefined
-      ? parseResourceMap(ctx.outputs?.resolve('clns'), (acc) => true, false).data.map(
-          (e) => e.key[0] as string
+      ? parseResourceMap(ctx.outputs?.resolve('clns'), (_acc) => true, false).data.map(
+          (e) => e.key[0] as string,
         )
       : undefined;
   })
@@ -78,13 +77,13 @@ export const platforma = BlockModel.create('Heavy')
       if (!isPColumnSpec(v)) return false;
       const domain = v.domain;
       return (
-        v.name === 'pl7.app/sequencing/data' &&
-        (v.valueType as string) === 'File' &&
-        domain !== undefined &&
-        (domain['pl7.app/fileExtension'] === 'fasta' ||
-          domain['pl7.app/fileExtension'] === 'fasta.gz' ||
-          domain['pl7.app/fileExtension'] === 'fastq' ||
-          domain['pl7.app/fileExtension'] === 'fastq.gz')
+        v.name === 'pl7.app/sequencing/data'
+        && (v.valueType as string) === 'File'
+        && domain !== undefined
+        && (domain['pl7.app/fileExtension'] === 'fasta'
+          || domain['pl7.app/fileExtension'] === 'fasta.gz'
+          || domain['pl7.app/fileExtension'] === 'fastq'
+          || domain['pl7.app/fileExtension'] === 'fastq.gz')
       );
     });
 
@@ -106,7 +105,7 @@ export const platforma = BlockModel.create('Heavy')
     const inputSpec = ctx.resultPool
       .getSpecs()
       .entries.find(
-        (obj) => obj.ref.blockId === inputRef.blockId && obj.ref.name === inputRef.name
+        (obj) => obj.ref.blockId === inputRef.blockId && obj.ref.name === inputRef.name,
       )?.obj;
     if (inputSpec === undefined || !isPColumnSpec(inputSpec)) return undefined;
     const sampleAxisSpec = inputSpec.axesSpec[0];
@@ -132,24 +131,26 @@ export const platforma = BlockModel.create('Heavy')
 
     return Object.fromEntries(
       Object.entries(
-        sampleLabelsObj.obj.data.getDataAsJson<{ data: Record<string, string> }>().data
-      ).map((e) => [JSON.parse(e[0])[0], e[1]])
-    ) satisfies Record<string, string>;
+        sampleLabelsObj.obj.data.getDataAsJson<{ data: Record<string, string> }>().data,
+      // @TODO zod
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      ).map((e) => [JSON.parse(e[0])[0], e[1]]),
+    ) as Record<string, string>;
   })
 
   // @TODO migrate to lambdas and merge with prerunFileImports
   .output(
     'mainFileImports',
-    mapResourceFields(getResourceField(MainOutputs, 'fileImports'), getImportProgress(It))
+    mapResourceFields(getResourceField(MainOutputs, 'fileImports'), getImportProgress(It)),
   )
 
   // @TODO migrate to lambdas and merge with mainFileImports
   .output(
     'prerunFileImports',
-    mapResourceFields(getResourceField(StagingOutputs, 'fileImports'), getImportProgress(It))
+    mapResourceFields(getResourceField(StagingOutputs, 'fileImports'), getImportProgress(It)),
   )
 
-  .sections((ctx) => {
+  .sections((_ctx) => {
     return [{ type: 'link', href: '/', label: 'Main' }];
   })
 

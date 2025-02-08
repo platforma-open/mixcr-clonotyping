@@ -11,6 +11,7 @@ catalog:
   '@platforma-sdk/ui-vue': ^1.22.9
   '@platforma-sdk/tengo-builder': ^1.17.5
   '@platforma-sdk/block-tools': ^2.5.3
+  '@platforma-sdk/eslint-config': ^1.0.1
 
   '@platforma-sdk/test': ^1.21.22
   '@milaboratories/helpers': ^1.6.11

@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { PlId } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
+import type { PlId } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
 import { computed, reactive } from 'vue';
 import { MiXCRResultsMap } from './results';
 import { debouncedRef } from '@vueuse/core';
 import SampleReportPanelLogs from './SampleReportPanelLogs.vue';
-import { PlBtnGroup, SimpleOption } from '@platforma-sdk/ui-vue';
+import type { SimpleOption } from '@platforma-sdk/ui-vue';
+import { PlBtnGroup } from '@platforma-sdk/ui-vue';
 import SampleReportPanelReports from './SampleReportPanelReports.vue';
 import SampleReportPanelQc from './SampleReportPanelQc.vue';
 import SampleReportPanelVisualReport from './SampleReportPanelVisualReport.vue';
 
-const sampleId = defineModel<PlId | undefined>()
+const sampleId = defineModel<PlId | undefined>();
 
 const resultMap = debouncedRef(MiXCRResultsMap, 300);
 const sampleData = computed(() => {
@@ -17,12 +18,12 @@ const sampleData = computed(() => {
   return resultMap.value.get(sampleId.value);
 });
 
-type TabId = "visualReport" | "qc" | "logs" | "reports";
+type TabId = 'visualReport' | 'qc' | 'logs' | 'reports';
 
 const data = reactive<{
-  currentTab: TabId
+  currentTab: TabId;
 }>({
-  currentTab: 'visualReport'
+  currentTab: 'visualReport',
 });
 
 const tabOptions: SimpleOption<TabId>[] = [
@@ -34,7 +35,7 @@ const tabOptions: SimpleOption<TabId>[] = [
 </script>
 
 <template>
-  <PlBtnGroup :options="tabOptions" v-model="data.currentTab" />
+  <PlBtnGroup v-model="data.currentTab" :options="tabOptions" />
   <div v-if="sampleId !== undefined && sampleData !== undefined" class="pl-scrollable">
     <SampleReportPanelVisualReport v-if="data.currentTab === 'visualReport'" :sample-data="sampleData" />
     <SampleReportPanelQc v-if="data.currentTab === 'qc'" :sample-data="sampleData" />
@@ -49,7 +50,7 @@ const tabOptions: SimpleOption<TabId>[] = [
   display: flex;
   flex-direction: column;
   gap: 24px;
-  height: 100%; 
+  height: 100%;
   max-height: 100%;
   max-width: 100%;
   padding: 0 6px;
