@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ICellRendererParams } from 'ag-grid-enterprise';
+import type { ICellRendererParams } from 'ag-grid-enterprise';
 import { ProgressPattern } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
-import { computed, unref, watch } from 'vue';
-import { MiXCRResult } from './results';
-import { PlAgCellProgress, PlProgressCellProps } from '@platforma-sdk/ui-vue';
+import { computed, unref } from 'vue';
+import type { MiXCRResult } from './results';
+import type { PlProgressCellProps } from '@platforma-sdk/ui-vue';
+import { PlAgCellProgress } from '@platforma-sdk/ui-vue';
 
 const props = defineProps<{
   params: ICellRendererParams<MiXCRResult>;
@@ -14,7 +15,7 @@ const progressString = computed(() => {
   // return 'Initialization: progress unknown';
   // return 'Applying correction & sorting alignments by UMI';
   // return 'Alignment: 60.4%  ETA: 00:00:01';
-  //return 'Not started';
+  // return 'Not started';
   return props.params.data?.progress ?? 'Unknown';
 });
 
@@ -31,7 +32,7 @@ const parsed = computed<Parsed>(() => {
   const raw = unref(progressString);
 
   const res: Parsed = {
-    raw
+    raw,
   };
 
   if (!raw) {
@@ -41,7 +42,7 @@ const parsed = computed<Parsed>(() => {
   const match = raw.match(ProgressPattern);
 
   if (match) {
-    const { stage, progress, eta } = match?.groups!;
+    const { stage, progress, eta } = match.groups!;
     res.stage = stage;
     res.percentage = progress;
     res.eta = eta;
@@ -69,7 +70,7 @@ const ProgressProps = computed<PlProgressCellProps>(() => {
     stage: parsed.value.raw === 'Queued' ? 'not_started' : 'running',
     step: parsed.value.stage || '',
     progress: parsed.value.percentage ? +parsed.value.percentage : undefined,
-    progressString: parsed.value.etaLabel || ''
+    progressString: parsed.value.etaLabel || '',
   };
 });
 </script>

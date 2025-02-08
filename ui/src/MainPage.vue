@@ -2,7 +2,8 @@
 import { AgGridVue } from 'ag-grid-vue3';
 
 import { ClientSideRowModelModule } from 'ag-grid-enterprise';
-import { ColDef, GridApi, GridOptions, GridReadyEvent, ModuleRegistry } from 'ag-grid-enterprise';
+import type { ColDef, GridApi, GridOptions, GridReadyEvent } from 'ag-grid-enterprise';
+import { ModuleRegistry } from 'ag-grid-enterprise';
 import type { PlId, Qc } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
 import {
   AgGridTheme,
@@ -15,13 +16,14 @@ import {
   PlAgTextAndButtonCell,
   PlAgCellStatusTag,
   makeRowNumberColDef,
-  autoSizeRowNumberColumn
+  autoSizeRowNumberColumn,
 } from '@platforma-sdk/ui-vue';
 import { refDebounced, whenever } from '@vueuse/core';
 import { reactive, shallowRef, watch } from 'vue';
 import { useApp } from './app';
 import ProgressCell from './ProgressCell.vue';
-import { MiXCRResult, MiXCRResultsFull } from './results';
+import type { MiXCRResult } from './results';
+import { MiXCRResultsFull } from './results';
 import SampleReportPanel from './SampleReportPanel.vue';
 import SettingsPanel from './SettingsPanel.vue';
 import { getAlignmentChartSettings } from './charts/alignmentChartSettings';
@@ -32,7 +34,7 @@ const app = useApp();
 
 // @TODO
 const result = refDebounced(MiXCRResultsFull, 100, {
-  maxWait: 200
+  maxWait: 200,
 });
 
 const data = reactive<{
@@ -42,7 +44,7 @@ const data = reactive<{
 }>({
   settingsOpen: app.model.outputs.started === false,
   sampleReportOpen: false,
-  selectedSample: undefined
+  selectedSample: undefined,
 });
 
 watch(
@@ -50,23 +52,23 @@ watch(
   (newVal, oldVal) => {
     if (oldVal === false && newVal === true) data.settingsOpen = false;
     if (oldVal === true && newVal === false) data.settingsOpen = true;
-  }
+  },
 );
 
 whenever(
   () => data.settingsOpen,
-  () => (data.sampleReportOpen = false)
+  () => (data.sampleReportOpen = false),
 );
 whenever(
   () => data.sampleReportOpen,
-  () => (data.settingsOpen = false)
+  () => (data.settingsOpen = false),
 );
 
 ModuleRegistry.registerModules([ClientSideRowModelModule]);
 
 const qcPriority = { OK: 0, WARN: 1, ALERT: 2 };
 
-const gridApi = shallowRef<GridApi<any>>();
+const gridApi = shallowRef<GridApi>();
 const onGridReady = (params: GridReadyEvent) => {
   gridApi.value = params.api;
   autoSizeRowNumberColumn(params.api);
@@ -75,7 +77,7 @@ const onGridReady = (params: GridReadyEvent) => {
 const defaultColumnDef: ColDef = {
   suppressHeaderMenuButton: true,
   lockPinned: true,
-  sortable: false
+  sortable: false,
 };
 
 const columnDefs: ColDef[] = [
@@ -89,8 +91,8 @@ const columnDefs: ColDef[] = [
     sortable: true,
     cellRenderer: PlAgTextAndButtonCell,
     cellRendererParams: {
-      invokeRowsOnDoubleClick: true
-    }
+      invokeRowsOnDoubleClick: true,
+    },
   },
   {
     colId: 'progress',
@@ -99,8 +101,8 @@ const columnDefs: ColDef[] = [
     headerName: 'Progress',
     cellStyle: {
       '--ag-cell-horizontal-padding': '0px',
-      '--ag-cell-vertical-padding': '0px'
-    }
+      '--ag-cell-vertical-padding': '0px',
+    },
   },
   {
     colId: 'qc',
@@ -110,31 +112,31 @@ const columnDefs: ColDef[] = [
       const type = (cellData.data.qc as MiXCRResult['qc'])?.reduce(
         (result: Qc[number]['status'], item) =>
           qcPriority[item.status] > qcPriority[result] ? item.status : result,
-        'OK'
+        'OK',
       );
       return {
         component: PlAgCellStatusTag,
-        params: { type }
+        params: { type },
       };
     },
     headerName: 'Quality',
     cellStyle: {
       '--ag-cell-horizontal-padding': '0px',
-      '--ag-cell-vertical-padding': '0px'
-    }
+      '--ag-cell-vertical-padding': '0px',
+    },
   },
   {
     colId: 'alignmentStats',
     headerName: 'Alignments',
     flex: 1,
     cellStyle: {
-      '--ag-cell-horizontal-padding': '12px'
+      '--ag-cell-horizontal-padding': '12px',
     },
     cellRendererSelector: (cellData) => {
       const value = getAlignmentChartSettings(cellData.data.alignReport);
       return {
         component: PlAgChartStackedBarCell,
-        params: { value }
+        params: { value },
       };
     },
   },
@@ -143,7 +145,7 @@ const columnDefs: ColDef[] = [
     headerName: 'Chains',
     flex: 1,
     cellStyle: {
-      '--ag-cell-horizontal-padding': '12px'
+      '--ag-cell-horizontal-padding': '12px',
       // '--ag-cell-horizontal-border': 'solid rgb(150, 150, 200);',
       // 'border-width': '0'
     },
@@ -151,15 +153,11 @@ const columnDefs: ColDef[] = [
       const value = getChainsChartSettings(cellData.data.alignReport);
       return {
         component: PlAgChartStackedBarCell,
-        params: { value }
+        params: { value },
       };
     },
-  }
+  },
 ];
-
-// watch(result, rd => {
-//     console.dir(rd, { depth: 5 })
-// }, { immediate: true })
 
 const gridOptions: GridOptions<MiXCRResult> = {
   getRowId: (row) => row.data.sampleId,
@@ -169,8 +167,8 @@ const gridOptions: GridOptions<MiXCRResult> = {
   },
   components: {
     ProgressCell,
-    PlAgTextAndButtonCell
-  }
+    PlAgTextAndButtonCell,
+  },
 };
 </script>
 
@@ -217,7 +215,7 @@ const gridOptions: GridOptions<MiXCRResult> = {
       Results for
       {{
         (data.selectedSample ? app.model.outputs.sampleLabels?.[data.selectedSample] : undefined) ??
-        '...'
+          '...'
       }}
     </template>
     <SampleReportPanel v-model="data.selectedSample" />

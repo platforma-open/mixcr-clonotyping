@@ -6,7 +6,8 @@
     "dev": "vite",
     "watch": "vue-tsc && vite build --watch",
     "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint ."
   },
   "dependencies": {
     "ag-grid-enterprise": "catalog:",
@@ -22,6 +23,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "catalog:",
+    "@platforma-sdk/eslint-config": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:",

@@ -19,7 +19,7 @@ const MiXCRStage = z.union([
   z.literal('exportCloneGroups'),
   z.literal('qc'),
   z.literal('findAlleles'),
-  z.literal('findShmTrees')
+  z.literal('findShmTrees'),
 ]);
 type MiXCRStage = z.infer<typeof MiXCRStage>;
 
@@ -32,7 +32,7 @@ const SupportedPresetOverview = z.object({
   presetName: z.string(),
   requiredFlags: z.array(SupportedMiXCRFlags),
   analysisStages: z.array(MiXCRStage),
-  reportTypes: z.array(MiXCRStage)
+  reportTypes: z.array(MiXCRStage),
 });
 type SupportedPresetOverview = z.infer<typeof SupportedPresetOverview>;
 
@@ -40,6 +40,6 @@ export const SupportedPresetList = z.array(z.unknown()).transform((presets) =>
   presets
     .map((p) => SupportedPresetOverview.safeParse(p))
     .filter((p) => p.success)
-    .map((p) => p.data!)
+    .map((p) => p.data),
 );
 export type SupportedPresetList = z.infer<typeof SupportedPresetList>;
