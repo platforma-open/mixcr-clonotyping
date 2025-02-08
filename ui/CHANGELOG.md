@@ -1,5 +1,13 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.7.1
+
+### Patch Changes
+
+- 392d6f3: Add and use @platforma-sdk/eslint-config package (MILAB-1128)
+- Updated dependencies [392d6f3]
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.5.1
+
 ## 1.7.0
 
 ### Minor Changes
