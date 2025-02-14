@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.7.2
+
+### Patch Changes
+
+- 9448c22: Use createAgGridColDef "progress" property (just a callback, no need to import ProgressCell)
+
 ## 1.7.1
 
 ### Patch Changes
