@@ -21,14 +21,14 @@ import {
 import { refDebounced, whenever } from '@vueuse/core';
 import { reactive, shallowRef, watch } from 'vue';
 import { useApp } from './app';
-import ProgressCell from './ProgressCell.vue';
 import type { MiXCRResult } from './results';
 import { MiXCRResultsFull } from './results';
 import SampleReportPanel from './SampleReportPanel.vue';
 import SettingsPanel from './SettingsPanel.vue';
 import { getAlignmentChartSettings } from './charts/alignmentChartSettings';
 import { getChainsChartSettings } from './charts/chainsChartSettings';
-import { PlAgChartStackedBarCell } from '@platforma-sdk/ui-vue';
+import { PlAgChartStackedBarCell, createAgGridColDef } from '@platforma-sdk/ui-vue';
+import { parseProgressString } from './parseProgress';
 
 const app = useApp();
 
@@ -80,7 +80,7 @@ const defaultColumnDef: ColDef = {
   sortable: false,
 };
 
-const columnDefs: ColDef[] = [
+const columnDefs: ColDef<MiXCRResult>[] = [
   makeRowNumberColDef(),
   {
     colId: 'label',
@@ -94,22 +94,34 @@ const columnDefs: ColDef[] = [
       invokeRowsOnDoubleClick: true,
     },
   },
-  {
+  createAgGridColDef<MiXCRResult, string>({
     colId: 'progress',
     field: 'progress',
-    cellRenderer: 'ProgressCell',
     headerName: 'Progress',
-    cellStyle: {
-      '--ag-cell-horizontal-padding': '0px',
-      '--ag-cell-vertical-padding': '0px',
+    progress(cellData) {
+      const parsed = parseProgressString(cellData.value);
+
+      if (parsed.stage === 'Queued') {
+        return {
+          status: 'not_started',
+          text: parsed.stage,
+        };
+      }
+
+      return {
+        status: parsed.stage === 'Done' ? 'done' : 'running',
+        percent: parsed.percentage,
+        text: parsed.stage,
+        suffix: parsed.etaLabel ?? '',
+      };
     },
-  },
-  {
+  }),
+  createAgGridColDef({
     colId: 'qc',
     field: 'qc',
     width: 96,
     cellRendererSelector: (cellData) => {
-      const type = (cellData.data.qc as MiXCRResult['qc'])?.reduce(
+      const type = (cellData.data?.qc as MiXCRResult['qc'])?.reduce(
         (result: Qc[number]['status'], item) =>
           qcPriority[item.status] > qcPriority[result] ? item.status : result,
         'OK',
@@ -120,11 +132,8 @@ const columnDefs: ColDef[] = [
       };
     },
     headerName: 'Quality',
-    cellStyle: {
-      '--ag-cell-horizontal-padding': '0px',
-      '--ag-cell-vertical-padding': '0px',
-    },
-  },
+    noGutters: true, // this means "no padding" i. e. --ag-cell-horizontal-padding: 0px & --ag-cell-vertical-padding: 0px
+  }),
   {
     colId: 'alignmentStats',
     headerName: 'Alignments',
@@ -133,7 +142,7 @@ const columnDefs: ColDef[] = [
       '--ag-cell-horizontal-padding': '12px',
     },
     cellRendererSelector: (cellData) => {
-      const value = getAlignmentChartSettings(cellData.data.alignReport);
+      const value = getAlignmentChartSettings(cellData.data?.alignReport);
       return {
         component: PlAgChartStackedBarCell,
         params: { value },
@@ -150,7 +159,7 @@ const columnDefs: ColDef[] = [
       // 'border-width': '0'
     },
     cellRendererSelector: (cellData) => {
-      const value = getChainsChartSettings(cellData.data.alignReport);
+      const value = getChainsChartSettings(cellData.data?.alignReport);
       return {
         component: PlAgChartStackedBarCell,
         params: { value },
@@ -166,7 +175,6 @@ const gridOptions: GridOptions<MiXCRResult> = {
     data.sampleReportOpen = data.selectedSample !== undefined;
   },
   components: {
-    ProgressCell,
     PlAgTextAndButtonCell,
   },
 };
