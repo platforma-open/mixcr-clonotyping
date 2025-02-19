@@ -2,11 +2,13 @@
 self := import("@platforma-sdk/workflow-tengo:tpl")
 // validation := import("@platforma-sdk/workflow-tengo:validation")
 maps := import("@platforma-sdk/workflow-tengo:maps")
+ll := import("@platforma-sdk/workflow-tengo:ll")
 
 pfconvParamsLib := import(":pfconv_params")
 getFeature := import(":check-feature")
 
 json := import("json")
+text := import("text")
 
 // self.validateInputs({
 // 	"__options__,closed": "",
@@ -17,7 +19,7 @@ json := import("json")
 // 	}
 // })
 
-self.defineOutputs("params", "featureParams")
+self.defineOutputs("params", "featureParams", "clonotypeKeyColumns")
 
 toCombinedDomainKey := func(spec) {
 	result := [spec.name]
@@ -132,9 +134,20 @@ self.body(func(inputs) {
 			"nMutationsFR4", "aaMutationsFR4", "nMutationsCountFR4", "aaMutationsCountFR4", "nMutationsRateFR4", "aaMutationsRateFR4"]
 	}
 
-	// filter pfconvParams by column name and get a list of fields from it
-	pfconvParams := pfconvParamsLib.getColumns(blockId, {assemblingFeature: assemblingFeature, imputed: imputed, cellTags: specs.cellTags})
+	//create key columns
+	clonotypeKeyColumns := ["nSeq"+assemblingFeature]
+	if specs.splitByV {
+		clonotypeKeyColumns = append(clonotypeKeyColumns, "bestVHit")
+	}
+	if specs.splitByJ {
+		clonotypeKeyColumns = append(clonotypeKeyColumns, "bestJHit")
+	}
+	if specs.splitByC {
+		clonotypeKeyColumns = append(clonotypeKeyColumns, "bestCHit")
+	}
 
+	// filter pfconvParams by column name and get a list of fields from it
+	pfconvParams := pfconvParamsLib.getColumns(blockId, {assemblingFeature: assemblingFeature, imputed: imputed, cellTags: specs.cellTags, clonotypeKeyColumns: clonotypeKeyColumns})
 	// column (i.e. in tsv) -> pfconv params
 	columnsMap := {}
 	axesMap := {}
@@ -145,21 +158,11 @@ self.body(func(inputs) {
 		axesMap[axis.column] = axis
 	}
 
+	ll.print("__THE_LOG__ " + columnsList)
 	columns := []
 	for col in columnsList {
 		// getColumn := filter(pfconvParams.columns, func(item) { return item.column == col})
 		columns += [columnsMap[col]] // getColumn
-	}
-
-	clonotypeKeyColumns := ["nSeq"+assemblingFeature]
-	if specs.splitByV {
-		clonotypeKeyColumns = append(clonotypeKeyColumns, "bestVHit")
-	}
-	if specs.splitByJ {
-		clonotypeKeyColumns = append(clonotypeKeyColumns, "bestJHit")
-	}
-	if specs.splitByC {
-		clonotypeKeyColumns = append(clonotypeKeyColumns, "bestCHit")
 	}
 
 	// if UMI in data make visibility of "readCount" and "readFraction" columns optional
@@ -176,7 +179,7 @@ self.body(func(inputs) {
 	// create axes fields
 	axes := []
 	if len(specs.cellTags) == 0 {
-		axes = [axesMap["cloneId"]] // filter(pfconvParams.axes, func(item) { return item.column == "cloneId" })
+		axes = [axesMap["cloneId"], axesMap[text.join(clonotypeKeyColumns, "-")]] // filter(pfconvParams.axes, func(item) { return item.column == "cloneId" })
 	} else {
 		axes = pfconvParams.axes
 	}

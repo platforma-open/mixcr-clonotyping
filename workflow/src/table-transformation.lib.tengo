@@ -1,0 +1,35 @@
+ll := import("@platforma-sdk/workflow-tengo:ll")
+exec := import("@platforma-sdk/workflow-tengo:exec")
+assets := import("@platforma-sdk/workflow-tengo:assets")
+json := import("json")
+text := import("text")
+paggregateSw := assets.importSoftware("@platforma-open/milaboratories.software-ptransform:main")
+
+//// aggregating by-nodes output to make it uniquely addressable by it's native key
+transform := func(inputTsv, source_columns) {
+
+    aggregationWorkflow := { 
+        "steps": [
+            {
+                "type": "combine_columns_as_json",
+                "src": source_columns,
+                "dst": text.join(source_columns, "-")
+                }
+            ]
+        }
+
+    aggregateCmd := exec.builder().
+        printErrStreamToStdout().
+        software(paggregateSw).
+        arg("--workflow").arg("wf.json").
+        writeFile("wf.json", json.encode(aggregationWorkflow)).
+        arg("input.tsv").addFile("input.tsv", inputTsv).
+        arg("output.tsv").saveFile("output.tsv").
+        run()
+
+    return aggregateCmd.getFile("output.tsv")
+}
+
+export ll.toStrict({
+	transform: transform
+})

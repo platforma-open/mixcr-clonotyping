@@ -25,8 +25,8 @@ catalogs:
       specifier: 4.7.0-133-develop
       version: 4.7.0-133-develop
     '@platforma-open/milaboratories.software-ptransform':
-      specifier: ^1.1.0
-      version: 1.1.0
+      specifier: ^1.2.0
+      version: 1.2.0
     '@platforma-open/milaboratories.software-small-binaries':
       specifier: ^1.15.6
       version: 1.15.6
@@ -236,7 +236,7 @@ importers:
         version: 4.7.0-133-develop
       '@platforma-open/milaboratories.software-ptransform':
         specifier: 'catalog:'
-        version: 1.1.0
+        version: 1.2.0
       '@platforma-open/milaboratories.software-small-binaries':
         specifier: 'catalog:'
         version: 1.15.6
@@ -1099,8 +1099,8 @@ packages:
   '@platforma-open/milaboratories.software-mixcr@4.7.0-133-develop':
     resolution: {integrity: sha512-b7jnFwjbO+tmlCEstILbTqVYYF3a5tYk2albcWNsfrJW8oP+of1KIBVCKMKVBr0UyshmsFjOLtLyrtLEa/ObGQ==}
 
-  '@platforma-open/milaboratories.software-ptransform@1.1.0':
-    resolution: {integrity: sha512-iX4guha/vuxP5VCo9CTeDTDih7P94cEgF2stwgGJlMWsijNyu/fq6IjWW29KLvjUKqVP1Wbd0U9NJhNmJkMBvw==}
+  '@platforma-open/milaboratories.software-ptransform@1.2.0':
+    resolution: {integrity: sha512-OCSEvD9XqJomOeVPqbKntev0bX22Ieh4+Ljo2ucLXyZV1rhkt9GssCnAZqaV43Fkf127O4z6QFyG/G/8Wlau8w==}
 
   '@platforma-open/milaboratories.software-small-binaries.guided-command@1.0.4':
     resolution: {integrity: sha512-LD8XQDnR+L9oRD7JXE0VWGmv1/0cm+J71flrwBUWeIbuaenPC8Nsza8oy7JjLJ8AX+bm8XAyyJALuqBBqkL95Q==}
@@ -4552,7 +4552,7 @@ snapshots:
 
   '@platforma-open/milaboratories.software-mixcr@4.7.0-133-develop': {}
 
-  '@platforma-open/milaboratories.software-ptransform@1.1.0': {}
+  '@platforma-open/milaboratories.software-ptransform@1.2.0': {}
 
   '@platforma-open/milaboratories.software-small-binaries.guided-command@1.0.4': {}
 

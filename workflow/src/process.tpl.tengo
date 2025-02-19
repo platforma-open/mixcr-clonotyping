@@ -29,6 +29,7 @@ self.body(func(inputs) {
 	preset := inputs.preset
 	inputSpec := inputs.inputSpec
 	featureParams := inputs.featureParams
+	clonotypeKeyColumns := inputs.clonotypeKeyColumns
 	species := params.species
 	limitInput := params.limitInput
 	blockId := params.blockId
@@ -140,7 +141,6 @@ self.body(func(inputs) {
 	} else {
 		ll.panic("unexpected structure of input PColumn with sequencing data")
 	}
-
 	mixcrResults := llPFrames.aggregate(
 		inputs.inputData, aggIndices, mixcrAnalyzeTpl,
 		aggregationTargets,
@@ -154,6 +154,7 @@ self.body(func(inputs) {
 				reports: reports,
 				featureParams: featureParams
 			},
+			clonotypeKeyColumns: clonotypeKeyColumns,
 			presetContent: presetContent,
 			pfconvParams: purifiedPfconvCfg
 		}

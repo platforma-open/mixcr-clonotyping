@@ -6,6 +6,7 @@ getColumns := func(blockId, featureParams) {
 	assemblingFeature := featureParams.assemblingFeature
 	imputed := featureParams.imputed
 	cellTags := featureParams.cellTags
+	clonotypeKeyColumns := featureParams.clonotypeKeyColumns
 	featureSpec := getFeature.getProductiveFeature(assemblingFeature, imputed)
 	productiveFeature := featureSpec.productiveFeature
 	mutationVFeature := featureSpec.mutationVFeature
@@ -1287,36 +1288,59 @@ getColumns := func(blockId, featureParams) {
 		} else {
 			cols.columns = cols.columns + featureColumns + mutationColumns
 		}
+	}
 
-		cellTagsList := []
-		label := undefined
-		priority := 100000
-		if len(cellTags) > 0 {
-			for tag in cellTags {
-				if tag == "CELL" {
-					label = "Cell tag"
-				} else {
-					label = text.to_title(tag[:4]) + " " + text.to_lower(tag[4:])
-				}
-				cols.axes += [
-					{
-						column: "tagValue" + tag,
-						naRegex: "",
-						spec: {
-							name: "pl7.app/vdj/tagValueCELL",
-							type: "String",
-							annotations: {
-								"pl7.app/label": label,
-								"pl7.app/table/visibility": "default",
-								"pl7.app/table/orderPriority": string(priority)
-							}
+	cellTagsList := []
+	label := undefined
+	priority := 100000
+	if len(cellTags) > 0 {
+		for tag in cellTags {
+			if tag == "CELL" {
+				label = "Cell tag"
+			} else {
+				label = text.to_title(tag[:4]) + " " + text.to_lower(tag[4:])
+			}
+			cols.axes += [
+				{
+					column: "tagValue" + tag,
+					naRegex: "",
+					spec: {
+						name: "pl7.app/vdj/tagValueCELL",
+						type: "String",
+						domain: {
+							"pl7.app/blockId": blockId
+						},
+						annotations: {
+							"pl7.app/label": label,
+							"pl7.app/table/visibility": "default",
+							"pl7.app/table/orderPriority": string(priority)
 						}
 					}
-					]
-				priority -= 1
-			}
+				}
+				]
+			priority -= 1
 		}
 	}
+
+	cols.axes += [
+		{
+			column: text.join(clonotypeKeyColumns, "-"),
+			naRegex: "",
+			spec: {
+				name: "pl7.app/vdj/keyColumn",
+				type: "String",
+				domain: {
+					"pl7.app/blockId": blockId
+				},
+				annotations: {
+					"pl7.app/label": text.join(clonotypeKeyColumns, "-"),
+					"pl7.app/table/visibility": "optional",
+					"pl7.app/table/orderPriority": "110000"
+				}
+			}
+		}
+	]
+
 	return cols
 }
 
