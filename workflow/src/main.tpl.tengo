@@ -19,6 +19,12 @@ processTpl := assets.importTemplate(":process")
 
 wf.setPreRun(assets.importTemplate(":prerun"))
 
+wf.prepare(func(args){
+	return{
+		resolvedLibraryInput: wf.resolve(args.inputLibrary, { errIfMissing: false })
+	}
+})
+
 wf.body(func(args) {
 	// (begin) @TODO To be moved to SDK / Model
 
@@ -54,10 +60,31 @@ wf.body(func(args) {
 		presetResource = smart.createJsonResource(preset)
 	}
 
-	species := args.species
 	limitInput := args.limitInput
+	inputLibrary := args.resolvedLibraryInput
+	libraryFile := args.libraryFile
+
+	library := undefined
+	species := undefined
+	if (inputLibrary) {
+		library = inputLibrary.data
+		librarySpec := inputLibrary.spec
+		species = librarySpec["annotations"]["pl7.app/species"]
+	} else if (libraryFile) {
+		library = importFile(libraryFile.file)
+		species = args.customSpecies
+	} else {
+		library = false
+		species = args.species
+	}
+
+	//lib := inputLibrary.getFutureInputField("data")
+
+	ll.print("__THE_LOG__ " + library)
 
 	input := wf.resolve(inputRef)
+
+	//ll.print("__THE_LOG__ " +input)
 
 	getPreset := render.create(getPresetTpl, {
 		preset: presetResource,
@@ -88,6 +115,7 @@ wf.body(func(args) {
 		}),
 		featureParams: featureParams,
 		pfconvParams: pfconvParams,
+		library: library,
 		inputSpec: input.getFutureInputField("spec"),
 		inputData: input.getFutureInputField("data")
 	})
