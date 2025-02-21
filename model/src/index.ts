@@ -18,7 +18,9 @@ import { ProgressPrefix } from './progress';
 
 export const platforma = BlockModel.create('Heavy')
 
-  .withArgs<BlockArgs>({})
+  .withArgs<BlockArgs>({
+    customSpecies: ""
+  })
 
   .retentiveOutput('presets', (ctx) =>
     ctx.prerun?.resolve({ field: 'presets', assertFieldType: 'Input' })?.getFileHandle(),
@@ -159,6 +161,8 @@ export const platforma = BlockModel.create('Heavy')
     'prerunFileImports',
     mapResourceFields(getResourceField(StagingOutputs, 'fileImports'), getImportProgress(It)),
   )
+  .output(
+    'libraryUploadProgress', (ctx) => ctx.args.libraryFile ? ctx.outputs?.resolve('libraryImportHandle')?.getImportProgress() : undefined)
 
   .sections((_ctx) => {
     return [{ type: 'link', href: '/', label: 'Main' }];

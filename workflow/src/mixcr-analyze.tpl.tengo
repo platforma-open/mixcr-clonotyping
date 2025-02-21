@@ -79,11 +79,11 @@ self.body(func(inputs) {
 		mixcrCmdBuilder.arg("--limit-input").arg(string(limitInput))
 	}
 
-	if (library) {
+	if !is_undefined(library) {
 		mixcrCmdBuilder.arg("--species").arg(species).
 			arg("--library").arg("library.json").
 			addFile("library.json", library)
-	} else if (species) {
+	} else if is_undefined(species) {
 		species = params.species
 		mixcrCmdBuilder.arg("--species").arg(species)
 	}

@@ -142,12 +142,6 @@ self.body(func(inputs) {
 		ll.panic("unexpected structure of input PColumn with sequencing data")
 	}
 
-	//ll.print("__THE_LOG__ " + string(is_undefined(species)))
-	ll.print("__THE_LOG__ " + library)
-	//ll.print("__THE_LOG__ " + string(is_undefined(preset)))
-	//ll.print("__THE_LOG__ " + presetContent)
-	//ll.print("__THE_LOG__ " + purifiedPfconvCfg)
-	//ll.print("__THE_LOG__ " + featureParams)
 	mixcrResults := llPFrames.aggregate(
 		inputs.inputData, aggIndices, mixcrAnalyzeTpl,
 		aggregationTargets,

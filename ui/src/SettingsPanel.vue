@@ -122,7 +122,7 @@ type LocalState = {
 }
 
 const state = reactive<LocalState>({
-  tab: undefined,
+  tab: "fromBlock",
 })
 
 const computedTab = computed({
@@ -189,13 +189,13 @@ const librarySourceOptions = [
     <template v-if="computedTab === 'fromFile'">
       <PlFileInput
       v-model="app.model.args.libraryFile"
+      :progress="app.model.outputs.libraryUploadProgress"
       file-dialog-title="Select library file"
       clearable
       />
-      <PlTextField
-      :value="app.model.args.customSpecies"
-      clearable 
-      label="Species" 
+      <PlTextField v-model="app.model.args.customSpecies" 
+      clearable label="Species"
+      placeholder="Type spicies name"
       />
     </template>
 
