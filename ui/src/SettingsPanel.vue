@@ -116,6 +116,41 @@ function parseNumber(v: string): number {
 
   return parsed;
 }
+
+type LocalState = {
+  tab: "fromFile" | "fromBlock" | undefined;
+}
+
+const state = reactive<LocalState>({
+  tab: undefined,
+})
+
+const computedTab = computed({
+  get() {
+    return state.tab ?? (app.model.args.libraryFile ? "fromFile" : "fromBlock");
+  },
+  set(tab) {
+    state.tab = tab;
+  },
+});
+
+watch(computedTab, (newValue, oldValue)=>{
+  if (newValue === "fromFile") {
+    app.model.args.inputLibrary = undefined;
+  }
+  if (newValue === "fromBlock") {
+    app.model.args.libraryFile = undefined;
+  }
+})
+
+//const computedAcc = computed(
+//  () => { return (app.model.args.libraryFile || app.model.args.inputLibrary) ? true : false }
+//)
+
+const librarySourceOptions = [
+  { label: "From library builder", value: "fromBlock" },
+  { label: "From file", value: "fromFile" }
+] as const satisfies ListOption [];
 </script>
 
 <template>
@@ -146,5 +181,27 @@ function parseNumber(v: string): number {
       v-model="app.model.args.limitInput" :parse="parseNumber" :clearable="() => undefined"
       label="Take only this number of reads into analysis"
     />
+
+    <PlBtnGroup :options="librarySourceOptions" v-model="computedTab" label="Custom reference library" />
+    <PlDropdownRef
+      v-if="computedTab === 'fromBlock'"
+      :options="app.model.outputs.libraryOptions" 
+      v-model="app.model.args.inputLibrary"
+      label="Custom library"
+      clearable
+    />
+    <template v-if="computedTab === 'fromFile'">
+      <PlFileInput
+      v-model="app.model.args.libraryFile"
+      :progress="app.model.outputs.libraryUploadProgress"
+      file-dialog-title="Select library file"
+      clearable
+      />
+      <PlTextField v-model="app.model.args.customSpecies" 
+      clearable label="Species"
+      placeholder="Type spicies name"
+      />
+    </template>
+
   </PlAccordionSection>
 </template>

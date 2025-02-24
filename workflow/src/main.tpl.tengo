@@ -19,6 +19,12 @@ processTpl := assets.importTemplate(":process")
 
 wf.setPreRun(assets.importTemplate(":prerun"))
 
+wf.prepare(func(args){
+	return{
+		resolvedLibraryInput: wf.resolve(args.inputLibrary, { errIfMissing: false })
+	}
+})
+
 wf.body(func(args) {
 	// (begin) @TODO To be moved to SDK / Model
 
@@ -54,10 +60,33 @@ wf.body(func(args) {
 		presetResource = smart.createJsonResource(preset)
 	}
 
-	species := args.species
 	limitInput := args.limitInput
+	inputLibrary := args.resolvedLibraryInput
+	libraryFile := args.libraryFile
+
+	library := undefined
+	species := undefined
+	libraryImportHandle := undefined
+	if !is_undefined(inputLibrary) {
+		library = inputLibrary.data
+		librarySpec := inputLibrary.spec
+		species = librarySpec["annotations"]["pl7.app/species"]
+	} else if !is_undefined(libraryFile) {
+		fImport := file.importFile(libraryFile)
+		libraryImportHandle = fImport.handle
+		library = fImport.file
+		species = args.customSpecies
+	} else {
+		library = false
+		species = args.species
+	}
+
+	//lib := inputLibrary.getFutureInputField("data")
+
 
 	input := wf.resolve(inputRef)
+
+	//ll.print("__THE_LOG__ " +input)
 
 	getPreset := render.create(getPresetTpl, {
 		preset: presetResource,
@@ -88,6 +117,7 @@ wf.body(func(args) {
 		}),
 		featureParams: featureParams,
 		pfconvParams: pfconvParams,
+		library: library,
 		inputSpec: input.getFutureInputField("spec"),
 		inputData: input.getFutureInputField("data")
 	})
@@ -117,6 +147,10 @@ wf.body(func(args) {
 		fileImports: smart.createMapResource(maps.mapValues(fileImports, func(im) {
 			return im.handle
 		}))
+	}
+
+	if !is_undefined(libraryImportHandle) {
+		outputs.libraryImportHandle = libraryImportHandle
 	}
 
 	return {

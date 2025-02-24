@@ -29,6 +29,7 @@ self.body(func(inputs) {
 	preset := inputs.preset
 	inputSpec := inputs.inputSpec
 	featureParams := inputs.featureParams
+	library := inputs.library
 	species := params.species
 	limitInput := params.limitInput
 	blockId := params.blockId
@@ -154,6 +155,7 @@ self.body(func(inputs) {
 				reports: reports,
 				featureParams: featureParams
 			},
+			library: library,
 			presetContent: presetContent,
 			pfconvParams: purifiedPfconvCfg
 		}
