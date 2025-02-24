@@ -33,7 +33,7 @@ export const platforma = BlockModel.create('Heavy')
   )
 
   .output('libraryOptions', (ctx) =>
-    ctx.resultPool.getOptions((spec) => (spec.annotations ?? {})["pl7.app/vdj/isLibrary"] === "true",
+    ctx.resultPool.getOptions((spec) => spec.annotations?.["pl7.app/vdj/isLibrary"] === "true",
                                         {includeNativeLabel: true, addLabelAsSuffix:true})
   )
 
@@ -162,7 +162,7 @@ export const platforma = BlockModel.create('Heavy')
     mapResourceFields(getResourceField(StagingOutputs, 'fileImports'), getImportProgress(It)),
   )
   .output(
-    'libraryUploadProgress', (ctx) => ctx.args.libraryFile ? ctx.outputs?.resolve('libraryImportHandle')?.getImportProgress() : undefined)
+    'libraryUploadProgress', (ctx) => ctx.outputs?.resolve({field: 'libraryImportHandle', allowPermanentAbsence: true})?.getImportProgress(), {isActive: true})
 
   .sections((_ctx) => {
     return [{ type: 'link', href: '/', label: 'Main' }];

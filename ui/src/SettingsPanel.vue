@@ -122,12 +122,12 @@ type LocalState = {
 }
 
 const state = reactive<LocalState>({
-  tab: "fromBlock",
+  tab: undefined,
 })
 
 const computedTab = computed({
   get() {
-    return state.tab ?? (app.model.args.libraryFile ? "fromFile" : undefined);
+    return state.tab ?? (app.model.args.libraryFile ? "fromFile" : "fromBlock");
   },
   set(tab) {
     state.tab = tab;
@@ -142,6 +142,10 @@ watch(computedTab, (newValue, oldValue)=>{
     app.model.args.libraryFile = undefined;
   }
 })
+
+//const computedAcc = computed(
+//  () => { return (app.model.args.libraryFile || app.model.args.inputLibrary) ? true : false }
+//)
 
 const librarySourceOptions = [
   { label: "From library builder", value: "fromBlock" },
