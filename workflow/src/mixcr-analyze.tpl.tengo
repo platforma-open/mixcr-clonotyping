@@ -24,6 +24,7 @@ progressPrefix := "[==PROGRESS==]"
 
 self.body(func(inputs) {
 	inputData := inputs[pConstants.VALUE_FIELD_NAME]
+	aggregationAxesNames := inputs[pConstants.AGGREGATION_AXES_NAMES_FIELD_NAME]
 
 	params := inputs.params
 	preset := inputs.preset
@@ -92,12 +93,14 @@ self.body(func(inputs) {
 	}
 
 	if inputDataMeta.keyLength == 0 {
+		ll.assert(aggregationAxesNames == [], "unexpected aggregation axes names")
 		inputFile := inputData.inputs()["[]"]
 		ll.assert(!is_undefined(inputFile), "unexpected agg group structure")
 		inputFileName := "input." + fileExtension
 		mixcrCmdBuilder.addFile(inputFileName, inputFile)
 		mixcrCmdBuilder.arg(inputFileName)
 	} else if inputDataMeta.keyLength == 1 {
+		ll.assert(aggregationAxesNames == ["pl7.app/sequencing/readIndex"], "unexpected aggregation axes names")
 		for sKey, inputFile in inputData.inputs() {
 			key := json.decode(sKey)
 			if len(key) != 1 {
@@ -111,6 +114,7 @@ self.body(func(inputs) {
 		}
 		mixcrCmdBuilder.arg("input_{{R}}." + fileExtension)
 	} else if inputDataMeta.keyLength == 2 {
+		ll.assert(aggregationAxesNames == ["pl7.app/sequencing/lane", "pl7.app/sequencing/readIndex"], "unexpected aggregation axes names")
 		for sKey, inputFile in inputData.inputs() {
 			key := json.decode(sKey)
 			if len(key) != 2 {
