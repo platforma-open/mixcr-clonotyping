@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 1.12.0
+
+### Minor Changes
+
+- db3cc0a: Custom reference library from library builder block or file
+
 ## 1.11.0
 
 ### Minor Changes
