@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Preset } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
 import { SupportedPresetList } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
-import type { ImportFileHandle, Ref as PlRef } from '@platforma-sdk/model';
+import type { ImportFileHandle, PlRef } from '@platforma-sdk/model';
 import { getFilePathFromHandle } from '@platforma-sdk/model';
 import type { ListOption } from '@platforma-sdk/ui-vue';
 import { PlAccordionSection, PlBtnGroup, PlDropdown, PlDropdownRef, PlFileInput, PlTextField, ReactiveFileContent } from '@platforma-sdk/ui-vue';
@@ -198,7 +198,8 @@ const librarySourceOptions = [
       clearable
       />
       <PlTextField v-model="app.model.args.customSpecies" 
-      clearable label="Species"
+      :clearable="() => undefined"
+      label="Species"
       placeholder="Type spicies name"
       />
     </template>
