@@ -30,6 +30,7 @@ self.body(func(inputs) {
 		if !text.has_prefix(fileName, FILE_NAME_PREFIX) || !text.has_suffix(fileName, FILE_NAME_SUFFIX) {
 			ll.panic("unexpected file name: %v", fileName)
 		}
+<<<<<<< HEAD
 		if newKey {
 			newFile := tableTransformation.transform(file, clonotypeKeyAxes)
 			chain := fileName[FILE_NAME_PREFIX_LEN:(len(fileName) - FILE_NAME_SUFFIX_LEN)]
@@ -38,6 +39,11 @@ self.body(func(inputs) {
 			chain := fileName[FILE_NAME_PREFIX_LEN:(len(fileName) - FILE_NAME_SUFFIX_LEN)]
 			csvMap.add([chain], file)
 		}
+=======
+		newFile := tableTransformation.addCombinedColumn(file, clonotypeKeyColumns, "cloneKey")
+		chain := fileName[FILE_NAME_PREFIX_LEN:(len(fileName) - FILE_NAME_SUFFIX_LEN)]
+		csvMap.add([chain], newFile)
+>>>>>>> 5bc35d98b1affbd81ce5d6f9bc2859ceb9f0167f
 	}
 	csvMap = csvMap.build()
 
