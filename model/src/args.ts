@@ -32,7 +32,7 @@ export const BlockArgsValid = z.object({
   libraryFile: z.string().transform((v) => v as ImportFileHandle).optional(),
   preset: Preset,
   species: z.string().optional(),
-  customSpecies: z.string(),
+  customSpecies: z.string().optional(),
   limitInput: z.number().int().optional(),
   title: z.string().optional(),
   presetCommonName: z.string().optional(),

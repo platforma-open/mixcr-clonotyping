@@ -18,9 +18,7 @@ import { ProgressPrefix } from './progress';
 
 export const platforma = BlockModel.create('Heavy')
 
-  .withArgs<BlockArgs>({
-    customSpecies: ""
-  })
+  .withArgs<BlockArgs>({})
 
   .retentiveOutput('presets', (ctx) =>
     ctx.prerun?.resolve({ field: 'presets', assertFieldType: 'Input' })?.getFileHandle(),
