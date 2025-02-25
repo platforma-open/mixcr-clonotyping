@@ -79,14 +79,27 @@ self.body(func(inputs) {
 		imputed = true
 	}
 
+	//create key columns
+	clonotypeKeyAxes := ["nSeq"+assemblingFeature, "bestVHit", "bestJHit"]
+	clonotypeKeyColumns := ["nSeq"+assemblingFeature, "bestVHit", "bestJHit"]
+	if specs.splitByC {
+		clonotypeKeyAxes = append(clonotypeKeyColumns, "bestCHit")
+		clonotypeKeyColumns = append(clonotypeKeyColumns, "bestCHit")
+	}
+	if assemblingFeature != "CDR3" {
+		clonotypeKeyColumns = append(clonotypeKeyColumns, "nSeqCDR3", "aaSeqCDR3")
+	}
+
 	//if using readCount or umiCount
 	columnsList := []
 	hasUmi := false
 	if len(specs.umiTags) == 0 {
-		columnsList += ["readCount", "readFraction"]
+		columnsList = append(columnsList, "readCount", "readFraction")
+		clonotypeKeyColumns = append(clonotypeKeyColumns, "readCount", "readFraction")
 	} else {
 		hasUmi = true
-		columnsList += ["uniqueMoleculeCount", "uniqueMoleculeFraction", "readCount", "readFraction"]
+		columnsList = append(columnsList, "uniqueMoleculeCount", "uniqueMoleculeFraction", "readCount", "readFraction")
+		clonotypeKeyColumns = append(clonotypeKeyColumns, "uniqueMoleculeCount", "uniqueMoleculeFraction", "readCount", "readFraction")
 	}
 
 	// filter columns by fieldsToColumns
@@ -134,20 +147,11 @@ self.body(func(inputs) {
 			"nMutationsFR4", "aaMutationsFR4", "nMutationsCountFR4", "aaMutationsCountFR4", "nMutationsRateFR4", "aaMutationsRateFR4"]
 	}
 
-	//create key columns
-	clonotypeKeyColumns := ["nSeq"+assemblingFeature]
-	if specs.splitByV {
-		clonotypeKeyColumns = append(clonotypeKeyColumns, "bestVHit")
-	}
-	if specs.splitByJ {
-		clonotypeKeyColumns = append(clonotypeKeyColumns, "bestJHit")
-	}
-	if specs.splitByC {
-		clonotypeKeyColumns = append(clonotypeKeyColumns, "bestCHit")
-	}
-
 	// filter pfconvParams by column name and get a list of fields from it
-	pfconvParams := pfconvParamsLib.getColumns(blockId, {assemblingFeature: assemblingFeature, imputed: imputed, cellTags: specs.cellTags, clonotypeKeyColumns: clonotypeKeyColumns})
+	pfconvParams := pfconvParamsLib.getColumns(blockId, 
+		{assemblingFeature: assemblingFeature, imputed: imputed, cellTags: specs.cellTags, generateKey: false, clonotypeKeyAxes: clonotypeKeyAxes})
+	pfconvParamsForKey := pfconvParamsLib.getColumns(blockId, 
+		{assemblingFeature: assemblingFeature, imputed: imputed, cellTags: specs.cellTags, generateKey: true, clonotypeKeyAxes: clonotypeKeyAxes})
 	// column (i.e. in tsv) -> pfconv params
 	columnsMap := {}
 	axesMap := {}
@@ -158,11 +162,21 @@ self.body(func(inputs) {
 		axesMap[axis.column] = axis
 	}
 
-	ll.print("__THE_LOG__ " + columnsList)
+	columnsNewKeyMap := {}
+	axesNewKeyMap := {}
+	for col in pfconvParamsForKey.columns {
+		columnsNewKeyMap[col.column] = col
+	}
+
 	columns := []
 	for col in columnsList {
 		// getColumn := filter(pfconvParams.columns, func(item) { return item.column == col})
 		columns += [columnsMap[col]] // getColumn
+	}
+
+	columnsNewKey := []
+	for col in clonotypeKeyColumns {
+		columnsNewKey += [columnsNewKeyMap[col]]
 	}
 
 	// if UMI in data make visibility of "readCount" and "readFraction" columns optional
@@ -178,10 +192,13 @@ self.body(func(inputs) {
 
 	// create axes fields
 	axes := []
+	axesNewKey := []
 	if len(specs.cellTags) == 0 {
-		axes = [axesMap["cloneId"], axesMap[text.join(clonotypeKeyColumns, "-")]] // filter(pfconvParams.axes, func(item) { return item.column == "cloneId" })
+		axes = [axesMap["cloneId"]] // filter(pfconvParams.axes, func(item) { return item.column == "cloneId" })
+		axesNewKey = pfconvParamsForKey.axes
 	} else {
 		axes = pfconvParams.axes
+		axesNewKey = pfconvParamsForKey.axes
 	}
 
 	return {
@@ -191,7 +208,13 @@ self.body(func(inputs) {
 			storageFormat: "Binary",
 			partitionKeyLength: 0
 		},
-		clonotypeKeyColumns: clonotypeKeyColumns,
+		paramsNewkey: {
+			axes: axesNewKey,
+			columns: columnsNewKey,
+			storageFormat: "Binary",
+			partitionKeyLength: 0
+		},
+		clonotypeKeyAxes: clonotypeKeyAxes,
 		featureParams: {
 			assemblingFeature: assemblingFeature,
 			imputed: imputed

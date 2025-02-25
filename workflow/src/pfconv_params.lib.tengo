@@ -6,7 +6,8 @@ getColumns := func(blockId, featureParams) {
 	assemblingFeature := featureParams.assemblingFeature
 	imputed := featureParams.imputed
 	cellTags := featureParams.cellTags
-	clonotypeKeyColumns := featureParams.clonotypeKeyColumns
+	generateKey := featureParams.generateKey
+	clonotypeKeyAxes := featureParams.clonotypeKeyAxes
 	featureSpec := getFeature.getProductiveFeature(assemblingFeature, imputed)
 	productiveFeature := featureSpec.productiveFeature
 	mutationVFeature := featureSpec.mutationVFeature
@@ -1321,10 +1322,10 @@ getColumns := func(blockId, featureParams) {
 			priority -= 1
 		}
 	}
-
-	cols.axes += [
+	if generateKey {
+		cols["axes"] = [
 		{
-			column: text.join(clonotypeKeyColumns, "-"),
+			column: text.join(clonotypeKeyAxes, "-"),
 			naRegex: "",
 			spec: {
 				name: "pl7.app/vdj/keyColumn",
@@ -1333,13 +1334,13 @@ getColumns := func(blockId, featureParams) {
 					"pl7.app/blockId": blockId
 				},
 				annotations: {
-					"pl7.app/label": text.join(clonotypeKeyColumns, "-"),
+					"pl7.app/label": text.join(clonotypeKeyAxes, "-"),
 					"pl7.app/table/visibility": "optional",
 					"pl7.app/table/orderPriority": "110000"
 				}
 			}
 		}
-	]
+	]}
 
 	return cols
 }

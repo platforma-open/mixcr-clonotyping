@@ -20,7 +20,8 @@ FILE_NAME_SUFFIX_LEN := len(FILE_NAME_SUFFIX)
 
 self.body(func(inputs) {
 	pfconvParams := inputs.pfconvParams
-	clonotypeKeyColumns := inputs.clonotypeKeyColumns
+	clonotypeKeyAxes := inputs.clonotypeKeyAxes
+	newKey := newKey
 	data := self.rawInputs().data.getValue()
 
 	csvMap := pcolumn.resourceMapBuilder(/* key length */ 1)
@@ -29,9 +30,14 @@ self.body(func(inputs) {
 		if !text.has_prefix(fileName, FILE_NAME_PREFIX) || !text.has_suffix(fileName, FILE_NAME_SUFFIX) {
 			ll.panic("unexpected file name: %v", fileName)
 		}
-		newFile := tableTransformation.transform(file, clonotypeKeyColumns)
-		chain := fileName[FILE_NAME_PREFIX_LEN:(len(fileName) - FILE_NAME_SUFFIX_LEN)]
-		csvMap.add([chain], newFile)
+		if newKey {
+			newFile := tableTransformation.transform(file, clonotypeKeyAxes)
+			chain := fileName[FILE_NAME_PREFIX_LEN:(len(fileName) - FILE_NAME_SUFFIX_LEN)]
+			csvMap.add([chain], newFile)
+		} esle {
+			chain := fileName[FILE_NAME_PREFIX_LEN:(len(fileName) - FILE_NAME_SUFFIX_LEN)]
+			csvMap.add([chain], file)
+		}
 	}
 	csvMap = csvMap.build()
 

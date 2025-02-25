@@ -75,8 +75,9 @@ wf.body(func(args) {
 		specs: specsContent
 	})
 	pfconvParams := calculatePfconvParams.output("params", 24 * 60 * 60 * 1000)
+	pfconvParamsNewKey := calculatePfconvParams.output("paramsNewKey", 24 * 60 * 60 * 1000)
 	featureParams := calculatePfconvParams.output("featureParams", 24 * 60 * 60 * 1000)
-	clonotypeKeyColumns := calculatePfconvParams.output("clonotypeKeyColumns", 24 * 60 * 60 * 1000)
+	clonotypeKeyAxes := calculatePfconvParams.output("clonotypeKeyAxes", 24 * 60 * 60 * 1000)
 
 	runMixcr := render.createEphemeral(processTpl, {
 		preset: presetResource,
@@ -88,8 +89,9 @@ wf.body(func(args) {
 			presetCommonName: args.presetCommonName
 		}),
 		featureParams: featureParams,
-		clonotypeKeyColumns: clonotypeKeyColumns,
+		clonotypeKeyAxes: clonotypeKeyAxes,
 		pfconvParams: pfconvParams,
+		pfconvParamsNewKey: pfconvParamsNewKey
 		inputSpec: input.getFutureInputField("spec"),
 		inputData: input.getFutureInputField("data")
 	})

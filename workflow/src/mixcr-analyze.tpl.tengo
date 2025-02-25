@@ -28,7 +28,7 @@ self.body(func(inputs) {
 
 	params := inputs.params
 	preset := inputs.preset
-	clonotypeKeyColumns := inputs.clonotypeKeyColumns
+	clonotypeKeyAxes := inputs.clonotypeKeyAxes
 	species := params.species
 	limitInput := params.limitInput
 	fileExtension := params.fileExtension
@@ -37,6 +37,7 @@ self.body(func(inputs) {
 
 	presetContent := inputs.presetContent // already in JSON
 	pfconvParams := inputs.pfconvParams // already in JSON
+	pfconvParamsNewKey := inputs.pfconvParamsNewKey
 
 	if !is_map(presetContent) {
 		ll.panic("malformed presetContent %v", presetContent)
@@ -160,28 +161,35 @@ self.body(func(inputs) {
 		reportsMap.add([report.id, "txt"], mixcrCmd.getFile(report.fileTxt))
 	}
 
+	result := {
+			qc: mixcrCmd.getFile("result.qc.json"),
+			log: mixcrCmd.getStdoutStream(),
+			reports: reportsMap.build(),
+			clns: mixcrCmd.getFile(clnsFileName),
+		}
+
 	// converting clone tables to p columns
 	clones := {}
+	result := {}
 	if hasAssembleCells {
 		cloneTable := mixcrCmd.getFile("result.clones.tsv")
-		transformedCloneTable := tableTransformation.transform(cloneTable, clonotypeKeyColumns)
-		clones = xsv.importFile(transformedCloneTable, "tsv", pfconvParams, { dataOnly: true })
+		clones = xsv.importFile(cloneTable, "tsv", pfconvParams, { dataOnly: true })
+		result.clones = clones
 	} else {
 		clones = render.create(exportClonesTpl, {
 			data: mixcrCmd.getFileSet("clones"),
 			pfconvParams: pfconvParams,
-			clonotypeKeyColumns: clonotypeKeyColumns
+			clonotypeKeyAxes: clonotypeKeyAxes,
+			newKey: false
 		}).output("result", 8 * 24 * 60 * 60 * 1000)
-	}
-	
-
-	result := {
-		qc: mixcrCmd.getFile("result.qc.json"),
-		log: mixcrCmd.getStdoutStream(),
-		reports: reportsMap.build(),
-		clns: mixcrCmd.getFile(clnsFileName),
-		clones: clones
-	}
+		clonesNewKey = render.create(exportClonesTpl, {
+			data: mixcrCmd.getFileSet("clones"),
+			pfconvParams: pfconvParamsNewKey,
+			clonotypeKeyAxes: clonotypeKeyAxes,
+			newKey: true
+		}).output("result", 8 * 24 * 60 * 60 * 1000)
+		result.clones = clones
+		result.clonesNewKey = clonesNewKey
 
 	return result
 })

@@ -29,7 +29,7 @@ self.body(func(inputs) {
 	preset := inputs.preset
 	inputSpec := inputs.inputSpec
 	featureParams := inputs.featureParams
-	clonotypeKeyColumns := inputs.clonotypeKeyColumns
+	clonotypeKeyAxes := inputs.clonotypeKeyAxes
 	species := params.species
 	limitInput := params.limitInput
 	blockId := params.blockId
@@ -37,6 +37,7 @@ self.body(func(inputs) {
 
 	presetContent := inputs.presetContent.getDataAsJson()
 	pfconvParams := inputs.pfconvParams
+	pfconvParamsNewKey := inputs.pfconvParamsNewKey
 
 	if is_undefined(presetContent) {
 		ll.panic("no presetContent")
@@ -90,6 +91,12 @@ self.body(func(inputs) {
 	})
 	purifiedPfconvCfg := decomposition.purifiedCfg
 	cloneColumnsSpec := decomposition.columnsSpec
+
+	decompositionNewKey := pUtil.decomposePfconvImportCfg(pfconvParamsNewKey, {
+		additionalAxesSpec: cColumnsAdditionalAxesSpec
+	})
+	purifiedPfconvNewKeyCfg := decompositionNewKey.purifiedCfg
+	cloneColumnsNewKeySpec := decompositionNewKey.columnsSpec
 
 	fileExtension := inputSpec.domain["pl7.app/fileExtension"]
 
@@ -154,9 +161,10 @@ self.body(func(inputs) {
 				reports: reports,
 				featureParams: featureParams
 			},
-			clonotypeKeyColumns: clonotypeKeyColumns,
+			clonotypeKeyAxes: clonotypeKeyAxes,
 			presetContent: presetContent,
-			pfconvParams: purifiedPfconvCfg
+			pfconvParams: purifiedPfconvCfg,
+			pfconvParamsNewKey: purifiedPfconvNewKeyCfg
 		}
 	)
 
@@ -165,6 +173,14 @@ self.body(func(inputs) {
 		clones.add(columnId, trace.inject(columnSpec), mixcrResults.output("clones/" + columnId))
 	}
 	clones = clones.build()
+
+	if !hasAssembleCells {
+		clonesNewKey := pframes.pFrameBuilder()
+		for columnId, columnSpec in cloneColumnsNewKeySpec {
+			clonesNewKey.add(columnId, trace.inject(columnSpec), mixcrResults.output("clonesNewKey/" + columnId))
+		}
+		clonesNewKey = clonesNewKey.build()
+	}
 
 	joinOrUndefined := func(arr) {
 		if is_undefined(arr) {
@@ -200,7 +216,7 @@ self.body(func(inputs) {
 		clnsAnnotations["mixcr.com/cellsAssembled"] = "true"
 	}
 
-	return {
+	output := {
 		"qc.spec": trace.inject({
 			kind: "PColumn",
 			name: "mixcr.com/qc",
@@ -269,6 +285,12 @@ self.body(func(inputs) {
 		}),
 		"clns.data": mixcrResults.output("clns"),
 
-		clones: clones
+		clones: clones,
 	}
+
+	if !hasAssembleCells {
+		output.clonesNewKey = clonesNewKey
+	}
+
+	return output
 })
