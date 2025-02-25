@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.7.0
+
+### Minor Changes
+
+- a370729: Custom library species corrected
+
 ## 1.6.0
 
 ### Minor Changes
