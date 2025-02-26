@@ -10,6 +10,7 @@ render := import("@platforma-sdk/workflow-tengo:render")
 pframes := import("@platforma-sdk/workflow-tengo:pframes")
 pcolumn := import("@platforma-sdk/workflow-tengo:pframes.pcolumn")
 xsv := import("@platforma-sdk/workflow-tengo:pframes.xsv")
+file := import("@platforma-sdk/workflow-tengo:file")
 mixcr := import(":mixcr")
 times := import("times")
 
@@ -28,6 +29,7 @@ self.body(func(inputs) {
 
 	params := inputs.params
 	preset := inputs.preset
+	library := inputs.library
 	species := params.species
 	limitInput := params.limitInput
 	fileExtension := params.fileExtension
@@ -74,12 +76,17 @@ self.body(func(inputs) {
 
 	mixcr.addAdditionalColumnArgs(mixcrCmdBuilder, featureParams)
 
-	if !is_undefined(species) {
-		mixcrCmdBuilder.arg("--species").arg(species)
-	}
-
 	if !is_undefined(limitInput) {
 		mixcrCmdBuilder.arg("--limit-input").arg(string(limitInput))
+	}
+
+	if library {
+		mixcrCmdBuilder.arg("--species").arg(species).
+			arg("--library").arg("library.json").
+			addFile("library.json", library)
+	} else if !is_undefined(species) {
+		species = params.species
+		mixcrCmdBuilder.arg("--species").arg(species)
 	}
 
 	if smart.isResource(preset) /* file */ {

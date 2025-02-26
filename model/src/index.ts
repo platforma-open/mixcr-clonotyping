@@ -30,6 +30,16 @@ export const platforma = BlockModel.create('Heavy')
       ?.getDataAsJson<string>(),
   )
 
+  .output('libraryOptions', (ctx) =>
+    ctx.resultPool.getOptions((spec) => spec.annotations?.["pl7.app/vdj/isLibrary"] === "true",
+                                        {includeNativeLabel: true, addLabelAsSuffix:true})
+  )
+
+  .output('datasetSpec', (ctx) => {
+    if (ctx.args.inputLibrary) return ctx.resultPool.getSpecByRef(ctx.args.inputLibrary);
+    else return undefined;
+  })
+
   .output('qc', (ctx) =>
     parseResourceMap(ctx.outputs?.resolve('qc'), (acc) => acc.getFileHandle(), true),
   )
@@ -149,6 +159,8 @@ export const platforma = BlockModel.create('Heavy')
     'prerunFileImports',
     mapResourceFields(getResourceField(StagingOutputs, 'fileImports'), getImportProgress(It)),
   )
+  .output(
+    'libraryUploadProgress', (ctx) => ctx.outputs?.resolve({field: 'libraryImportHandle', allowPermanentAbsence: true})?.getImportProgress(), {isActive: true})
 
   .sections((_ctx) => {
     return [{ type: 'link', href: '/', label: 'Main' }];

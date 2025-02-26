@@ -28,8 +28,11 @@ export type Preset = z.infer<typeof Preset>;
 
 export const BlockArgsValid = z.object({
   input: PlRef,
+  inputLibrary: PlRef.optional(),
+  libraryFile: z.string().transform((v) => v as ImportFileHandle).optional(),
   preset: Preset,
   species: z.string().optional(),
+  customSpecies: z.string().optional(),
   limitInput: z.number().int().optional(),
   title: z.string().optional(),
   presetCommonName: z.string().optional(),

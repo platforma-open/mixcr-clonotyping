@@ -1,6 +1,6 @@
 {
   "name": "@platforma-open/milaboratories.mixcr-clonotyping.ui",
-  "version": "1.7.2",
+  "version": "1.9.0",
   "type": "module",
   "scripts": {
     "dev": "vite",

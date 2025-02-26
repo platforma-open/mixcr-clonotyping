@@ -43,12 +43,11 @@ self.body(func(inputs) {
 			arg(preset.name)
 	}
 
-
-	mixcr.addAdditionalColumnArgs(mixcrExportPresetCmdBuilder, {assemblingFeature: "CDR3", imputed: false})
-
 	if !is_undefined(species) {
 		mixcrExportPresetCmdBuilder.arg("--species").arg(species)
 	}
+
+	mixcr.addAdditionalColumnArgs(mixcrExportPresetCmdBuilder, {assemblingFeature: "CDR3", imputed: false})
 
 	mixcrExportPresetCmd := mixcrExportPresetCmdBuilder.arg("preset.json").
 		saveFileContent("preset.json").
