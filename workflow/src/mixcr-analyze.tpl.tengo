@@ -46,8 +46,8 @@ self.body(func(inputs) {
 		ll.panic("malformed presetContent %v", presetContent)
 	}
 
-	if !is_map(pfconvParamsById) {
-		ll.panic("malformed pfconvParams %v", pfconvParamsById)
+	if !is_map(pfconvParamsById) || !is_map(pfconvParamsByKey) {
+		ll.panic("malformed pfconvParams")
 	}
 
 	inputDataMeta := inputData.getDataAsJson()
@@ -173,11 +173,11 @@ self.body(func(inputs) {
 	}
 
 	result := {
-			qc: mixcrCmd.getFile("result.qc.json"),
-			log: mixcrCmd.getStdoutStream(),
-			reports: reportsMap.build(),
-			clns: mixcrCmd.getFile(clnsFileName)
-		}
+		qc: mixcrCmd.getFile("result.qc.json"),
+		log: mixcrCmd.getStdoutStream(),
+		reports: reportsMap.build(),
+		clns: mixcrCmd.getFile(clnsFileName)
+	}
 
 	// converting clone tables to p columns
 	clonesById := {}
@@ -185,7 +185,7 @@ self.body(func(inputs) {
 	if hasAssembleCells {
 		cloneTable := mixcrCmd.getFile("result.clones.tsv")
 		clonesById = xsv.importFile(cloneTable, "tsv", pfconvParamsById, { dataOnly: true })
-		result.clones = clonesById
+		result.clonesById = clonesById
 	} else {
 		clonesById = render.create(exportClonesBulkTpl, {
 			data: mixcrCmd.getFileSet("clones"),
@@ -199,8 +199,8 @@ self.body(func(inputs) {
 			clonotypeKeyAxes: clonotypeKeyAxes,
 			aggKey: true
 		}).output("result", 8 * 24 * 60 * 60 * 1000)
-		result.clones = clonesById
-		result.clonesKey = clonesByKey
+		result.clonesById = clonesById
+		result.clonesByKey = clonesByKey
 	}
 
 	return result
