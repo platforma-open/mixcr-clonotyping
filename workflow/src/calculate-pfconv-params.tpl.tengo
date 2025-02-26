@@ -19,7 +19,7 @@ text := import("text")
 // 	}
 // })
 
-self.defineOutputs("params", "featureParams", "clonotypeKeyColumns")
+self.defineOutputs("paramsById", "paramsByKey", "featureParams", "clonotypeKeyAxes")
 
 toCombinedDomainKey := func(spec) {
 	result := [spec.name]
@@ -148,69 +148,73 @@ self.body(func(inputs) {
 	}
 
 	// filter pfconvParams by column name and get a list of fields from it
-	pfconvParams := pfconvParamsLib.getColumns(blockId, 
+	pfconvParamsById := pfconvParamsLib.getColumns(blockId, 
 		{assemblingFeature: assemblingFeature, imputed: imputed, cellTags: specs.cellTags, generateKey: false, clonotypeKeyAxes: clonotypeKeyAxes})
-	pfconvParamsForKey := pfconvParamsLib.getColumns(blockId, 
+	pfconvParamsByKey := pfconvParamsLib.getColumns(blockId, 
 		{assemblingFeature: assemblingFeature, imputed: imputed, cellTags: specs.cellTags, generateKey: true, clonotypeKeyAxes: clonotypeKeyAxes})
 	// column (i.e. in tsv) -> pfconv params
-	columnsMap := {}
-	axesMap := {}
-	for col in pfconvParams.columns {
-		columnsMap[col.column] = col
+	columnsByIdMap := {}
+	axesByIdMap := {}
+	for col in pfconvParamsById.columns {
+		columnsByIdMap[col.column] = col
 	}
-	for axis in pfconvParams.axes {
-		axesMap[axis.column] = axis
-	}
-
-	columnsNewKeyMap := {}
-	axesNewKeyMap := {}
-	for col in pfconvParamsForKey.columns {
-		columnsNewKeyMap[col.column] = col
+	for axis in pfconvParamsById.axes {
+		axesByIdMap[axis.column] = axis
 	}
 
-	columns := []
+	columnsByKeyMap := {}
+	axesByKeyMap := {}
+	for col in pfconvParamsByKey.columns {
+		columnsByKeyMap[col.column] = col
+	}
+
+	columnsById := []
 	for col in columnsList {
 		// getColumn := filter(pfconvParams.columns, func(item) { return item.column == col})
-		columns += [columnsMap[col]] // getColumn
+		columnsById += [columnsByIdMap[col]] // getColumn
 	}
 
-	columnsNewKey := []
+	columnsByKey := []
 	for col in clonotypeKeyColumns {
-		columnsNewKey += [columnsNewKeyMap[col]]
+		columnsByKey += [columnsByKeyMap[col]]
 	}
 
 	// if UMI in data make visibility of "readCount" and "readFraction" columns optional
 	targetColumns := ["readCount", "readFraction"]
 
 	if hasUmi {
-		for column in columns {
+		for column in columnsById {
 			if contains(targetColumns, column.column) {
 				column.spec.annotations["pl7.app/table/visibility"] = "optional"
 			}
 		}
 	}
 
+	for col in columnsByKey {
+		col.id = col.id + "-cloneKey"
+	}
+
 	// create axes fields
-	axes := []
-	axesNewKey := []
+	axesById := []
+	axesByKey := []
 	if len(specs.cellTags) == 0 {
-		axes = [axesMap["cloneId"]] // filter(pfconvParams.axes, func(item) { return item.column == "cloneId" })
-		axesNewKey = pfconvParamsForKey.axes
+		axesById = [axesByIdMap["cloneId"]] // filter(pfconvParams.axes, func(item) { return item.column == "cloneId" })
+		axesByKey = pfconvParamsByKey.axes
 	} else {
-		axes = pfconvParams.axes
-		axesNewKey = pfconvParamsForKey.axes
+		axesById = pfconvParamsById.axes
+		axesByKey = pfconvParamsByKey.axes
 	}
 
 	return {
-		params: {
-			axes: axes,
-			columns: columns,
+		paramsById: {
+			axes: axesById,
+			columns: columnsById,
 			storageFormat: "Binary",
 			partitionKeyLength: 0
 		},
-		paramsNewkey: {
-			axes: axesNewKey,
-			columns: columnsNewKey,
+		paramsByKey: {
+			axes: axesByKey,
+			columns: columnsByKey,
 			storageFormat: "Binary",
 			partitionKeyLength: 0
 		},

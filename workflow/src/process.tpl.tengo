@@ -21,7 +21,7 @@ self.awaitState("InputsLocked")
 self.awaitState("params", "ResourceReady")
 self.awaitState("inputSpec", "ResourceReady")
 self.awaitState("presetContent", "ResourceReady")
-self.awaitState("pfconvParams", "ResourceReady")
+self.awaitState("pfconvParamsById", "ResourceReady")
 self.awaitState("featureParams", "ResourceReady")
 
 self.body(func(inputs) {
@@ -36,14 +36,14 @@ self.body(func(inputs) {
 	presetCommonName := params.presetCommonName
 
 	presetContent := inputs.presetContent.getDataAsJson()
-	pfconvParams := inputs.pfconvParams
-	pfconvParamsNewKey := inputs.pfconvParamsNewKey
+	pfconvParamsById := inputs.pfconvParamsById
+	pfconvParamsByKey := inputs.pfconvParamsByKey
 
 	if is_undefined(presetContent) {
 		ll.panic("no presetContent")
 	}
 
-	if is_undefined(pfconvParams) {
+	if is_undefined(pfconvParamsById) {
 		ll.panic("no pfconvParams")
 	}
 
@@ -86,17 +86,17 @@ self.body(func(inputs) {
 		})
 	}
 
-	decomposition := pUtil.decomposePfconvImportCfg(pfconvParams, {
+	decompositionById := pUtil.decomposePfconvImportCfg(pfconvParamsById, {
 		additionalAxesSpec: cColumnsAdditionalAxesSpec
 	})
-	purifiedPfconvCfg := decomposition.purifiedCfg
-	cloneColumnsSpec := decomposition.columnsSpec
+	purifiedPfconvByIdCfg := decompositionById.purifiedCfg
+	cloneColumnsByIdSpec := decompositionById.columnsSpec
 
-	decompositionNewKey := pUtil.decomposePfconvImportCfg(pfconvParamsNewKey, {
+	decompositionByKey := pUtil.decomposePfconvImportCfg(pfconvParamsByKey, {
 		additionalAxesSpec: cColumnsAdditionalAxesSpec
 	})
-	purifiedPfconvNewKeyCfg := decompositionNewKey.purifiedCfg
-	cloneColumnsNewKeySpec := decompositionNewKey.columnsSpec
+	purifiedPfconvByKeyCfg := decompositionByKey.purifiedCfg
+	cloneColumnsByKeySpec := decompositionByKey.columnsSpec
 
 	fileExtension := inputSpec.domain["pl7.app/fileExtension"]
 
@@ -115,19 +115,29 @@ self.body(func(inputs) {
 		keyLength: 2 // [reportType, reportFormat]
 	}]
 
-	ll.assert(purifiedPfconvCfg.partitionKeyLength == 0, "unexpected partition length")
-	ll.assert(purifiedPfconvCfg.storageFormat == "Binary", "unexpected format")
+	ll.assert(purifiedPfconvByIdCfg.partitionKeyLength == 0, "unexpected partition length")
+	ll.assert(purifiedPfconvByIdCfg.storageFormat == "Binary", "unexpected format")
 
 	innerPartitionLength := 0
 	if !hasAssembleCells {
 		innerPartitionLength = 1 // [chain]
 	}
 
-	for columnCfg in purifiedPfconvCfg.columns {
+	for columnCfg in purifiedPfconvByIdCfg.columns {
 		aggCfg := {
 			type: "BinaryPartitioned",
 			name: "clones/" + columnCfg.id,
 			path: ["clones", columnCfg.id],
+			partitionKeyLength: innerPartitionLength
+		}
+		aggregationTargets = append(aggregationTargets, aggCfg)
+	}
+
+	for columnCfg in purifiedPfconvByKeyCfg.columns {
+		aggCfg := {
+			type: "BinaryPartitioned",
+			name: "clonesKey/" + columnCfg.id,
+			path: ["clonesKey", columnCfg.id],
 			partitionKeyLength: innerPartitionLength
 		}
 		aggregationTargets = append(aggregationTargets, aggCfg)
@@ -163,24 +173,21 @@ self.body(func(inputs) {
 			},
 			clonotypeKeyAxes: clonotypeKeyAxes,
 			presetContent: presetContent,
-			pfconvParams: purifiedPfconvCfg,
-			pfconvParamsNewKey: purifiedPfconvNewKeyCfg
+			pfconvParamsById: purifiedPfconvByIdCfg,
+			pfconvParamsByKey: purifiedPfconvByKeyCfg
 		}
 	)
 
 	clones := pframes.pFrameBuilder()
-	for columnId, columnSpec in cloneColumnsSpec {
+	for columnId, columnSpec in cloneColumnsByIdSpec {
 		clones.add(columnId, trace.inject(columnSpec), mixcrResults.output("clones/" + columnId))
 	}
-	clones = clones.build()
-
 	if !hasAssembleCells {
-		clonesNewKey := pframes.pFrameBuilder()
-		for columnId, columnSpec in cloneColumnsNewKeySpec {
-			clonesNewKey.add(columnId, trace.inject(columnSpec), mixcrResults.output("clonesNewKey/" + columnId))
+		for columnId, columnSpec in cloneColumnsByKeySpec {
+			clones.add(columnId, trace.inject(columnSpec), mixcrResults.output("clonesKey/" + columnId))
 		}
-		clonesNewKey = clonesNewKey.build()
 	}
+	clones.build()
 
 	joinOrUndefined := func(arr) {
 		if is_undefined(arr) {
@@ -216,7 +223,7 @@ self.body(func(inputs) {
 		clnsAnnotations["mixcr.com/cellsAssembled"] = "true"
 	}
 
-	output := {
+	return {
 		"qc.spec": trace.inject({
 			kind: "PColumn",
 			name: "mixcr.com/qc",
@@ -284,13 +291,7 @@ self.body(func(inputs) {
 			axesSpec: [ inputSpec.axesSpec[0] ]
 		}),
 		"clns.data": mixcrResults.output("clns"),
-
-		clones: clones,
+		
+		clones: clones
 	}
-
-	if !hasAssembleCells {
-		output.clonesNewKey = clonesNewKey
-	}
-
-	return output
 })

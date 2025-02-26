@@ -10,12 +10,14 @@ file := import("@platforma-sdk/workflow-tengo:file")
 llPFrames := import("@platforma-sdk/workflow-tengo:pframes.ll")
 pframes := import("@platforma-sdk/workflow-tengo:pframes")
 exec := import("@platforma-sdk/workflow-tengo:exec")
+self := import("@platforma-sdk/workflow-tengo:tpl")
 
 json := import("json")
 
 getPresetTpl := assets.importTemplate(":get-preset")
 calculatePfconvParamsTpl := assets.importTemplate(":calculate-pfconv-params")
 processTpl := assets.importTemplate(":process")
+
 
 wf.setPreRun(assets.importTemplate(":prerun"))
 
@@ -74,8 +76,8 @@ wf.body(func(args) {
 		preset: presetContent,
 		specs: specsContent
 	})
-	pfconvParams := calculatePfconvParams.output("params", 24 * 60 * 60 * 1000)
-	pfconvParamsNewKey := calculatePfconvParams.output("paramsNewKey", 24 * 60 * 60 * 1000)
+	pfconvParamsById := calculatePfconvParams.output("paramsById", 24 * 60 * 60 * 1000)
+	pfconvParamsByKey := calculatePfconvParams.output("paramsByKey", 24 * 60 * 60 * 1000)
 	featureParams := calculatePfconvParams.output("featureParams", 24 * 60 * 60 * 1000)
 	clonotypeKeyAxes := calculatePfconvParams.output("clonotypeKeyAxes", 24 * 60 * 60 * 1000)
 
@@ -90,8 +92,8 @@ wf.body(func(args) {
 		}),
 		featureParams: featureParams,
 		clonotypeKeyAxes: clonotypeKeyAxes,
-		pfconvParams: pfconvParams,
-		pfconvParamsNewKey: pfconvParamsNewKey
+		pfconvParamsById: pfconvParamsById,
+		pfconvParamsByKey: pfconvParamsByKey,
 		inputSpec: input.getFutureInputField("spec"),
 		inputData: input.getFutureInputField("data")
 	})
