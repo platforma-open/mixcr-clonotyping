@@ -21,7 +21,7 @@ test('test parse simple align report', () => {
       VAndJOnDifferentTargets: 0,
       LowTotalScore: 0,
       NoBarcode: 0,
-      SampleNotMatched: 0
+      SampleNotMatched: 0,
     },
     overlapped: 1,
     overlappedAligned: 1,
@@ -40,7 +40,7 @@ test('test parse simple align report', () => {
       type: 'chainUsage',
       chimeras: 0,
       total: 9,
-      chains: { TRA: { total: 9, nonFunctional: 0, isOOF: 0, hasStops: 0 } }
+      chains: { TRA: { total: 9, nonFunctional: 0, isOOF: 0, hasStops: 0 } },
     },
     trimmingReport: {},
     tagParsingReport: null,
@@ -52,8 +52,8 @@ test('test parse simple align report', () => {
       FR2_TO_FR4: 0,
       CDR2_TO_FR4: 0,
       FR3_TO_FR4: 0,
-      CDR3: 9
-    }
+      CDR3: 9,
+    },
   });
 });
 
@@ -89,13 +89,13 @@ test('test parse simple assemble report', () => {
       type: 'chainUsage',
       chimeras: 0,
       total: 4,
-      chains: { TRA: { total: 4, nonFunctional: 0, isOOF: 0, hasStops: 0 } }
+      chains: { TRA: { total: 4, nonFunctional: 0, isOOF: 0, hasStops: 0 } },
     },
     clonesFilteredInFineFiltering: 0,
     readsFilteredInFineFiltering: 0.0,
     clonesFilteredInPostFiltering: 0,
     readsFilteredInPostFiltering: 0.0,
     postFilteringReports: null,
-    readsFilteredByTagPrefix: 0
+    readsFilteredByTagPrefix: 0,
   });
 });

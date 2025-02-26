@@ -1,5 +1,69 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 1.8.9
+
+### Patch Changes
+
+- Updated dependencies [95a3ac2]
+  - @platforma-open/milaboratories.mixcr-clonotyping.workflow@1.13.0
+
+## 1.8.8
+
+### Patch Changes
+
+- Updated dependencies [a370729]
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.7.0
+  - @platforma-open/milaboratories.mixcr-clonotyping.ui@1.9.0
+
+## 1.8.7
+
+### Patch Changes
+
+- Updated dependencies [db3cc0a]
+  - @platforma-open/milaboratories.mixcr-clonotyping.workflow@1.12.0
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.6.0
+  - @platforma-open/milaboratories.mixcr-clonotyping.ui@1.8.0
+
+## 1.8.6
+
+### Patch Changes
+
+- Updated dependencies [9448c22]
+  - @platforma-open/milaboratories.mixcr-clonotyping.ui@1.7.2
+
+## 1.8.5
+
+### Patch Changes
+
+- Updated dependencies [392d6f3]
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.5.1
+  - @platforma-open/milaboratories.mixcr-clonotyping.ui@1.7.1
+
+## 1.8.4
+
+### Patch Changes
+
+- 29ff040: MILAB-680
+
+## 1.8.3
+
+### Patch Changes
+
+- Updated dependencies [53900ff]
+  - @platforma-open/milaboratories.mixcr-clonotyping.workflow@1.11.0
+
+## 1.8.2
+
+### Patch Changes
+
+- 07bbe21: pfconv update
+
+## 1.8.1
+
+### Patch Changes
+
+- 7632e59: pfconv update
+
 ## 1.8.0
 
 ### Minor Changes

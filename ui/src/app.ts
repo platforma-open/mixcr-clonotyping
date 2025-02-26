@@ -11,8 +11,8 @@ export const sdkPlugin = defineApp(platforma, (app) => {
       return done.length / qc.data.length;
     },
     routes: {
-      '/': () => MainPageWrapper
-    }
+      '/': () => MainPageWrapper,
+    },
   };
 });
 

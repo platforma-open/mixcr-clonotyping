@@ -1,17 +1,18 @@
 <script lang="ts" setup>
 import { computed, reactive } from 'vue';
+import type {
+  QcCheckResult } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
 import {
-  QcCheckResult,
-  QcCheckDescriptions
+  QcCheckDescriptions,
 } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
-import { PlStatusTag, PlStatusTagType } from '@platforma-sdk/ui-vue';
+import { PlStatusTag } from '@platforma-sdk/ui-vue';
 
 const props = defineProps<{
   value: QcCheckResult;
 }>();
 
 const data = reactive({
-  expanded: false
+  expanded: false,
 });
 
 const description = computed(() => {

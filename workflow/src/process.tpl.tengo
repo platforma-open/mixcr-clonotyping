@@ -30,6 +30,7 @@ self.body(func(inputs) {
 	inputSpec := inputs.inputSpec
 	featureParams := inputs.featureParams
 	clonotypeKeyAxes := inputs.clonotypeKeyAxes
+	library := inputs.library
 	species := params.species
 	limitInput := params.limitInput
 	blockId := params.blockId
@@ -43,14 +44,9 @@ self.body(func(inputs) {
 		ll.panic("no presetContent")
 	}
 
-	if is_undefined(pfconvParamsById) {
+	if is_undefined(pfconvParamsById) || is_undefined(pfconvParamsByKey) {
 		ll.panic("no pfconvParams")
 	}
-
-	sampleAxis := inputSpec.axesSpec[0]
-	trace := pSpec.makeTrace(inputSpec,
-		{type: "milaboratories.mixcr-clonotyping", id: blockId, importance: 20, label: "MiXCR " + presetCommonName}
-	)
 
 	reports := []
 
@@ -74,120 +70,7 @@ self.body(func(inputs) {
 		}
 	}
 
-	cColumnsAdditionalAxesSpec := [sampleAxis]
-	if !hasAssembleCells {
-		cColumnsAdditionalAxesSpec = append(cColumnsAdditionalAxesSpec, {
-			name: "pl7.app/vdj/chain",
-			type: "String",
-			annotations: {
-				"pl7.app/label": "Chain",
-				"pl7.app/axisNature": "scaleCompatible"
-			}
-		})
-	}
-
-	decompositionById := pUtil.decomposePfconvImportCfg(pfconvParamsById, {
-		additionalAxesSpec: cColumnsAdditionalAxesSpec
-	})
-	purifiedPfconvByIdCfg := decompositionById.purifiedCfg
-	cloneColumnsByIdSpec := decompositionById.columnsSpec
-
-	decompositionByKey := pUtil.decomposePfconvImportCfg(pfconvParamsByKey, {
-		additionalAxesSpec: cColumnsAdditionalAxesSpec
-	})
-	purifiedPfconvByKeyCfg := decompositionByKey.purifiedCfg
-	cloneColumnsByKeySpec := decompositionByKey.columnsSpec
-
-	fileExtension := inputSpec.domain["pl7.app/fileExtension"]
-
-	aggregationTargets := [{
-		type: "Resource",
-		name: "qc"
-	}, {
-		type: "Resource",
-		name: "log"
-	}, {
-		type: "Resource",
-		name: "clns"
-	}, {
-		type: "ResourceMap",
-		name: "reports",
-		keyLength: 2 // [reportType, reportFormat]
-	}]
-
-	ll.assert(purifiedPfconvByIdCfg.partitionKeyLength == 0, "unexpected partition length")
-	ll.assert(purifiedPfconvByIdCfg.storageFormat == "Binary", "unexpected format")
-
-	innerPartitionLength := 0
-	if !hasAssembleCells {
-		innerPartitionLength = 1 // [chain]
-	}
-
-	for columnCfg in purifiedPfconvByIdCfg.columns {
-		aggCfg := {
-			type: "BinaryPartitioned",
-			name: "clones/" + columnCfg.id,
-			path: ["clones", columnCfg.id],
-			partitionKeyLength: innerPartitionLength
-		}
-		aggregationTargets = append(aggregationTargets, aggCfg)
-	}
-
-	for columnCfg in purifiedPfconvByKeyCfg.columns {
-		aggCfg := {
-			type: "BinaryPartitioned",
-			name: "clonesKey/" + columnCfg.id,
-			path: ["clonesKey", columnCfg.id],
-			partitionKeyLength: innerPartitionLength
-		}
-		aggregationTargets = append(aggregationTargets, aggCfg)
-	}
-
-	ll.assert(smart.isResource(inputs.inputData), "input data should be a resource")
-
-	aggIndices := undefined
-	if len(inputSpec.axesSpec) == 1 { // Fasta
-		aggIndices = []
-	} else if len(inputSpec.axesSpec) == 2 { // Fastq
-		ll.assert(inputSpec.axesSpec[1].name == "pl7.app/sequencing/readIndex", "unexpected axis name " + inputSpec.axesSpec[1].name)
-		aggIndices = [1]
-	} else if len(inputSpec.axesSpec) == 3 { // MultilaneFastq
-		ll.assert(inputSpec.axesSpec[1].name == "pl7.app/sequencing/lane", "unexpected axis name " + inputSpec.axesSpec[1].name)
-		ll.assert(inputSpec.axesSpec[2].name == "pl7.app/sequencing/readIndex", "unexpected axi name " + inputSpec.axesSpec[2].name)
-		aggIndices = [1, 2]
-	} else {
-		ll.panic("unexpected structure of input PColumn with sequencing data")
-	}
-	mixcrResults := llPFrames.aggregate(
-		inputs.inputData, aggIndices, mixcrAnalyzeTpl,
-		aggregationTargets,
-		false,
-		{
-			preset: preset,
-			params: {
-				species: species,
-				limitInput: limitInput,
-				fileExtension: fileExtension,
-				reports: reports,
-				featureParams: featureParams
-			},
-			clonotypeKeyAxes: clonotypeKeyAxes,
-			presetContent: presetContent,
-			pfconvParamsById: purifiedPfconvByIdCfg,
-			pfconvParamsByKey: purifiedPfconvByKeyCfg
-		}
-	)
-
-	clones := pframes.pFrameBuilder()
-	for columnId, columnSpec in cloneColumnsByIdSpec {
-		clones.add(columnId, trace.inject(columnSpec), mixcrResults.output("clones/" + columnId))
-	}
-	if !hasAssembleCells {
-		for columnId, columnSpec in cloneColumnsByKeySpec {
-			clones.add(columnId, trace.inject(columnSpec), mixcrResults.output("clonesKey/" + columnId))
-		}
-	}
-	clones.build()
+	// calculating clns annotations
 
 	joinOrUndefined := func(arr) {
 		if is_undefined(arr) {
@@ -196,8 +79,6 @@ self.body(func(inputs) {
 			return text.join(arr, ",")
 		}
 	}
-
-	// calculating clns annotations
 
 	removeUndefined := func(m) {
 		r := {}
@@ -223,75 +104,190 @@ self.body(func(inputs) {
 		clnsAnnotations["mixcr.com/cellsAssembled"] = "true"
 	}
 
-	return {
-		"qc.spec": trace.inject({
+	cColumnsAdditionalAxesSpec := []
+	if !hasAssembleCells {
+		cColumnsAdditionalAxesSpec = append(cColumnsAdditionalAxesSpec, {
+			"name": "pl7.app/vdj/chain",
+			"type": "String",
+			"annotations": {
+				"pl7.app/label": "Chain",
+				"pl7.app/axisNature": "scaleCompatible"
+			}
+		})
+	}
+
+
+	decompositionById := pUtil.decomposePfconvImportCfg(pfconvParamsById, {
+		additionalAxesSpec: cColumnsAdditionalAxesSpec
+	})
+	purifiedPfconvByIdCfg := decompositionById.purifiedCfg
+	cloneColumnsByIdSpec := decompositionById.columnsSpec
+	decompositionByKey := pUtil.decomposePfconvImportCfg(pfconvParamsByKey, {
+		additionalAxesSpec: cColumnsAdditionalAxesSpec
+	})
+	purifiedPfconvByKeyCfg := decompositionByKey.purifiedCfg
+	cloneColumnsByKeySpec := decompositionByKey.columnsSpec
+
+	fileExtension := inputSpec.domain["pl7.app/fileExtension"]
+
+	targetOutputs := [ {
+		type: "Resource",
+		spec: {
 			kind: "PColumn",
+			valueType: "File",
 			name: "mixcr.com/qc",
 			domain: {
 				"pl7.app/blockId": blockId
-			},
-			valueType: "File",
-			axesSpec: [
-				inputSpec.axesSpec[0]
-			]
-		}),
-		"qc.data": mixcrResults.output("qc"),
-
-		"logs.spec": trace.inject({
+			}
+		},
+		name: "qc"
+	}, {
+		type: "Resource",
+		spec: {
 			kind: "PColumn",
 			name: "pl7.app/log",
 			domain: {
 				"pl7.app/blockId": blockId
 			},
-			valueType: "Log",
-			axesSpec: [
-				inputSpec.axesSpec[0]
-			]
-		}),
-		"logs.data": mixcrResults.output("log"),
-
-		"reports.spec": trace.inject({
-			kind: "PColumn",
-			name: "mixcr.com/report",
-			domain: {
-				"pl7.app/blockId": blockId
-			},
-			valueType: "File",
-			axesSpec: [
-				inputSpec.axesSpec[0],
-				{
-					type: "String",
-					name: "mixcr.com/report/source",
-					annotations: {
-						"pl7.app/label": "Source MiXCR stage"
-					}
-				},
-				{
-					type: "String",
-					name: "mixcr.com/report/format",
-					annotations: {
-						"pl7.app/label": "Report format"
-					},
-					domain: {
-						"pl7.app/dense": string(json.encode(["json", "txt"]))
-					}
-				}
-				]
-		}),
-		"reports.data": mixcrResults.output("reports"),
-
-		"clns.spec": trace.inject({
+			valueType: "Log"
+		},
+		name: "log"
+	}, {
+		type: "Resource",
+		spec: {
 			kind: "PColumn",
 			name: "mixcr.com/clns",
 			domain: {
 				"pl7.app/blockId": blockId
 			},
 			annotations: clnsAnnotations,
+			valueType: "File"
+		},
+		name: "clns"
+	}, {
+		type: "ResourceMap",
+		name: "reports",
+		spec: {
+			kind: "PColumn",
+			name: "mixcr.com/report",
+			domain: {
+				"pl7.app/blockId": blockId
+			},
 			valueType: "File",
-			axesSpec: [ inputSpec.axesSpec[0] ]
-		}),
-		"clns.data": mixcrResults.output("clns"),
-		
-		clones: clones
+			axesSpec: [ {
+				type: "String",
+				name: "mixcr.com/report/source",
+				annotations: {
+					"pl7.app/label": "Source MiXCR stage"
+				}
+			}, {
+				type: "String",
+				name: "mixcr.com/report/format",
+				annotations: {
+					"pl7.app/label": "Report format"
+				},
+				domain: {
+					"pl7.app/dense": string(json.encode(["json", "txt"]))
+				}
+			} ]
+		}
+	} ]
+
+	ll.assert(purifiedPfconvByIdCfg.partitionKeyLength == 0, "unexpected partition length")
+	ll.assert(purifiedPfconvByIdCfg.storageFormat == "Binary", "unexpected format")
+	ll.assert(purifiedPfconvByKeyCfg.partitionKeyLength == 0, "unexpected partition length")
+	ll.assert(purifiedPfconvByKeyCfg.storageFormat == "Binary", "unexpected format")
+
+	innerPartitionLength := 0
+	if !hasAssembleCells {
+		innerPartitionLength = 1 // [chain]
+	}
+
+	for columnCfg in purifiedPfconvByIdCfg.columns {
+		aggCfg := {
+			type: "BinaryPartitioned",
+			name: "clonesById/" + columnCfg.id,
+			path: ["clonesById", columnCfg.id],
+			spec: cloneColumnsByIdSpec[columnCfg.id],
+			partitionKeyLength: innerPartitionLength
+		}
+		targetOutputs = append(targetOutputs, aggCfg)
+	}
+
+	for columnCfg in purifiedPfconvByKeyCfg.columns {
+		aggCfg := {
+			type: "BinaryPartitioned",
+			name: "clonesByKey/" + columnCfg.id,
+			path: ["clonesByKey", columnCfg.id],
+			spec: cloneColumnsByKeySpec[columnCfg.id],
+			partitionKeyLength: innerPartitionLength
+		}
+		targetOutputs = append(targetOutputs, aggCfg)
+	}
+
+	mixcrResults := pframes.processColumn(
+		{ spec: inputSpec, data: inputs.inputData },
+		mixcrAnalyzeTpl,
+		targetOutputs,
+		{
+			aggregate: [{
+				name: "pl7.app/sequencing/lane",
+				optional: true
+			}, {
+				name: "pl7.app/sequencing/readIndex",
+				optional: true
+			}],
+			// resulting aggregation axes names will be checked against supported combinations
+			// in the body template
+			passAggregationAxesNames: true,
+
+			// will be automatically propagated to all output specs
+			traceSteps: [{type: "milaboratories.mixcr-clonotyping", id: blockId, importance: 20, label: "MiXCR " + presetCommonName}],
+
+			extra: {
+				preset: preset,
+				params: {
+					species: species,
+					limitInput: limitInput,
+					fileExtension: fileExtension,
+					reports: reports,
+					featureParams: featureParams
+				},
+				clonotypeKeyAxes: clonotypeKeyAxes,
+				presetContent: presetContent,
+				pfconvParams: purifiedPfconvCfg
+			}
+		}
+	)
+
+	clones := pframes.pFrameBuilder()
+	for columnId, columnSpec in cloneColumnsByIdSpec {
+		clones.add(columnId,
+				mixcrResults.outputSpec("clonesById/" + columnId),
+				mixcrResults.outputData("clonesById/" + columnId))
+	}
+	if !hasAssembleCells {
+		for columnId, columnSpec in cloneColumnsByKeySpec {
+			clones.add(columnId,
+					mixcrResults.outputSpec("clonesByKey/" + columnId),
+					mixcrResults.outputData("clonesByKey/" + columnId))
+		}
+	}
+	clones = clones.build()
+
+	return {
+		"qc.spec": mixcrResults.outputSpec("qc"),
+		"qc.data": mixcrResults.outputData("qc"),
+
+		"logs.spec": mixcrResults.outputSpec("log"),
+		"logs.data": mixcrResults.outputData("log"),
+
+		"reports.spec": mixcrResults.outputSpec("reports"),
+		"reports.data": mixcrResults.outputData("reports"),
+
+		"clns.spec": mixcrResults.outputSpec("clns"),
+		"clns.data": mixcrResults.outputData("clns"),
+
+		"clones": clones
 	}
 })

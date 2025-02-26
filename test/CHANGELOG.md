@@ -1,5 +1,30 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.test
 
+## 1.5.0
+
+### Minor Changes
+
+- a370729: Custom library species corrected
+
+### Patch Changes
+
+- Updated dependencies [a370729]
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.7.0
+
+## 1.4.2
+
+### Patch Changes
+
+- Updated dependencies [db3cc0a]
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.6.0
+
+## 1.4.1
+
+### Patch Changes
+
+- Updated dependencies [392d6f3]
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.5.1
+
 ## 1.4.0
 
 ### Minor Changes

@@ -10,6 +10,7 @@ render := import("@platforma-sdk/workflow-tengo:render")
 pframes := import("@platforma-sdk/workflow-tengo:pframes")
 pcolumn := import("@platforma-sdk/workflow-tengo:pframes.pcolumn")
 xsv := import("@platforma-sdk/workflow-tengo:pframes.xsv")
+file := import("@platforma-sdk/workflow-tengo:file")
 mixcr := import(":mixcr")
 times := import("times")
 
@@ -25,10 +26,12 @@ progressPrefix := "[==PROGRESS==]"
 
 self.body(func(inputs) {
 	inputData := inputs[pConstants.VALUE_FIELD_NAME]
+	aggregationAxesNames := inputs[pConstants.AGGREGATION_AXES_NAMES_FIELD_NAME]
 
 	params := inputs.params
 	preset := inputs.preset
 	clonotypeKeyAxes := inputs.clonotypeKeyAxes
+	library := inputs.library
 	species := params.species
 	limitInput := params.limitInput
 	fileExtension := params.fileExtension
@@ -76,12 +79,17 @@ self.body(func(inputs) {
 
 	mixcr.addAdditionalColumnArgs(mixcrCmdBuilder, featureParams)
 
-	if !is_undefined(species) {
-		mixcrCmdBuilder.arg("--species").arg(species)
-	}
-
 	if !is_undefined(limitInput) {
 		mixcrCmdBuilder.arg("--limit-input").arg(string(limitInput))
+	}
+
+	if library {
+		mixcrCmdBuilder.arg("--species").arg(species).
+			arg("--library").arg("library.json").
+			addFile("library.json", library)
+	} else if !is_undefined(species) {
+		species = params.species
+		mixcrCmdBuilder.arg("--species").arg(species)
 	}
 
 	if smart.isResource(preset) /* file */ {
@@ -95,12 +103,14 @@ self.body(func(inputs) {
 	}
 
 	if inputDataMeta.keyLength == 0 {
+		ll.assert(aggregationAxesNames == [], "unexpected aggregation axes names")
 		inputFile := inputData.inputs()["[]"]
 		ll.assert(!is_undefined(inputFile), "unexpected agg group structure")
 		inputFileName := "input." + fileExtension
 		mixcrCmdBuilder.addFile(inputFileName, inputFile)
 		mixcrCmdBuilder.arg(inputFileName)
 	} else if inputDataMeta.keyLength == 1 {
+		ll.assert(aggregationAxesNames == ["pl7.app/sequencing/readIndex"], "unexpected aggregation axes names")
 		for sKey, inputFile in inputData.inputs() {
 			key := json.decode(sKey)
 			if len(key) != 1 {
@@ -114,6 +124,7 @@ self.body(func(inputs) {
 		}
 		mixcrCmdBuilder.arg("input_{{R}}." + fileExtension)
 	} else if inputDataMeta.keyLength == 2 {
+		ll.assert(aggregationAxesNames == ["pl7.app/sequencing/lane", "pl7.app/sequencing/readIndex"], "unexpected aggregation axes names")
 		for sKey, inputFile in inputData.inputs() {
 			key := json.decode(sKey)
 			if len(key) != 2 {

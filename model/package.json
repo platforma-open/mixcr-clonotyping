@@ -1,6 +1,6 @@
 {
   "name": "@platforma-open/milaboratories.mixcr-clonotyping.model",
-  "version": "1.5.0",
+  "version": "1.7.0",
   "description": "Block model",
   "type": "module",
   "main": "dist/index.cjs",
@@ -8,7 +8,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsup && vite build && block-tools build-model",
-    "test": "vitest"
+    "test": "vitest",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@platforma-sdk/model": "catalog:",
@@ -16,6 +17,7 @@
   },
   "devDependencies": {
     "@platforma-sdk/block-tools": "catalog:",
+    "@platforma-sdk/eslint-config": "catalog:",
     "vitest": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",

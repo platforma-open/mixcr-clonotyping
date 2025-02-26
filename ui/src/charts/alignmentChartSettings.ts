@@ -1,20 +1,22 @@
-import { computed, Ref, unref } from "vue";
-import { AlignmentChannelLabels, AlignReport } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
+import type { Ref } from 'vue';
+import { computed, unref } from 'vue';
+import type { AlignReport } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
+import { AlignmentChannelLabels } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
 import { extractAlignmentChannels } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
 import type {
-  Color 
+  Color,
 } from '@platforma-sdk/ui-vue';
 import {
   Gradient,
 } from '@platforma-sdk/ui-vue';
-import { call } from "@milaboratories/helpers";
+import { call } from '@milaboratories/helpers';
 
 type Category = keyof typeof AlignmentChannelLabels;
 
 export function getAlignmentChartSettings(alignReport: AlignReport | undefined) {
   const data = call(() => {
     if (alignReport === undefined) return [];
-    
+
     const alignmentChannels = extractAlignmentChannels(alignReport);
 
     return alignmentChannels.map(([category, value]) => {

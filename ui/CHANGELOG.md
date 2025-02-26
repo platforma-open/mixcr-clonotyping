@@ -1,5 +1,41 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.9.0
+
+### Minor Changes
+
+- a370729: Custom library species corrected
+
+### Patch Changes
+
+- Updated dependencies [a370729]
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.7.0
+
+## 1.8.0
+
+### Minor Changes
+
+- db3cc0a: Custom reference library from library builder block or file
+
+### Patch Changes
+
+- Updated dependencies [db3cc0a]
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.6.0
+
+## 1.7.2
+
+### Patch Changes
+
+- 9448c22: Use createAgGridColDef "progress" property (just a callback, no need to import ProgressCell)
+
+## 1.7.1
+
+### Patch Changes
+
+- 392d6f3: Add and use @platforma-sdk/eslint-config package (MILAB-1128)
+- Updated dependencies [392d6f3]
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.5.1
+
 ## 1.7.0
 
 ### Minor Changes
