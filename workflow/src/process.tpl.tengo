@@ -22,7 +22,9 @@ self.awaitState("params", "ResourceReady")
 self.awaitState("inputSpec", "ResourceReady")
 self.awaitState("presetContent", "ResourceReady")
 self.awaitState("pfconvParamsById", "ResourceReady")
+self.awaitState("pfconvParamsByKey", "ResourceReady")
 self.awaitState("featureParams", "ResourceReady")
+self.awaitState("clonotypeKeyAxes", "ResourceReady")
 
 self.body(func(inputs) {
 	params := inputs.params

@@ -16,7 +16,7 @@ times := import("times")
 
 json := import("json")
 
-self.defineOutputs("qc", "reports", "clones", "clonesKey", "log", "clns")
+self.defineOutputs("qc", "reports", "clonesById", "clonesByKey", "log", "clns")
 
 exportClonesBulkTpl := assets.importTemplate(":export-clones-bulk")
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:main")
@@ -180,27 +180,23 @@ self.body(func(inputs) {
 	}
 
 	// converting clone tables to p columns
-	clonesById := {}
-	clonesByKey := {}
 	if hasAssembleCells {
 		cloneTable := mixcrCmd.getFile("result.clones.tsv")
-		clonesById = xsv.importFile(cloneTable, "tsv", pfconvParamsById, { dataOnly: true })
-		result.clonesById = clonesById
+		result.clonesById = xsv.importFile(cloneTable, "tsv", pfconvParamsById, { dataOnly: true })
+		result.clonesByKey = smart.createMapResource({}) // creating empty output to avoid errors
 	} else {
-		clonesById = render.create(exportClonesBulkTpl, {
+		result.clonesById = render.create(exportClonesBulkTpl, {
 			data: mixcrCmd.getFileSet("clones"),
 			pfconvParams: pfconvParamsById,
 			clonotypeKeyAxes: clonotypeKeyAxes,
 			aggKey: false
 		}).output("result", 8 * 24 * 60 * 60 * 1000)
-		clonesByKey = render.create(exportClonesBulkTpl, {
+		result.clonesByKey = render.create(exportClonesBulkTpl, {
 			data: mixcrCmd.getFileSet("clones"),
 			pfconvParams: pfconvParamsByKey,
 			clonotypeKeyAxes: clonotypeKeyAxes,
 			aggKey: true
 		}).output("result", 8 * 24 * 60 * 60 * 1000)
-		result.clonesById = clonesById
-		result.clonesByKey = clonesByKey
 	}
 
 	return result

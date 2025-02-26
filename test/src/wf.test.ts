@@ -201,13 +201,19 @@ blockTest(
 
     const clonesPfColumnList = await ml.driverKit.pFrameDriver.listColumns(clonesPfHandle);
 
+    // console.dir(clonesPfColumnList[0].spec, { depth: 5 });
+
     expect(
-      clonesPfColumnList[0].spec.axesSpec.find((s: any) => s.name === 'pl7.app/vdj/cloneId')
+      clonesPfColumnList.map(c => c.spec.axesSpec.find((s: any) => s.name === 'pl7.app/vdj/cloneId')).find(Boolean)
     ).toMatchObject({
       domain: {
         'pl7.app/blockId': clonotypingBlockId
       }
     });
+
+    expect(
+      clonesPfColumnList.map(c => c.spec.axesSpec.find((s: any) => s.name === 'pl7.app/vdj/cloneKey')).find(Boolean)?.domain
+    ).toHaveProperty("pl7.app/vdj/cloneKey/structure");
 
     expect(clonesPfColumnList).length.to.greaterThanOrEqual(7);
   }

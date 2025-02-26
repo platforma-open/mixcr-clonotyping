@@ -21,9 +21,17 @@ self.body(func(inputs) {
 	pfconvConfig := render.create(calculateColumnsParamsTpl, {
 		preset: getPreset.output("preset"),
 		specs: getPreset.output("presetSpecForBack")
-	}).output("params")
+	})
+	paramsById := pfconvConfig.output("paramsById")
+	paramsByKey := pfconvConfig.output("paramsByKey")
+	featureParams := pfconvConfig.output("featureParams")
+	clonotypeKeyAxes := pfconvConfig.output("clonotypeKeyAxes")
 
 	return {
-		conf: pfconvConfig
+		conf: pfconvConfig,
+		paramsById: paramsById,
+		paramsByKey: paramsByKey,
+		featureParams: featureParams,
+		clonotypeKeyAxes: clonotypeKeyAxes
 	}
 })

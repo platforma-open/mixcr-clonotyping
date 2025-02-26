@@ -1328,13 +1328,13 @@ getColumns := func(blockId, featureParams) {
 			column: text.join(clonotypeKeyAxes, "-"),
 			naRegex: "",
 			spec: {
-				name: "pl7.app/vdj/keyColumn",
+				name: "pl7.app/vdj/cloneKey",
 				type: "String",
 				domain: {
-					"pl7.app/blockId": blockId
+					"pl7.app/vdj/cloneKey/structure": text.join(clonotypeKeyAxes, "-")
 				},
 				annotations: {
-					"pl7.app/label": text.join(clonotypeKeyAxes, "-"),
+					"pl7.app/label": "Clone key",
 					"pl7.app/table/visibility": "optional",
 					"pl7.app/table/orderPriority": "110000"
 				}
