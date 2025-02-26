@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 1.13.0
+
+### Minor Changes
+
+- 95a3ac2: Migration to AggregateV2 API
+
 ## 1.12.0
 
 ### Minor Changes
