@@ -232,6 +232,7 @@ self.body(func(inputs) {
 					reports: reports,
 					featureParams: featureParams
 				},
+				library: library,
 				presetContent: presetContent,
 				pfconvParams: purifiedPfconvCfg
 			}
