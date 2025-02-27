@@ -1,0 +1,20 @@
+{
+  "cSpell.words": [
+      "canonicalize",
+      "datasource",
+      "Heterogenize",
+      "pcolumn",
+      "ptable"
+  ],
+  "[typescript]": {
+      "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  },
+  "[vue]": {
+      "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  },
+  "[javascript]": {
+      "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  },
+  "eslint.enable": true,
+  "eslint.format.enable": true
+}
