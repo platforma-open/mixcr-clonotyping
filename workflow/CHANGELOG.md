@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 1.14.0
+
+### Minor Changes
+
+- c6b6860: library added to processColumns in precess tpl
+
 ## 1.13.0
 
 ### Minor Changes
