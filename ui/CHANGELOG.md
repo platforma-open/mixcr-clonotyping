@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.9.1
+
+### Patch Changes
+
+- b049d9d: Minor migration to new UI SDK
+
 ## 1.9.0
 
 ### Minor Changes

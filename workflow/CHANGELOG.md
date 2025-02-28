@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 1.14.1
+
+### Patch Changes
+
+- b049d9d: SDK upgrade to fix sporadic validation errors in workflow execution
+
 ## 1.14.0
 
 ### Minor Changes
