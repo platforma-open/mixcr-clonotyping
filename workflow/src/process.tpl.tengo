@@ -256,6 +256,7 @@ self.body(func(inputs) {
 					featureParams: featureParams
 				},
 				clonotypeKeyAxes: clonotypeKeyAxes,
+				library: library,
 				presetContent: presetContent,
 				pfconvParamsById: purifiedPfconvByIdCfg,
 				pfconvParamsByKey: purifiedPfconvByKeyCfg
