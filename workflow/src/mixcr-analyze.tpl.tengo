@@ -16,10 +16,11 @@ times := import("times")
 
 json := import("json")
 
-self.defineOutputs("qc", "reports", "clones", "log", "clns")
+self.defineOutputs("qc", "reports", "clonesById", "clonesByKey", "log", "clns")
 
-exportClonesTpl := assets.importTemplate(":export-clones-bulk")
+exportClonesBulkTpl := assets.importTemplate(":export-clones-bulk")
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:main")
+tableTransformation := import(":table-transformation")
 
 progressPrefix := "[==PROGRESS==]"
 
@@ -29,6 +30,7 @@ self.body(func(inputs) {
 
 	params := inputs.params
 	preset := inputs.preset
+	clonotypeKeyAxes := inputs.clonotypeKeyAxes
 	library := inputs.library
 	species := params.species
 	limitInput := params.limitInput
@@ -37,14 +39,15 @@ self.body(func(inputs) {
 	featureParams := params.featureParams
 
 	presetContent := inputs.presetContent // already in JSON
-	pfconvParams := inputs.pfconvParams // already in JSON
+	pfconvParamsById := inputs.pfconvParamsById // already in JSON
+	pfconvParamsByKey := inputs.pfconvParamsByKey
 
 	if !is_map(presetContent) {
 		ll.panic("malformed presetContent %v", presetContent)
 	}
 
-	if !is_map(pfconvParams) {
-		ll.panic("malformed pfconvParams %v", pfconvParams)
+	if !is_map(pfconvParamsById) || !is_map(pfconvParamsByKey) {
+		ll.panic("malformed pfconvParams")
 	}
 
 	inputDataMeta := inputData.getDataAsJson()
@@ -169,23 +172,31 @@ self.body(func(inputs) {
 		reportsMap.add([report.id, "txt"], mixcrCmd.getFile(report.fileTxt))
 	}
 
-	// converting clone tables to p columns
-	clones := {}
-	if hasAssembleCells {
-		clones = xsv.importFile(mixcrCmd.getFile("result.clones.tsv"), "tsv", pfconvParams, { dataOnly: true })
-	} else {
-		clones = render.create(exportClonesTpl, {
-			data: mixcrCmd.getFileSet("clones"),
-			pfconvParams: pfconvParams
-		}).output("result", 8 * 24 * 60 * 60 * 1000)
-	}
-
 	result := {
 		qc: mixcrCmd.getFile("result.qc.json"),
 		log: mixcrCmd.getStdoutStream(),
 		reports: reportsMap.build(),
-		clns: mixcrCmd.getFile(clnsFileName),
-		clones: clones
+		clns: mixcrCmd.getFile(clnsFileName)
+	}
+
+	// converting clone tables to p columns
+	if hasAssembleCells {
+		cloneTable := mixcrCmd.getFile("result.clones.tsv")
+		result.clonesById = xsv.importFile(cloneTable, "tsv", pfconvParamsById, { dataOnly: true })
+		result.clonesByKey = smart.createMapResource({}) // creating empty output to avoid errors
+	} else {
+		result.clonesById = render.create(exportClonesBulkTpl, {
+			data: mixcrCmd.getFileSet("clones"),
+			pfconvParams: pfconvParamsById,
+			clonotypeKeyAxes: clonotypeKeyAxes,
+			aggKey: false
+		}).output("result", 8 * 24 * 60 * 60 * 1000)
+		result.clonesByKey = render.create(exportClonesBulkTpl, {
+			data: mixcrCmd.getFileSet("clones"),
+			pfconvParams: pfconvParamsByKey,
+			clonotypeKeyAxes: clonotypeKeyAxes,
+			aggKey: true
+		}).output("result", 8 * 24 * 60 * 60 * 1000)
 	}
 
 	return result

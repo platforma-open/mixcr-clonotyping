@@ -129,7 +129,7 @@ tplTest.for(testCases)(
   { timeout: 30000 },
   async ({ preset, species, check }, { helper, expect }) => {
     const resultC = (
-      await helper.renderTemplate(true, 'test.columns.test', ['conf'], (tx) => {
+      await helper.renderTemplate(true, 'test.columns.test', ['paramsById'], (tx) => {
         return {
           preset: tx.createValue(
             ML.Pl.JsonObject,
@@ -138,7 +138,7 @@ tplTest.for(testCases)(
           params: tx.createValue(ML.Pl.JsonObject, JSON.stringify({ species } satisfies Params))
         };
       })
-    ).computeOutput('conf', (c) => c?.getDataAsJson());
+    ).computeOutput('paramsById', (c) => c?.getDataAsJson());
     const result = await awaitStableState(resultC, 20000);
     check(expect, result);
   }
