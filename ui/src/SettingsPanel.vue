@@ -151,6 +151,17 @@ const librarySourceOptions = [
   { label: "From library builder", value: "fromBlock" },
   { label: "From file", value: "fromFile" }
 ] as const satisfies ListOption [];
+
+if (app.model.args.libraryFile) {
+  const libraryFileName = extractFileName(getFilePathFromHandle(app.model.args.libraryFile))
+  if (libraryFileName.endsWith('.gz')) {
+    app.model.args.isLibraryFileGzipped = true
+  } else {
+    app.model.args.isLibraryFileGzipped = false
+  }
+} else {
+  app.model.args.isLibraryFileGzipped = false
+}
 </script>
 
 <template>

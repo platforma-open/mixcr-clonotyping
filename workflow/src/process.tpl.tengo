@@ -34,6 +34,7 @@ self.body(func(inputs) {
 	limitInput := params.limitInput
 	blockId := params.blockId
 	presetCommonName := params.presetCommonName
+	isLibraryFileGzipped := params.isLibraryFileGzipped
 
 	presetContent := inputs.presetContent.getDataAsJson()
 	pfconvParams := inputs.pfconvParams
@@ -230,8 +231,10 @@ self.body(func(inputs) {
 					limitInput: limitInput,
 					fileExtension: fileExtension,
 					reports: reports,
-					featureParams: featureParams
+					featureParams: featureParams,
+					isLibraryFileGzipped: isLibraryFileGzipped
 				},
+				library: library,
 				presetContent: presetContent,
 				pfconvParams: purifiedPfconvCfg
 			}

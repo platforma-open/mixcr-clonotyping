@@ -63,6 +63,7 @@ wf.body(func(args) {
 	limitInput := args.limitInput
 	inputLibrary := args.resolvedLibraryInput
 	libraryFile := args.libraryFile
+	isLibraryFileGzipped := args.isLibraryFileGzipped
 
 	library := undefined
 	species := undefined
@@ -113,7 +114,8 @@ wf.body(func(args) {
 			species: species,
 			limitInput: limitInput,
 			blockId: blockId,
-			presetCommonName: args.presetCommonName
+			presetCommonName: args.presetCommonName,
+			isLibraryFileGzipped: isLibraryFileGzipped
 		}),
 		featureParams: featureParams,
 		pfconvParams: pfconvParams,
