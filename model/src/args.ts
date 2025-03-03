@@ -30,7 +30,7 @@ export const BlockArgsValid = z.object({
   input: PlRef,
   inputLibrary: PlRef.optional(),
   libraryFile: z.string().transform((v) => v as ImportFileHandle).optional(),
-  isLibraryFileGzipped: z.boolean(),
+  isLibraryFileGzipped: z.boolean().optional(),
   preset: Preset,
   species: z.string().optional(),
   customSpecies: z.string().optional(),
@@ -40,5 +40,5 @@ export const BlockArgsValid = z.object({
 });
 export type BlockArgsValid = z.infer<typeof BlockArgsValid>;
 
-export const BlockArgs = BlockArgsValid.partial({ input: true, preset: true, isLibraryFileGzipped: true });
+export const BlockArgs = BlockArgsValid.partial({ input: true, preset: true });
 export type BlockArgs = z.infer<typeof BlockArgs>;
