@@ -5,7 +5,7 @@ import type { ImportFileHandle, PlRef } from '@platforma-sdk/model';
 import { getFilePathFromHandle } from '@platforma-sdk/model';
 import type { ListOption } from '@platforma-sdk/ui-vue';
 import { PlAccordionSection, PlBtnGroup, PlDropdown, PlDropdownRef, PlFileInput, PlTextField, ReactiveFileContent } from '@platforma-sdk/ui-vue';
-import { computed, reactive, watch } from 'vue';
+import { computed, reactive, watch, ref, watchEffect } from 'vue';
 import { useApp } from './app';
 import { retentive } from './retentive';
 
@@ -143,21 +143,36 @@ watch(computedTab, (newValue, oldValue)=>{
   }
 })
 
-//const computedAcc = computed(
-//  () => { return (app.model.args.libraryFile || app.model.args.inputLibrary) ? true : false }
-//)
-
 const librarySourceOptions = [
   { label: "From library builder", value: "fromBlock" },
   { label: "From file", value: "fromFile" }
 ] as const satisfies ListOption [];
 
-watch(() => app.model.args.libraryFile, (newFile) => {
-  if (newFile) {
-    const libraryFileName = extractFileName(getFilePathFromHandle(newFile));
-    app.model.args.isLibraryFileGzipped = libraryFileName?.toLowerCase().endsWith('.gz') || false;
+const computedSpecies = computed({
+  get: () => (app.model.args.libraryFile ? app.model.args.customSpecies : undefined),
+  set: (value) => {
+    app.model.args.customSpecies = value;
+  },
+})
+
+watch(
+  () => app.model.args.libraryFile,
+  (newFile) => {
+    if (!newFile) {
+      app.model.args.customSpecies = undefined;
+    }
   }
-});
+);
+
+watch(
+  () => app.model.args.libraryFile,
+  (newFile) => {
+    if (newFile) {
+      const libraryFileName = extractFileName(getFilePathFromHandle(newFile));
+      app.model.args.isLibraryFileGzipped = libraryFileName?.toLowerCase().endsWith('.gz') || false;
+    }
+  }
+);
 
 </script>
 
@@ -202,11 +217,10 @@ watch(() => app.model.args.libraryFile, (newFile) => {
       <PlFileInput
       v-model="app.model.args.libraryFile"
       :progress="app.model.outputs.libraryUploadProgress"
-      @update:model-value=""
       file-dialog-title="Select library file"
       clearable
       />
-      <PlTextField v-model="app.model.args.customSpecies" 
+      <PlTextField v-model="computedSpecies" 
       :clearable="() => undefined"
       label="Species"
       placeholder="Type spicies name"
