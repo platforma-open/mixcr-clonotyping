@@ -151,6 +151,14 @@ const librarySourceOptions = [
   { label: "From library builder", value: "fromBlock" },
   { label: "From file", value: "fromFile" }
 ] as const satisfies ListOption [];
+
+watch(() => app.model.args.libraryFile, (newFile) => {
+  if (newFile) {
+    const libraryFileName = extractFileName(getFilePathFromHandle(newFile));
+    app.model.args.isLibraryFileGzipped = libraryFileName?.toLowerCase().endsWith('.gz') || false;
+  }
+});
+
 </script>
 
 <template>
@@ -194,6 +202,7 @@ const librarySourceOptions = [
       <PlFileInput
       v-model="app.model.args.libraryFile"
       :progress="app.model.outputs.libraryUploadProgress"
+      @update:model-value=""
       file-dialog-title="Select library file"
       clearable
       />
