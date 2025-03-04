@@ -933,7 +933,7 @@ getColumns := func(blockId, featureParams) {
           "annotations": {
             "pl7.app/label": "Chain",
             "pl7.app/isDiscreteFilter": "true",
-            "pl7.app/discreteValues": "['TRA', 'TRB', 'TRG', 'TRD', 'IGH', 'IGK', 'IGL']"
+            "pl7.app/discreteValues": "['TRA', 'TRB', 'TRG', 'TRD', 'IGH', 'IGK', 'IGL']",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "21500"
           }
