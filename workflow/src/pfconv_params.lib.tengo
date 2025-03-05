@@ -171,6 +171,7 @@ getColumns := func(blockId, featureParams) {
           "annotations": {
             "type": "V gene name",
             "pl7.app/label": "Best V hit",
+            "pl7.app/isDiscreteFilter": "true",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "21000"
           }
@@ -189,6 +190,7 @@ getColumns := func(blockId, featureParams) {
           "annotations": {
             "type": "D gene name",
             "pl7.app/label": "Best D hit",
+            "pl7.app/isDiscreteFilter": "true",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "20500"
           }
@@ -208,6 +210,7 @@ getColumns := func(blockId, featureParams) {
           "annotations": {
             "type": "J gene name",
             "pl7.app/label": "Best J hit",
+            "pl7.app/isDiscreteFilter": "true",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "20000"
           }
@@ -226,6 +229,7 @@ getColumns := func(blockId, featureParams) {
           "annotations": {
             "type": "C gene name",
             "pl7.app/label": "Best C hit",
+            "pl7.app/isDiscreteFilter": "true",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "19500"
           }
@@ -912,6 +916,7 @@ getColumns := func(blockId, featureParams) {
           "name": "pl7.app/vdj/isotype",
           "annotations": {
             "pl7.app/label": "IG isotype",
+            "pl7.app/isDiscreteFilter": "true",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "19000"
           }
@@ -927,6 +932,8 @@ getColumns := func(blockId, featureParams) {
           "name": "pl7.app/vdj/chain",
           "annotations": {
             "pl7.app/label": "Chain",
+            "pl7.app/isDiscreteFilter": "true",
+            "pl7.app/discreteValues": "['TRA', 'TRB', 'TRG', 'TRD', 'IGH', 'IGK', 'IGL']",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "21500"
           }
@@ -941,6 +948,8 @@ getColumns := func(blockId, featureParams) {
           "name": "pl7.app/vdj/sequence/productive",
           "annotations": {
             "pl7.app/label": "Productive",
+            "pl7.app/isDiscreteFilter": "true",
+            "pl7.app/discreteValues": "['true', 'false']",
             "pl7.app/table/visibility": "default",
             "pl7.app/table/orderPriority": "21400"
           }
@@ -969,6 +978,8 @@ getColumns := func(blockId, featureParams) {
           "name": "pl7.app/vdj/sequence/containsStopCodons",
           "annotations": {
             "pl7.app/label": "Contains stop codons",
+            "pl7.app/isDiscreteFilter": "true",
+            "pl7.app/discreteValues": "['true', 'false']",
             "pl7.app/table/visibility": "optional",
             "pl7.app/table/orderPriority": "10"
           }
