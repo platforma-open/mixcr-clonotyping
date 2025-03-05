@@ -99,7 +99,7 @@ const columnDefs: ColDef<MiXCRResult>[] = [
     field: 'progress',
     headerName: 'Progress',
     progress(cellData) {
-      const parsed = parseProgressString(cellData.value);
+      const parsed = parseProgressString(cellData);
 
       if (parsed.stage === 'Queued') {
         return {
