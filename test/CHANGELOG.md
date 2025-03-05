@@ -1,5 +1,12 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.test
 
+## 1.5.1
+
+### Patch Changes
+
+- Updated dependencies [5ca4eb7]
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.8.0
+
 ## 1.5.0
 
 ### Minor Changes

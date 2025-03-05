@@ -1,5 +1,12 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 1.15.0
+
+### Minor Changes
+
+- 5ca4eb7: Check if custom library json file gzipped or not
+- a4dc2aa: Columns annotation for descrete filtering
+
 ## 1.14.1
 
 ### Patch Changes

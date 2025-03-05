@@ -30,6 +30,7 @@ export const BlockArgsValid = z.object({
   input: PlRef,
   inputLibrary: PlRef.optional(),
   libraryFile: z.string().transform((v) => v as ImportFileHandle).optional(),
+  isLibraryFileGzipped: z.boolean().optional(),
   preset: Preset,
   species: z.string().optional(),
   customSpecies: z.string().optional(),

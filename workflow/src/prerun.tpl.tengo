@@ -43,20 +43,20 @@ wf.body(func(args) {
 		presetResource := undefined
 
 		if preset.type == "file" {
-			presetResource = importFile(preset.file)
+			//presetResource = importFile(preset.file)
+			presetResource = undefined
 		} else {
 			ll.assert(preset.type == "name", "unexpected preset type")
 			// whole json, including type
 			presetResource = smart.createJsonResource(preset)
+			getPreset := render.create(getPresetTpl, {
+				preset: presetResource,
+				params: {
+					species: args.species
+				}
+			})
+			outputs.preset = getPreset.output("presetSpecForBack", 24 * 60 * 60 * 1000)
 		}
-
-		getPreset := render.create(getPresetTpl, {
-			preset: presetResource,
-			params: {
-				species: args.species
-			}
-		})
-		outputs.preset = getPreset.output("presetSpecForBack", 24 * 60 * 60 * 1000)
 	}
 
 	outputs.fileImports = smart.createMapResource(maps.mapValues(fileImports, func(im) {

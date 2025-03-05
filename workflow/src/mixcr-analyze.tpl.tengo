@@ -37,6 +37,7 @@ self.body(func(inputs) {
 	fileExtension := params.fileExtension
 	reports := params.reports
 	featureParams := params.featureParams
+	isLibraryFileGzipped := params.isLibraryFileGzipped
 
 	presetContent := inputs.presetContent // already in JSON
 	pfconvParamsById := inputs.pfconvParamsById // already in JSON
@@ -84,9 +85,14 @@ self.body(func(inputs) {
 	}
 
 	if library {
-		mixcrCmdBuilder.arg("--species").arg(species).
-			arg("--library").arg("library.json").
+		mixcrCmdBuilder.arg("--species").arg(species)
+		if isLibraryFileGzipped {
+			mixcrCmdBuilder.arg("--library").arg("library.json.gz").
+			addFile("library.json.gz", library)
+		} else {
+			mixcrCmdBuilder.arg("--library").arg("library.json").
 			addFile("library.json", library)
+		}
 	} else if !is_undefined(species) {
 		species = params.species
 		mixcrCmdBuilder.arg("--species").arg(species)
