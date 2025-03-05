@@ -1,5 +1,16 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.10.0
+
+### Minor Changes
+
+- 5ca4eb7: Check if custom library json file gzipped or not
+
+### Patch Changes
+
+- Updated dependencies [5ca4eb7]
+  - @platforma-open/milaboratories.mixcr-clonotyping.model@1.8.0
+
 ## 1.9.1
 
 ### Patch Changes
