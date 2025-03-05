@@ -6,23 +6,23 @@ packages:
   - test
 
 catalog:
-  '@platforma-sdk/workflow-tengo': ^2.13.4
+  '@platforma-sdk/workflow-tengo': ^2.15.0
   '@platforma-sdk/model': ^1.22.59
   '@platforma-sdk/ui-vue': ^1.22.64
-  '@platforma-sdk/tengo-builder': ^1.17.8
+  '@platforma-sdk/tengo-builder': ^1.19.1
   '@platforma-sdk/block-tools': ^2.5.16
   '@platforma-sdk/eslint-config': ^1.0.1
 
-  '@platforma-sdk/test': ^1.22.66
+  '@platforma-sdk/test': ^1.22.74
   '@milaboratories/helpers': ^1.6.11
 
-  '@milaboratories/software-pframes-conv': 2.1.12
+  '@milaboratories/software-pframes-conv': 2.1.13
   '@platforma-open/milaboratories.software-small-binaries': ^1.15.11
   '@platforma-open/milaboratories.software-mixcr': 4.7.0-133-develop
   '@platforma-open/milaboratories.software-ptransform': ^1.2.0
 
   'vue': ^3.5.13
-  'vue-tsc': ^2.2.0
+  'vue-tsc': ^2.2.8
 
   'zod': ~3.23.8
   'utility-types': ^3.11.0
@@ -34,9 +34,9 @@ catalog:
   'vite': ^6.2.0
   'vitest': ^2.1.8
   '@vitejs/plugin-vue': ^5.2.1
-  'rollup-plugin-sourcemaps2': ^0.4.3
+  'rollup-plugin-sourcemaps2': ^0.5.0
 
-  '@vueuse/core': ^12.7.0
+  '@vueuse/core': ^12.8.2
 
   'ag-grid-enterprise': &ag-grid ^33.1.1
   'ag-grid-vue3': *ag-grid
