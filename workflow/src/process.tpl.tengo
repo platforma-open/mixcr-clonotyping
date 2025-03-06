@@ -110,9 +110,9 @@ self.body(func(inputs) {
 	cColumnsAdditionalAxesSpec := []
 	if !hasAssembleCells {
 		cColumnsAdditionalAxesSpec = append(cColumnsAdditionalAxesSpec, {
-			"name": "pl7.app/vdj/chain",
-			"type": "String",
-			"annotations": {
+			name: "pl7.app/vdj/chain",
+			type: "String",
+			annotations: {
 				"pl7.app/label": "Chain",
 				"pl7.app/axisNature": "scaleCompatible"
 			}
@@ -294,6 +294,6 @@ self.body(func(inputs) {
 		"clns.spec": mixcrResults.outputSpec("clns"),
 		"clns.data": mixcrResults.outputData("clns"),
 
-		"clones": clones
+		clones: clones
 	}
 })

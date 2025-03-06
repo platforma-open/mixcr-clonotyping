@@ -20,7 +20,7 @@ self.defineOutputs("qc", "reports", "clonesById", "clonesByKey", "log", "clns")
 
 exportClonesBulkTpl := assets.importTemplate(":export-clones-bulk")
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:main")
-tableTransformation := import(":table-transformation")
+tableTransformation := import(":utils")
 
 progressPrefix := "[==PROGRESS==]"
 
@@ -189,7 +189,7 @@ self.body(func(inputs) {
 	if hasAssembleCells {
 		cloneTable := mixcrCmd.getFile("result.clones.tsv")
 		result.clonesById = xsv.importFile(cloneTable, "tsv", pfconvParamsById, { dataOnly: true })
-		result.clonesByKey = smart.createMapResource({}) // creating empty output to avoid errors
+		result.clonesByKey = smart.createNullResource() // creating empty output to avoid errors
 	} else {
 		result.clonesById = render.create(exportClonesBulkTpl, {
 			data: mixcrCmd.getFileSet("clones"),

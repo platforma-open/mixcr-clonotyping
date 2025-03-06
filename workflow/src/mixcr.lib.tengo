@@ -1,12 +1,12 @@
 ll := import("@platforma-sdk/workflow-tengo:ll")
 text := import("text")
-getFeature := import(":check-feature")
+utils := import(":utils")
 
 
 addAdditionalColumnArgs := func(mixcrCmdBuilder, featureParams) {
 	assemblingFeature := featureParams.assemblingFeature
 	imputed := featureParams.imputed
-	featureSpec := getFeature.getProductiveFeature(assemblingFeature, imputed)
+	featureSpec := utils.getProductiveFeature(assemblingFeature, imputed)
 	addColumns := true
 	if assemblingFeature == "CDR3" {
 		addColumns = false

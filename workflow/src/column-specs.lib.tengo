@@ -1,0 +1,309 @@
+maps := import("@platforma-sdk/workflow-tengo:maps")
+
+a := func(order, defaultVisibility, spec) {
+	return maps.merge(spec, {
+		"pl7.app/table/orderPriority": string(order),
+		"pl7.app/table/visibility": defaultVisibility ? "default" : "optional"
+	})
+}
+
+columnSpec := func(ops) {
+	assemblingFeature := ops.assemblingFeature
+	imputationEnabled := ops.imputationEnabled
+	cellTags := ops.cellTags
+	clonotypeKeyAxes := ops.clonotypeKeyAxes
+
+	// Abundance
+
+	columnSpecList += [
+		{
+			column: "readCount",
+			id: "read-count",
+			allowNA: false,
+			spec: {
+				name: "pl7.app/vdj/readCount",
+				valueType: "Long",
+				annotations: a(23500, true, {
+					"pl7.app/min": "1",
+					"pl7.app/label": "Number Of Reads",
+				})
+			}
+		},
+		{
+			column: "readFraction",
+			id: "read-fraction",
+			allowNA: false,
+			spec: {
+				name: "pl7.app/vdj/readFraction",
+				valueType: "Double",
+				annotations: a(23000, true, {
+					"pl7.app/min": "0",
+					"pl7.app/max": "1",
+					"pl7.app/label": "Fraction of reads",
+				})
+			}
+		},
+		{
+			column: "uniqueMoleculeCount",
+			id: "umi-count",
+			allowNA: false,
+			spec: {
+				name: "pl7.app/vdj/uniqueMoleculeCount",
+				valueType: "Long",
+				annotations: a(22500, true, {
+					"pl7.app/min": "1",
+					"pl7.app/label": "Number of UMI",
+				})
+			}
+		},
+		{
+			column: "uniqueMoleculeFraction",
+			id: "umi-fraction",
+			allowNA: false,
+			spec: {
+				name: "pl7.app/vdj/uniqueMoleculeFraction",
+				valueType: "Double",
+				annotations: a(22000, true, {
+					"pl7.app/min": "0",
+					"pl7.app/max": "1",
+					"pl7.app/label": "Fraction of UMI",
+				})
+			}
+		}
+	]
+
+	// VDJC Hits
+
+	orderP := 21000
+	for vdjcU in ["V", "D", "J", "C"] {
+		vdjcL := text.to_lower(vdjcU)
+		columnSpecList += [
+			{
+				column: "best" + vdjcU + "Hit",
+				id: "best-" + vdjcL + "-hit",
+				naRegex: "",
+				allowNA: false,
+				spec: {
+					name: "pl7.app/vdj/geneHit",
+					valueType: "String",
+					domain: {
+						"pl7.app/vdj/reference": vdjcU + "Gene"
+					},
+					annotations: a(orderP, true, {
+						type: vdjcU + " gene name",
+						"pl7.app/label": "Best " + vdjcU + " hit",
+						"pl7.app/isDiscreteFilter": "true"
+					})
+				}
+			}
+		]
+		orderP -= 500
+	}
+
+	// Sequences
+
+	if assemblingFeature != "CDR3" {
+		features = [assemblingFeature, "CDR1", "FR1", "FR2", "CDR2", "FR3", "CDR3", "FR4"]
+	} else {
+		features = ["CDR3"]
+	}
+
+	for isImputed in [false, true] {
+		imputedU := isImputed ? "Imputed" : ""
+		imputedL := text.to_lower(imputedU)
+		for featureU in features {
+			featureL := text.to_lower(featureU)
+			for isAminoAcid in [false, true] {
+				alphabet := isAminoAcid ? "aminoacid" : "nucleotide"
+				alphabetShort := isAminoAcid ? "aa" : "nt"
+				alphabetShortMixcr := isAminoAcid ? "aa" : "n"
+				columnSpecList += [
+					{
+						column: alphabetShortMixcr + "Seq" + imputedU + featureU,
+						id: alphabetShortMixcr + "-seq-" + featureL + "-" + imputedL,
+						naRegex: "region_not_covered",
+						spec: {
+							name: "pl7.app/vdj/sequence",
+							valueType: "String",
+							domain: {
+								"pl7.app/vdj/feature": featureU,
+								"pl7.app/alphabet": alphabet
+							},
+							annotations: a(orderP, false, {
+								"pl7.app/vdj/imputed": string(isImputed),
+								"pl7.app/label": featureU + " " + alphabetShort,
+							})
+						}
+					}
+				]
+				if !isImputed && !isAminoAcid {
+					columnSpecList += [
+						{
+							column: "minQual" + featureU,
+							id: "min-qual-" + featureL,
+							naRegex: "region_not_covered",
+							spec: {
+								name: "pl7.app/vdj/sequenceQuality",
+								valueType: "Int",
+								domain: {
+									"pl7.app/vdj/quality": "minQuality",
+									"pl7.app/vdj/feature": featureU
+								},
+								annotations: a(orderP - 10, false, {
+									"pl7.app/min": "0",
+									"pl7.app/max": "60",
+									"pl7.app/label": "Min quality " + featureU,
+								})
+							}
+						}
+					]
+				}
+				orderP -= 100
+			}
+		}
+	}
+
+// Single cell
+
+
+	{
+		column: "isotype",
+		id: "isotype",
+		naRegex: "",
+		spec: {
+			valueType: "String",
+			name: "pl7.app/vdj/isotype",
+			annotations: {
+				"pl7.app/label": "IG isotype",
+				"pl7.app/isDiscreteFilter": "true",
+				"pl7.app/table/visibility": "default",
+				"pl7.app/table/orderPriority": "19000"
+			}
+		}
+	},
+	{
+		column: "topChains",
+		id: "top-chains",
+		naRegex: "",
+		allowNA: false,
+		spec: {
+			valueType: "String",
+			name: "pl7.app/vdj/chain",
+			annotations: {
+				"pl7.app/label": "Chain",
+				"pl7.app/isDiscreteFilter": "true",
+				"pl7.app/discreteValues": "['TRA','TRB','TRG','TRD','IGH','IGK','IGL']",
+				"pl7.app/table/visibility": "default",
+				"pl7.app/table/orderPriority": "21500"
+			}
+		}
+	},
+	{
+		column: "isProductive" + productiveFeature,
+		id: "is-productive-" + assemblingFeature,
+		allowNA: false,
+		spec: {
+			valueType: "String",
+			name: "pl7.app/vdj/sequence/productive",
+			annotations: {
+				"pl7.app/label": "Productive",
+				"pl7.app/isDiscreteFilter": "true",
+				"pl7.app/discreteValues": "['true', 'false']",
+				"pl7.app/table/visibility": "default",
+				"pl7.app/table/orderPriority": "21400"
+			}
+		}
+	},
+	{
+		column: "isOOF" + productiveFeature,
+		id: "is-oof-" + assemblingFeature,
+		allowNA: false,
+		spec: {
+			valueType: "String",
+			name: "pl7.app/vdj/sequence/containsOOF",
+			annotations: {
+				"pl7.app/label": "Contains OOF",
+				"pl7.app/table/visibility": "optional",
+				"pl7.app/table/orderPriority": "20"
+			}
+		}
+	},
+	{
+		column: "hasStopsIn" + productiveFeature,
+		id: "has-stops-in-" + assemblingFeature,
+		allowNA: false,
+		spec: {
+			valueType: "String",
+			name: "pl7.app/vdj/sequence/containsStopCodons",
+			annotations: {
+				"pl7.app/label": "Contains stop codons",
+				"pl7.app/isDiscreteFilter": "true",
+				"pl7.app/discreteValues": "['true', 'false']",
+				"pl7.app/table/visibility": "optional",
+				"pl7.app/table/orderPriority": "10"
+			}
+		}
+	},
+	{
+		column: "nSeqVRegionOfGermline",
+		id: "n-seq-vregion-germline",
+		spec: {
+			name: "pl7.app/vdj/sequence",
+			valueType: "String",
+			domain: {
+				"pl7.app/vdj/feature": "VRegion",
+				"pl7.app/alphabet": "nucleotide"
+			},
+			annotations: {
+				"pl7.app/vdj/imputed": "false",
+				"pl7.app/label": "V germline",
+				"pl7.app/table/visibility": "optional",
+				"pl7.app/table/orderPriority": "400"
+			}
+		}
+	},
+	{
+		column: "nSeqDRegionOfGermline",
+		id: "n-seq-dregion-germline",
+		spec: {
+			name: "pl7.app/vdj/sequence",
+			valueType: "String",
+			domain: {
+				"pl7.app/vdj/feature": "DRegion",
+				"pl7.app/alphabet": "nucleotide"
+			},
+			annotations: {
+				"pl7.app/vdj/imputed": "false",
+				"pl7.app/label": "D germline",
+				"pl7.app/table/visibility": "optional",
+				"pl7.app/table/orderPriority": "300"
+			}
+		}
+	},
+	{
+		column: "nSeqJRegionOfGermline",
+		id: "n-seq-jregion-germline",
+		spec: {
+			name: "pl7.app/vdj/sequence",
+			valueType: "String",
+			domain: {
+				"pl7.app/vdj/feature": "JRegion",
+				"pl7.app/alphabet": "nucleotide"
+			},
+			annotations: {
+				"pl7.app/vdj/imputed": "false",
+				"pl7.app/label": "J germline",
+				"pl7.app/table/visibility": "optional",
+				"pl7.app/table/orderPriority": "200"
+			}
+		}
+	}]
+
+
+
+columnSpecMap := {}
+
+export ll.toStr({
+	list: columnSpecList,
+	map: columnSpecMap
+})
