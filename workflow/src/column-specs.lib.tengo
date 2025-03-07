@@ -1,4 +1,7 @@
 maps := import("@platforma-sdk/workflow-tengo:maps")
+ll := import("@platforma-sdk/workflow-tengo:ll")
+utils := import(":utils")
+text := import("text")
 
 a := func(order, defaultVisibility, spec) {
 	return maps.merge(spec, {
@@ -12,6 +15,10 @@ columnSpec := func(ops) {
 	imputationEnabled := ops.imputationEnabled
 	cellTags := ops.cellTags
 	clonotypeKeyAxes := ops.clonotypeKeyAxes
+	featureSpec := utils.getProductiveFeature(assemblingFeature, imputationEnabled)
+	blockId := ops.blockId
+
+	columnSpecList := []
 
 	// Abundance
 
@@ -23,9 +30,9 @@ columnSpec := func(ops) {
 			spec: {
 				name: "pl7.app/vdj/readCount",
 				valueType: "Long",
-				annotations: a(23500, true, {
+				annotations: a(90000, true, {
 					"pl7.app/min": "1",
-					"pl7.app/label": "Number Of Reads",
+					"pl7.app/label": "Number Of Reads"
 				})
 			}
 		},
@@ -36,10 +43,10 @@ columnSpec := func(ops) {
 			spec: {
 				name: "pl7.app/vdj/readFraction",
 				valueType: "Double",
-				annotations: a(23000, true, {
+				annotations: a(89000, true, {
 					"pl7.app/min": "0",
 					"pl7.app/max": "1",
-					"pl7.app/label": "Fraction of reads",
+					"pl7.app/label": "Fraction of reads"
 				})
 			}
 		},
@@ -50,9 +57,9 @@ columnSpec := func(ops) {
 			spec: {
 				name: "pl7.app/vdj/uniqueMoleculeCount",
 				valueType: "Long",
-				annotations: a(22500, true, {
+				annotations: a(88000, true, {
 					"pl7.app/min": "1",
-					"pl7.app/label": "Number of UMI",
+					"pl7.app/label": "Number of UMI"
 				})
 			}
 		},
@@ -63,10 +70,10 @@ columnSpec := func(ops) {
 			spec: {
 				name: "pl7.app/vdj/uniqueMoleculeFraction",
 				valueType: "Double",
-				annotations: a(22000, true, {
+				annotations: a(87500, true, {
 					"pl7.app/min": "0",
 					"pl7.app/max": "1",
-					"pl7.app/label": "Fraction of UMI",
+					"pl7.app/label": "Fraction of UMI"
 				})
 			}
 		}
@@ -74,7 +81,7 @@ columnSpec := func(ops) {
 
 	// VDJC Hits
 
-	orderP := 21000
+	orderP := 80000
 	for vdjcU in ["V", "D", "J", "C"] {
 		vdjcL := text.to_lower(vdjcU)
 		columnSpecList += [
@@ -97,11 +104,11 @@ columnSpec := func(ops) {
 				}
 			}
 		]
-		orderP -= 500
+		orderP -= 100
 	}
 
 	// Sequences
-
+	features := []
 	if assemblingFeature != "CDR3" {
 		features = [assemblingFeature, "CDR1", "FR1", "FR2", "CDR2", "FR3", "CDR3", "FR4"]
 	} else {
@@ -117,6 +124,7 @@ columnSpec := func(ops) {
 				alphabet := isAminoAcid ? "aminoacid" : "nucleotide"
 				alphabetShort := isAminoAcid ? "aa" : "nt"
 				alphabetShortMixcr := isAminoAcid ? "aa" : "n"
+				visibility := ((featureU == "CDR3") || (featureU == assemblingFeature)) ? true : false
 				columnSpecList += [
 					{
 						column: alphabetShortMixcr + "Seq" + imputedU + featureU,
@@ -129,9 +137,9 @@ columnSpec := func(ops) {
 								"pl7.app/vdj/feature": featureU,
 								"pl7.app/alphabet": alphabet
 							},
-							annotations: a(orderP, false, {
+							annotations: a(orderP, visibility, {
 								"pl7.app/vdj/imputed": string(isImputed),
-								"pl7.app/label": featureU + " " + alphabetShort,
+								"pl7.app/label": featureU + " " + alphabetShort
 							})
 						}
 					}
@@ -152,7 +160,7 @@ columnSpec := func(ops) {
 								annotations: a(orderP - 10, false, {
 									"pl7.app/min": "0",
 									"pl7.app/max": "60",
-									"pl7.app/label": "Min quality " + featureU,
+									"pl7.app/label": "Min quality " + featureU
 								})
 							}
 						}
@@ -163,147 +171,253 @@ columnSpec := func(ops) {
 		}
 	}
 
-// Single cell
+	// Mutations
+	
+	if assemblingFeature != "CDR3" {
+		mutationVFeature := featureSpec.mutationVFeature
 
+		genes := ["V", "J"]
 
-	{
-		column: "isotype",
-		id: "isotype",
-		naRegex: "",
-		spec: {
-			valueType: "String",
-			name: "pl7.app/vdj/isotype",
-			annotations: {
-				"pl7.app/label": "IG isotype",
-				"pl7.app/isDiscreteFilter": "true",
-				"pl7.app/table/visibility": "default",
-				"pl7.app/table/orderPriority": "19000"
-			}
-		}
-	},
-	{
-		column: "topChains",
-		id: "top-chains",
-		naRegex: "",
-		allowNA: false,
-		spec: {
-			valueType: "String",
-			name: "pl7.app/vdj/chain",
-			annotations: {
-				"pl7.app/label": "Chain",
-				"pl7.app/isDiscreteFilter": "true",
-				"pl7.app/discreteValues": "['TRA','TRB','TRG','TRD','IGH','IGK','IGL']",
-				"pl7.app/table/visibility": "default",
-				"pl7.app/table/orderPriority": "21500"
-			}
-		}
-	},
-	{
-		column: "isProductive" + productiveFeature,
-		id: "is-productive-" + assemblingFeature,
-		allowNA: false,
-		spec: {
-			valueType: "String",
-			name: "pl7.app/vdj/sequence/productive",
-			annotations: {
-				"pl7.app/label": "Productive",
-				"pl7.app/isDiscreteFilter": "true",
-				"pl7.app/discreteValues": "['true', 'false']",
-				"pl7.app/table/visibility": "default",
-				"pl7.app/table/orderPriority": "21400"
-			}
-		}
-	},
-	{
-		column: "isOOF" + productiveFeature,
-		id: "is-oof-" + assemblingFeature,
-		allowNA: false,
-		spec: {
-			valueType: "String",
-			name: "pl7.app/vdj/sequence/containsOOF",
-			annotations: {
-				"pl7.app/label": "Contains OOF",
-				"pl7.app/table/visibility": "optional",
-				"pl7.app/table/orderPriority": "20"
-			}
-		}
-	},
-	{
-		column: "hasStopsIn" + productiveFeature,
-		id: "has-stops-in-" + assemblingFeature,
-		allowNA: false,
-		spec: {
-			valueType: "String",
-			name: "pl7.app/vdj/sequence/containsStopCodons",
-			annotations: {
-				"pl7.app/label": "Contains stop codons",
-				"pl7.app/isDiscreteFilter": "true",
-				"pl7.app/discreteValues": "['true', 'false']",
-				"pl7.app/table/visibility": "optional",
-				"pl7.app/table/orderPriority": "10"
-			}
-		}
-	},
-	{
-		column: "nSeqVRegionOfGermline",
-		id: "n-seq-vregion-germline",
-		spec: {
-			name: "pl7.app/vdj/sequence",
-			valueType: "String",
-			domain: {
-				"pl7.app/vdj/feature": "VRegion",
-				"pl7.app/alphabet": "nucleotide"
-			},
-			annotations: {
-				"pl7.app/vdj/imputed": "false",
-				"pl7.app/label": "V germline",
-				"pl7.app/table/visibility": "optional",
-				"pl7.app/table/orderPriority": "400"
-			}
-		}
-	},
-	{
-		column: "nSeqDRegionOfGermline",
-		id: "n-seq-dregion-germline",
-		spec: {
-			name: "pl7.app/vdj/sequence",
-			valueType: "String",
-			domain: {
-				"pl7.app/vdj/feature": "DRegion",
-				"pl7.app/alphabet": "nucleotide"
-			},
-			annotations: {
-				"pl7.app/vdj/imputed": "false",
-				"pl7.app/label": "D germline",
-				"pl7.app/table/visibility": "optional",
-				"pl7.app/table/orderPriority": "300"
-			}
-		}
-	},
-	{
-		column: "nSeqJRegionOfGermline",
-		id: "n-seq-jregion-germline",
-		spec: {
-			name: "pl7.app/vdj/sequence",
-			valueType: "String",
-			domain: {
-				"pl7.app/vdj/feature": "JRegion",
-				"pl7.app/alphabet": "nucleotide"
-			},
-			annotations: {
-				"pl7.app/vdj/imputed": "false",
-				"pl7.app/label": "J germline",
-				"pl7.app/table/visibility": "optional",
-				"pl7.app/table/orderPriority": "200"
-			}
-		}
-	}]
+		orderP := 1000
 
+		for isAminoAcid in [false, true] {
+			alphabetShort := isAminoAcid ? "AA" : "Nt"
+			alphabetShortMixcr := isAminoAcid ? "aa" : "n"
+			// Now loop over gene types.
+			for gene in genes {
+				suffix := (gene == "V") ? mutationVFeature : "FR4"
+				idSuffix := (gene == "V") ? "v" : "fr4"
+				mutationGroups := [
+					{
+						group: "Mutations",
+						valueType: "String",
+						specName: "pl7.app/vdj/sequence/" + alphabetShortMixcr + "Mutations",
+						label: alphabetShort + "mutations in " + gene + " gene",
+						id: alphabetShortMixcr + "-mutations-" + idSuffix
+					},
+					{
+						group: "MutationsCount",
+						valueType: "Int",
+						specName: "pl7.app/vdj/sequence/" + alphabetShortMixcr + "MutationsCount",
+						label: alphabetShort + "mutations count in " + gene + " gene",
+						id: alphabetShortMixcr + "-mutations-count-" + idSuffix
+					},
+					{
+						group: "MutationsRate",
+						valueType: "Double",
+						specName: "pl7.app/vdj/sequence/" + alphabetShortMixcr + "MutationsRate",
+						label: alphabetShort + "mutations rate in " + gene + " gene",
+						id: alphabetShortMixcr + "-mutations-rate-" + idSuffix
+					}
+				]
+				for group in mutationGroups {
+					columnName := alphabetShortMixcr + group.group + suffix
+					naRegex := (group.group == "Mutations") ? "None" : "region_not_covered"					
+					columnSpecList += [
+						{
+							column: columnName,
+							id: group.id,
+							allowNA: true,
+							naRegex: naRegex,
+							spec: {
+								valueType: group.valueType,
+								name: group.specName,
+								annotations: a(orderP, false, {
+									"pl7.app/label": group.label
+								})
+							}
+						}
+					]
+					orderP -= 100
+				}
+			}
+		}
+	}
 
+	// Productive, OOF, Stop codons columns
 
-columnSpecMap := {}
+	productiveFeature := featureSpec.productiveFeature
+	columnGroups := [
+		{
+			group: "Productive",
+			columns: "isProductive" + productiveFeature,
+			valueType: "String",
+			specName: "pl7.app/vdj/sequence/productive",
+			label: "Productive",
+			id: "is-productive-" + text.to_lower(assemblingFeature)
+		},
+		{
+			group: "Contains OOF",
+			columns: "isOOF" + productiveFeature,
+			valueType: "String",
+			specName: "pl7.app/vdj/sequence/containsOOF",
+			label: "Contains OOF",
+			id: "is-oof-" + text.to_lower(assemblingFeature)
+		},
+		{
+			group: "Contains stop codons",
+			columns: "hasStopsIn" + productiveFeature,
+			valueType: "String",
+			specName: "pl7.app/vdj/sequence/containsStopCodons",
+			label: "Contains stop codons",
+			id: "has-stops-in-" + text.to_lower(assemblingFeature)
+		}
+	]
+	for group in columnGroups {
+		visibility := (group == "Productive" ? true : false)
+		columnSpecList += [
+			{
+				column: group.column,
+				id: group.id,
+				allowNA: false,
+				spec: {
+					valueType: group.valueType,
+					name: group.specName,
+					annotations: a(orderP, visibility, {
+						"pl7.app/label": group.label,
+						"pl7.app/isDiscreteFilter": "true",
+						"pl7.app/discreteValues": "['true', 'false']"
+						})
+					}
+				}
+			]
+		}
 
-export ll.toStr({
-	list: columnSpecList,
-	map: columnSpecMap
+	// Germline sequences
+
+	geneRegions := ["VRegion", "DRegion", "JRegion"]
+
+	for region in geneRegions {
+		columnSpecList += [
+			{
+				column: "nSeq" + region + "OfGermline",
+				id: "n-seq-" + text.to_lower(region) + "-germline",
+				spec: {
+					name: "pl7.app/vdj/sequence",
+					valueType: "String",
+					domain: {
+						"pl7.app/vdj/feature": region,
+						"pl7.app/alphabet": "nucleotide"
+					},
+					annotations: a(orderP, false, {
+						"pl7.app/vdj/imputed": "false",
+						"pl7.app/label": string(region[0]) + " germline"
+					})
+				}
+			}
+		]
+	}
+
+//Isotype and chain
+	columnSpecList += [
+		{
+			column: "isotype",
+			id: "isotype",
+			naRegex: "",
+			spec: {
+				valueType: "String",
+				name: "pl7.app/vdj/isotype",
+				annotations: a(orderP, true, {
+					"pl7.app/label": "IG isotype",
+					"pl7.app/isDiscreteFilter": "true"
+				})
+			}
+		},
+		{
+			column: "topChains",
+			id: "top-chains",
+			naRegex: "",
+			allowNA: false,
+			spec: {
+				valueType: "String",
+				name: "pl7.app/vdj/chain",
+				annotations: a(orderP, true, {
+					"pl7.app/label": "Chain",
+					"pl7.app/isDiscreteFilter": "true",
+					"pl7.app/discreteValues": "['TRA','TRB','TRG','TRD','IGH','IGK','IGL']"
+				})
+			}
+		}
+	]
+
+// Axes
+
+	axisSpecList := []
+	generateKey := ops.generateKey
+	if generateKey {
+		axisSpecList = [
+			{
+				column: text.join(clonotypeKeyAxes, "-"),
+				naRegex: "",
+				spec: {
+					name: "pl7.app/vdj/cloneKey",
+					type: "String",
+					domain: {
+						"pl7.app/vdj/cloneKey/structure": text.join(clonotypeKeyAxes, "-")
+					},
+					annotations: {
+						"pl7.app/label": "Clone key",
+						"pl7.app/table/visibility": "optional",
+						"pl7.app/table/orderPriority": "110000"
+					}
+				}
+			}
+		]
+	} else {
+		axisSpecList := [
+		{
+			column: "cloneId",
+			spec: {
+				name: "pl7.app/vdj/cloneId",
+				type: "Long",
+				domain: {
+					"pl7.app/blockId": blockId
+				},
+				annotations: {
+					"pl7.app/min": "0",
+					"pl7.app/label": "Clone id",
+					"pl7.app/table/visibility": "optional",
+					"pl7.app/table/orderPriority": "90000"
+					}
+				}
+			}
+		]
+		label := undefined
+		order := 100000
+		if len(cellTags) > 0 {
+			for tag in cellTags {
+				if tag == "CELL" {
+					label = "Cell tag"
+				} else {
+					label = text.to_title(tag[:4]) + " " + text.to_lower(tag[4:])
+				}
+				axisSpecList += [
+					{
+						column: "tagValue" + tag,
+						naRegex: "",
+						spec: {
+							name: "pl7.app/vdj/tagValueCELL",
+							type: "String",
+							domain: {
+								"pl7.app/blockId": blockId
+							},
+							annotations: a(order, true, {
+								"pl7.app/label": label
+								})
+							}
+						}
+					]
+				order -= 1
+			}
+		}
+	}
+	columnSpecMap := {
+		axes: axisSpecList,
+		columns: columnSpecList
+	}
+	return columnSpecMap
+}
+
+export ll.toStrict({
+	columnSpec: columnSpec
 })

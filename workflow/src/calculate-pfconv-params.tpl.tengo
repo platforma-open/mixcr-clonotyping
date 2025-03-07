@@ -2,7 +2,7 @@ self := import("@platforma-sdk/workflow-tengo:tpl")
 maps := import("@platforma-sdk/workflow-tengo:maps")
 ll := import("@platforma-sdk/workflow-tengo:ll")
 
-pfconvParamsLib := import(":pfconv_params")
+pfconvParamsLib := import(":column-specs")
 utils := import(":utils")
 
 json := import("json")
@@ -137,14 +137,15 @@ self.body(func(inputs) {
 	}
 
 	// filter pfconvParams by column name and get a list of fields from it
-	pfconvParamsById := pfconvParamsLib.getColumns(blockId,
-		{assemblingFeature: assemblingFeature, imputed: imputed, cellTags: specs.cellTags, generateKey: false, clonotypeKeyAxes: clonotypeKeyAxes})
-	pfconvParamsByKey := pfconvParamsLib.getColumns(blockId,
-		{assemblingFeature: assemblingFeature, imputed: imputed, cellTags: specs.cellTags, generateKey: true, clonotypeKeyAxes: clonotypeKeyAxes})
+	pfconvParamsById := pfconvParamsLib.columnSpec({blockId: blockId,
+		assemblingFeature: assemblingFeature, imputationEnabled: imputed, cellTags: specs.cellTags, generateKey: false, clonotypeKeyAxes: clonotypeKeyAxes})
+	pfconvParamsByKey := pfconvParamsLib.columnSpec({blockId: blockId,
+		assemblingFeature: assemblingFeature, imputationEnabled: imputed, cellTags: specs.cellTags, generateKey: true, clonotypeKeyAxes: clonotypeKeyAxes})
 	// column (i.e. in tsv) -> pfconv params
 	columnsByIdMap := {}
 	axesByIdMap := {}
 	for col in pfconvParamsById.columns {
+		ll.print("__THE_LOG__" + col)
 		columnsByIdMap[col.column] = col
 	}
 	for axis in pfconvParamsById.axes {
