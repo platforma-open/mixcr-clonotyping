@@ -20,7 +20,7 @@ FILE_NAME_SUFFIX_LEN := len(FILE_NAME_SUFFIX)
 
 self.body(func(inputs) {
 	params := inputs.params
-	cloneKeyAxes := params.cloneKeyAxes
+	clonotypeKeyAxes := params.clonotypeKeyAxes
 	data := self.rawInputs().data.getValue()
 
 	csvMap := pcolumn.resourceMapBuilder(/* key length */ 1)
@@ -31,8 +31,8 @@ self.body(func(inputs) {
 		}
 		chain := tsvName[FILE_NAME_PREFIX_LEN:(len(tsvName) - FILE_NAME_SUFFIX_LEN)]
 		processedCsv := tsv
-		if !is_undefined(cloneKeyAxes) {
-			processedCsv = utils.addCloneKey(processedCsv, cloneKeyAxes)
+		if !is_undefined(clonotypeKeyAxes) {
+			processedCsv = utils.addCloneKey(processedCsv, clonotypeKeyAxes)
 		}
 		csvMap.add([chain], processedCsv)
 	}

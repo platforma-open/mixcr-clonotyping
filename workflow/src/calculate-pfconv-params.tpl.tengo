@@ -181,7 +181,7 @@ self.body(func(inputs) {
 	}
 
 	for col in columnsByKey {
-		col.id = col.id + "-cloneKey"
+		col.id = col.id + "-clonotypeKey"
 	}
 
 	// create axes fields

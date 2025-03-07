@@ -15,14 +15,18 @@ columnSpec := func(ops) {
 	imputationEnabled := ops.imputationEnabled
 	cellTags := ops.cellTags
 	clonotypeKeyAxes := ops.clonotypeKeyAxes
-	featureSpec := utils.getProductiveFeature(assemblingFeature, imputationEnabled)
+
+	assemblingFeatureInfo := utils.assemblingFeatureInfo(assemblingFeature, imputationEnabled)
+	productiveFeature := assemblingFeatureInfo.productiveFeature
+	coreGeneFeatures := assemblingFeatureInfo.coreFeatures
+
 	blockId := ops.blockId
 
-	columnSpecList := []
+	columnsSpec := []
 
 	// Abundance
 
-	columnSpecList += [
+	columnsSpec += [
 		{
 			column: "readCount",
 			id: "read-count",
@@ -84,7 +88,7 @@ columnSpec := func(ops) {
 	orderP := 80000
 	for vdjcU in ["V", "D", "J", "C"] {
 		vdjcL := text.to_lower(vdjcU)
-		columnSpecList += [
+		columnsSpec += [
 			{
 				column: "best" + vdjcU + "Hit",
 				id: "best-" + vdjcL + "-hit",
@@ -108,6 +112,7 @@ columnSpec := func(ops) {
 	}
 
 	// Sequences
+
 	features := []
 	if assemblingFeature != "CDR3" {
 		features = [assemblingFeature, "CDR1", "FR1", "FR2", "CDR2", "FR3", "CDR3", "FR4"]
@@ -125,7 +130,7 @@ columnSpec := func(ops) {
 				alphabetShort := isAminoAcid ? "aa" : "nt"
 				alphabetShortMixcr := isAminoAcid ? "aa" : "n"
 				visibility := ((featureU == "CDR3") || (featureU == assemblingFeature)) ? true : false
-				columnSpecList += [
+				columnsSpec += [
 					{
 						column: alphabetShortMixcr + "Seq" + imputedU + featureU,
 						id: alphabetShortMixcr + "-seq-" + featureL + "-" + imputedL,
@@ -145,7 +150,7 @@ columnSpec := func(ops) {
 					}
 				]
 				if !isImputed && !isAminoAcid {
-					columnSpecList += [
+					columnsSpec += [
 						{
 							column: "minQual" + featureU,
 							id: "min-qual-" + featureL,
@@ -172,145 +177,130 @@ columnSpec := func(ops) {
 	}
 
 	// Mutations
-	
-	if assemblingFeature != "CDR3" {
-		mutationVFeature := featureSpec.mutationVFeature
 
-		genes := ["V", "J"]
+	orderP = 10000
 
-		orderP := 1000
+	for isAminoAcid in [false, true] {
+		alphabetShort := isAminoAcid ? "AA" : "Nt"
+		alphabetShortMixcr := isAminoAcid ? "aa" : "n"
 
-		for isAminoAcid in [false, true] {
-			alphabetShort := isAminoAcid ? "AA" : "Nt"
-			alphabetShortMixcr := isAminoAcid ? "aa" : "n"
-			// Now loop over gene types.
-			for gene in genes {
-				suffix := (gene == "V") ? mutationVFeature : "FR4"
-				idSuffix := (gene == "V") ? "v" : "fr4"
-				mutationGroups := [
-					{
-						group: "Mutations",
-						valueType: "String",
-						specName: "pl7.app/vdj/sequence/" + alphabetShortMixcr + "Mutations",
-						label: alphabetShort + "mutations in " + gene + " gene",
-						id: alphabetShortMixcr + "-mutations-" + idSuffix
-					},
-					{
-						group: "MutationsCount",
-						valueType: "Int",
-						specName: "pl7.app/vdj/sequence/" + alphabetShortMixcr + "MutationsCount",
-						label: alphabetShort + "mutations count in " + gene + " gene",
-						id: alphabetShortMixcr + "-mutations-count-" + idSuffix
-					},
-					{
-						group: "MutationsRate",
-						valueType: "Double",
-						specName: "pl7.app/vdj/sequence/" + alphabetShortMixcr + "MutationsRate",
-						label: alphabetShort + "mutations rate in " + gene + " gene",
-						id: alphabetShortMixcr + "-mutations-rate-" + idSuffix
-					}
-				]
-				for group in mutationGroups {
-					columnName := alphabetShortMixcr + group.group + suffix
-					naRegex := (group.group == "Mutations") ? "None" : "region_not_covered"					
-					columnSpecList += [
-						{
-							column: columnName,
-							id: group.id,
-							allowNA: true,
-							naRegex: naRegex,
-							spec: {
-								valueType: group.valueType,
-								name: group.specName,
-								annotations: a(orderP, false, {
-									"pl7.app/label": group.label
-								})
-							}
+		// Now loop over gene types.
+		for geneU in ["V", "J"] {
+			geneL := text.to_lower(geneU)
+
+			coreFeature := coreGeneFeatures[geneU]
+			if is_undefined(coreFeature) {
+				continue
+			}
+
+			mutationGroups := [ {
+					group: "Mutations",
+					valueType: "String",
+					specName: "pl7.app/vdj/sequence/" + alphabetShortMixcr + "Mutations",
+					label: alphabetShort + " mutations in " + geneU + " gene",
+					id: alphabetShortMixcr + "-mutations-" + geneL
+				}, {
+					group: "MutationsCount",
+					valueType: "Int",
+					specName: "pl7.app/vdj/sequence/" + alphabetShortMixcr + "MutationsCount",
+					label: alphabetShort + " mutations count in " + geneU + " gene",
+					id: alphabetShortMixcr + "-mutations-count-" + geneL
+				}, {
+					group: "MutationsRate",
+					valueType: "Double",
+					specName: "pl7.app/vdj/sequence/" + alphabetShortMixcr + "MutationsRate",
+					label: alphabetShort + " mutations rate in " + geneU + " gene",
+					id: alphabetShortMixcr + "-mutations-rate-" + geneL
+				} ]
+
+			for group in mutationGroups {
+				columnsSpec += [ {
+						column: alphabetShortMixcr + group.group + coreFeature,
+						id: group.id,
+						allowNA: true,
+						naRegex: "region_not_covered",
+						spec: {
+							valueType: group.valueType,
+							name: group.specName,
+							annotations: a(orderP, false, {
+								"pl7.app/label": group.label
+							})
 						}
-					]
-					orderP -= 100
-				}
+					} ]
+				orderP -= 100
 			}
 		}
 	}
 
-	// Productive, OOF, Stop codons columns
+	// Flags: productive, oof, stop codons
 
-	productiveFeature := featureSpec.productiveFeature
-	columnGroups := [
-		{
-			group: "Productive",
+	columnGroups := [ {
 			columns: "isProductive" + productiveFeature,
 			valueType: "String",
 			specName: "pl7.app/vdj/sequence/productive",
 			label: "Productive",
-			id: "is-productive-" + text.to_lower(assemblingFeature)
-		},
-		{
+			id: "is-productive",
+			visibility: true
+		}, {
 			group: "Contains OOF",
 			columns: "isOOF" + productiveFeature,
 			valueType: "String",
 			specName: "pl7.app/vdj/sequence/containsOOF",
 			label: "Contains OOF",
-			id: "is-oof-" + text.to_lower(assemblingFeature)
-		},
-		{
+			id: "is-oof",
+			visibility: false
+		}, {
 			group: "Contains stop codons",
 			columns: "hasStopsIn" + productiveFeature,
 			valueType: "String",
 			specName: "pl7.app/vdj/sequence/containsStopCodons",
 			label: "Contains stop codons",
-			id: "has-stops-in-" + text.to_lower(assemblingFeature)
-		}
-	]
+			id: "has-stops",
+			visibility: false
+		} ]
 	for group in columnGroups {
-		visibility := (group == "Productive" ? true : false)
-		columnSpecList += [
-			{
+		columnsSpec += [ {
 				column: group.column,
 				id: group.id,
 				allowNA: false,
 				spec: {
 					valueType: group.valueType,
 					name: group.specName,
-					annotations: a(orderP, visibility, {
+					annotations: a(orderP, group.visibility, {
 						"pl7.app/label": group.label,
 						"pl7.app/isDiscreteFilter": "true",
-						"pl7.app/discreteValues": "['true', 'false']"
-						})
-					}
+						"pl7.app/discreteValues": "['true','false']" } )
 				}
-			]
-		}
+			} ]
+		orderP -= 100
+	}
 
 	// Germline sequences
 
 	geneRegions := ["VRegion", "DRegion", "JRegion"]
 
 	for region in geneRegions {
-		columnSpecList += [
-			{
+		columnsSpec += [ {
 				column: "nSeq" + region + "OfGermline",
 				id: "n-seq-" + text.to_lower(region) + "-germline",
 				spec: {
-					name: "pl7.app/vdj/sequence",
+					name: "pl7.app/vdj/germlineSequence",
 					valueType: "String",
 					domain: {
 						"pl7.app/vdj/feature": region,
 						"pl7.app/alphabet": "nucleotide"
 					},
 					annotations: a(orderP, false, {
-						"pl7.app/vdj/imputed": "false",
-						"pl7.app/label": string(region[0]) + " germline"
+						"pl7.app/label": region[0:1] + " germline"
 					})
 				}
-			}
-		]
+			} ]
+		orderP -= 100
 	}
 
-//Isotype and chain
-	columnSpecList += [
-		{
+	// Isotype and chain
+
+	columnsSpec += [ {
 			column: "isotype",
 			id: "isotype",
 			naRegex: "",
@@ -322,8 +312,7 @@ columnSpec := func(ops) {
 					"pl7.app/isDiscreteFilter": "true"
 				})
 			}
-		},
-		{
+		}, {
 			column: "topChains",
 			id: "top-chains",
 			naRegex: "",
@@ -337,35 +326,31 @@ columnSpec := func(ops) {
 					"pl7.app/discreteValues": "['TRA','TRB','TRG','TRD','IGH','IGK','IGL']"
 				})
 			}
-		}
-	]
+		} ]
 
-// Axes
+	// Axes
 
-	axisSpecList := []
-	generateKey := ops.generateKey
-	if generateKey {
-		axisSpecList = [
-			{
-				column: text.join(clonotypeKeyAxes, "-"),
+	axesSpec := undefined
+	if !is_undefined(clonotypeKeyAxes) {
+		ll.assert(is_undefined(cellTags) || len(cellTags) == 0, "cellTags and clonotypeKeyAxes cannot both be defined")
+		axesSpec = [ {
+				column: "clonotypeKey",
 				naRegex: "",
 				spec: {
-					name: "pl7.app/vdj/cloneKey",
+					name: "pl7.app/vdj/clonotypeKey",
 					type: "String",
 					domain: {
-						"pl7.app/vdj/cloneKey/structure": text.join(clonotypeKeyAxes, "-")
+						"pl7.app/vdj/clonotypeKey/structure": text.join(clonotypeKeyAxes, "-")
 					},
 					annotations: {
-						"pl7.app/label": "Clone key",
+						"pl7.app/label": "Clonotype key",
 						"pl7.app/table/visibility": "optional",
 						"pl7.app/table/orderPriority": "110000"
 					}
 				}
-			}
-		]
+			} ]
 	} else {
-		axisSpecList := [
-		{
+		axesSpec = [ {
 			column: "cloneId",
 			spec: {
 				name: "pl7.app/vdj/cloneId",
@@ -380,42 +365,49 @@ columnSpec := func(ops) {
 					"pl7.app/table/orderPriority": "90000"
 					}
 				}
-			}
-		]
-		label := undefined
-		order := 100000
-		if len(cellTags) > 0 {
+			} ]
+
+		orderP := 100000
+		if !is_undefined(cellTags) && len(cellTags) > 0 {
 			for tag in cellTags {
+				label := undefined
 				if tag == "CELL" {
 					label = "Cell tag"
 				} else {
 					label = text.to_title(tag[:4]) + " " + text.to_lower(tag[4:])
 				}
-				axisSpecList += [
-					{
+				axesSpec += [ {
 						column: "tagValue" + tag,
 						naRegex: "",
 						spec: {
-							name: "pl7.app/vdj/tagValueCELL",
+							name: "pl7.app/vdj/cellTag",
 							type: "String",
 							domain: {
+								"pl7.app/vdj/cellTagId": tag,
 								"pl7.app/blockId": blockId
 							},
-							annotations: a(order, true, {
+							annotations: a(orderP, true, {
 								"pl7.app/label": label
-								})
-							}
+							})
 						}
-					]
-				order -= 1
+					} ]
+				orderP -= 1
 			}
 		}
 	}
-	columnSpecMap := {
-		axes: axisSpecList,
-		columns: columnSpecList
+
+	// columnSpecMap := {}
+	// for columnSpec in columnsSpec {
+	// 	columnSpecMap[columnSpec.id] = columnSpec
+	// }
+	// for axisSpec in axesSpec {
+	// 	columnSpecMap[axisSpec.id] = axisSpec
+	// }
+
+	return {
+		axesSpec: axesSpec,
+		columnsSpec: columnsSpec
 	}
-	return columnSpecMap
 }
 
 export ll.toStrict({

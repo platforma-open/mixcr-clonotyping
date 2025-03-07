@@ -212,8 +212,8 @@ blockTest(
     });
 
     expect(
-      clonesPfColumnList.map(c => c.spec.axesSpec.find((s: any) => s.name === 'pl7.app/vdj/cloneKey')).find(Boolean)?.domain
-    ).toHaveProperty("pl7.app/vdj/cloneKey/structure");
+      clonesPfColumnList.map(c => c.spec.axesSpec.find((s: any) => s.name === 'pl7.app/vdj/clonotypeKey')).find(Boolean)?.domain
+    ).toHaveProperty("pl7.app/vdj/clonotypeKey/structure");
 
     expect(clonesPfColumnList).length.to.greaterThanOrEqual(7);
   }
