@@ -15,6 +15,7 @@ columnSpec := func(ops) {
 	imputationEnabled := ops.imputationEnabled
 	cellTags := ops.cellTags
 	clonotypeKeyAxes := ops.clonotypeKeyAxes
+	hasUmi := ops.hasUmi
 
 	assemblingFeatureInfo := utils.assemblingFeatureInfo(assemblingFeature, imputationEnabled)
 	productiveFeature := assemblingFeatureInfo.productiveFeature
@@ -24,91 +25,116 @@ columnSpec := func(ops) {
 
 	columnsSpec := []
 
+	// array of array of arg groups
+	exportArgs := []
+
 	// Abundance
 
-	columnsSpec += [
-		{
+	columnsSpec += [ {
 			column: "readCount",
 			id: "read-count",
 			allowNA: false,
 			spec: {
 				name: "pl7.app/vdj/readCount",
 				valueType: "Long",
-				annotations: a(90000, true, {
+				annotations: a(90000, !hasUmi, {
 					"pl7.app/min": "1",
 					"pl7.app/label": "Number Of Reads"
 				})
 			}
-		},
-		{
+		}, {
 			column: "readFraction",
 			id: "read-fraction",
 			allowNA: false,
 			spec: {
 				name: "pl7.app/vdj/readFraction",
 				valueType: "Double",
-				annotations: a(89000, true, {
+				annotations: a(89000, !hasUmi, {
 					"pl7.app/min": "0",
 					"pl7.app/max": "1",
 					"pl7.app/label": "Fraction of reads"
 				})
 			}
-		},
-		{
-			column: "uniqueMoleculeCount",
-			id: "umi-count",
-			allowNA: false,
-			spec: {
-				name: "pl7.app/vdj/uniqueMoleculeCount",
-				valueType: "Long",
-				annotations: a(88000, true, {
-					"pl7.app/min": "1",
-					"pl7.app/label": "Number of UMI"
-				})
-			}
-		},
-		{
-			column: "uniqueMoleculeFraction",
-			id: "umi-fraction",
-			allowNA: false,
-			spec: {
-				name: "pl7.app/vdj/uniqueMoleculeFraction",
-				valueType: "Double",
-				annotations: a(87500, true, {
-					"pl7.app/min": "0",
-					"pl7.app/max": "1",
-					"pl7.app/label": "Fraction of UMI"
-				})
-			}
-		}
+		} ]
+	exportArgs += [
+		[ "-readCount" ],
+		[ "-readFraction" ]
 	]
+
+	if hasUmi {
+		columnsSpec += [ {
+				column: "uniqueMoleculeCount",
+				id: "umi-count",
+				allowNA: false,
+				spec: {
+					name: "pl7.app/vdj/uniqueMoleculeCount",
+					valueType: "Long",
+					annotations: a(88000, true, {
+						"pl7.app/min": "1",
+						"pl7.app/label": "Number of UMI"
+					})
+				}
+			}, {
+				column: "uniqueMoleculeFraction",
+				id: "umi-fraction",
+				allowNA: false,
+				spec: {
+					name: "pl7.app/vdj/uniqueMoleculeFraction",
+					valueType: "Double",
+					annotations: a(87500, true, {
+						"pl7.app/min": "0",
+						"pl7.app/max": "1",
+						"pl7.app/label": "Fraction of UMI"
+					})
+				}
+			} ]
+			exportArgs += [
+				[ "-uniqueTagCount", "Molecule" ],
+				[ "-uniqueTagFraction", "Molecule" ]
+			]
+	}
 
 	// VDJC Hits
 
 	orderP := 80000
+	geneHitColumnVariants := [ {
+			name: "pl7.app/vdj/geneHitWithAllele",
+			columnNameSuffix: "Hit",
+			idSuffix: "-hit-with-allele",
+			labelSuffix: " hit with allele",
+			argSuffix: "Hit",
+			visible: false
+		}, {
+			name: "pl7.app/vdj/geneHit",
+			columnNameSuffix: "Gene",
+			idSuffix: "-gene",
+			labelSuffix: " gene",
+			argSuffix: "Gene",
+			visible: true
+		} ]
 	for vdjcU in ["V", "D", "J", "C"] {
 		vdjcL := text.to_lower(vdjcU)
-		columnsSpec += [
-			{
-				column: "best" + vdjcU + "Hit",
-				id: "best-" + vdjcL + "-hit",
-				naRegex: "",
-				allowNA: false,
-				spec: {
-					name: "pl7.app/vdj/geneHit",
-					valueType: "String",
-					domain: {
-						"pl7.app/vdj/reference": vdjcU + "Gene"
-					},
-					annotations: a(orderP, true, {
-						type: vdjcU + " gene name",
-						"pl7.app/label": "Best " + vdjcU + " hit",
-						"pl7.app/isDiscreteFilter": "true"
-					})
-				}
-			}
-		]
-		orderP -= 100
+		for variant in geneHitColumnVariants {
+			columnsSpec += [ {
+					column: "best" + vdjcU + variant.columnNameSuffix,
+					id: "best-" + vdjcL + variant.idSuffix,
+					naRegex: "",
+					allowNA: false,
+					spec: {
+						name: variant.name,
+						valueType: "String",
+						domain: {
+							"pl7.app/vdj/reference": vdjcU + "Gene"
+						},
+						annotations: a(orderP, variant.visible, {
+							"pl7.app/label": "Best " + vdjcU + variant.labelSuffix,
+							"pl7.app/isDiscreteFilter": "true"
+						})
+					}
+				} ]
+			exportArgs += [ [ "-best" + vdjcU + variant.argSuffix ] ]
+			orderP -= 100
+		}
 	}
 
 	// Sequences
@@ -120,7 +146,7 @@ columnSpec := func(ops) {
 		features = ["CDR3"]
 	}
 
-	for isImputed in [false, true] {
+	for isImputed in ( is_undefined(assemblingFeature) ? [false, true] : [false] ) {
 		imputedU := isImputed ? "Imputed" : ""
 		imputedL := text.to_lower(imputedU)
 		for featureU in features {
@@ -130,8 +156,7 @@ columnSpec := func(ops) {
 				alphabetShort := isAminoAcid ? "aa" : "nt"
 				alphabetShortMixcr := isAminoAcid ? "aa" : "n"
 				visibility := ((featureU == "CDR3") || (featureU == assemblingFeature)) ? true : false
-				columnsSpec += [
-					{
+				columnsSpec += [ {
 						column: alphabetShortMixcr + "Seq" + imputedU + featureU,
 						id: alphabetShortMixcr + "-seq-" + featureL + "-" + imputedL,
 						naRegex: "region_not_covered",
@@ -147,11 +172,10 @@ columnSpec := func(ops) {
 								"pl7.app/label": featureU + " " + alphabetShort
 							})
 						}
-					}
-				]
+					} ]
+				exportArgs += [ [ "-" + alphabetShortMixcr + "Feature" + imputedU, featureU ] ]
 				if !isImputed && !isAminoAcid {
-					columnsSpec += [
-						{
+					columnsSpec += [ {
 							column: "minQual" + featureU,
 							id: "min-qual-" + featureL,
 							naRegex: "region_not_covered",
@@ -168,8 +192,8 @@ columnSpec := func(ops) {
 									"pl7.app/label": "Min quality " + featureU
 								})
 							}
-						}
-					]
+						} ]
+					exportArgs += [ [ "-minFeatureQuality", featureU ] ]
 				}
 				orderP -= 100
 			}
@@ -179,6 +203,23 @@ columnSpec := func(ops) {
 	// Mutations
 
 	orderP = 10000
+
+	mutationColumnVariants := [ {
+			name: "Mutations",
+			valueType: "String",
+			labelPart: " mutations in ",
+			idPart: "-mutations-"
+		}, {
+			name: "MutationsCount",
+			valueType: "Int",
+			labelPart: " mutations count in ",
+			idPart: "-mutations-count-"
+		}, {
+			name: "MutationsRate",
+			valueType: "Double",
+			labelPart: " mutations rate in ",
+			idPart: "-mutations-rate-"
+		} ]
 
 	for isAminoAcid in [false, true] {
 		alphabetShort := isAminoAcid ? "AA" : "Nt"
@@ -193,40 +234,21 @@ columnSpec := func(ops) {
 				continue
 			}
 
-			mutationGroups := [ {
-					group: "Mutations",
-					valueType: "String",
-					specName: "pl7.app/vdj/sequence/" + alphabetShortMixcr + "Mutations",
-					label: alphabetShort + " mutations in " + geneU + " gene",
-					id: alphabetShortMixcr + "-mutations-" + geneL
-				}, {
-					group: "MutationsCount",
-					valueType: "Int",
-					specName: "pl7.app/vdj/sequence/" + alphabetShortMixcr + "MutationsCount",
-					label: alphabetShort + " mutations count in " + geneU + " gene",
-					id: alphabetShortMixcr + "-mutations-count-" + geneL
-				}, {
-					group: "MutationsRate",
-					valueType: "Double",
-					specName: "pl7.app/vdj/sequence/" + alphabetShortMixcr + "MutationsRate",
-					label: alphabetShort + " mutations rate in " + geneU + " gene",
-					id: alphabetShortMixcr + "-mutations-rate-" + geneL
-				} ]
-
-			for group in mutationGroups {
+			for variant in mutationColumnVariants {
 				columnsSpec += [ {
-						column: alphabetShortMixcr + group.group + coreFeature,
-						id: group.id,
+						column: alphabetShortMixcr + variant.name + coreFeature,
+						id: alphabetShortMixcr + variant.idPart + geneL,
 						allowNA: true,
 						naRegex: "region_not_covered",
 						spec: {
-							valueType: group.valueType,
-							name: group.specName,
+							valueType: variant.valueType,
+							name: "pl7.app/vdj/sequence/" + alphabetShortMixcr + variant.name,
 							annotations: a(orderP, false, {
-								"pl7.app/label": group.label
+								"pl7.app/label": alphabetShort + variant.labelPart + geneU + " gene",
 							})
 						}
 					} ]
+				exportArgs += [ [ "-" + alphabetShortMixcr + variant.name, coreFeature ] ]
 				orderP -= 100
 			}
 		}
@@ -234,44 +256,43 @@ columnSpec := func(ops) {
 
 	// Flags: productive, oof, stop codons
 
-	columnGroups := [ {
-			columns: "isProductive" + productiveFeature,
-			valueType: "String",
+	flagColumnVariants := [ {
+			columnPrefix: "isProductive",
+			arg: "-isProductive",
 			specName: "pl7.app/vdj/sequence/productive",
 			label: "Productive",
 			id: "is-productive",
 			visibility: true
 		}, {
-			group: "Contains OOF",
-			columns: "isOOF" + productiveFeature,
-			valueType: "String",
+			columnPrefix: "isOOF",
+			arg: "-isOOF",
 			specName: "pl7.app/vdj/sequence/containsOOF",
 			label: "Contains OOF",
 			id: "is-oof",
 			visibility: false
 		}, {
-			group: "Contains stop codons",
-			columns: "hasStopsIn" + productiveFeature,
-			valueType: "String",
+			columnPrefix: "hasStopsIn",
+			arg: "-hasStops",
 			specName: "pl7.app/vdj/sequence/containsStopCodons",
 			label: "Contains stop codons",
 			id: "has-stops",
 			visibility: false
 		} ]
-	for group in columnGroups {
+	for variant in flagColumnVariants {
 		columnsSpec += [ {
-				column: group.column,
-				id: group.id,
+				column: variant.columnPrefix + productiveFeature,
+				id: variant.id,
 				allowNA: false,
 				spec: {
-					valueType: group.valueType,
-					name: group.specName,
-					annotations: a(orderP, group.visibility, {
-						"pl7.app/label": group.label,
+					valueType: "String",
+					name: variant.specName,
+					annotations: a(orderP, variant.visibility, {
+						"pl7.app/label": variant.label,
 						"pl7.app/isDiscreteFilter": "true",
 						"pl7.app/discreteValues": "['true','false']" } )
 				}
 			} ]
+		exportArgs += [ [ variant.arg, productiveFeature ] ]
 		orderP -= 100
 	}
 
@@ -282,6 +303,8 @@ columnSpec := func(ops) {
 	for region in geneRegions {
 		columnsSpec += [ {
 				column: "nSeq" + region + "OfGermline",
+				naRegex: "",
+				allowNA: true,
 				id: "n-seq-" + text.to_lower(region) + "-germline",
 				spec: {
 					name: "pl7.app/vdj/germlineSequence",
@@ -295,6 +318,7 @@ columnSpec := func(ops) {
 					})
 				}
 			} ]
+		exportArgs += [ [ "-nFeature", region, "germline" ] ]
 		orderP -= 100
 	}
 
@@ -327,6 +351,10 @@ columnSpec := func(ops) {
 				})
 			}
 		} ]
+	exportArgs += [
+		[ "-isotype", "primary" ],
+		[ "-topChains" ]
+	]
 
 	// Axes
 
@@ -350,6 +378,8 @@ columnSpec := func(ops) {
 				}
 			} ]
 	} else {
+		// single-cell
+
 		axesSpec = [ {
 			column: "cloneId",
 			spec: {
@@ -394,6 +424,21 @@ columnSpec := func(ops) {
 				orderP -= 1
 			}
 		}
+
+		columnsSpec += [ {
+				column: "cellGroup",
+				id: "cell-group",
+				naRegex: "undefined|contamination",
+				allowNA: true,
+				spec: {
+					name: "pl7.app/vdj/cellGroup",
+					valueType: "Long",
+					annotations: a(24000, true, {
+						"pl7.app/min": "0",
+						"pl7.app/label": "Cell group number"
+					} )
+				}
+			} ]
 	}
 
 	// columnSpecMap := {}
@@ -406,7 +451,8 @@ columnSpec := func(ops) {
 
 	return {
 		axesSpec: axesSpec,
-		columnsSpec: columnsSpec
+		columnsSpec: columnsSpec,
+
 	}
 }
 

@@ -23,118 +23,118 @@ self.body(func(inputs) {
 
 	blockId := inputs.blockId
 
-	// filter function
-	filter := func(list, predicate) {
-		result := []
-		for item in list {
-			if predicate(item) {
-				result = append(result, item)
-			}
-		}
-		return result
-	}
+	// // filter function
+	// filter := func(list, predicate) {
+	// 	result := []
+	// 	for item in list {
+	// 		if predicate(item) {
+	// 			result = append(result, item)
+	// 		}
+	// 	}
+	// 	return result
+	// }
 
-	// contains function
-	contains := func(list, value) {
-		for item in list {
-			if item == value {
-				return true
-			}
-		}
-		return false
-	}
+	// // contains function
+	// contains := func(list, value) {
+	// 	for item in list {
+	// 		if item == value {
+	// 			return true
+	// 		}
+	// 	}
+	// 	return false
+	// }
 
-	fieldsToColumns := {
-		"-cellGroup": "cellGroup",
-		"-topChains": "topChains",
-		"-isotype": "isotype",
-		"-vHit": "bestVHit",
-		"-dHit": "bestDHit",
-		"-jHit": "bestJHit",
-		"-cHit": "bestCHit"
-	}
+	// fieldsToColumns := {
+	// 	"-cellGroup": "cellGroup",
+	// 	"-topChains": "topChains",
+	// 	"-isotype": "isotype",
+	// 	"-vHit": "bestVHit",
+	// 	"-dHit": "bestDHit",
+	// 	"-jHit": "bestJHit",
+	// 	"-cHit": "bestCHit"
+	// }
 
-	// get specs and preset data
-	specs := inputs.specs.getDataAsJson()
-	preset := inputs.preset.getDataAsJson()
+	// // get specs and preset data
+	// specs := inputs.specs.getDataAsJson()
+	// preset := inputs.preset.getDataAsJson()
 
-	// extract covered feature
-	imputed := false
-	assemblingFeature := undefined
-	if !is_undefined(specs.assemblingFeature) {
-		assemblingFeature = specs.assemblingFeature[0]
-	} else {
-		assemblingFeature = "VDJRegion"
-		imputed = true
-	}
+	// // extract covered feature
+	// imputed := false
+	// assemblingFeature := undefined
+	// if !is_undefined(specs.assemblingFeature) {
+	// 	assemblingFeature = specs.assemblingFeature[0]
+	// } else {
+	// 	assemblingFeature = "VDJRegion"
+	// 	imputed = true
+	// }
 
-	//create key columns
-	clonotypeKeyAxes := ["nSeq"+assemblingFeature, "bestVHit", "bestJHit"]
-	clonotypeKeyColumns := ["nSeq"+assemblingFeature, "bestVHit", "bestJHit"]
-	if specs.splitByC {
-		clonotypeKeyAxes = append(clonotypeKeyColumns, "bestCHit")
-		clonotypeKeyColumns = append(clonotypeKeyColumns, "bestCHit")
-	}
-	if assemblingFeature != "CDR3" {
-		clonotypeKeyColumns = append(clonotypeKeyColumns, "nSeqCDR3", "aaSeqCDR3")
-	}
+	// //create key columns
+	// clonotypeKeyAxes := ["nSeq"+assemblingFeature, "bestVHit", "bestJHit"]
+	// clonotypeKeyColumns := ["nSeq"+assemblingFeature, "bestVHit", "bestJHit"]
+	// if specs.splitByC {
+	// 	clonotypeKeyAxes = append(clonotypeKeyColumns, "bestCHit")
+	// 	clonotypeKeyColumns = append(clonotypeKeyColumns, "bestCHit")
+	// }
+	// if assemblingFeature != "CDR3" {
+	// 	clonotypeKeyColumns = append(clonotypeKeyColumns, "nSeqCDR3", "aaSeqCDR3")
+	// }
 
-	//if using readCount or umiCount
-	columnsList := []
-	hasUmi := false
-	if len(specs.umiTags) == 0 {
-		columnsList = append(columnsList, "readCount", "readFraction")
-		clonotypeKeyColumns = append(clonotypeKeyColumns, "readCount", "readFraction")
-	} else {
-		hasUmi = true
-		columnsList = append(columnsList, "uniqueMoleculeCount", "uniqueMoleculeFraction", "readCount", "readFraction")
-		clonotypeKeyColumns = append(clonotypeKeyColumns, "uniqueMoleculeCount", "uniqueMoleculeFraction", "readCount", "readFraction")
-	}
+	// //if using readCount or umiCount
+	// columnsList := []
+	// hasUmi := false
+	// if len(specs.umiTags) == 0 {
+	// 	columnsList = append(columnsList, "readCount", "readFraction")
+	// 	clonotypeKeyColumns = append(clonotypeKeyColumns, "readCount", "readFraction")
+	// } else {
+	// 	hasUmi = true
+	// 	columnsList = append(columnsList, "uniqueMoleculeCount", "uniqueMoleculeFraction", "readCount", "readFraction")
+	// 	clonotypeKeyColumns = append(clonotypeKeyColumns, "uniqueMoleculeCount", "uniqueMoleculeFraction", "readCount", "readFraction")
+	// }
 
-	// filter columns by fieldsToColumns
-	for field in preset.exportClones.fields {
-		if !is_undefined(fieldsToColumns[field.field]) {
-			columnsList = append(columnsList, fieldsToColumns[field.field])
-		}
-	}
+	// // filter columns by fieldsToColumns
+	// for field in preset.exportClones.fields {
+	// 	if !is_undefined(fieldsToColumns[field.field]) {
+	// 		columnsList = append(columnsList, fieldsToColumns[field.field])
+	// 	}
+	// }
 
-	// add columns with frameworks, cdrs sequences
-	for feature in specs.coveredFeaturesOnExport {
-		if imputed {
-			if feature == "CDR3" {
-				columnsList += ["nSeq"+feature, "aaSeq"+feature]
-			} else {
-				columnsList += ["nSeqImputed"+feature, "aaSeqImputed"+feature,
-					"nSeq"+feature, "aaSeq"+feature]
-			}
-		} else {
-			columnsList += ["nSeq"+feature, "aaSeq"+feature]
-		}
-	}
+	// // add columns with frameworks, cdrs sequences
+	// for feature in specs.coveredFeaturesOnExport {
+	// 	if imputed {
+	// 		if feature == "CDR3" {
+	// 			columnsList += ["nSeq"+feature, "aaSeq"+feature]
+	// 		} else {
+	// 			columnsList += ["nSeqImputed"+feature, "aaSeqImputed"+feature,
+	// 				"nSeq"+feature, "aaSeq"+feature]
+	// 		}
+	// 	} else {
+	// 		columnsList += ["nSeq"+feature, "aaSeq"+feature]
+	// 	}
+	// }
 
-	// add columns with covered feature sequences
-	if assemblingFeature != "CDR3" {
-		columnsList += ["nSeq"+assemblingFeature, "aaSeq"+assemblingFeature]
-		if imputed {
-			columnsList += ["nSeqImputed"+assemblingFeature, "aaSeqImputed"+assemblingFeature]
-		}
-	}
+	// // add columns with covered feature sequences
+	// if assemblingFeature != "CDR3" {
+	// 	columnsList += ["nSeq"+assemblingFeature, "aaSeq"+assemblingFeature]
+	// 	if imputed {
+	// 		columnsList += ["nSeqImputed"+assemblingFeature, "aaSeqImputed"+assemblingFeature]
+	// 	}
+	// }
 
-	// add V, D, J germline sequences
-	columnsList += ["nSeqVRegionOfGermline", "nSeqDRegionOfGermline", "nSeqJRegionOfGermline"]
+	// // add V, D, J germline sequences
+	// columnsList += ["nSeqVRegionOfGermline", "nSeqDRegionOfGermline", "nSeqJRegionOfGermline"]
 
-	// add boolean columns (isProductive, hasStops, hasOOF)
-	featureSpec := utils.getProductiveFeature(assemblingFeature, imputed)
-	productiveFeature := featureSpec.productiveFeature
-	columnsList += ["isProductive"+productiveFeature, "isOOF"+productiveFeature, "hasStopsIn"+productiveFeature]
+	// // add boolean columns (isProductive, hasStops, hasOOF)
+	// featureSpec := utils.getProductiveFeature(assemblingFeature, imputed)
+	// productiveFeature := featureSpec.productiveFeature
+	// columnsList += ["isProductive"+productiveFeature, "isOOF"+productiveFeature, "hasStopsIn"+productiveFeature]
 
-	// add columns with mutations
-	if assemblingFeature != "CDR3" {
-		mutationVFeature := featureSpec.mutationVFeature
-		columnsList += ["nMutations"+mutationVFeature, "aaMutations"+mutationVFeature, "nMutationsCount"+mutationVFeature,
-			"aaMutationsCount"+mutationVFeature, "nMutationsRate"+mutationVFeature, "aaMutationsRate"+mutationVFeature,
-			"nMutationsFR4", "aaMutationsFR4", "nMutationsCountFR4", "aaMutationsCountFR4", "nMutationsRateFR4", "aaMutationsRateFR4"]
-	}
+	// // add columns with mutations
+	// if assemblingFeature != "CDR3" {
+	// 	mutationVFeature := featureSpec.mutationVFeature
+	// 	columnsList += ["nMutations"+mutationVFeature, "aaMutations"+mutationVFeature, "nMutationsCount"+mutationVFeature,
+	// 		"aaMutationsCount"+mutationVFeature, "nMutationsRate"+mutationVFeature, "aaMutationsRate"+mutationVFeature,
+	// 		"nMutationsFR4", "aaMutationsFR4", "nMutationsCountFR4", "aaMutationsCountFR4", "nMutationsRateFR4", "aaMutationsRateFR4"]
+	// }
 
 	// filter pfconvParams by column name and get a list of fields from it
 	pfconvParamsById := pfconvParamsLib.columnSpec({blockId: blockId,
@@ -169,16 +169,16 @@ self.body(func(inputs) {
 		columnsByKey += [columnsByKeyMap[col]]
 	}
 
-	// if UMI in data make visibility of "readCount" and "readFraction" columns optional
-	targetColumns := ["readCount", "readFraction"]
+	// // if UMI in data make visibility of "readCount" and "readFraction" columns optional
+	// targetColumns := ["readCount", "readFraction"]
 
-	if hasUmi {
-		for column in columnsById {
-			if contains(targetColumns, column.column) {
-				column.spec.annotations["pl7.app/table/visibility"] = "optional"
-			}
-		}
-	}
+	// if hasUmi {
+	// 	for column in columnsById {
+	// 		if contains(targetColumns, column.column) {
+	// 			column.spec.annotations["pl7.app/table/visibility"] = "optional"
+	// 		}
+	// 	}
+	// }
 
 	for col in columnsByKey {
 		col.id = col.id + "-clonotypeKey"
