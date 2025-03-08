@@ -9,6 +9,8 @@ pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 text := import("text")
 json := import("json")
 
+utils := import(":utils")
+
 self.defineOutputs("result")
 
 FILE_NAME_PREFIX := "result.clones_"
@@ -17,23 +19,26 @@ FILE_NAME_PREFIX_LEN := len(FILE_NAME_PREFIX)
 FILE_NAME_SUFFIX_LEN := len(FILE_NAME_SUFFIX)
 
 self.body(func(inputs) {
-	pfconvParams := inputs.pfconvParams
+	params := inputs.params
+	clonotypeKeyAxes := params.clonotypeKeyAxes
 	data := self.rawInputs().data.getValue()
 
 	csvMap := pcolumn.resourceMapBuilder(/* key length */ 1)
 
-	for fileName, file in data.inputs() {
-		if !text.has_prefix(fileName, FILE_NAME_PREFIX) || !text.has_suffix(fileName, FILE_NAME_SUFFIX) {
-			ll.panic("unexpected file name: %v", fileName)
+	for tsvName, tsv in data.inputs() {
+		if !text.has_prefix(tsvName, FILE_NAME_PREFIX) || !text.has_suffix(tsvName, FILE_NAME_SUFFIX) {
+			ll.panic("unexpected file name: %v", tsvName)
 		}
-		chain := fileName[FILE_NAME_PREFIX_LEN:(len(fileName) - FILE_NAME_SUFFIX_LEN)]
-		csvMap.add([chain], file)
+		chain := tsvName[FILE_NAME_PREFIX_LEN:(len(tsvName) - FILE_NAME_SUFFIX_LEN)]
+		processedCsv := tsv
+		if !is_undefined(clonotypeKeyAxes) {
+			processedCsv = utils.addCloneKey(processedCsv, clonotypeKeyAxes)
+		}
+		csvMap.add([chain], processedCsv)
 	}
 	csvMap = csvMap.build()
 
-	resultData := xsv.importFileMap(csvMap, "tsv", pfconvParams, { dataOnly: true })
-
 	return {
-		result: resultData
+		result: csvMap
 	}
 })

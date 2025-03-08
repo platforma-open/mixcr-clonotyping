@@ -20,36 +20,31 @@ mixcrAnalyzeTpl := assets.importTemplate(":mixcr-analyze")
 self.awaitState("InputsLocked")
 self.awaitState("params", "ResourceReady")
 self.awaitState("inputSpec", "ResourceReady")
-self.awaitState("presetContent", "ResourceReady")
-self.awaitState("pfconvParams", "ResourceReady")
-self.awaitState("featureParams", "ResourceReady")
+self.awaitState("presetSpecForBack", "ResourceReady")
 
 self.body(func(inputs) {
-	params := inputs.params
+
 	preset := inputs.preset
 	inputSpec := inputs.inputSpec
-	featureParams := inputs.featureParams
 	library := inputs.library
+
+	presetSpecForBack := inputs.presetSpecForBack.getDataAsJson()
+
+	params := inputs.params
 	species := params.species
 	limitInput := params.limitInput
 	blockId := params.blockId
 	presetCommonName := params.presetCommonName
 	isLibraryFileGzipped := params.isLibraryFileGzipped
 
-	presetContent := inputs.presetContent.getDataAsJson()
-	pfconvParams := inputs.pfconvParams
 
-	if is_undefined(presetContent) {
-		ll.panic("no presetContent")
-	}
-
-	if is_undefined(pfconvParams) {
-		ll.panic("no pfconvParams")
+	if is_undefined(presetSpecForBack) {
+		ll.panic("no presetSpecForBack")
 	}
 
 	reports := []
 
-	for step in presetContent.reportTypes {
+	for step in presetSpecForBack.reportTypes {
 		if step == "align" || step == "assemble" {
 			reports = append(reports, {
 				id: step,
@@ -61,7 +56,7 @@ self.body(func(inputs) {
 
 	hasAssembleContigs := false
 	hasAssembleCells := false
-	for stage in presetContent.analysisStages {
+	for stage in presetSpecForBack.analysisStages {
 		if stage == "assembleContigs" {
 			hasAssembleContigs = true
 		} else if stage == "assembleCells" {
@@ -90,10 +85,10 @@ self.body(func(inputs) {
 	}
 
 	clnsAnnotations := removeUndefined({
-		"mixcr.com/assemblingFeature": joinOrUndefined(presetContent.assemblingFeature),
-		"mixcr.com/cellTags": joinOrUndefined(presetContent.cellTags),
-		"mixcr.com/coveredFeaturesOnExport": joinOrUndefined(presetContent.coveredFeaturesOnExport),
-		"mixcr.com/umiTags": joinOrUndefined(presetContent.umiTags),
+		"mixcr.com/assemblingFeature": joinOrUndefined(presetSpecForBack.assemblingFeature),
+		"mixcr.com/cellTags": joinOrUndefined(presetSpecForBack.cellTags),
+		"mixcr.com/coveredFeaturesOnExport": joinOrUndefined(presetSpecForBack.coveredFeaturesOnExport),
+		"mixcr.com/umiTags": joinOrUndefined(presetSpecForBack.umiTags),
 		"pl7.app/label": "MiXCR Clonesets"
 	})
 	if hasAssembleContigs {
@@ -103,23 +98,29 @@ self.body(func(inputs) {
 		clnsAnnotations["mixcr.com/cellsAssembled"] = "true"
 	}
 
-	cColumnsAdditionalAxesSpec := []
-	if !hasAssembleCells {
-		cColumnsAdditionalAxesSpec = append(cColumnsAdditionalAxesSpec, {
-			"name": "pl7.app/vdj/chain",
-			"type": "String",
-			"annotations": {
-				"pl7.app/label": "Chain",
-				"pl7.app/axisNature": "scaleCompatible"
-			}
-		})
-	}
+	// cColumnsAdditionalAxesSpec := []
+	// if !hasAssembleCells {
+	// 	cColumnsAdditionalAxesSpec = append(cColumnsAdditionalAxesSpec, {
+	// 		name: "pl7.app/vdj/chain",
+	// 		type: "String",
+	// 		annotations: {
+	// 			"pl7.app/label": "Chain",
+	// 			"pl7.app/axisNature": "scaleCompatible"
+	// 		}
+	// 	})
+	// }
 
-	decomposition := pUtil.decomposePfconvImportCfg(pfconvParams, {
-		additionalAxesSpec: cColumnsAdditionalAxesSpec
-	})
-	purifiedPfconvCfg := decomposition.purifiedCfg
-	cloneColumnsSpec := decomposition.columnsSpec
+
+	// decompositionById := pUtil.decomposePfconvImportCfg(pfconvParamsById, {
+	// 	additionalAxesSpec: cColumnsAdditionalAxesSpec
+	// })
+	// purifiedPfconvByIdCfg := decompositionById.purifiedCfg
+	// cloneColumnsByIdSpec := decompositionById.columnsSpec
+	// decompositionByKey := pUtil.decomposePfconvImportCfg(pfconvParamsByKey, {
+	// 	additionalAxesSpec: cColumnsAdditionalAxesSpec
+	// })
+	// purifiedPfconvByKeyCfg := decompositionByKey.purifiedCfg
+	// cloneColumnsByKeySpec := decompositionByKey.columnsSpec
 
 	fileExtension := inputSpec.domain["pl7.app/fileExtension"]
 
@@ -186,20 +187,33 @@ self.body(func(inputs) {
 		}
 	} ]
 
-	ll.assert(purifiedPfconvCfg.partitionKeyLength == 0, "unexpected partition length")
-	ll.assert(purifiedPfconvCfg.storageFormat == "Binary", "unexpected format")
+	ll.assert(purifiedPfconvByIdCfg.partitionKeyLength == 0, "unexpected partition length")
+	ll.assert(purifiedPfconvByIdCfg.storageFormat == "Binary", "unexpected format")
+	ll.assert(purifiedPfconvByKeyCfg.partitionKeyLength == 0, "unexpected partition length")
+	ll.assert(purifiedPfconvByKeyCfg.storageFormat == "Binary", "unexpected format")
 
 	innerPartitionLength := 0
 	if !hasAssembleCells {
 		innerPartitionLength = 1 // [chain]
 	}
 
-	for columnCfg in purifiedPfconvCfg.columns {
+	for columnCfg in purifiedPfconvByIdCfg.columns {
 		aggCfg := {
 			type: "BinaryPartitioned",
-			name: "clones/" + columnCfg.id,
-			path: ["clones", columnCfg.id],
-			spec: cloneColumnsSpec[columnCfg.id],
+			name: "clonesById/" + columnCfg.id,
+			path: ["clonesById", columnCfg.id],
+			spec: cloneColumnsByIdSpec[columnCfg.id],
+			partitionKeyLength: innerPartitionLength
+		}
+		targetOutputs = append(targetOutputs, aggCfg)
+	}
+
+	for columnCfg in purifiedPfconvByKeyCfg.columns {
+		aggCfg := {
+			type: "BinaryPartitioned",
+			name: "clonesByKey/" + columnCfg.id,
+			path: ["clonesByKey", columnCfg.id],
+			spec: cloneColumnsByKeySpec[columnCfg.id],
 			partitionKeyLength: innerPartitionLength
 		}
 		targetOutputs = append(targetOutputs, aggCfg)
@@ -234,18 +248,27 @@ self.body(func(inputs) {
 					featureParams: featureParams,
 					isLibraryFileGzipped: isLibraryFileGzipped
 				},
+				clonotypeKeyAxes: clonotypeKeyAxes,
 				library: library,
 				presetContent: presetContent,
-				pfconvParams: purifiedPfconvCfg
+				pfconvParamsById: purifiedPfconvByIdCfg,
+				pfconvParamsByKey: purifiedPfconvByKeyCfg
 			}
 		}
 	)
 
 	clones := pframes.pFrameBuilder()
-	for columnId, columnSpec in cloneColumnsSpec {
+	for columnId, columnSpec in cloneColumnsByIdSpec {
 		clones.add(columnId,
-				mixcrResults.outputSpec("clones/" + columnId),
-				mixcrResults.outputData("clones/" + columnId))
+				mixcrResults.outputSpec("clonesById/" + columnId),
+				mixcrResults.outputData("clonesById/" + columnId))
+	}
+	if !hasAssembleCells {
+		for columnId, columnSpec in cloneColumnsByKeySpec {
+			clones.add(columnId,
+					mixcrResults.outputSpec("clonesByKey/" + columnId),
+					mixcrResults.outputData("clonesByKey/" + columnId))
+		}
 	}
 	clones = clones.build()
 
@@ -262,6 +285,6 @@ self.body(func(inputs) {
 		"clns.spec": mixcrResults.outputSpec("clns"),
 		"clns.data": mixcrResults.outputData("clns"),
 
-		"clones": clones
+		clones: clones
 	}
 })
