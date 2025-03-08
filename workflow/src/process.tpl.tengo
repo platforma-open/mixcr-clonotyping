@@ -20,40 +20,31 @@ mixcrAnalyzeTpl := assets.importTemplate(":mixcr-analyze")
 self.awaitState("InputsLocked")
 self.awaitState("params", "ResourceReady")
 self.awaitState("inputSpec", "ResourceReady")
-self.awaitState("presetContent", "ResourceReady")
-self.awaitState("pfconvParamsById", "ResourceReady")
-self.awaitState("pfconvParamsByKey", "ResourceReady")
-self.awaitState("featureParams", "ResourceReady")
-self.awaitState("clonotypeKeyAxes", "ResourceReady")
+self.awaitState("presetSpecForBack", "ResourceReady")
 
 self.body(func(inputs) {
-	params := inputs.params
+
 	preset := inputs.preset
 	inputSpec := inputs.inputSpec
-	featureParams := inputs.featureParams
-	clonotypeKeyAxes := inputs.clonotypeKeyAxes
 	library := inputs.library
+
+	presetSpecForBack := inputs.presetSpecForBack.getDataAsJson()
+
+	params := inputs.params
 	species := params.species
 	limitInput := params.limitInput
 	blockId := params.blockId
 	presetCommonName := params.presetCommonName
 	isLibraryFileGzipped := params.isLibraryFileGzipped
 
-	presetContent := inputs.presetContent.getDataAsJson()
-	pfconvParamsById := inputs.pfconvParamsById
-	pfconvParamsByKey := inputs.pfconvParamsByKey
 
-	if is_undefined(presetContent) {
-		ll.panic("no presetContent")
-	}
-
-	if is_undefined(pfconvParamsById) || is_undefined(pfconvParamsByKey) {
-		ll.panic("no pfconvParams")
+	if is_undefined(presetSpecForBack) {
+		ll.panic("no presetSpecForBack")
 	}
 
 	reports := []
 
-	for step in presetContent.reportTypes {
+	for step in presetSpecForBack.reportTypes {
 		if step == "align" || step == "assemble" {
 			reports = append(reports, {
 				id: step,
@@ -65,7 +56,7 @@ self.body(func(inputs) {
 
 	hasAssembleContigs := false
 	hasAssembleCells := false
-	for stage in presetContent.analysisStages {
+	for stage in presetSpecForBack.analysisStages {
 		if stage == "assembleContigs" {
 			hasAssembleContigs = true
 		} else if stage == "assembleCells" {
@@ -94,10 +85,10 @@ self.body(func(inputs) {
 	}
 
 	clnsAnnotations := removeUndefined({
-		"mixcr.com/assemblingFeature": joinOrUndefined(presetContent.assemblingFeature),
-		"mixcr.com/cellTags": joinOrUndefined(presetContent.cellTags),
-		"mixcr.com/coveredFeaturesOnExport": joinOrUndefined(presetContent.coveredFeaturesOnExport),
-		"mixcr.com/umiTags": joinOrUndefined(presetContent.umiTags),
+		"mixcr.com/assemblingFeature": joinOrUndefined(presetSpecForBack.assemblingFeature),
+		"mixcr.com/cellTags": joinOrUndefined(presetSpecForBack.cellTags),
+		"mixcr.com/coveredFeaturesOnExport": joinOrUndefined(presetSpecForBack.coveredFeaturesOnExport),
+		"mixcr.com/umiTags": joinOrUndefined(presetSpecForBack.umiTags),
 		"pl7.app/label": "MiXCR Clonesets"
 	})
 	if hasAssembleContigs {
@@ -107,29 +98,29 @@ self.body(func(inputs) {
 		clnsAnnotations["mixcr.com/cellsAssembled"] = "true"
 	}
 
-	cColumnsAdditionalAxesSpec := []
-	if !hasAssembleCells {
-		cColumnsAdditionalAxesSpec = append(cColumnsAdditionalAxesSpec, {
-			name: "pl7.app/vdj/chain",
-			type: "String",
-			annotations: {
-				"pl7.app/label": "Chain",
-				"pl7.app/axisNature": "scaleCompatible"
-			}
-		})
-	}
+	// cColumnsAdditionalAxesSpec := []
+	// if !hasAssembleCells {
+	// 	cColumnsAdditionalAxesSpec = append(cColumnsAdditionalAxesSpec, {
+	// 		name: "pl7.app/vdj/chain",
+	// 		type: "String",
+	// 		annotations: {
+	// 			"pl7.app/label": "Chain",
+	// 			"pl7.app/axisNature": "scaleCompatible"
+	// 		}
+	// 	})
+	// }
 
 
-	decompositionById := pUtil.decomposePfconvImportCfg(pfconvParamsById, {
-		additionalAxesSpec: cColumnsAdditionalAxesSpec
-	})
-	purifiedPfconvByIdCfg := decompositionById.purifiedCfg
-	cloneColumnsByIdSpec := decompositionById.columnsSpec
-	decompositionByKey := pUtil.decomposePfconvImportCfg(pfconvParamsByKey, {
-		additionalAxesSpec: cColumnsAdditionalAxesSpec
-	})
-	purifiedPfconvByKeyCfg := decompositionByKey.purifiedCfg
-	cloneColumnsByKeySpec := decompositionByKey.columnsSpec
+	// decompositionById := pUtil.decomposePfconvImportCfg(pfconvParamsById, {
+	// 	additionalAxesSpec: cColumnsAdditionalAxesSpec
+	// })
+	// purifiedPfconvByIdCfg := decompositionById.purifiedCfg
+	// cloneColumnsByIdSpec := decompositionById.columnsSpec
+	// decompositionByKey := pUtil.decomposePfconvImportCfg(pfconvParamsByKey, {
+	// 	additionalAxesSpec: cColumnsAdditionalAxesSpec
+	// })
+	// purifiedPfconvByKeyCfg := decompositionByKey.purifiedCfg
+	// cloneColumnsByKeySpec := decompositionByKey.columnsSpec
 
 	fileExtension := inputSpec.domain["pl7.app/fileExtension"]
 

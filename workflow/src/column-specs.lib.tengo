@@ -377,6 +377,7 @@ columnSpec := func(ops) {
 					}
 				}
 			} ]
+		// TODO @dbolotin add args, etc
 	} else {
 		// single-cell
 
@@ -396,6 +397,7 @@ columnSpec := func(ops) {
 					}
 				}
 			} ]
+		exportArgs += [ [ "-cloneId" ] ]
 
 		orderP := 100000
 		if !is_undefined(cellTags) && len(cellTags) > 0 {
@@ -423,6 +425,7 @@ columnSpec := func(ops) {
 					} ]
 				orderP -= 1
 			}
+			exportArgs += [ [ "-tags", "Cell" ] ]
 		}
 
 		columnsSpec += [ {
@@ -439,6 +442,7 @@ columnSpec := func(ops) {
 					} )
 				}
 			} ]
+		exportArgs += [ [ "-cellGroup" ] ]
 	}
 
 	// columnSpecMap := {}
@@ -452,7 +456,7 @@ columnSpec := func(ops) {
 	return {
 		axesSpec: axesSpec,
 		columnsSpec: columnsSpec,
-
+		exportArgs: exportArgs
 	}
 }
 

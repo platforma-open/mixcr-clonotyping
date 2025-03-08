@@ -99,21 +99,21 @@ wf.body(func(args) {
 	})
 
 	presetContent := getPreset.output("preset", 24 * 60 * 60 * 1000)
-	specsContent := getPreset.output("presetSpecForBack", 24 * 60 * 60 * 1000)
+	presetSpecForBack := getPreset.output("presetSpecForBack", 24 * 60 * 60 * 1000)
 
-	calculatePfconvParams := render.create(calculatePfconvParamsTpl, {
-		blockId: blockId,
-		preset: presetContent,
-		specs: specsContent
-	})
-	pfconvParamsById := calculatePfconvParams.output("paramsById", 24 * 60 * 60 * 1000)
-	pfconvParamsByKey := calculatePfconvParams.output("paramsByKey", 24 * 60 * 60 * 1000)
-	featureParams := calculatePfconvParams.output("featureParams", 24 * 60 * 60 * 1000)
-	clonotypeKeyAxes := calculatePfconvParams.output("clonotypeKeyAxes", 24 * 60 * 60 * 1000)
+	// calculatePfconvParams := render.create(calculatePfconvParamsTpl, {
+	// 	blockId: blockId,
+	// 	preset: presetContent,
+	// 	specs: specsContent
+	// })
+	// pfconvParamsById := calculatePfconvParams.output("paramsById", 24 * 60 * 60 * 1000)
+	// pfconvParamsByKey := calculatePfconvParams.output("paramsByKey", 24 * 60 * 60 * 1000)
+	// featureParams := calculatePfconvParams.output("featureParams", 24 * 60 * 60 * 1000)
+	// clonotypeKeyAxes := calculatePfconvParams.output("clonotypeKeyAxes", 24 * 60 * 60 * 1000)
 
 	runMixcr := render.createEphemeral(processTpl, {
 		preset: presetResource,
-		presetContent: specsContent,
+		presetSpecForBack: presetSpecForBack,
 		params: smart.createJsonResource({
 			species: species,
 			limitInput: limitInput,

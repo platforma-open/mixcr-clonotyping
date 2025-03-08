@@ -16,7 +16,7 @@ self.validateInputs({
 	}
 })
 
-mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:main")
+mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:low-memory")
 
 self.defineOutputs("preset", "presetSpecForBack")
 
