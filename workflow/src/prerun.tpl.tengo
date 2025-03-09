@@ -9,7 +9,7 @@ assets := import("@platforma-sdk/workflow-tengo:assets")
 file := import("@platforma-sdk/workflow-tengo:file")
 
 listPresetsTpl := assets.importTemplate(":list-presets")
-getPresetTpl := assets.importTemplate(":get-preset")
+calculatePresetInfoTpl := assets.importTemplate(":calculate-preset-info")
 
 wf.body(func(args) {
 
@@ -49,13 +49,13 @@ wf.body(func(args) {
 			ll.assert(preset.type == "name", "unexpected preset type")
 			// whole json, including type
 			presetResource = smart.createJsonResource(preset)
-			getPreset := render.create(getPresetTpl, {
+			presetInfoResult := render.create(calculatePresetInfoTpl, {
 				preset: presetResource,
 				params: {
 					species: args.species
 				}
 			})
-			outputs.preset = getPreset.output("presetSpecForBack", 24 * 60 * 60 * 1000)
+			outputs.preset = presetInfoResult.output("presetSpecForBack", 24 * 60 * 60 * 1000)
 		}
 	}
 

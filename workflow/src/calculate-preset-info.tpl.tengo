@@ -5,18 +5,17 @@ smart := import("@platforma-sdk/workflow-tengo:smart")
 ll := import("@platforma-sdk/workflow-tengo:ll")
 exec := import("@platforma-sdk/workflow-tengo:exec")
 assets := import("@platforma-sdk/workflow-tengo:assets")
-mixcr := import(":mixcr")
 
 self.validateInputs({
 	"__options__,closed": "",
-	"preset": "any",
-	"params": {
+	preset: "any",
+	params: {
 		"__options__,closed": "",
 		"species,omitempty": "string"
 	}
 })
 
-mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:main")
+mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:low-memory")
 
 self.defineOutputs("preset", "presetSpecForBack")
 
@@ -46,8 +45,6 @@ self.body(func(inputs) {
 	if !is_undefined(species) {
 		mixcrExportPresetCmdBuilder.arg("--species").arg(species)
 	}
-
-	mixcr.addAdditionalColumnArgs(mixcrExportPresetCmdBuilder, {assemblingFeature: "CDR3", imputed: false})
 
 	mixcrExportPresetCmd := mixcrExportPresetCmdBuilder.arg("preset.json").
 		saveFileContent("preset.json").
