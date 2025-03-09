@@ -213,8 +213,10 @@ calculateExportSpec := func(ops) {
 
 	// Sequences
 
-	features := []
-	if assemblingFeature != "CDR3" || is_undefined(assemblingFeature) {
+	features := undefined
+	if is_undefined(assemblingFeature) {
+		features = ["CDR1", "FR1", "FR2", "CDR2", "FR3", "CDR3", "FR4"]
+	} else if assemblingFeature != "CDR3" {
 		features = [assemblingFeature, "CDR1", "FR1", "FR2", "CDR2", "FR3", "CDR3", "FR4"]
 	} else {
 		features = ["CDR3"]
@@ -437,7 +439,7 @@ calculateExportSpec := func(ops) {
 	// Creating a column map for fast search
 	columnsByName := {}
 	for columnSpec in columnsSpec {
-		columnsByName[columnSpec.name] = columnSpec
+		columnsByName[columnSpec.column] = columnSpec
 	}
 
 	// Axes

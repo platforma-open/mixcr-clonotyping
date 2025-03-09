@@ -3,10 +3,10 @@ ll := import("@platforma-sdk/workflow-tengo:ll")
 
 calculateExportSpec := import(":calculate-export-specs")
 
-self.defineOutputs("conf")
+self.defineOutputs("exportSpec")
 
 self.body(func(inputs) {
-	presetSpecForBack := inputs.presetSpecForBack
+	presetSpecForBack := inputs.presetSpecForBack.getDataAsJson()
 
 	assemblingFeature := undefined
 	if !is_undefined(presetSpecForBack.assemblingFeature) {
