@@ -10,27 +10,87 @@ a := func(order, defaultVisibility, spec) {
 	})
 }
 
-columnSpec := func(ops) {
+toCombinedDomainValue := func(spec) {
+	result := [spec.name]
+	// getKeys sort keys
+	for domain in maps.getKeys(spec.domain) {
+		result = append(result, [domain, spec.domain[domain]])
+	}
+	return result
+}
+
+/**
+ * Converts an assembling feature into corresponding productive feature and core features formats.
+ * This function handles different immunological feature types (CDR3, VDJRegion, etc.) and
+ * returns properly formatted feature expressions based on the input.
+ *
+ * @param assemblingFeature - The input feature identifier (e.g., "CDR3", "VDJRegion", "FR1_TO_FR4")
+ * @return An object containing:
+ *   - productiveFeature: formatted identifier for the productive feature
+ *   - coreGeneFeatures: an object containing core features used for mutation analysis:
+ *     - V: formatted identifier for the V gene core feature
+ *     - J: formatted identifier for the J gene core feature (if applicable)
+ */
+assemblingFeatureInfo := func(assemblingFeature) {
+	productiveFeature := undefined
+	coreVFeature := undefined
+	coreJFeature := undefined
+	if assemblingFeature == "CDR3" || is_undefined(assemblingFeature) {
+		productiveFeature = "CDR3"
+	} else if assemblingFeature == "VDJRegion" {
+		productiveFeature = "VDJRegion(0,-1)"
+		coreVFeature = "{FR1Begin:FR3End}"
+		coreJFeature = "FR4"
+	} else {
+		splittedFeature := text.split(assemblingFeature, "_TO_")
+		if len(splittedFeature) == 2 {
+			if splittedFeature[1] == "FR4" {
+				productiveFeature = "{"+splittedFeature[0] + "Begin:FR4End(-1)}"
+				coreVFeature = "{"+splittedFeature[0]+"Begin:FR3End}"
+				coreJFeature = "FR4"
+			} else {
+				productiveFeature = assemblingFeature
+				coreVFeature = "{"+splittedFeature[0]+"Begin:FR3End}"
+			}
+		}
+	}
+	return {
+		productiveFeature: productiveFeature,
+		coreGeneFeatures: {
+			V: coreVFeature,
+			J: coreJFeature
+		}
+	}
+}
+
+calculateExportSpec := func(ops) {
 	assemblingFeature := ops.assemblingFeature
-	imputationEnabled := ops.imputationEnabled
 	cellTags := ops.cellTags
-	clonotypeKeyAxes := ops.clonotypeKeyAxes
 	hasUmi := ops.hasUmi
-
-	assemblingFeatureInfo := utils.assemblingFeatureInfo(assemblingFeature, imputationEnabled)
-	productiveFeature := assemblingFeatureInfo.productiveFeature
-	coreGeneFeatures := assemblingFeatureInfo.coreFeatures
-
+	splitByC := ops.splitByC
 	blockId := ops.blockId
 
-	columnsSpec := []
+	assemblingFeatureInfo := assemblingFeatureInfo(assemblingFeature)
+	productiveFeature := assemblingFeatureInfo.productiveFeature
+	coreGeneFeatures := assemblingFeatureInfo.coreGeneFeatures
+
+	clonotypeKeyColumns := undefined
+	if !is_undefined(assemblingFeature) && (is_undefined(cellTags) || len(cellTags) == 0) {
+		clonotypeKeyColumns = ["nSeq" + assemblingFeature, "bestVGene", "bestJGene"]
+		if splitByC {
+			clonotypeKeyColumns += ["bestCGene"]
+		}
+	}
+
+	columnsSpecPerSample := []
+	columnsSpecPerClonotype := []
 
 	// array of array of arg groups
 	exportArgs := []
 
 	// Abundance
 
-	columnsSpec += [ {
+	columnsSpecPerSample += [ {
 			column: "readCount",
 			id: "read-count",
 			allowNA: false,
@@ -39,6 +99,9 @@ columnSpec := func(ops) {
 				valueType: "Long",
 				annotations: a(90000, !hasUmi, {
 					"pl7.app/min": "1",
+					"pl7.app/isAbundance": "true",
+					"pl7.app/abundance/unit": "reads",
+					"pl7.app/abundance/normalized": "false",
 					"pl7.app/label": "Number Of Reads"
 				})
 			}
@@ -52,6 +115,9 @@ columnSpec := func(ops) {
 				annotations: a(89000, !hasUmi, {
 					"pl7.app/min": "0",
 					"pl7.app/max": "1",
+					"pl7.app/isAbundance": "true",
+					"pl7.app/abundance/unit": "reads",
+					"pl7.app/abundance/normalized": "true",
 					"pl7.app/label": "Fraction of reads"
 				})
 			}
@@ -60,9 +126,10 @@ columnSpec := func(ops) {
 		[ "-readCount" ],
 		[ "-readFraction" ]
 	]
+	mainAbundanceColumn := "readFraction"
 
 	if hasUmi {
-		columnsSpec += [ {
+		columnsSpecPerSample += [ {
 				column: "uniqueMoleculeCount",
 				id: "umi-count",
 				allowNA: false,
@@ -71,6 +138,9 @@ columnSpec := func(ops) {
 					valueType: "Long",
 					annotations: a(88000, true, {
 						"pl7.app/min": "1",
+						"pl7.app/isAbundance": "true",
+						"pl7.app/abundance/unit": "molecules",
+						"pl7.app/abundance/normalized": "false",
 						"pl7.app/label": "Number of UMI"
 					})
 				}
@@ -84,14 +154,18 @@ columnSpec := func(ops) {
 					annotations: a(87500, true, {
 						"pl7.app/min": "0",
 						"pl7.app/max": "1",
+						"pl7.app/isAbundance": "true",
+						"pl7.app/abundance/unit": "molecules",
+						"pl7.app/abundance/normalized": "true",
 						"pl7.app/label": "Fraction of UMI"
 					})
 				}
 			} ]
-			exportArgs += [
-				[ "-uniqueTagCount", "Molecule" ],
-				[ "-uniqueTagFraction", "Molecule" ]
-			]
+		exportArgs += [
+			[ "-uniqueTagCount", "Molecule" ],
+			[ "-uniqueTagFraction", "Molecule" ]
+		]
+		mainAbundanceColumn = "uniqueMoleculeFraction"
 	}
 
 	// VDJC Hits
@@ -115,7 +189,7 @@ columnSpec := func(ops) {
 	for vdjcU in ["V", "D", "J", "C"] {
 		vdjcL := text.to_lower(vdjcU)
 		for variant in geneHitColumnVariants {
-			columnsSpec += [ {
+			columnsSpecPerClonotype += [ {
 					column: "best" + vdjcU + variant.columnNameSuffix,
 					id: "best-" + vdjcL + variant.idSuffix,
 					naRegex: "",
@@ -140,7 +214,7 @@ columnSpec := func(ops) {
 	// Sequences
 
 	features := []
-	if assemblingFeature != "CDR3" {
+	if assemblingFeature != "CDR3" || is_undefined(assemblingFeature) {
 		features = [assemblingFeature, "CDR1", "FR1", "FR2", "CDR2", "FR3", "CDR3", "FR4"]
 	} else {
 		features = ["CDR3"]
@@ -156,7 +230,7 @@ columnSpec := func(ops) {
 				alphabetShort := isAminoAcid ? "aa" : "nt"
 				alphabetShortMixcr := isAminoAcid ? "aa" : "n"
 				visibility := ((featureU == "CDR3") || (featureU == assemblingFeature)) ? true : false
-				columnsSpec += [ {
+				columnsSpecPerClonotype += [ {
 						column: alphabetShortMixcr + "Seq" + imputedU + featureU,
 						id: alphabetShortMixcr + "-seq-" + featureL + "-" + imputedL,
 						naRegex: "region_not_covered",
@@ -175,7 +249,7 @@ columnSpec := func(ops) {
 					} ]
 				exportArgs += [ [ "-" + alphabetShortMixcr + "Feature" + imputedU, featureU ] ]
 				if !isImputed && !isAminoAcid {
-					columnsSpec += [ {
+					columnsSpecPerSample += [ {
 							column: "minQual" + featureU,
 							id: "min-qual-" + featureL,
 							naRegex: "region_not_covered",
@@ -235,7 +309,7 @@ columnSpec := func(ops) {
 			}
 
 			for variant in mutationColumnVariants {
-				columnsSpec += [ {
+				columnsSpecPerClonotype += [ {
 						column: alphabetShortMixcr + variant.name + coreFeature,
 						id: alphabetShortMixcr + variant.idPart + geneL,
 						allowNA: true,
@@ -279,7 +353,7 @@ columnSpec := func(ops) {
 			visibility: false
 		} ]
 	for variant in flagColumnVariants {
-		columnsSpec += [ {
+		columnsSpecPerClonotype += [ {
 				column: variant.columnPrefix + productiveFeature,
 				id: variant.id,
 				allowNA: false,
@@ -301,7 +375,7 @@ columnSpec := func(ops) {
 	geneRegions := ["VRegion", "DRegion", "JRegion"]
 
 	for region in geneRegions {
-		columnsSpec += [ {
+		columnsSpecPerClonotype += [ {
 				column: "nSeq" + region + "OfGermline",
 				naRegex: "",
 				allowNA: true,
@@ -324,7 +398,7 @@ columnSpec := func(ops) {
 
 	// Isotype and chain
 
-	columnsSpec += [ {
+	columnsSpecPerClonotype += [ {
 			column: "isotype",
 			id: "isotype",
 			naRegex: "",
@@ -356,19 +430,41 @@ columnSpec := func(ops) {
 		[ "-topChains" ]
 	]
 
+	// All columns are added
+
+	columnsSpec := columnsSpecPerSample + columnsSpecPerClonotype
+
+	// Creating a column map for fast search
+	columnsByName := {}
+	for columnSpec in columnsSpec {
+		columnsByName[columnSpec.name] = columnSpec
+	}
+
 	// Axes
 
-	axesSpec := undefined
-	if !is_undefined(clonotypeKeyAxes) {
+	axesByClonotypeKey := undefined
+
+	if !is_undefined(clonotypeKeyColumns) {
 		ll.assert(is_undefined(cellTags) || len(cellTags) == 0, "cellTags and clonotypeKeyAxes cannot both be defined")
-		axesSpec = [ {
+
+		// checking that corresponding columns exist in export
+		keyStrincture := []
+		for keyColumn in clonotypeKeyColumns {
+			columnSpec := columnsByName[keyColumn]
+			if is_undefined(columnSpec) {
+				ll.panic("column " + keyColumn + " does not exist in export")
+			}
+			keyStrincture += [ toCombinedDomainValue(columnSpec.spec) ]
+		}
+
+		axesByClonotypeKey = [ {
 				column: "clonotypeKey",
 				naRegex: "",
 				spec: {
 					name: "pl7.app/vdj/clonotypeKey",
 					type: "String",
 					domain: {
-						"pl7.app/vdj/clonotypeKey/structure": text.join(clonotypeKeyAxes, "-")
+						"pl7.app/vdj/clonotypeKey/structure": json.encode(keyStrincture)
 					},
 					annotations: {
 						"pl7.app/label": "Clonotype key",
@@ -377,56 +473,53 @@ columnSpec := func(ops) {
 					}
 				}
 			} ]
-		// TODO @dbolotin add args, etc
-	} else {
-		// single-cell
+	}
 
-		axesSpec = [ {
-			column: "cloneId",
-			spec: {
-				name: "pl7.app/vdj/cloneId",
-				type: "Long",
-				domain: {
-					"pl7.app/blockId": blockId
-				},
-				annotations: {
-					"pl7.app/min": "0",
-					"pl7.app/label": "Clone id",
-					"pl7.app/table/visibility": "optional",
-					"pl7.app/table/orderPriority": "90000"
-					}
+	axesByClonotypeId = [ {
+		column: "cloneId",
+		spec: {
+			name: "pl7.app/vdj/cloneId",
+			type: "Long",
+			domain: {
+				"pl7.app/blockId": blockId
+			},
+			annotations: {
+				"pl7.app/min": "0",
+				"pl7.app/label": "Clone id",
+				"pl7.app/table/visibility": "optional",
+				"pl7.app/table/orderPriority": "90000"
 				}
-			} ]
-		exportArgs += [ [ "-cloneId" ] ]
-
-		orderP := 100000
-		if !is_undefined(cellTags) && len(cellTags) > 0 {
-			for tag in cellTags {
-				label := undefined
-				if tag == "CELL" {
-					label = "Cell tag"
-				} else {
-					label = text.to_title(tag[:4]) + " " + text.to_lower(tag[4:])
-				}
-				axesSpec += [ {
-						column: "tagValue" + tag,
-						naRegex: "",
-						spec: {
-							name: "pl7.app/vdj/cellTag",
-							type: "String",
-							domain: {
-								"pl7.app/vdj/cellTagId": tag,
-								"pl7.app/blockId": blockId
-							},
-							annotations: a(orderP, true, {
-								"pl7.app/label": label
-							})
-						}
-					} ]
-				orderP -= 1
 			}
-			exportArgs += [ [ "-tags", "Cell" ] ]
+		} ]
+	exportArgs += [ [ "-cloneId" ] ]
+
+	orderP := 100000
+	if !is_undefined(cellTags) && len(cellTags) > 0 {
+		for tag in cellTags {
+			label := undefined
+			if tag == "CELL" {
+				label = "Cell tag"
+			} else {
+				label = text.to_title(tag[:4]) + " " + text.to_lower(tag[4:])
+			}
+			axesSpec += [ {
+					column: "tagValue" + tag,
+					naRegex: "",
+					spec: {
+						name: "pl7.app/vdj/cellTag",
+						type: "String",
+						domain: {
+							"pl7.app/vdj/cellTagId": tag,
+							"pl7.app/blockId": blockId
+						},
+						annotations: a(orderP, true, {
+							"pl7.app/label": label
+						})
+					}
+				} ]
+			orderP -= 1
 		}
+		exportArgs += [ [ "-tags", "Cell" ] ]
 
 		columnsSpec += [ {
 				column: "cellGroup",
@@ -445,21 +538,21 @@ columnSpec := func(ops) {
 		exportArgs += [ [ "-cellGroup" ] ]
 	}
 
-	// columnSpecMap := {}
-	// for columnSpec in columnsSpec {
-	// 	columnSpecMap[columnSpec.id] = columnSpec
-	// }
-	// for axisSpec in axesSpec {
-	// 	columnSpecMap[axisSpec.id] = axisSpec
-	// }
-
 	return {
-		axesSpec: axesSpec,
+		clonotypeKeyColumns: clonotypeKeyColumns,
+
+		axesByClonotypeId: axesByClonotypeId,
+		axesByClonotypeKey: axesByClonotypeKey,
+
+		columnsSpecPerSample: columnsSpecPerSample,
+		columnsSpecPerClonotype: columnsSpecPerClonotype,
+
 		columnsSpec: columnsSpec,
+
+		mainAbundanceColumn: mainAbundanceColumn,
+
 		exportArgs: exportArgs
 	}
 }
 
-export ll.toStrict({
-	columnSpec: columnSpec
-})
+export calculateExportSpec

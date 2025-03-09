@@ -39,16 +39,10 @@ self.body(func(inputs) {
 	isLibraryFileGzipped := params.isLibraryFileGzipped
 
 	presetContent := inputs.presetContent // already in JSON
-	// pfconvParamsById := inputs.pfconvParamsById // already in JSON
-	// pfconvParamsByKey := inputs.pfconvParamsByKey
 
 	if !is_map(presetContent) {
 		ll.panic("malformed presetContent %v", presetContent)
 	}
-
-	// if !is_map(pfconvParamsById) || !is_map(pfconvParamsByKey) {
-	// 	ll.panic("malformed pfconvParams")
-	// }
 
 	inputDataMeta := inputData.getDataAsJson()
 
@@ -158,12 +152,6 @@ self.body(func(inputs) {
 		mixcrCmdBuilder.saveFile(report.fileTxt)
 	}
 
-	// if hasAssembleCells {
-	// 	mixcrCmdBuilder.saveFile("result.clones.tsv")
-	// } else {
-	// 	mixcrCmdBuilder.saveFileSet("clones", "^result\\.clones_[A-Z0-9]+\\.tsv$")
-	// }
-
 	mixcrCmdBuilder = mixcrCmdBuilder.cache(48 * times.hour)
 	mixcrCmd := mixcrCmdBuilder.run()
 
@@ -181,26 +169,6 @@ self.body(func(inputs) {
 		reports: reportsMap.build(),
 		clns: mixcrCmd.getFile(clnsFileName)
 	}
-
-	// // converting clone tables to p columns
-	// if hasAssembleCells {
-	// 	cloneTable := mixcrCmd.getFile("result.clones.tsv")
-	// 	result.clonesById = xsv.importFile(cloneTable, "tsv", pfconvParamsById, { dataOnly: true })
-	// 	result.clonesByKey = smart.createNullResource() // creating empty output to avoid errors
-	// } else {
-	// 	result.clonesById = render.create(exportClonesBulkTpl, {
-	// 		data: mixcrCmd.getFileSet("clones"),
-	// 		pfconvParams: pfconvParamsById,
-	// 		clonotypeKeyAxes: clonotypeKeyAxes,
-	// 		aggKey: false
-	// 	}).output("result", 8 * 24 * 60 * 60 * 1000)
-	// 	result.clonesByKey = render.create(exportClonesBulkTpl, {
-	// 		data: mixcrCmd.getFileSet("clones"),
-	// 		pfconvParams: pfconvParamsByKey,
-	// 		clonotypeKeyAxes: clonotypeKeyAxes,
-	// 		aggKey: true
-	// 	}).output("result", 8 * 24 * 60 * 60 * 1000)
-	// }
 
 	return result
 })

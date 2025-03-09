@@ -12,10 +12,13 @@ pSpec := import("@platforma-sdk/workflow-tengo:pframes.spec")
 pUtil := import("@platforma-sdk/workflow-tengo:pframes.util")
 pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 
+calculateExportSpec := import(":calculate-export-specs")
+
 json := import("json")
 text := import("text")
 
 mixcrAnalyzeTpl := assets.importTemplate(":mixcr-analyze")
+mixcrExportTpl := assets.importTemplate(":mixcr-export")
 
 self.awaitState("InputsLocked")
 self.awaitState("params", "ResourceReady")
@@ -32,6 +35,7 @@ self.body(func(inputs) {
 
 	params := inputs.params
 	species := params.species
+	chains := params.chains
 	limitInput := params.limitInput
 	blockId := params.blockId
 	presetCommonName := params.presetCommonName
@@ -98,29 +102,7 @@ self.body(func(inputs) {
 		clnsAnnotations["mixcr.com/cellsAssembled"] = "true"
 	}
 
-	// cColumnsAdditionalAxesSpec := []
-	// if !hasAssembleCells {
-	// 	cColumnsAdditionalAxesSpec = append(cColumnsAdditionalAxesSpec, {
-	// 		name: "pl7.app/vdj/chain",
-	// 		type: "String",
-	// 		annotations: {
-	// 			"pl7.app/label": "Chain",
-	// 			"pl7.app/axisNature": "scaleCompatible"
-	// 		}
-	// 	})
-	// }
 
-
-	// decompositionById := pUtil.decomposePfconvImportCfg(pfconvParamsById, {
-	// 	additionalAxesSpec: cColumnsAdditionalAxesSpec
-	// })
-	// purifiedPfconvByIdCfg := decompositionById.purifiedCfg
-	// cloneColumnsByIdSpec := decompositionById.columnsSpec
-	// decompositionByKey := pUtil.decomposePfconvImportCfg(pfconvParamsByKey, {
-	// 	additionalAxesSpec: cColumnsAdditionalAxesSpec
-	// })
-	// purifiedPfconvByKeyCfg := decompositionByKey.purifiedCfg
-	// cloneColumnsByKeySpec := decompositionByKey.columnsSpec
 
 	fileExtension := inputSpec.domain["pl7.app/fileExtension"]
 
@@ -187,37 +169,39 @@ self.body(func(inputs) {
 		}
 	} ]
 
-	ll.assert(purifiedPfconvByIdCfg.partitionKeyLength == 0, "unexpected partition length")
-	ll.assert(purifiedPfconvByIdCfg.storageFormat == "Binary", "unexpected format")
-	ll.assert(purifiedPfconvByKeyCfg.partitionKeyLength == 0, "unexpected partition length")
-	ll.assert(purifiedPfconvByKeyCfg.storageFormat == "Binary", "unexpected format")
 
-	innerPartitionLength := 0
-	if !hasAssembleCells {
-		innerPartitionLength = 1 // [chain]
+	// extract covered feature
+	imputationEnabled := false
+	assemblingFeature := undefined
+	if !is_undefined(presetSpecForBack.assemblingFeature) {
+		ll.assert(len(presetSpecForBack.assemblingFeature) == 1, "Don't support disjoint assembling features")
+		assemblingFeature = presetSpecForBack.assemblingFeature[0]
+	} else {
+		imputationEnabled = true
 	}
 
-	for columnCfg in purifiedPfconvByIdCfg.columns {
-		aggCfg := {
-			type: "BinaryPartitioned",
-			name: "clonesById/" + columnCfg.id,
-			path: ["clonesById", columnCfg.id],
-			spec: cloneColumnsByIdSpec[columnCfg.id],
-			partitionKeyLength: innerPartitionLength
-		}
-		targetOutputs = append(targetOutputs, aggCfg)
-	}
+	ll.assert(!is_undefined(assemblingFeature), "undefined assembling feature")
 
-	for columnCfg in purifiedPfconvByKeyCfg.columns {
-		aggCfg := {
-			type: "BinaryPartitioned",
-			name: "clonesByKey/" + columnCfg.id,
-			path: ["clonesByKey", columnCfg.id],
-			spec: cloneColumnsByKeySpec[columnCfg.id],
-			partitionKeyLength: innerPartitionLength
-		}
-		targetOutputs = append(targetOutputs, aggCfg)
-	}
+	exportSpec := calculateExportSpec({
+		blockId: blockId,
+		assemblingFeature: assemblingFeature,
+		splitByC: presetSpecForBack.splitByC,
+		hasUmi: presetSpecForBack.hasUmi,
+		cellTags: presetSpecForBack.cellTags
+	})
+
+	columnsSpecPerSample := exportSpec.columnsSpecPerSample
+	columnsSpecPerClonotype := exportSpec.columnsSpecPerClonotype
+	columnsSpec := exportSpec.columnsSpec
+
+	clonotypeKeyColumns := exportSpec.clonotypeKeyColumns
+
+	axesByClonotypeId := exportSpec.axesByClonotypeId
+	axesByClonotypeKey := exportSpec.axesByClonotypeKey
+
+	exportArgs := exportSpec.exportArgs
+
+	mainAbundanceColumn := exportSpec.mainAbundanceColumn
 
 	mixcrResults := pframes.processColumn(
 		{ spec: inputSpec, data: inputs.inputData },
@@ -250,27 +234,43 @@ self.body(func(inputs) {
 				},
 				clonotypeKeyAxes: clonotypeKeyAxes,
 				library: library,
-				presetContent: presetContent,
-				pfconvParamsById: purifiedPfconvByIdCfg,
-				pfconvParamsByKey: purifiedPfconvByKeyCfg
+				presetContent: presetContent
 			}
 		}
 	)
 
-	clones := pframes.pFrameBuilder()
-	for columnId, columnSpec in cloneColumnsByIdSpec {
-		clones.add(columnId,
-				mixcrResults.outputSpec("clonesById/" + columnId),
-				mixcrResults.outputData("clonesById/" + columnId))
+	clonotypes := pframes.pFrameBuilder()
+
+	for chain in chains {
+		exportOutputs := [ {
+			type: "Xsv",
+			xsvType: "tsv",
+			settings: {
+				axes: axesByClonotypeId,
+				columns: columnsSpec,
+				storageFormat: "Binary",
+				partitionKeyLength: 0
+			},
+			name: "byCloneId",
+			path: ["tsv"]
+		} ]
+
+		exportResults := pframes.processColumn(
+			mixcrResults.output("clns"),
+			mixcrExportTpl,
+			targetOutputs,
+			{
+				// will be automatically propagated to all output specs
+				traceSteps: [{type: "milaboratories.mixcr-clonotyping.export", id: blockId + "." + chain.name, importance: 80, label: chain.name}],
+
+				extra: {
+					chain: chain.mixcrChain
+				}
+			}
+		)
+
+		clonotypes.add("byCloneId/" + chain.name, exportResults.outputSpec("byCloneId"), exportResults.outputData("byCloneId"))
 	}
-	if !hasAssembleCells {
-		for columnId, columnSpec in cloneColumnsByKeySpec {
-			clones.add(columnId,
-					mixcrResults.outputSpec("clonesByKey/" + columnId),
-					mixcrResults.outputData("clonesByKey/" + columnId))
-		}
-	}
-	clones = clones.build()
 
 	return {
 		"qc.spec": mixcrResults.outputSpec("qc"),
@@ -285,6 +285,6 @@ self.body(func(inputs) {
 		"clns.spec": mixcrResults.outputSpec("clns"),
 		"clns.data": mixcrResults.outputData("clns"),
 
-		clones: clones
+		clonotypes: clonotypes
 	}
 })
