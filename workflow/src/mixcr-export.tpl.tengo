@@ -1,13 +1,10 @@
 ll := import("@platforma-sdk/workflow-tengo:ll")
-xsv := import("@platforma-sdk/workflow-tengo:pframes.xsv")
 self := import("@platforma-sdk/workflow-tengo:tpl")
-pcolumn := import("@platforma-sdk/workflow-tengo:pframes.pcolumn")
 pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
+assets := import("@platforma-sdk/workflow-tengo:assets")
+exec := import("@platforma-sdk/workflow-tengo:exec")
 
-text := import("text")
 json := import("json")
-
-utils := import(":utils")
 
 self.defineOutputs("tsv")
 
@@ -26,7 +23,6 @@ self.body(func(inputs) {
 
 	mixcrCmdBuilder := exec.builder().
 		printErrStreamToStdout().
-		env("MI_PROGRESS_PREFIX", progressPrefix).
 		software(mixcrSw).
 		secret("MI_LICENSE", "MI_LICENSE").
 		arg("exportClones").
@@ -67,7 +63,7 @@ self.body(func(inputs) {
 			software(ptransformSw).
 			arg("--workflow").arg("wf.json").
 			writeFile("wf.json", json.encode(pWorkflow)).
-			arg("input.tsv").addFile("input.tsv", inputTsv).
+			arg("input.tsv").addFile("input.tsv", unprocessedTsv).
 			arg("output.tsv").saveFile("output.tsv").
 			run()
 

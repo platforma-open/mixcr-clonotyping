@@ -24,14 +24,16 @@ self.awaitState("InputsLocked")
 self.awaitState("params", "ResourceReady")
 self.awaitState("inputSpec", "ResourceReady")
 self.awaitState("presetSpecForBack", "ResourceReady")
+self.awaitState("presetContent", "ResourceReady")
 
 self.body(func(inputs) {
 
-	preset := inputs.preset
 	inputSpec := inputs.inputSpec
 	library := inputs.library
 
+	preset := inputs.preset
 	presetSpecForBack := inputs.presetSpecForBack.getDataAsJson()
+	presetContent := inputs.presetContent
 
 	params := inputs.params
 	species := params.species
@@ -102,8 +104,6 @@ self.body(func(inputs) {
 		clnsAnnotations["mixcr.com/cellsAssembled"] = "true"
 	}
 
-
-
 	fileExtension := inputSpec.domain["pl7.app/fileExtension"]
 
 	targetOutputs := [ {
@@ -171,13 +171,10 @@ self.body(func(inputs) {
 
 
 	// extract covered feature
-	imputationEnabled := false
 	assemblingFeature := undefined
 	if !is_undefined(presetSpecForBack.assemblingFeature) {
 		ll.assert(len(presetSpecForBack.assemblingFeature) == 1, "Don't support disjoint assembling features")
 		assemblingFeature = presetSpecForBack.assemblingFeature[0]
-	} else {
-		imputationEnabled = true
 	}
 
 	ll.assert(!is_undefined(assemblingFeature), "undefined assembling feature")
@@ -229,10 +226,8 @@ self.body(func(inputs) {
 					limitInput: limitInput,
 					fileExtension: fileExtension,
 					reports: reports,
-					featureParams: featureParams,
 					isLibraryFileGzipped: isLibraryFileGzipped
 				},
-				clonotypeKeyAxes: clonotypeKeyAxes,
 				library: library,
 				presetContent: presetContent
 			}

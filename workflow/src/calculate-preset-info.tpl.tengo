@@ -5,7 +5,6 @@ smart := import("@platforma-sdk/workflow-tengo:smart")
 ll := import("@platforma-sdk/workflow-tengo:ll")
 exec := import("@platforma-sdk/workflow-tengo:exec")
 assets := import("@platforma-sdk/workflow-tengo:assets")
-mixcr := import(":mixcr")
 
 self.validateInputs({
 	"__options__,closed": "",
@@ -46,8 +45,6 @@ self.body(func(inputs) {
 	if !is_undefined(species) {
 		mixcrExportPresetCmdBuilder.arg("--species").arg(species)
 	}
-
-	mixcr.addAdditionalColumnArgs(mixcrExportPresetCmdBuilder, {assemblingFeature: "CDR3", imputed: false})
 
 	mixcrExportPresetCmd := mixcrExportPresetCmdBuilder.arg("preset.json").
 		saveFileContent("preset.json").

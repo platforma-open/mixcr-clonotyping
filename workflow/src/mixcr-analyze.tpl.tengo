@@ -11,16 +11,13 @@ pframes := import("@platforma-sdk/workflow-tengo:pframes")
 pcolumn := import("@platforma-sdk/workflow-tengo:pframes.pcolumn")
 xsv := import("@platforma-sdk/workflow-tengo:pframes.xsv")
 file := import("@platforma-sdk/workflow-tengo:file")
-mixcr := import(":mixcr")
 times := import("times")
 
 json := import("json")
 
 self.defineOutputs("qc", "reports", "clonesById", "clonesByKey", "log", "clns")
 
-exportClonesBulkTpl := assets.importTemplate(":export-clones-bulk")
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:main")
-tableTransformation := import(":utils")
 
 progressPrefix := "[==PROGRESS==]"
 

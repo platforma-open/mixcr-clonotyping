@@ -107,6 +107,7 @@ wf.body(func(args) {
 
 		preset: presetResource,
 		presetSpecForBack: presetSpecForBack,
+		presetContent: presetContent,
 
 		library: library,
 

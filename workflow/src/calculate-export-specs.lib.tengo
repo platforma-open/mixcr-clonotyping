@@ -1,7 +1,7 @@
 maps := import("@platforma-sdk/workflow-tengo:maps")
 ll := import("@platforma-sdk/workflow-tengo:ll")
-utils := import(":utils")
 text := import("text")
+json := import("json")
 
 a := func(order, defaultVisibility, spec) {
 	return maps.merge(spec, {
@@ -318,7 +318,7 @@ calculateExportSpec := func(ops) {
 							valueType: variant.valueType,
 							name: "pl7.app/vdj/sequence/" + alphabetShortMixcr + variant.name,
 							annotations: a(orderP, false, {
-								"pl7.app/label": alphabetShort + variant.labelPart + geneU + " gene",
+								"pl7.app/label": alphabetShort + variant.labelPart + geneU + " gene"
 							})
 						}
 					} ]
@@ -475,7 +475,7 @@ calculateExportSpec := func(ops) {
 			} ]
 	}
 
-	axesByClonotypeId = [ {
+	axesByClonotypeId := [ {
 		column: "cloneId",
 		spec: {
 			name: "pl7.app/vdj/cloneId",
@@ -493,7 +493,7 @@ calculateExportSpec := func(ops) {
 		} ]
 	exportArgs += [ [ "-cloneId" ] ]
 
-	orderP := 100000
+	orderP = 100000
 	if !is_undefined(cellTags) && len(cellTags) > 0 {
 		for tag in cellTags {
 			label := undefined
@@ -502,7 +502,7 @@ calculateExportSpec := func(ops) {
 			} else {
 				label = text.to_title(tag[:4]) + " " + text.to_lower(tag[4:])
 			}
-			axesSpec += [ {
+			axesByClonotypeId += [ {
 					column: "tagValue" + tag,
 					naRegex: "",
 					spec: {
