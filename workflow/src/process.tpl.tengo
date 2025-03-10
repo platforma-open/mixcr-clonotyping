@@ -234,6 +234,21 @@ self.body(func(inputs) {
 			path: ["tsv"]
 		} ]
 
+		if !is_undefined(axesByClonotypeKey) {
+			exportOutputs += [ {
+				type: "Xsv",
+				xsvType: "tsv",
+				settings: {
+					axes: axesByClonotypeKey,
+					columns: columnsSpecPerSample,
+					storageFormat: "Binary",
+					partitionKeyLength: 0
+				},
+				name: "byCloneKeyBySample",
+				path: ["tsv"]
+			} ]
+		}
+
 		exportResults := pframes.processColumn(
 			mixcrResults.output("clns"),
 			mixcrExportTpl,
@@ -243,14 +258,19 @@ self.body(func(inputs) {
 				traceSteps: [{type: "milaboratories.mixcr-clonotyping.export", id: blockId + "." + chain.name, importance: 80, label: chain.name}],
 
 				extra: {
-					chain: chain.mixcrChain
+					params: {
+						chains: chain.mixcrChain,
+						clonotypeKeyColumns: clonotypeKeyColumns,
+						exportArgs: exportArgs
+					}
 				}
 			}
 		)
 
-		for c in exportResults.listXsvColumns("byCloneId") {
-			clonotypes.add("byCloneId/" + chain.name + "/" + c, exportResults.outputSpec("byCloneId", c), exportResults.outputData("byCloneId", c))
-		}
+		// for c in exportResults.listXsvColumns("byCloneId") {
+		// 	clonotypes.add("byCloneId/" + chain.name + "/" + c, exportResults.outputSpec("byCloneId", c), exportResults.outputData("byCloneId", c))
+		// }
+		exportResults.addXsvOutputToBuilder(clonotypes, "byCloneId", "byCloneId/" + chain.name + "/")
 	}
 
 	return {

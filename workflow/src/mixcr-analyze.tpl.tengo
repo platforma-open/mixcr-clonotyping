@@ -15,7 +15,7 @@ times := import("times")
 
 json := import("json")
 
-self.defineOutputs("qc", "reports", "clonesById", "clonesByKey", "log", "clns")
+self.defineOutputs("qc", "reports", "log", "clns")
 
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:main")
 

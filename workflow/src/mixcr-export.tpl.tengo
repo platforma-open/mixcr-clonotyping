@@ -17,7 +17,7 @@ self.body(func(inputs) {
 	params := inputs.params
 	chains := params.chains
 	clonotypeKeyColumns := params.clonotypeKeyColumns
-	exportArguments := params.exportArguments
+	exportArgs := params.exportArgs
 
 	// Exporting clones from clns file
 
@@ -29,7 +29,7 @@ self.body(func(inputs) {
 		arg("--dont-split-files").
 		arg("--chains").arg(chains)
 
-	for argGrp in exportArguments {
+	for argGrp in exportArgs {
 		for arg in argGrp {
 			mixcrCmdBuilder.arg(arg)
 		}
@@ -42,7 +42,7 @@ self.body(func(inputs) {
 		saveFile("clones.tsv").
 		run()
 
-	unprocessedTsv := mixcrCmd.output("clones.tsv")
+	unprocessedTsv := mixcrCmd.getFile("clones.tsv")
 
 	if is_undefined(clonotypeKeyColumns) {
 		return {

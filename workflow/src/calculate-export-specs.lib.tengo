@@ -209,7 +209,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 					column: "best" + vdjcU + variant.columnNameSuffix,
 					id: "best-" + vdjcL + variant.idSuffix,
 					naRegex: "",
-					allowNA: false,
+					allowNA: vdjcU == "C" || vdjcU == "D",
 					spec: {
 						name: variant.name,
 						valueType: "String",
@@ -222,7 +222,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 						})
 					}
 				} ]
-			exportArgs += [ [ "-best" + vdjcU + variant.argSuffix ] ]
+			exportArgs += [ [ "-" + vdjcL + variant.argSuffix ] ]
 			orderP -= 100
 		}
 	}
@@ -247,10 +247,10 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 				alphabet := isAminoAcid ? "aminoacid" : "nucleotide"
 				alphabetShort := isAminoAcid ? "aa" : "nt"
 				alphabetShortMixcr := isAminoAcid ? "aa" : "n"
-				visibility := ((featureU == "CDR3") || (featureU == assemblingFeature)) ? true : false
+				visibility := (featureU == "CDR3") || (featureU == assemblingFeature)
 				columnsSpecPerClonotype += [ {
 						column: alphabetShortMixcr + "Seq" + imputedU + featureU,
-						id: alphabetShortMixcr + "-seq-" + featureL + "-" + imputedL,
+						id: alphabetShortMixcr + "-seq-" + featureL + (isImputed ? "-imputed" : ""),
 						naRegex: "region_not_covered",
 						spec: {
 							name: "pl7.app/vdj/sequence",
@@ -417,7 +417,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 	// Isotype and chain
 
 	columnsSpecPerClonotype += [ {
-			column: "isotype",
+			column: "isotypePrimary",
 			id: "isotype",
 			naRegex: "",
 			spec: {
@@ -482,7 +482,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 					name: "pl7.app/vdj/clonotypeKey",
 					type: "String",
 					domain: {
-						"pl7.app/vdj/clonotypeKey/structure": json.encode(keyStrincture)
+						"pl7.app/vdj/clonotypeKey/structure": string(json.encode(keyStrincture))
 					},
 					annotations: {
 						"pl7.app/label": "Clonotype key",
