@@ -1,0 +1,16 @@
+self := import("@platforma-sdk/workflow-tengo:tpl")
+ll := import("@platforma-sdk/workflow-tengo:ll")
+
+calculateExportSpecs := import(":calculate-export-specs")
+
+self.defineOutputs("exportSpecs")
+
+self.body(func(inputs) {
+	presetSpecForBack := inputs.presetSpecForBack.getDataAsJson()
+
+	exportSpecs := calculateExportSpecs(presetSpecForBack, "test")
+
+	return {
+		exportSpecs: exportSpecs
+	}
+})

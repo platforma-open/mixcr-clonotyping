@@ -4,8 +4,8 @@ self := import("@platforma-sdk/workflow-tengo:tpl")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 render := import("@platforma-sdk/workflow-tengo:render")
 
-getPresetTpl := assets.importTemplate(":get-preset")
-calculateColumnsParamsTpl := assets.importTemplate(":calculate-pfconv-params")
+calculatePresetInfoTpl := assets.importTemplate(":calculate-preset-info")
+columnsCalculateTpl := assets.importTemplate(":test.columns-calculate")
 
 self.defineOutputs("conf")
 
@@ -13,17 +13,16 @@ self.body(func(inputs) {
 	preset := inputs.preset
 	params := inputs.params
 
-	getPreset := render.create(getPresetTpl, {
+	getPreset := render.create(calculatePresetInfoTpl, {
 		preset: preset,
 		params: params
 	})
 
-	pfconvConfig := render.create(calculateColumnsParamsTpl, {
-		preset: getPreset.output("preset"),
-		specs: getPreset.output("presetSpecForBack")
-	}).output("params")
+	calumnsCalculateResult := render.create(columnsCalculateTpl, {
+		presetSpecForBack: getPreset.output("presetSpecForBack")
+	})
 
 	return {
-		conf: pfconvConfig
+		exportSpecs: calumnsCalculateResult.output("exportSpecs")
 	}
 })

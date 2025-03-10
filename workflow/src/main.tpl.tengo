@@ -10,11 +10,11 @@ file := import("@platforma-sdk/workflow-tengo:file")
 llPFrames := import("@platforma-sdk/workflow-tengo:pframes.ll")
 pframes := import("@platforma-sdk/workflow-tengo:pframes")
 exec := import("@platforma-sdk/workflow-tengo:exec")
+self := import("@platforma-sdk/workflow-tengo:tpl")
 
 json := import("json")
 
-getPresetTpl := assets.importTemplate(":get-preset")
-calculatePfconvParamsTpl := assets.importTemplate(":calculate-pfconv-params")
+calculatePresetInfoTpl := assets.importTemplate(":calculate-preset-info")
 processTpl := assets.importTemplate(":process")
 
 wf.setPreRun(assets.importTemplate(":prerun"))
@@ -61,67 +61,64 @@ wf.body(func(args) {
 	}
 
 	limitInput := args.limitInput
-	inputLibrary := args.resolvedLibraryInput
-	libraryFile := args.libraryFile
-	isLibraryFileGzipped := args.isLibraryFileGzipped
+	isLibraryFileGzipped := false
 
-	library := undefined
-	species := undefined
+	library := false
+	species := args.species
 	libraryImportHandle := undefined
-	if !is_undefined(inputLibrary) {
-		library = inputLibrary.data
-		librarySpec := inputLibrary.spec
+	if !is_undefined(args.resolvedLibraryInput) {
+		library = args.resolvedLibraryInput.data
+		librarySpec := args.resolvedLibraryInput.spec
 		species = librarySpec["annotations"]["pl7.app/species"]
-	} else if !is_undefined(libraryFile) {
-		fImport := file.importFile(libraryFile)
+	} else if !is_undefined(args.libraryFile) {
+		fImport := file.importFile(args.libraryFile)
 		libraryImportHandle = fImport.handle
 		library = fImport.file
 		species = args.customSpecies
-	} else {
-		library = false
-		species = args.species
+		isLibraryFileGzipped = args.isLibraryFileGzipped
 	}
-
-	//lib := inputLibrary.getFutureInputField("data")
-
 
 	input := wf.resolve(inputRef)
 
 	//ll.print("__THE_LOG__ " +input)
 
-	getPreset := render.create(getPresetTpl, {
+	presetInfoResult := render.create(calculatePresetInfoTpl, {
 		preset: presetResource,
 		params: {
 			species: species
 		}
 	})
 
-	presetContent := getPreset.output("preset", 24 * 60 * 60 * 1000)
-	specsContent := getPreset.output("presetSpecForBack", 24 * 60 * 60 * 1000)
+	presetContent := presetInfoResult.output("preset", 24 * 60 * 60 * 1000)
+	presetSpecForBack := presetInfoResult.output("presetSpecForBack", 24 * 60 * 60 * 1000)
 
-	calculatePfconvParams := render.create(calculatePfconvParamsTpl, {
-		blockId: blockId,
-		preset: presetContent,
-		specs: specsContent
-	})
-	pfconvParams := calculatePfconvParams.output("params", 24 * 60 * 60 * 1000)
-	featureParams := calculatePfconvParams.output("featureParams", 24 * 60 * 60 * 1000)
+	// calculating chains
+	chains := [
+		{ name: "IGH", mixcrChain: "IGH" },
+		{ name: "IGKL", mixcrChain: "IGK,IGL" },
+		{ name: "TRA", mixcrChain: "TRA" },
+		{ name: "TRB", mixcrChain: "TRB" },
+		{ name: "TRD", mixcrChain: "TRD" },
+		{ name: "TRG", mixcrChain: "TRG" } ]
 
 	runMixcr := render.createEphemeral(processTpl, {
+		inputSpec: input.getFutureInputField("spec"),
+		inputData: input.getFutureInputField("data"),
+
 		preset: presetResource,
-		presetContent: specsContent,
+		presetSpecForBack: presetSpecForBack,
+		presetContent: presetContent,
+
+		library: library,
+
 		params: smart.createJsonResource({
 			species: species,
+			chains: chains,
 			limitInput: limitInput,
 			blockId: blockId,
 			presetCommonName: args.presetCommonName,
 			isLibraryFileGzipped: isLibraryFileGzipped
-		}),
-		featureParams: featureParams,
-		pfconvParams: pfconvParams,
-		library: library,
-		inputSpec: input.getFutureInputField("spec"),
-		inputData: input.getFutureInputField("data")
+		})
 	})
 
 	exports := {
@@ -133,7 +130,7 @@ wf.body(func(args) {
 			spec: runMixcr.output("reports.spec"),
 			data: runMixcr.output("reports.data")
 		},
-		clones: runMixcr.output("clones"),
+		clones: runMixcr.output("clonotypes"),
 		clns: {
 			spec: runMixcr.output("clns.spec"),
 			data: runMixcr.output("clns.data")
@@ -144,7 +141,7 @@ wf.body(func(args) {
 		qc: pframes.exportColumnData(runMixcr.output("qc.data")),
 		reports: pframes.exportColumnData(runMixcr.output("reports.data")),
 		logs: runMixcr.output("logs.data"),
-		clones: pframes.exportFrame(runMixcr.output("clones")),
+		clonotypes: pframes.exportFrame(runMixcr.output("clonotypes")),
 		clns: runMixcr.output("clns.data"),
 		fileImports: smart.createMapResource(maps.mapValues(fileImports, func(im) {
 			return im.handle
