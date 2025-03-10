@@ -237,7 +237,7 @@ self.body(func(inputs) {
 		exportResults := pframes.processColumn(
 			mixcrResults.output("clns"),
 			mixcrExportTpl,
-			targetOutputs,
+			exportOutputs,
 			{
 				// will be automatically propagated to all output specs
 				traceSteps: [{type: "milaboratories.mixcr-clonotyping.export", id: blockId + "." + chain.name, importance: 80, label: chain.name}],
@@ -248,7 +248,9 @@ self.body(func(inputs) {
 			}
 		)
 
-		clonotypes.add("byCloneId/" + chain.name, exportResults.outputSpec("byCloneId"), exportResults.outputData("byCloneId"))
+		for c in exportResults.listXsvColumns("byCloneId") {
+			clonotypes.add("byCloneId/" + chain.name + "/" + c, exportResults.outputSpec("byCloneId", c), exportResults.outputData("byCloneId", c))
+		}
 	}
 
 	return {
@@ -264,6 +266,6 @@ self.body(func(inputs) {
 		"clns.spec": mixcrResults.outputSpec("clns"),
 		"clns.data": mixcrResults.outputData("clns"),
 
-		clonotypes: clonotypes
+		clonotypes: clonotypes.build()
 	}
 })

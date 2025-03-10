@@ -35,7 +35,7 @@ self.body(func(inputs) {
 	reports := params.reports
 	isLibraryFileGzipped := params.isLibraryFileGzipped
 
-	presetContent := inputs.presetContent // already in JSON
+	presetContent := inputs.presetContent.getDataAsJson()
 
 	if !is_map(presetContent) {
 		ll.panic("malformed presetContent %v", presetContent)
