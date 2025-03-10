@@ -5,6 +5,7 @@ import { ClientSideRowModelModule } from 'ag-grid-enterprise';
 import type { ColDef, GridApi, GridOptions, GridReadyEvent } from 'ag-grid-enterprise';
 import { ModuleRegistry } from 'ag-grid-enterprise';
 import type { PlId, Qc } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
+import type { PlAgHeaderComponentParams } from '@platforma-sdk/ui-vue';
 import {
   AgGridTheme,
   PlAgOverlayLoading,
@@ -82,10 +83,11 @@ const defaultColumnDef: ColDef = {
 
 const columnDefs: ColDef<MiXCRResult>[] = [
   makeRowNumberColDef(),
-  {
+  createAgGridColDef<MiXCRResult, string>({
     colId: 'label',
     field: 'label',
     headerName: 'Sample',
+    headerComponentParams: { type: 'Text' } satisfies PlAgHeaderComponentParams,
     pinned: 'left',
     lockPinned: true,
     sortable: true,
@@ -93,11 +95,12 @@ const columnDefs: ColDef<MiXCRResult>[] = [
     cellRendererParams: {
       invokeRowsOnDoubleClick: true,
     },
-  },
+  }),
   createAgGridColDef<MiXCRResult, string>({
     colId: 'progress',
     field: 'progress',
     headerName: 'Progress',
+    headerComponentParams: { type: 'Progress' } satisfies PlAgHeaderComponentParams,
     progress(cellData) {
       const parsed = parseProgressString(cellData);
 
@@ -132,11 +135,13 @@ const columnDefs: ColDef<MiXCRResult>[] = [
       };
     },
     headerName: 'Quality',
+    headerComponentParams: { type: 'Text' } satisfies PlAgHeaderComponentParams,
     noGutters: true, // this means "no padding" i. e. --ag-cell-horizontal-padding: 0px & --ag-cell-vertical-padding: 0px
   }),
-  {
+  createAgGridColDef<MiXCRResult, string>({
     colId: 'alignmentStats',
     headerName: 'Alignments',
+    headerComponentParams: { type: 'Text' } satisfies PlAgHeaderComponentParams,
     flex: 1,
     cellStyle: {
       '--ag-cell-horizontal-padding': '12px',
@@ -148,10 +153,11 @@ const columnDefs: ColDef<MiXCRResult>[] = [
         params: { value },
       };
     },
-  },
-  {
+  }),
+  createAgGridColDef<MiXCRResult, string>({
     colId: 'chainsStats',
     headerName: 'Chains',
+    headerComponentParams: { type: 'Text' } satisfies PlAgHeaderComponentParams,
     flex: 1,
     cellStyle: {
       '--ag-cell-horizontal-padding': '12px',
@@ -165,7 +171,7 @@ const columnDefs: ColDef<MiXCRResult>[] = [
         params: { value },
       };
     },
-  },
+  }),
 ];
 
 const gridOptions: GridOptions<MiXCRResult> = {
