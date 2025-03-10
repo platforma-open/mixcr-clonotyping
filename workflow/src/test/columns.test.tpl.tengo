@@ -4,8 +4,6 @@ self := import("@platforma-sdk/workflow-tengo:tpl")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 render := import("@platforma-sdk/workflow-tengo:render")
 
-calculateExportSpec := import(":calculate-export-specs")
-
 calculatePresetInfoTpl := assets.importTemplate(":calculate-preset-info")
 columnsCalculateTpl := assets.importTemplate(":test.columns-calculate")
 
@@ -25,6 +23,6 @@ self.body(func(inputs) {
 	})
 
 	return {
-		exportSpec: calumnsCalculateResult.output("exportSpec")
+		exportSpecs: calumnsCalculateResult.output("exportSpecs")
 	}
 })

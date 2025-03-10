@@ -12,7 +12,7 @@ pSpec := import("@platforma-sdk/workflow-tengo:pframes.spec")
 pUtil := import("@platforma-sdk/workflow-tengo:pframes.util")
 pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 
-calculateExportSpec := import(":calculate-export-specs")
+calculateExportSpecs := import(":calculate-export-specs")
 
 json := import("json")
 text := import("text")
@@ -169,36 +169,20 @@ self.body(func(inputs) {
 		}
 	} ]
 
+	exportSpecs := calculateExportSpecs(presetSpecForBack, blockId)
 
-	// extract covered feature
-	assemblingFeature := undefined
-	if !is_undefined(presetSpecForBack.assemblingFeature) {
-		ll.assert(len(presetSpecForBack.assemblingFeature) == 1, "Don't support disjoint assembling features")
-		assemblingFeature = presetSpecForBack.assemblingFeature[0]
-	}
+	columnsSpecPerSample := exportSpecs.columnsSpecPerSample
+	columnsSpecPerClonotype := exportSpecs.columnsSpecPerClonotype
+	columnsSpec := exportSpecs.columnsSpec
 
-	ll.assert(!is_undefined(assemblingFeature), "undefined assembling feature")
+	clonotypeKeyColumns := exportSpecs.clonotypeKeyColumns
 
-	exportSpec := calculateExportSpec({
-		blockId: blockId,
-		assemblingFeature: assemblingFeature,
-		splitByC: presetSpecForBack.splitByC,
-		hasUmi: presetSpecForBack.hasUmi,
-		cellTags: presetSpecForBack.cellTags
-	})
+	axesByClonotypeId := exportSpecs.axesByClonotypeId
+	axesByClonotypeKey := exportSpecs.axesByClonotypeKey
 
-	columnsSpecPerSample := exportSpec.columnsSpecPerSample
-	columnsSpecPerClonotype := exportSpec.columnsSpecPerClonotype
-	columnsSpec := exportSpec.columnsSpec
+	exportArgs := exportSpecs.exportArgs
 
-	clonotypeKeyColumns := exportSpec.clonotypeKeyColumns
-
-	axesByClonotypeId := exportSpec.axesByClonotypeId
-	axesByClonotypeKey := exportSpec.axesByClonotypeKey
-
-	exportArgs := exportSpec.exportArgs
-
-	mainAbundanceColumn := exportSpec.mainAbundanceColumn
+	mainAbundanceColumn := exportSpecs.mainAbundanceColumn
 
 	mixcrResults := pframes.processColumn(
 		{ spec: inputSpec, data: inputs.inputData },

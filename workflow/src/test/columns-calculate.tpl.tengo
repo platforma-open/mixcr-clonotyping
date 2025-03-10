@@ -1,28 +1,16 @@
 self := import("@platforma-sdk/workflow-tengo:tpl")
 ll := import("@platforma-sdk/workflow-tengo:ll")
 
-calculateExportSpec := import(":calculate-export-specs")
+calculateExportSpecs := import(":calculate-export-specs")
 
-self.defineOutputs("exportSpec")
+self.defineOutputs("exportSpecs")
 
 self.body(func(inputs) {
 	presetSpecForBack := inputs.presetSpecForBack.getDataAsJson()
 
-	assemblingFeature := undefined
-	if !is_undefined(presetSpecForBack.assemblingFeature) {
-		ll.assert(len(presetSpecForBack.assemblingFeature) == 1, "Don't support disjoint assembling features")
-		assemblingFeature = presetSpecForBack.assemblingFeature[0]
-	}
-
-	exportSpec := calculateExportSpec({
-		blockId: "test",
-		assemblingFeature: assemblingFeature,
-		splitByC: presetSpecForBack.splitByC,
-		hasUmi: presetSpecForBack.hasUmi,
-		cellTags: presetSpecForBack.cellTags
-	})
+	exportSpecs := calculateExportSpecs(presetSpecForBack, "test")
 
 	return {
-		exportSpec: exportSpec
+		exportSpecs: exportSpecs
 	}
 })

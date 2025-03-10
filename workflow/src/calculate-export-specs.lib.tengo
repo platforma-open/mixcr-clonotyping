@@ -63,12 +63,28 @@ assemblingFeatureInfo := func(assemblingFeature) {
 	}
 }
 
-calculateExportSpec := func(ops) {
+exportSpecOpsFromPreset := func(presetSpecForBack) {
+	assemblingFeature := undefined
+	if !is_undefined(presetSpecForBack.assemblingFeature) {
+		ll.assert(len(presetSpecForBack.assemblingFeature) == 1, "Don't support disjoint assembling features")
+		assemblingFeature = presetSpecForBack.assemblingFeature[0]
+	}
+
+	return {
+		assemblingFeature: assemblingFeature,
+		splitByC: presetSpecForBack.splitByC,
+		hasUmi: !is_undefined(presetSpecForBack.umiTags) && len(presetSpecForBack.umiTags) > 0,
+		cellTags: presetSpecForBack.cellTags
+	}
+}
+
+calculateExportSpecs := func(presetSpecForBack, blockId) {
+	ops := exportSpecOpsFromPreset(presetSpecForBack)
+
 	assemblingFeature := ops.assemblingFeature
 	cellTags := ops.cellTags
 	hasUmi := ops.hasUmi
 	splitByC := ops.splitByC
-	blockId := ops.blockId
 
 	assemblingFeatureInfo := assemblingFeatureInfo(assemblingFeature)
 	productiveFeature := assemblingFeatureInfo.productiveFeature
@@ -557,4 +573,4 @@ calculateExportSpec := func(ops) {
 	}
 }
 
-export calculateExportSpec
+export calculateExportSpecs
