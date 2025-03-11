@@ -107,37 +107,37 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 	// Abundance
 
 	columnsSpecPerSample += [ {
-			column: "readCount",
-			id: "read-count",
-			allowNA: false,
-			spec: {
-				name: "pl7.app/vdj/readCount",
-				valueType: "Long",
-				annotations: a(90000, !hasUmi, {
-					"pl7.app/min": "1",
-					"pl7.app/isAbundance": "true",
-					"pl7.app/abundance/unit": "reads",
-					"pl7.app/abundance/normalized": "false",
-					"pl7.app/label": "Number Of Reads"
-				})
-			}
-		}, {
-			column: "readFraction",
-			id: "read-fraction",
-			allowNA: false,
-			spec: {
-				name: "pl7.app/vdj/readFraction",
-				valueType: "Double",
-				annotations: a(89000, !hasUmi, {
-					"pl7.app/min": "0",
-					"pl7.app/max": "1",
-					"pl7.app/isAbundance": "true",
-					"pl7.app/abundance/unit": "reads",
-					"pl7.app/abundance/normalized": "true",
-					"pl7.app/label": "Fraction of reads"
-				})
-			}
-		} ]
+		column: "readCount",
+		id: "read-count",
+		allowNA: false,
+		spec: {
+			name: "pl7.app/vdj/readCount",
+			valueType: "Long",
+			annotations: a(90000, !hasUmi, {
+				"pl7.app/min": "1",
+				"pl7.app/isAbundance": "true",
+				"pl7.app/abundance/unit": "reads",
+				"pl7.app/abundance/normalized": "false",
+				"pl7.app/label": "Number Of Reads"
+			})
+		}
+	}, {
+		column: "readFraction",
+		id: "read-fraction",
+		allowNA: false,
+		spec: {
+			name: "pl7.app/vdj/readFraction",
+			valueType: "Double",
+			annotations: a(89000, !hasUmi, {
+				"pl7.app/min": "0",
+				"pl7.app/max": "1",
+				"pl7.app/isAbundance": "true",
+				"pl7.app/abundance/unit": "reads",
+				"pl7.app/abundance/normalized": "true",
+				"pl7.app/label": "Fraction of reads"
+			})
+		}
+	} ]
 	exportArgs += [
 		[ "-readCount" ],
 		[ "-readFraction" ]

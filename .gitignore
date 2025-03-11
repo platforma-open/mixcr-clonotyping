@@ -4,6 +4,7 @@ block-pack/
 dev/
 work/
 log/
+*.tgz
 .test_auth.json
 .turbo
 vite.config.*.timestamp-*
