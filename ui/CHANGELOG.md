@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.10.1
+
+### Patch Changes
+
+- 885401d: Updated column types
+
 ## 1.10.0
 
 ### Minor Changes
