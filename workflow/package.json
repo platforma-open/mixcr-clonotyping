@@ -7,6 +7,9 @@
     "format": "/usr/bin/env emacs --script ./format.el",
     "test": "vitest"
   },
+  "dependencies": {
+    "@platforma-open/milaboratories.mixcr-clonotyping-2.sc-clonotype-builder": "workspace:*"
+  },
   "devDependencies": {
     "@platforma-sdk/tengo-builder": "catalog:",
     "@platforma-sdk/workflow-tengo": "catalog:",
