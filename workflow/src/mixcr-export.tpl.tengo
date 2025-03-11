@@ -16,8 +16,9 @@ self.body(func(inputs) {
 
 	params := inputs.params
 	chains := params.chains
-	clonotypeKeyColumns := params.clonotypeKeyColumns
 	exportArgs := params.exportArgs
+
+	clonotypeKeyColumns := params.clonotypeKeyColumns
 
 	// Exporting clones from clns file
 

@@ -97,7 +97,7 @@ const testCases: TestCase[] = [
       expect(config.columnsSpec.find((c: any) => c.column === 'aaSeqFR3')).toBeDefined();
       expect(config.columnsSpec.find((c: any) => c.column === 'aaSeqCDR3')).toBeDefined();
       expect(config.columnsSpec.find((c: any) => c.column === 'aaSeqFR4')).toBeDefined();
-      expect(config.columnsSpec.find((c: any) => c.column === 'isotype')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'isotypePrimary')).toBeDefined();
     }
   },
   {

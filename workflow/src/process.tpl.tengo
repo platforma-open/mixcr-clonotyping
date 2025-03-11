@@ -175,7 +175,6 @@ self.body(func(inputs) {
 
 	columnsSpecPerSample := exportSpecs.columnsSpecPerSample
 	columnsSpecPerClonotype := exportSpecs.columnsSpecPerClonotype
-	columnsSpecPerClonotype = columnsSpecPerClonotype[0:5]
 	columnsSpec := exportSpecs.columnsSpec
 
 	clonotypeKeyColumns := exportSpecs.clonotypeKeyColumns
@@ -221,6 +220,8 @@ self.body(func(inputs) {
 		}
 	)
 
+	clnsFiles := mixcrResults.output("clns")
+
 	clonotypes := pframes.pFrameBuilder()
 
 	for chain in chains {
@@ -265,7 +266,7 @@ self.body(func(inputs) {
 		}
 
 		exportResults := pframes.processColumn(
-			mixcrResults.output("clns"),
+			clnsFiles,
 			mixcrExportTpl,
 			exportOutputs,
 			{
