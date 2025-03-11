@@ -1,0 +1,77 @@
+ll := import("@platforma-sdk/workflow-tengo:ll")
+self := import("@platforma-sdk/workflow-tengo:tpl")
+pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
+assets := import("@platforma-sdk/workflow-tengo:assets")
+exec := import("@platforma-sdk/workflow-tengo:exec")
+
+json := import("json")
+
+self.defineOutputs("tsv")
+
+mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:low-memory")
+ptransformSw := assets.importSoftware("@platforma-open/milaboratories.software-ptransform:main")
+
+self.body(func(inputs) {
+	clnsFile := inputs[pConstants.VALUE_FIELD_NAME]
+
+	params := inputs.params
+	chains := params.chains
+	exportArgs := params.exportArgs
+
+	clonotypeKeyColumns := params.clonotypeKeyColumns
+
+	// Exporting clones from clns file
+
+	mixcrCmdBuilder := exec.builder().
+		printErrStreamToStdout().
+		software(mixcrSw).
+		secret("MI_LICENSE", "MI_LICENSE").
+		arg("exportClones").
+		arg("--dont-split-files").
+		arg("--chains").arg(chains)
+
+	for argGrp in exportArgs {
+		for arg in argGrp {
+			mixcrCmdBuilder.arg(arg)
+		}
+	}
+
+	mixcrCmd := mixcrCmdBuilder.
+		arg("clones.clns").
+		addFile("clones.clns", clnsFile).
+		arg("clones.tsv").
+		saveFile("clones.tsv").
+		run()
+
+	unprocessedTsv := mixcrCmd.getFile("clones.tsv")
+
+	if is_undefined(clonotypeKeyColumns) {
+		return {
+			tsv: unprocessedTsv
+		}
+	} else {
+		// Adding clonotypeKey column
+		pWorkflow := {
+			steps: [ {
+				type: "combine_columns_as_json",
+				src: clonotypeKeyColumns,
+				dst: "clonotypeKey"
+			} ]
+		}
+
+		aggregateCmd := exec.builder().
+			printErrStreamToStdout().
+			software(ptransformSw).
+			arg("--workflow").arg("wf.json").
+			writeFile("wf.json", json.encode(pWorkflow)).
+			arg("input.tsv").addFile("input.tsv", unprocessedTsv).
+			arg("output.tsv").saveFile("output.tsv").
+			run()
+
+		processedTsv := aggregateCmd.getFile("output.tsv")
+
+		return {
+			tsv: processedTsv
+		}
+	}
+})

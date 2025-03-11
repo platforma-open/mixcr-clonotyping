@@ -27,12 +27,12 @@ const testCases: TestCase[] = [
     preset: 'milab-human-dna-xcr-7genes-multiplex',
     check: (expect, config) => {
       // console.dir(config, { depth: 5 });
-      expect(config.axes).to.have.lengthOf(1);
-      expect(config.axes.find((c: any) => c.column === 'cloneId')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'readCount')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'readFraction')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'nSeqCDR3')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'aaSeqCDR3')).toBeDefined();
+      expect(config.axesByClonotypeId).to.have.lengthOf(1);
+      expect(config.axesByClonotypeId.find((c: any) => c.column === 'cloneId')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'readCount')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'readFraction')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'nSeqCDR3')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'aaSeqCDR3')).toBeDefined();
     }
   },
   {
@@ -40,64 +40,64 @@ const testCases: TestCase[] = [
     species: 'human',
     check: (expect, config) => {
       // console.dir(config, { depth: 5 });
-      expect(config.axes).to.have.lengthOf(2);
-      expect(config.axes.find((c: any) => c.column === 'tagValueCELL')).toBeDefined();
-      expect(config.axes.find((c: any) => c.column === 'cloneId')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'cellGroup')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'uniqueMoleculeCount')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'uniqueMoleculeFraction')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'nSeqFR1')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'nSeqCDR1')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'nSeqFR2')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'nSeqCDR2')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'nSeqFR3')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'nSeqCDR3')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'nSeqFR4')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'aaSeqFR1')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'aaSeqCDR1')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'aaSeqFR2')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'aaSeqCDR2')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'aaSeqFR3')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'aaSeqCDR3')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'aaSeqFR4')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'topChains')).toBeDefined();
+      expect(config.axesByClonotypeId).to.have.lengthOf(2);
+      expect(config.axesByClonotypeId.find((c: any) => c.column === 'tagValueCELL')).toBeDefined();
+      expect(config.axesByClonotypeId.find((c: any) => c.column === 'cloneId')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'cellGroup')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'uniqueMoleculeCount')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'uniqueMoleculeFraction')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'nSeqFR1')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'nSeqCDR1')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'nSeqFR2')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'nSeqCDR2')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'nSeqFR3')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'nSeqCDR3')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'nSeqFR4')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'aaSeqFR1')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'aaSeqCDR1')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'aaSeqFR2')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'aaSeqCDR2')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'aaSeqFR3')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'aaSeqCDR3')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'aaSeqFR4')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'topChains')).toBeDefined();
     }
   },
   {
     preset: 'cellecta-human-rna-xcr-umi-drivermap-air',
     check: (expect, config) => {
       // console.dir(config, { depth: 5 });
-      expect(config.axes).to.have.lengthOf(1);
-      expect(config.axes.find((c: any) => c.column === 'cloneId')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'uniqueMoleculeCount')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'uniqueMoleculeFraction')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'nSeqCDR3')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'aaSeqCDR3')).toBeDefined();
+      expect(config.axesByClonotypeId).to.have.lengthOf(1);
+      expect(config.axesByClonotypeId.find((c: any) => c.column === 'cloneId')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'uniqueMoleculeCount')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'uniqueMoleculeFraction')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'nSeqCDR3')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'aaSeqCDR3')).toBeDefined();
     }
   },
   {
     preset: 'takara-human-rna-bcr-umi-smartseq',
     check: (expect, config) => {
       // console.dir(config, { depth: 5 });
-      expect(config.axes).to.have.lengthOf(1);
-      expect(config.axes.find((c: any) => c.column === 'cloneId')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'uniqueMoleculeCount')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'uniqueMoleculeFraction')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'nSeqFR1')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'nSeqCDR1')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'nSeqFR2')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'nSeqCDR2')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'nSeqFR3')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'nSeqCDR3')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'nSeqFR4')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'aaSeqFR1')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'aaSeqCDR1')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'aaSeqFR2')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'aaSeqCDR2')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'aaSeqFR3')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'aaSeqCDR3')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'aaSeqFR4')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'isotype')).toBeDefined();
+      expect(config.axesByClonotypeId).to.have.lengthOf(1);
+      expect(config.axesByClonotypeId.find((c: any) => c.column === 'cloneId')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'uniqueMoleculeCount')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'uniqueMoleculeFraction')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'nSeqFR1')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'nSeqCDR1')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'nSeqFR2')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'nSeqCDR2')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'nSeqFR3')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'nSeqCDR3')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'nSeqFR4')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'aaSeqFR1')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'aaSeqCDR1')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'aaSeqFR2')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'aaSeqCDR2')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'aaSeqFR3')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'aaSeqCDR3')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'aaSeqFR4')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'isotypePrimary')).toBeDefined();
     }
   },
   {
@@ -105,12 +105,12 @@ const testCases: TestCase[] = [
     species: 'human',
     check: (expect, config) => {
       // console.dir(config, { depth: 5 });
-      expect(config.axes).to.have.lengthOf(1);
-      expect(config.axes.find((c: any) => c.column === 'cloneId')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'readCount')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'readFraction')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'nSeqCDR3')).toBeDefined();
-      expect(config.columns.find((c: any) => c.column === 'aaSeqCDR3')).toBeDefined();
+      expect(config.axesByClonotypeId).to.have.lengthOf(1);
+      expect(config.axesByClonotypeId.find((c: any) => c.column === 'cloneId')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'readCount')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'readFraction')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'nSeqCDR3')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'aaSeqCDR3')).toBeDefined();
     }
   },
   {
@@ -118,8 +118,8 @@ const testCases: TestCase[] = [
     species: 'human',
     check: (expect, config) => {
       // console.dir(config, { depth: 5 });
-      expect(config.axes).to.have.lengthOf(1);
-      expect(config.columns.find((c: any) => c.column === 'readCount')).toBeDefined();
+      expect(config.axesByClonotypeId).to.have.lengthOf(1);
+      expect(config.columnsSpec.find((c: any) => c.column === 'readCount')).toBeDefined();
     }
   }
 ];
@@ -129,7 +129,7 @@ tplTest.for(testCases)(
   { timeout: 30000 },
   async ({ preset, species, check }, { helper, expect }) => {
     const resultC = (
-      await helper.renderTemplate(true, 'test.columns.test', ['conf'], (tx) => {
+      await helper.renderTemplate(true, 'test.columns.test', ['exportSpecs'], (tx) => {
         return {
           preset: tx.createValue(
             ML.Pl.JsonObject,
@@ -138,8 +138,9 @@ tplTest.for(testCases)(
           params: tx.createValue(ML.Pl.JsonObject, JSON.stringify({ species } satisfies Params))
         };
       })
-    ).computeOutput('conf', (c) => c?.getDataAsJson());
+    ).computeOutput('exportSpecs', (c) => c?.getDataAsJson());
     const result = await awaitStableState(resultC, 20000);
+    // console.dir(result, { depth: 5 });
     check(expect, result);
   }
 );
