@@ -237,17 +237,17 @@ self.body(func(inputs) {
 			},
 			name: "clonotypeTable",
 			path: ["tsv"]
-		}, {
-			type: "Xsv",
-			xsvType: "tsv",
-			settings: {
-				axes: axesByClonotypeId,
-				columns: columnsSpec,
-				storageFormat: "Binary",
-				partitionKeyLength: 0
-			},
-			name: "byCloneId",
-			path: ["tsv"]
+		// }, {
+		// 	type: "Xsv",
+		// 	xsvType: "tsv",
+		// 	settings: {
+		// 		axes: axesByClonotypeId,
+		// 		columns: columnsSpec,
+		// 		storageFormat: "Binary",
+		// 		partitionKeyLength: 0
+		// 	},
+		// 	name: "byCloneId",
+		// 	path: ["tsv"]
 		} ]
 
 		if !is_undefined(axesByClonotypeKey) {
@@ -283,7 +283,7 @@ self.body(func(inputs) {
 			}
 		)
 
-		exportResults.addXsvOutputToBuilder(clonotypes, "byCloneId", "byCloneId/" + chain.name + "/")
+		// exportResults.addXsvOutputToBuilder(clonotypes, "byCloneId", "byCloneId/" + chain.name + "/")
 		exportResults.addXsvOutputToBuilder(clonotypes, "byCloneKeyBySample", "byCloneKeyBySample/" + chain.name + "/")
 
 		aggregationOutputs := [ {
