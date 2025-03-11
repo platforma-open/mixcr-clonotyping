@@ -1,5 +1,17 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.0.0
+
+### Major Changes
+
+- f3e6573: First build of MiXCR Clonotyping 2
+  - clonotypeKey based output
+
+### Patch Changes
+
+- Updated dependencies [f3e6573]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@2.0.0
+
 ## 1.8.13
 
 ### Patch Changes
