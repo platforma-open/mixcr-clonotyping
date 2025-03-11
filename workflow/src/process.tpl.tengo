@@ -6,6 +6,7 @@ ll := import("@platforma-sdk/workflow-tengo:ll")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 pframes := import("@platforma-sdk/workflow-tengo:pframes")
 smart := import("@platforma-sdk/workflow-tengo:smart")
+slices := import("@platforma-sdk/workflow-tengo:slices")
 file := import("@platforma-sdk/workflow-tengo:file")
 llPFrames := import("@platforma-sdk/workflow-tengo:pframes.ll")
 pSpec := import("@platforma-sdk/workflow-tengo:pframes.spec")
@@ -19,6 +20,7 @@ text := import("text")
 
 mixcrAnalyzeTpl := assets.importTemplate(":mixcr-analyze")
 mixcrExportTpl := assets.importTemplate(":mixcr-export")
+aggregateByClonotypeKeyTpl := assets.importTemplate(":aggregate-by-clonotype-key")
 
 self.awaitState("InputsLocked")
 self.awaitState("params", "ResourceReady")
@@ -173,6 +175,7 @@ self.body(func(inputs) {
 
 	columnsSpecPerSample := exportSpecs.columnsSpecPerSample
 	columnsSpecPerClonotype := exportSpecs.columnsSpecPerClonotype
+	columnsSpecPerClonotype = columnsSpecPerClonotype[0:5]
 	columnsSpec := exportSpecs.columnsSpec
 
 	clonotypeKeyColumns := exportSpecs.clonotypeKeyColumns
@@ -222,6 +225,18 @@ self.body(func(inputs) {
 
 	for chain in chains {
 		exportOutputs := [ {
+			type: "Resource",
+			spec: {
+				kind: "PColumn",
+				name: "mixcr.com/clonotypeTable",
+				domain: {
+					"pl7.app/blockId": blockId
+				},
+				valueType: "File"
+			},
+			name: "clonotypeTable",
+			path: ["tsv"]
+		}, {
 			type: "Xsv",
 			xsvType: "tsv",
 			settings: {
@@ -267,10 +282,40 @@ self.body(func(inputs) {
 			}
 		)
 
-		// for c in exportResults.listXsvColumns("byCloneId") {
-		// 	clonotypes.add("byCloneId/" + chain.name + "/" + c, exportResults.outputSpec("byCloneId", c), exportResults.outputData("byCloneId", c))
-		// }
 		exportResults.addXsvOutputToBuilder(clonotypes, "byCloneId", "byCloneId/" + chain.name + "/")
+		exportResults.addXsvOutputToBuilder(clonotypes, "byCloneKeyBySample", "byCloneKeyBySample/" + chain.name + "/")
+
+		aggregationOutputs := [ {
+			type: "Xsv",
+			xsvType: "tsv",
+			settings: {
+				axes: axesByClonotypeKey,
+				columns: columnsSpecPerClonotype,
+				storageFormat: "Binary",
+				partitionKeyLength: 0
+			},
+			name: "byCloneKey",
+			path: ["tsv"]
+		} ]
+
+		aggregateByCloneKey := pframes.processColumn(
+			exportResults.output("clonotypeTable"),
+			aggregateByClonotypeKeyTpl,
+			aggregationOutputs,
+			{
+				aggregate: ["pl7.app/sampleId"],
+				extra: {
+					params: {
+						mainAbundanceColumn: mainAbundanceColumn,
+						clonotypeColumns: slices.map(columnsSpecPerClonotype, func(col) {
+							return col.column
+						})
+					}
+				}
+			}
+		)
+
+		aggregateByCloneKey.addXsvOutputToBuilder(clonotypes, "byCloneKey", "byCloneKey/" + chain.name + "/")
 	}
 
 	return {

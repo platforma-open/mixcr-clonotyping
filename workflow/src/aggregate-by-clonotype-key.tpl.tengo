@@ -1,0 +1,65 @@
+ll := import("@platforma-sdk/workflow-tengo:ll")
+self := import("@platforma-sdk/workflow-tengo:tpl")
+pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
+slices := import("@platforma-sdk/workflow-tengo:slices")
+assets := import("@platforma-sdk/workflow-tengo:assets")
+exec := import("@platforma-sdk/workflow-tengo:exec")
+
+json := import("json")
+
+self.defineOutputs("tsv")
+
+ptransformSw := assets.importSoftware("@platforma-open/milaboratories.software-ptransform:main")
+
+self.body(func(inputs) {
+	inputData := inputs[pConstants.VALUE_FIELD_NAME]
+	inputDataMeta := inputData.getDataAsJson()
+
+	ll.assert(inputDataMeta.keyLength == 1, "unexpected number of aggregation axes")
+
+	params := inputs.params
+	mainAbundanceColumn := params.mainAbundanceColumn
+	clonotypeColumns := params.clonotypeColumns
+
+	// Adding clonotypeKey column
+	pWorkflow := {
+		steps: [ {
+			type: "aggregate",
+			groupBy: ["clonotypeKey"],
+			aggregations: [ {
+				type: "max_by",
+				rankingCol: mainAbundanceColumn,
+				pickCols: slices.map(clonotypeColumns, func(col) {
+					return [col, col]
+				})
+			} ]
+		} ]
+	}
+
+	aggregateBuilderCmd := exec.builder().
+		printErrStreamToStdout().
+		software(ptransformSw).
+		arg("--workflow").arg("wf.json").
+		writeFile("wf.json", json.encode(pWorkflow))
+
+	for sKey, inputFile in inputData.inputs() {
+		key := json.decode(sKey)
+		if len(key) != 1 {
+			ll.panic("malformed key: %v", sKey)
+		}
+		sampleId := key[0]
+		aggregateBuilderCmd.
+			arg(sampleId + ".tsv").
+			addFile(sampleId + ".tsv", inputFile)
+	}
+
+	aggregateCmd := aggregateBuilderCmd.
+		arg("output.tsv").saveFile("output.tsv").
+		run()
+
+	processedTsv := aggregateCmd.getFile("output.tsv")
+
+	return {
+		tsv: processedTsv
+	}
+})

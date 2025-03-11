@@ -13,13 +13,13 @@ catalog:
   '@platforma-sdk/block-tools': ^2.5.18
   '@platforma-sdk/eslint-config': ^1.0.1
 
-  '@platforma-sdk/test': ^1.22.83
+  '@platforma-sdk/test': ^1.22.84
   '@milaboratories/helpers': ^1.6.11
 
   '@milaboratories/software-pframes-conv': 2.1.16
   '@platforma-open/milaboratories.software-small-binaries': ^1.15.11
   '@platforma-open/milaboratories.software-mixcr': 4.7.0-147-develop	
-  '@platforma-open/milaboratories.software-ptransform': ^1.2.0
+  '@platforma-open/milaboratories.software-ptransform': ^1.3.0
 
   'vue': ^3.5.13
   'vue-tsc': ^2.2.8

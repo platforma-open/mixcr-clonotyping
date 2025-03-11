@@ -75,7 +75,7 @@ export const platforma = BlockModel.create('Heavy')
   })
 
   .output('clones', (ctx) => {
-    const collection = ctx.outputs?.resolve('clones')?.parsePObjectCollection();
+    const collection = ctx.outputs?.resolve('clonotypes')?.parsePObjectCollection();
     if (collection === undefined) return undefined;
     // if (collection === undefined || !collection.isComplete) return undefined;
     const pColumns = Object.values(collection).filter(isPColumn);
