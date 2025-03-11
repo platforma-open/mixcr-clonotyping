@@ -1,6 +1,6 @@
 {
   "name": "@platforma-open/milaboratories.mixcr-clonotyping-2.sc-clonotype-builder",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "scripts": {
     "build": "pl-pkg build",
     "prepublishOnly": "pl-pkg publish packages",

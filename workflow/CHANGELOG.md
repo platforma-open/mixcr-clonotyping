@@ -1,5 +1,13 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.0.1
+
+### Patch Changes
+
+- 6c45177: Chain is added to output columns domain
+- Updated dependencies [6c45177]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.sc-clonotype-builder@1.0.1
+
 ## 2.0.0
 
 ### Major Changes
