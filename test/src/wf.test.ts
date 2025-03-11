@@ -7,7 +7,7 @@ import {
   Qc,
   SupportedPresetList,
   uniquePlId
-} from '@platforma-open/milaboratories.mixcr-clonotyping.model';
+} from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
 import { awaitStableState, blockTest } from '@platforma-sdk/test';
 import { blockSpec as samplesAndDataBlockSpec } from '@platforma-open/milaboratories.samples-and-data';
 import { BlockArgs as SamplesAndDataBlockArgs } from '@platforma-open/milaboratories.samples-and-data.model';
@@ -51,7 +51,7 @@ blockTest(
 
 blockTest(
   'simple project',
-  { timeout: 35000 },
+  { timeout: 55000 },
   async ({ rawPrj: project, ml, helpers, expect }) => {
     const sndBlockId = await project.addBlock('Samples & Data', samplesAndDataBlockSpec);
     const clonotypingBlockId = await project.addBlock('MiXCR Clonotyping', myBlockSpec);
@@ -201,13 +201,11 @@ blockTest(
 
     const clonesPfColumnList = await ml.driverKit.pFrameDriver.listColumns(clonesPfHandle);
 
+    // console.dir(clonesPfColumnList[0].spec, { depth: 5 });
+
     expect(
-      clonesPfColumnList[0].spec.axesSpec.find((s: any) => s.name === 'pl7.app/vdj/cloneId')
-    ).toMatchObject({
-      domain: {
-        'pl7.app/blockId': clonotypingBlockId
-      }
-    });
+      clonesPfColumnList.map(c => c.spec.axesSpec.find((s: any) => s.name === 'pl7.app/vdj/clonotypeKey')).find(Boolean)?.domain
+    ).toHaveProperty("pl7.app/vdj/clonotypeKey/structure");
 
     expect(clonesPfColumnList).length.to.greaterThanOrEqual(7);
   }

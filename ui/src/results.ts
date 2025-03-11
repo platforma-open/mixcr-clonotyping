@@ -1,11 +1,11 @@
 import type {
-  PlId } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
+  PlId } from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
 import {
   AlignReport,
   AssembleReport,
   ProgressPrefix,
   Qc,
-} from '@platforma-open/milaboratories.mixcr-clonotyping.model';
+} from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
 import type { AnyLogHandle } from '@platforma-sdk/model';
 import { ReactiveFileContent } from '@platforma-sdk/ui-vue';
 import { computed } from 'vue';

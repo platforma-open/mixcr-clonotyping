@@ -11,14 +11,12 @@ pframes := import("@platforma-sdk/workflow-tengo:pframes")
 pcolumn := import("@platforma-sdk/workflow-tengo:pframes.pcolumn")
 xsv := import("@platforma-sdk/workflow-tengo:pframes.xsv")
 file := import("@platforma-sdk/workflow-tengo:file")
-mixcr := import(":mixcr")
 times := import("times")
 
 json := import("json")
 
-self.defineOutputs("qc", "reports", "clones", "log", "clns")
+self.defineOutputs("qc", "reports", "log", "clns")
 
-exportClonesTpl := assets.importTemplate(":export-clones-bulk")
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:main")
 
 progressPrefix := "[==PROGRESS==]"
@@ -27,25 +25,20 @@ self.body(func(inputs) {
 	inputData := inputs[pConstants.VALUE_FIELD_NAME]
 	aggregationAxesNames := inputs[pConstants.AGGREGATION_AXES_NAMES_FIELD_NAME]
 
-	params := inputs.params
 	preset := inputs.preset
 	library := inputs.library
+
+	params := inputs.params
 	species := params.species
 	limitInput := params.limitInput
 	fileExtension := params.fileExtension
 	reports := params.reports
-	featureParams := params.featureParams
 	isLibraryFileGzipped := params.isLibraryFileGzipped
 
-	presetContent := inputs.presetContent // already in JSON
-	pfconvParams := inputs.pfconvParams // already in JSON
+	presetContent := inputs.presetContent.getDataAsJson()
 
 	if !is_map(presetContent) {
 		ll.panic("malformed presetContent %v", presetContent)
-	}
-
-	if !is_map(pfconvParams) {
-		ll.panic("malformed pfconvParams %v", pfconvParams)
 	}
 
 	inputDataMeta := inputData.getDataAsJson()
@@ -74,8 +67,6 @@ self.body(func(inputs) {
 		software(mixcrSw).
 		secret("MI_LICENSE", "MI_LICENSE").
 		arg("analyze")
-
-	mixcr.addAdditionalColumnArgs(mixcrCmdBuilder, featureParams)
 
 	if !is_undefined(limitInput) {
 		mixcrCmdBuilder.arg("--limit-input").arg(string(limitInput))
@@ -158,12 +149,6 @@ self.body(func(inputs) {
 		mixcrCmdBuilder.saveFile(report.fileTxt)
 	}
 
-	if hasAssembleCells {
-		mixcrCmdBuilder.saveFile("result.clones.tsv")
-	} else {
-		mixcrCmdBuilder.saveFileSet("clones", "^result\\.clones_[A-Z0-9]+\\.tsv$")
-	}
-
 	mixcrCmdBuilder = mixcrCmdBuilder.cache(48 * times.hour)
 	mixcrCmd := mixcrCmdBuilder.run()
 
@@ -175,23 +160,11 @@ self.body(func(inputs) {
 		reportsMap.add([report.id, "txt"], mixcrCmd.getFile(report.fileTxt))
 	}
 
-	// converting clone tables to p columns
-	clones := {}
-	if hasAssembleCells {
-		clones = xsv.importFile(mixcrCmd.getFile("result.clones.tsv"), "tsv", pfconvParams, { dataOnly: true })
-	} else {
-		clones = render.create(exportClonesTpl, {
-			data: mixcrCmd.getFileSet("clones"),
-			pfconvParams: pfconvParams
-		}).output("result", 8 * 24 * 60 * 60 * 1000)
-	}
-
 	result := {
 		qc: mixcrCmd.getFile("result.qc.json"),
 		log: mixcrCmd.getStdoutStream(),
 		reports: reportsMap.build(),
-		clns: mixcrCmd.getFile(clnsFileName),
-		clones: clones
+		clns: mixcrCmd.getFile(clnsFileName)
 	}
 
 	return result

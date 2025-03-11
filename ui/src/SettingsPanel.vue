@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { Preset } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
-import { SupportedPresetList } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
+import type { Preset } from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
+import { SupportedPresetList } from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
 import type { ImportFileHandle, PlRef } from '@platforma-sdk/model';
 import { getFilePathFromHandle } from '@platforma-sdk/model';
 import type { ListOption } from '@platforma-sdk/ui-vue';

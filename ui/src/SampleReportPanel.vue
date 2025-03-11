@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { PlId } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
+import type { PlId } from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
 import { computed, reactive } from 'vue';
 import { MiXCRResultsMap } from './results';
 import { debouncedRef } from '@vueuse/core';

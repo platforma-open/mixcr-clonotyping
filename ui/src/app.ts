@@ -1,4 +1,4 @@
-import { platforma } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
+import { platforma } from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
 import { defineApp } from '@platforma-sdk/ui-vue';
 import MainPageWrapper from './MainPageWrapper.vue';
 

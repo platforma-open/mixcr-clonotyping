@@ -4,7 +4,7 @@ import { AgGridVue } from 'ag-grid-vue3';
 import { ClientSideRowModelModule } from 'ag-grid-enterprise';
 import type { ColDef, GridApi, GridOptions, GridReadyEvent } from 'ag-grid-enterprise';
 import { ModuleRegistry } from 'ag-grid-enterprise';
-import type { PlId, Qc } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
+import type { PlId, Qc } from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
 import type { PlAgHeaderComponentParams } from '@platforma-sdk/ui-vue';
 import {
   AgGridTheme,
