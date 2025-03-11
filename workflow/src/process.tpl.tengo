@@ -7,6 +7,7 @@ assets := import("@platforma-sdk/workflow-tengo:assets")
 pframes := import("@platforma-sdk/workflow-tengo:pframes")
 smart := import("@platforma-sdk/workflow-tengo:smart")
 slices := import("@platforma-sdk/workflow-tengo:slices")
+maps := import("@platforma-sdk/workflow-tengo:maps")
 file := import("@platforma-sdk/workflow-tengo:file")
 llPFrames := import("@platforma-sdk/workflow-tengo:pframes.ll")
 pSpec := import("@platforma-sdk/workflow-tengo:pframes.spec")
@@ -27,6 +28,21 @@ self.awaitState("params", "ResourceReady")
 self.awaitState("inputSpec", "ResourceReady")
 self.awaitState("presetSpecForBack", "ResourceReady")
 self.awaitState("presetContent", "ResourceReady")
+
+chainInfos := {
+	"IGHeavy": { mixcrFilter: "IGH", name: "IG Heavy" },
+	"IGLight": { mixcrFilter: "IGK,IGL", name: "IG Light" },
+	"TRA": { mixcrFilter: "TRA", name: "TRA" },
+	"TRB": { mixcrFilter: "TRB", name: "TRB" },
+	"TRD": { mixcrFilter: "TRD", name: "TRD" },
+	"TRG": { mixcrFilter: "TRG", name: "TRG" }
+}
+
+receptorInfo := {
+	"IG": { chains: ["IGHeavy", "IGLight"], name: "IG" },
+	"TRAB": { chains: ["TRB", "TRA"], name: "TRAB" },
+	"TRGD": { chains: ["TRD", "TRG"], name: "TRGD" }
+}
 
 self.body(func(inputs) {
 
@@ -225,6 +241,22 @@ self.body(func(inputs) {
 	clonotypes := pframes.pFrameBuilder()
 
 	for chain in chains {
+		chainInfo := chainInfos[chain]
+		additionalSpec := {
+			spec: {
+				domain: {
+					"pl7.app/chain": chain
+				}
+			}
+		}
+		columnSpecsTransform := func(specs) {
+			return slices.map(specs, func(spec) {
+				return maps.deepMerge(spec, additionalSpec)
+			})
+		}
+
+		traceSteps := [{type: "milaboratories.mixcr-clonotyping.export", id: blockId + "." + chain, importance: 80, label: chainInfo.name}]
+
 		exportOutputs := [ {
 			type: "Resource",
 			spec: {
@@ -237,17 +269,6 @@ self.body(func(inputs) {
 			},
 			name: "clonotypeTable",
 			path: ["tsv"]
-		// }, {
-		// 	type: "Xsv",
-		// 	xsvType: "tsv",
-		// 	settings: {
-		// 		axes: axesByClonotypeId,
-		// 		columns: columnsSpec,
-		// 		storageFormat: "Binary",
-		// 		partitionKeyLength: 0
-		// 	},
-		// 	name: "byCloneId",
-		// 	path: ["tsv"]
 		} ]
 
 		if !is_undefined(axesByClonotypeKey) {
@@ -256,7 +277,7 @@ self.body(func(inputs) {
 				xsvType: "tsv",
 				settings: {
 					axes: axesByClonotypeKey,
-					columns: columnsSpecPerSample,
+					columns: columnSpecsTransform(columnsSpecPerSample),
 					storageFormat: "Binary",
 					partitionKeyLength: 0
 				},
@@ -271,11 +292,11 @@ self.body(func(inputs) {
 			exportOutputs,
 			{
 				// will be automatically propagated to all output specs
-				traceSteps: [{type: "milaboratories.mixcr-clonotyping.export", id: blockId + "." + chain.name, importance: 80, label: chain.name}],
+				traceSteps: traceSteps,
 
 				extra: {
 					params: {
-						chains: chain.mixcrChain,
+						chains: chainInfo.mixcrFilter,
 						clonotypeKeyColumns: clonotypeKeyColumns,
 						exportArgs: exportArgs
 					}
@@ -283,15 +304,14 @@ self.body(func(inputs) {
 			}
 		)
 
-		// exportResults.addXsvOutputToBuilder(clonotypes, "byCloneId", "byCloneId/" + chain.name + "/")
-		exportResults.addXsvOutputToBuilder(clonotypes, "byCloneKeyBySample", "byCloneKeyBySample/" + chain.name + "/")
+		exportResults.addXsvOutputToBuilder(clonotypes, "byCloneKeyBySample", "byCloneKeyBySample/" + chain + "/")
 
 		aggregationOutputs := [ {
 			type: "Xsv",
 			xsvType: "tsv",
 			settings: {
 				axes: axesByClonotypeKey,
-				columns: columnsSpecPerClonotype,
+				columns: columnSpecsTransform(columnsSpecPerClonotype),
 				storageFormat: "Binary",
 				partitionKeyLength: 0
 			},
@@ -316,7 +336,7 @@ self.body(func(inputs) {
 			}
 		)
 
-		aggregateByCloneKey.addXsvOutputToBuilder(clonotypes, "byCloneKey", "byCloneKey/" + chain.name + "/")
+		aggregateByCloneKey.addXsvOutputToBuilder(clonotypes, "byCloneKey", "byCloneKey/" + chain + "/")
 	}
 
 	return {

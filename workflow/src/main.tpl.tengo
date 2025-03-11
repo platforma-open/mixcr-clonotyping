@@ -93,13 +93,7 @@ wf.body(func(args) {
 	presetSpecForBack := presetInfoResult.output("presetSpecForBack", 24 * 60 * 60 * 1000)
 
 	// calculating chains
-	chains := [
-		{ name: "IGH", mixcrChain: "IGH" },
-		{ name: "IGKL", mixcrChain: "IGK,IGL" },
-		{ name: "TRA", mixcrChain: "TRA" },
-		{ name: "TRB", mixcrChain: "TRB" },
-		{ name: "TRD", mixcrChain: "TRD" },
-		{ name: "TRG", mixcrChain: "TRG" } ]
+	chains := ["IGHeavy", "IGLight", "TRA", "TRB", "TRD", "TRG"]
 
 	runMixcr := render.createEphemeral(processTpl, {
 		inputSpec: input.getFutureInputField("spec"),
