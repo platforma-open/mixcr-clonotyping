@@ -1,7 +1,7 @@
 import type { Ref } from 'vue';
 import { computed, unref } from 'vue';
-import type { AlignReport } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
-import { AlignmentChainColors, ImmuneChains } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
+import type { AlignReport } from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
+import { AlignmentChainColors, ImmuneChains } from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
 import type {
   PlChartStackedBarSettings,
 } from '@platforma-sdk/ui-vue';

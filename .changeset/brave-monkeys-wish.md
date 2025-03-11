@@ -1,6 +1,7 @@
 ---
-'@platforma-open/milaboratories.mixcr-clonotyping.workflow': major
-'@platforma-open/milaboratories.mixcr-clonotyping': major
+'@platforma-open/milaboratories.mixcr-clonotyping-2.workflow': major
+'@platforma-open/milaboratories.mixcr-clonotyping-2': major
 ---
 
-CloneKey based output
+First build of MiXCR Clonotyping 2
+- clonotypeKey based output

@@ -7,7 +7,7 @@ import {
   Qc,
   SupportedPresetList,
   uniquePlId
-} from '@platforma-open/milaboratories.mixcr-clonotyping.model';
+} from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
 import { awaitStableState, blockTest } from '@platforma-sdk/test';
 import { blockSpec as samplesAndDataBlockSpec } from '@platforma-open/milaboratories.samples-and-data';
 import { BlockArgs as SamplesAndDataBlockArgs } from '@platforma-open/milaboratories.samples-and-data.model';
@@ -202,14 +202,6 @@ blockTest(
     const clonesPfColumnList = await ml.driverKit.pFrameDriver.listColumns(clonesPfHandle);
 
     // console.dir(clonesPfColumnList[0].spec, { depth: 5 });
-
-    expect(
-      clonesPfColumnList.map(c => c.spec.axesSpec.find((s: any) => s.name === 'pl7.app/vdj/cloneId')).find(Boolean)
-    ).toMatchObject({
-      domain: {
-        'pl7.app/blockId': clonotypingBlockId
-      }
-    });
 
     expect(
       clonesPfColumnList.map(c => c.spec.axesSpec.find((s: any) => s.name === 'pl7.app/vdj/clonotypeKey')).find(Boolean)?.domain

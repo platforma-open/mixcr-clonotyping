@@ -1,5 +1,5 @@
 {
-  "name": "@platforma-open/milaboratories.mixcr-clonotyping",
+  "name": "@platforma-open/milaboratories.mixcr-clonotyping-2",
   "version": "1.8.13",
   "scripts": {
     "pretty": "prettier --write \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json,vue}\"",
@@ -13,18 +13,18 @@
   ],
   "dependencies": {
     "@platforma-sdk/model": "catalog:",
-    "@platforma-open/milaboratories.mixcr-clonotyping.workflow": "workspace:*",
-    "@platforma-open/milaboratories.mixcr-clonotyping.model": "workspace:*",
-    "@platforma-open/milaboratories.mixcr-clonotyping.ui": "workspace:*"
+    "@platforma-open/milaboratories.mixcr-clonotyping-2.workflow": "workspace:*",
+    "@platforma-open/milaboratories.mixcr-clonotyping-2.model": "workspace:*",
+    "@platforma-open/milaboratories.mixcr-clonotyping-2.ui": "workspace:*"
   },
   "block": {
     "components": {
-      "workflow": "@platforma-open/milaboratories.mixcr-clonotyping.workflow/dist/tengo/tpl/main.plj.gz",
-      "model": "@platforma-open/milaboratories.mixcr-clonotyping.model/dist/model.json",
-      "ui": "@platforma-open/milaboratories.mixcr-clonotyping.ui/dist"
+      "workflow": "@platforma-open/milaboratories.mixcr-clonotyping-2.workflow/dist/tengo/tpl/main.plj.gz",
+      "model": "@platforma-open/milaboratories.mixcr-clonotyping-2.model/dist/model.json",
+      "ui": "@platforma-open/milaboratories.mixcr-clonotyping-2.ui/dist"
     },
     "meta": {
-      "title": "MiXCR Clonotyping",
+      "title": "MiXCR Clonotyping 2",
       "logo": "file:../logos/block-logo.png",
       "url": "https://github.com/milaboratory/block-mixcr-clonotyping",
       "docs": "https://github.com/milaboratory/block-mixcr-clonotyping/docs",
@@ -43,11 +43,10 @@
         "url": "https://milaboratories.com/",
         "logo": "file:../logos/organization-logo.png"
       },
-      "marketplaceRanking": 10000
+      "marketplaceRanking": 10010
     }
   },
   "devDependencies": {
     "@platforma-sdk/block-tools": "catalog:"
-  },
-  "packageManager": "pnpm@9.12.0"
+  }
 }

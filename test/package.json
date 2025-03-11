@@ -1,5 +1,5 @@
 {
-  "name": "@platforma-open/milaboratories.mixcr-clonotyping.test",
+  "name": "@platforma-open/milaboratories.mixcr-clonotyping-2.test",
   "private": true,
   "version": "1.5.1",
   "description": "Block tests",
@@ -9,8 +9,8 @@
   "files": [],
   "keywords": [],
   "dependencies": {
-    "this-block": "workspace:@platforma-open/milaboratories.mixcr-clonotyping@*",
-    "@platforma-open/milaboratories.mixcr-clonotyping.model": "workspace:*",
+    "this-block": "workspace:@platforma-open/milaboratories.mixcr-clonotyping-2@*",
+    "@platforma-open/milaboratories.mixcr-clonotyping-2.model": "workspace:*",
     "@platforma-open/milaboratories.samples-and-data.model": "catalog:",
     "@platforma-open/milaboratories.samples-and-data": "catalog:",
     "@platforma-sdk/model": "catalog:"

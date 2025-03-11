@@ -107,13 +107,13 @@ importers:
 
   block:
     dependencies:
-      '@platforma-open/milaboratories.mixcr-clonotyping.model':
+      '@platforma-open/milaboratories.mixcr-clonotyping-2.model':
         specifier: workspace:*
         version: link:../model
-      '@platforma-open/milaboratories.mixcr-clonotyping.ui':
+      '@platforma-open/milaboratories.mixcr-clonotyping-2.ui':
         specifier: workspace:*
         version: link:../ui
-      '@platforma-open/milaboratories.mixcr-clonotyping.workflow':
+      '@platforma-open/milaboratories.mixcr-clonotyping-2.workflow':
         specifier: workspace:*
         version: link:../workflow
       '@platforma-sdk/model':
@@ -154,7 +154,7 @@ importers:
 
   test:
     dependencies:
-      '@platforma-open/milaboratories.mixcr-clonotyping.model':
+      '@platforma-open/milaboratories.mixcr-clonotyping-2.model':
         specifier: workspace:*
         version: link:../model
       '@platforma-open/milaboratories.samples-and-data':
@@ -167,7 +167,7 @@ importers:
         specifier: 'catalog:'
         version: 1.22.59
       this-block:
-        specifier: workspace:@platforma-open/milaboratories.mixcr-clonotyping@*
+        specifier: workspace:@platforma-open/milaboratories.mixcr-clonotyping-2@*
         version: link:../block
     devDependencies:
       '@platforma-sdk/test':
@@ -185,7 +185,7 @@ importers:
       '@milaboratories/helpers':
         specifier: 'catalog:'
         version: 1.6.11
-      '@platforma-open/milaboratories.mixcr-clonotyping.model':
+      '@platforma-open/milaboratories.mixcr-clonotyping-2.model':
         specifier: workspace:*
         version: link:../model
       '@platforma-sdk/model':

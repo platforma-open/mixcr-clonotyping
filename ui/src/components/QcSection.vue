@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { computed, reactive } from 'vue';
 import type {
-  QcCheckResult } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
+  QcCheckResult } from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
 import {
   QcCheckDescriptions,
-} from '@platforma-open/milaboratories.mixcr-clonotyping.model';
+} from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
 import { PlStatusTag } from '@platforma-sdk/ui-vue';
 
 const props = defineProps<{

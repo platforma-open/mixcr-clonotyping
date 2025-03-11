@@ -1,8 +1,8 @@
 import type { Ref } from 'vue';
 import { computed, unref } from 'vue';
-import type { AlignReport } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
-import { AlignmentChannelLabels } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
-import { extractAlignmentChannels } from '@platforma-open/milaboratories.mixcr-clonotyping.model';
+import type { AlignReport } from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
+import { AlignmentChannelLabels } from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
+import { extractAlignmentChannels } from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
 import type {
   Color,
 } from '@platforma-sdk/ui-vue';
