@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.0.2
+
+### Patch Changes
+
+- dff8738: Fixes wrong link in block description
+
 ## 2.0.1
 
 ### Patch Changes
