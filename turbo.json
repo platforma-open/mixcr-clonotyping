@@ -4,7 +4,7 @@
   "tasks": {
     "build": {
       "inputs": ["$TURBO_DEFAULT$"],
-      "outputs": ["./dist/**", "./block-pack/**"],
+      "outputs": ["./dist/**", "./block-pack/**", "./pkg-*.tgz"],
       "dependsOn": ["^build"]
     },
     "test": {
