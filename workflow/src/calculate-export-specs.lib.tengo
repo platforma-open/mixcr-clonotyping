@@ -118,6 +118,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 				"pl7.app/isAbundance": "true",
 				"pl7.app/abundance/unit": "reads",
 				"pl7.app/abundance/normalized": "false",
+				"pl7.app/abundance/isPrimary": string(!hasUmi),
 				"pl7.app/label": "Number Of Reads"
 			})
 		}
@@ -134,6 +135,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 				"pl7.app/isAbundance": "true",
 				"pl7.app/abundance/unit": "reads",
 				"pl7.app/abundance/normalized": "true",
+				"pl7.app/abundance/isPrimary": string(!hasUmi),
 				"pl7.app/label": "Fraction of reads"
 			})
 		}
@@ -157,6 +159,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 						"pl7.app/isAbundance": "true",
 						"pl7.app/abundance/unit": "molecules",
 						"pl7.app/abundance/normalized": "false",
+						"pl7.app/abundance/isPrimary": "true",
 						"pl7.app/label": "Number of UMI"
 					})
 				}
@@ -173,6 +176,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 						"pl7.app/isAbundance": "true",
 						"pl7.app/abundance/unit": "molecules",
 						"pl7.app/abundance/normalized": "true",
+						"pl7.app/abundance/isPrimary": "true",
 						"pl7.app/label": "Fraction of UMI"
 					})
 				}
@@ -229,13 +233,19 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 
 	// Sequences
 
+	// column with nucleotide sequence of this feature will be marked as anchor
+	anchorFeature := undefined;
+
 	features := undefined
 	if is_undefined(assemblingFeature) {
 		features = ["CDR1", "FR1", "FR2", "CDR2", "FR3", "CDR3", "FR4"]
+		anchorFeature = "CDR3"
 	} else if assemblingFeature != "CDR3" {
 		features = [assemblingFeature, "CDR1", "FR1", "FR2", "CDR2", "FR3", "CDR3", "FR4"]
+		anchorFeature = assemblingFeature
 	} else {
 		features = ["CDR3"]
+		anchorFeature = "CDR3"
 	}
 
 	for isImputed in ( is_undefined(assemblingFeature) ? [false, true] : [false] ) {
@@ -248,6 +258,13 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 				alphabetShort := isAminoAcid ? "aa" : "nt"
 				alphabetShortMixcr := isAminoAcid ? "aa" : "n"
 				visibility := (featureU == "CDR3") || (featureU == assemblingFeature)
+				annotations :=  {
+					"pl7.app/vdj/imputed": string(isImputed),
+					"pl7.app/label": featureU + " " + alphabetShort
+				}
+				if featureU == anchorFeature && !isImputed && !isAminoAcid {
+					annotations["pl7.app/isAnchor"] = "true"
+				}
 				columnsSpecPerClonotype += [ {
 						column: alphabetShortMixcr + "Seq" + imputedU + featureU,
 						id: alphabetShortMixcr + "-seq-" + featureL + (isImputed ? "-imputed" : ""),
@@ -259,10 +276,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 								"pl7.app/vdj/feature": featureU,
 								"pl7.app/alphabet": alphabet
 							},
-							annotations: a(orderP, visibility, {
-								"pl7.app/vdj/imputed": string(isImputed),
-								"pl7.app/label": featureU + " " + alphabetShort
-							})
+							annotations: a(orderP, visibility, annotations)
 						}
 					} ]
 				exportArgs += [ [ "-" + alphabetShortMixcr + "Feature" + imputedU, featureU ] ]

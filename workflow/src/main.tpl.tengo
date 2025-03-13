@@ -20,7 +20,7 @@ processTpl := assets.importTemplate(":process")
 wf.setPreRun(assets.importTemplate(":prerun"))
 
 wf.prepare(func(args){
-	return{
+	return {
 		resolvedLibraryInput: wf.resolve(args.inputLibrary, { errIfMissing: false })
 	}
 })
