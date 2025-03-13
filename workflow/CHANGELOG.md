@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.1.0
+
+### Minor Changes
+
+- a168fe3: pl7.app/abundance/isPrimary and pl7.app/isAnchor annotations added to the output columns
+
 ## 2.0.1
 
 ### Patch Changes
