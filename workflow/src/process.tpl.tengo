@@ -214,6 +214,7 @@ self.body(func(inputs) {
 				name: "pl7.app/sequencing/readIndex",
 				optional: true
 			}],
+
 			// resulting aggregation axes names will be checked against supported combinations
 			// in the body template
 			passAggregationAxesNames: true,

@@ -135,7 +135,8 @@ blockTest(
 
     await project.setBlockArgs(clonotypingBlockId, {
       input: clonotypingStableState1Outputs.inputOptions[0].ref,
-      preset: { type: 'name', name: 'milab-human-dna-xcr-7genes-multiplex' }
+      preset: { type: 'name', name: 'milab-human-dna-xcr-7genes-multiplex' },
+      // chains: ['TRB'],
     } satisfies BlockArgs);
 
     const clonotypingStableState2 = (await awaitStableState(

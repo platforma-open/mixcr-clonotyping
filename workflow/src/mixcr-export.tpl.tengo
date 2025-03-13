@@ -23,6 +23,7 @@ self.body(func(inputs) {
 	// Exporting clones from clns file
 
 	mixcrCmdBuilder := exec.builder().
+		inMediumQueue().
 		printErrStreamToStdout().
 		software(mixcrSw).
 		secret("MI_LICENSE", "MI_LICENSE").

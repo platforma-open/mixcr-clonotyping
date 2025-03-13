@@ -37,6 +37,7 @@ export const BlockArgsValid = z.object({
   limitInput: z.number().int().optional(),
   title: z.string().optional(),
   presetCommonName: z.string().optional(),
+  chains: z.array(z.string()).optional(),
 });
 export type BlockArgsValid = z.infer<typeof BlockArgsValid>;
 
