@@ -94,6 +94,9 @@ wf.body(func(args) {
 
 	// calculating chains
 	chains := ["IGHeavy", "IGLight", "TRA", "TRB", "TRD", "TRG"]
+	if !is_undefined(args.chains) {
+		chains = args.chains
+	}
 
 	runMixcr := render.createEphemeral(processTpl, {
 		inputSpec: input.getFutureInputField("spec"),
