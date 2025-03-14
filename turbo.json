@@ -7,6 +7,10 @@
       "outputs": ["./dist/**", "./block-pack/**", "./pkg-*.tgz"],
       "dependsOn": ["^build"]
     },
+    "do-pack": {
+      "dependsOn": ["build"],
+      "outputs": ["package.tgz"]
+    },
     "test": {
       "dependsOn": ["build"],
       "passThroughEnv": ["PL_ADDRESS", "PL_TEST_PASSWORD", "PL_TEST_USER", "PL_TEST_PROXY", "DEBUG"]

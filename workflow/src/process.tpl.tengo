@@ -243,6 +243,7 @@ self.body(func(inputs) {
 
 	for chain in chains {
 		chainInfo := chainInfos[chain]
+		ll.assert(!is_undefined(chainInfo), "chainInfo not found for chain %v", chain)
 		additionalSpec := {
 			spec: {
 				domain: {
@@ -326,6 +327,7 @@ self.body(func(inputs) {
 			aggregationOutputs,
 			{
 				aggregate: ["pl7.app/sampleId"],
+				traceSteps: [], // to propagete trace as-is TODO remove after SDK upgrade
 				extra: {
 					params: {
 						mainAbundanceColumn: mainAbundanceColumn,
