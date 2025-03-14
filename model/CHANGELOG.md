@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.8.1
+
+### Patch Changes
+
+- 3e7235c: Chains arg added to model
+
 ## 1.8.0
 
 ### Minor Changes
