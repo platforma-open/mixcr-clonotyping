@@ -1,4 +1,5 @@
 maps := import("@platforma-sdk/workflow-tengo:maps")
+slices := import("@platforma-sdk/workflow-tengo:slices")
 ll := import("@platforma-sdk/workflow-tengo:ll")
 text := import("text")
 json := import("json")
@@ -118,7 +119,8 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 				"pl7.app/isAbundance": "true",
 				"pl7.app/abundance/unit": "reads",
 				"pl7.app/abundance/normalized": "false",
-				"pl7.app/abundance/isPrimary": string(!hasUmi),
+				"pl7.app/abundance/isPrimary": !hasUmi ? "true" : undefined,
+				"pl7.app/isAnchor": !hasUmi ? "true" : undefined,
 				"pl7.app/label": "Number Of Reads"
 			})
 		}
@@ -135,7 +137,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 				"pl7.app/isAbundance": "true",
 				"pl7.app/abundance/unit": "reads",
 				"pl7.app/abundance/normalized": "true",
-				"pl7.app/abundance/isPrimary": string(!hasUmi),
+				"pl7.app/abundance/isPrimary": !hasUmi ? "true" : undefined,
 				"pl7.app/label": "Fraction of reads"
 			})
 		}
@@ -160,7 +162,8 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 						"pl7.app/abundance/unit": "molecules",
 						"pl7.app/abundance/normalized": "false",
 						"pl7.app/abundance/isPrimary": "true",
-						"pl7.app/label": "Number of UMI"
+						"pl7.app/isAnchor": "true",
+						"pl7.app/label": "Number of UMIs"
 					})
 				}
 			}, {
@@ -177,7 +180,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 						"pl7.app/abundance/unit": "molecules",
 						"pl7.app/abundance/normalized": "true",
 						"pl7.app/abundance/isPrimary": "true",
-						"pl7.app/label": "Fraction of UMI"
+						"pl7.app/label": "Fraction of UMIs"
 					})
 				}
 			} ]
@@ -258,13 +261,6 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 				alphabetShort := isAminoAcid ? "aa" : "nt"
 				alphabetShortMixcr := isAminoAcid ? "aa" : "n"
 				visibility := (featureU == "CDR3") || (featureU == assemblingFeature)
-				annotations :=  {
-					"pl7.app/vdj/imputed": string(isImputed),
-					"pl7.app/label": featureU + " " + alphabetShort
-				}
-				if featureU == anchorFeature && !isImputed && !isAminoAcid {
-					annotations["pl7.app/isAnchor"] = "true"
-				}
 				columnsSpecPerClonotype += [ {
 						column: alphabetShortMixcr + "Seq" + imputedU + featureU,
 						id: alphabetShortMixcr + "-seq-" + featureL + (isImputed ? "-imputed" : ""),
@@ -276,7 +272,10 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 								"pl7.app/vdj/feature": featureU,
 								"pl7.app/alphabet": alphabet
 							},
-							annotations: a(orderP, visibility, annotations)
+							annotations: a(orderP, visibility, {
+								"pl7.app/vdj/imputed": string(isImputed),
+								"pl7.app/label": featureU + " " + alphabetShort
+							})
 						}
 					} ]
 				exportArgs += [ [ "-" + alphabetShortMixcr + "Feature" + imputedU, featureU ] ]
@@ -463,6 +462,32 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 	]
 
 	// All columns are added
+
+	// Adding block and segment annotations
+
+	addSpec := func(columns, additionalSpec) {
+		return slices.map(columns, func(columnSpec) {
+			return maps.deepMerge(columnSpec, additionalSpec)
+		})
+	}
+
+	columnsSpecPerSample = addSpec(columnsSpecPerSample, { spec: { domain: {
+		"pl7.app/blockId": blockId
+	} } })
+
+	//   "pl7.app/segmentedBy" annotation indicates columns that can be meaningfully merged across
+	//   different runs (given they have the same name and axes signature).
+	//   Its absence indicates that merging would be semantically meaningless (e.g., abundance
+	//   measurements specific to each analysis)
+
+	columnsSpecPerClonotype = addSpec(columnsSpecPerClonotype, { spec: {
+		domain: {
+			"pl7.app/blockId": blockId
+		},
+		annotations: {
+			"pl7.app/segmentedBy": string(json.encode(["pl7.app/blockId"]))
+		}
+	} })
 
 	columnsSpec := columnsSpecPerSample + columnsSpecPerClonotype
 
