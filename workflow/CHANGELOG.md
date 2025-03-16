@@ -1,5 +1,14 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.1.1
+
+### Patch Changes
+
+- aed9be8: Fixes trace information propagation
+  Enhances export specifications by adding block and segment annotations
+  Updates abundance labels
+  Refines chain names in the model
+
 ## 2.1.0
 
 ### Minor Changes
