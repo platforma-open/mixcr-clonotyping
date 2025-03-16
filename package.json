@@ -5,6 +5,7 @@
     "build": "turbo run build",
     "test": "turbo run test --concurrency 1 --env-mode=loose",
     "mark-stable": "turbo run mark-stable",
+    "do-pack": "turbo run do-pack",
     "watch": "turbo watch build",
     "changeset": "changeset",
     "version-packages": "changeset version"

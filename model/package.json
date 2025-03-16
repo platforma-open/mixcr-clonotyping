@@ -9,7 +9,8 @@
   "scripts": {
     "build": "tsup && vite build && block-tools build-model",
     "test": "vitest",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "do-pack": "rm -f *.tgz && pnpm pack && mv *.tgz package.tgz"
   },
   "dependencies": {
     "@platforma-sdk/model": "catalog:",

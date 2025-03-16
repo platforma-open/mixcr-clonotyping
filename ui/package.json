@@ -7,7 +7,8 @@
     "watch": "vue-tsc && vite build --watch",
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "do-pack": "rm -f *.tgz && pnpm pack && mv *.tgz package.tgz"
   },
   "dependencies": {
     "ag-grid-enterprise": "catalog:",

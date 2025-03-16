@@ -5,7 +5,8 @@
   "scripts": {
     "build": "rm -rf dist && pl-tengo check && pl-tengo build",
     "format": "/usr/bin/env emacs --script ./format.el",
-    "test": "vitest"
+    "test": "vitest",
+    "do-pack": "rm -f *.tgz && pnpm pack && mv *.tgz package.tgz"
   },
   "dependencies": {
     "@platforma-open/milaboratories.mixcr-clonotyping-2.sc-clonotype-builder": "workspace:*"

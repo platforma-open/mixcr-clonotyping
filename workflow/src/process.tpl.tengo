@@ -32,16 +32,17 @@ self.awaitState("presetContent", "ResourceReady")
 chainInfos := {
 	"IGHeavy": { mixcrFilter: "IGH", name: "IG Heavy" },
 	"IGLight": { mixcrFilter: "IGK,IGL", name: "IG Light" },
-	"TRA": { mixcrFilter: "TRA", name: "TRA" },
-	"TRB": { mixcrFilter: "TRB", name: "TRB" },
-	"TRD": { mixcrFilter: "TRD", name: "TRD" },
-	"TRG": { mixcrFilter: "TRG", name: "TRG" }
+	"TRAlpha": { mixcrFilter: "TRA", name: "TR Alpha" },
+	"TRBeta": { mixcrFilter: "TRB", name: "TR Beta" },
+	"TRGamma": { mixcrFilter: "TRD", name: "TR Gamma" },
+	"TRDelta": { mixcrFilter: "TRG", name: "TR Delta" }
 }
 
+// TODO better naming
 receptorInfo := {
 	"IG": { chains: ["IGHeavy", "IGLight"], name: "IG" },
-	"TRAB": { chains: ["TRB", "TRA"], name: "TRAB" },
-	"TRGD": { chains: ["TRD", "TRG"], name: "TRGD" }
+	"TRAB": { chains: ["TRAlpha", "TRBeta"], name: "TRAB" },
+	"TRGD": { chains: ["TRGamma", "TRDelta"], name: "TRGD" }
 }
 
 self.body(func(inputs) {
@@ -243,6 +244,7 @@ self.body(func(inputs) {
 
 	for chain in chains {
 		chainInfo := chainInfos[chain]
+		ll.assert(!is_undefined(chainInfo), "chainInfo not found for chain %v", chain)
 		additionalSpec := {
 			spec: {
 				domain: {
