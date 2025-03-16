@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.9.0
+
+### Minor Changes
+
+- b5204ea: Adding chains to BlockArgs
+
 ## 1.8.1
 
 ### Patch Changes
