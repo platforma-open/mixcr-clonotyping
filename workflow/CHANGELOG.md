@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.2.0
+
+### Minor Changes
+
+- 4b82d2d: Source domain for output columns changed from pl7.app/blockId to pl7.app/vdj/clonotypingRunId
+
 ## 2.1.1
 
 ### Patch Changes
