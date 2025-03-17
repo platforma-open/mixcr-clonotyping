@@ -472,7 +472,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 	}
 
 	columnsSpecPerSample = addSpec(columnsSpecPerSample, { spec: { domain: {
-		"pl7.app/blockId": blockId
+		"pl7.app/vdj/clonotypingRunId": blockId
 	} } })
 
 	//   "pl7.app/segmentedBy" annotation indicates columns that can be meaningfully merged across
@@ -482,10 +482,10 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 
 	columnsSpecPerClonotype = addSpec(columnsSpecPerClonotype, { spec: {
 		domain: {
-			"pl7.app/blockId": blockId
+			"pl7.app/vdj/clonotypingRunId": blockId
 		},
 		annotations: {
-			"pl7.app/segmentedBy": string(json.encode(["pl7.app/blockId"]))
+			"pl7.app/segmentedBy": string(json.encode(["pl7.app/vdj/clonotypingRunId"]))
 		}
 	} })
 
@@ -567,7 +567,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 						type: "String",
 						domain: {
 							"pl7.app/vdj/cellTagId": tag,
-							"pl7.app/blockId": blockId
+							"pl7.app/vdj/clonotypingRunId": blockId
 						},
 						annotations: a(orderP, true, {
 							"pl7.app/label": label
