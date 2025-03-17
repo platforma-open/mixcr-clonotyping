@@ -132,7 +132,7 @@ self.body(func(inputs) {
 			valueType: "File",
 			name: "mixcr.com/qc",
 			domain: {
-				"pl7.app/blockId": blockId
+				"pl7.app/vdj/clonotypingRunId": blockId
 			}
 		},
 		name: "qc"
@@ -142,7 +142,7 @@ self.body(func(inputs) {
 			kind: "PColumn",
 			name: "pl7.app/log",
 			domain: {
-				"pl7.app/blockId": blockId
+				"pl7.app/vdj/clonotypingRunId": blockId
 			},
 			valueType: "Log"
 		},
@@ -153,7 +153,7 @@ self.body(func(inputs) {
 			kind: "PColumn",
 			name: "mixcr.com/clns",
 			domain: {
-				"pl7.app/blockId": blockId
+				"pl7.app/vdj/clonotypingRunId": blockId
 			},
 			annotations: clnsAnnotations,
 			valueType: "File"
@@ -166,7 +166,7 @@ self.body(func(inputs) {
 			kind: "PColumn",
 			name: "mixcr.com/report",
 			domain: {
-				"pl7.app/blockId": blockId
+				"pl7.app/vdj/clonotypingRunId": blockId
 			},
 			valueType: "File",
 			axesSpec: [ {
@@ -266,7 +266,7 @@ self.body(func(inputs) {
 				kind: "PColumn",
 				name: "mixcr.com/clonotypeTable",
 				domain: {
-					"pl7.app/blockId": blockId
+					"pl7.app/vdj/clonotypingRunId": blockId
 				},
 				valueType: "File"
 			},
