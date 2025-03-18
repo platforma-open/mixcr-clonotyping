@@ -1,0 +1,67 @@
+ll := import("@platforma-sdk/workflow-tengo:ll")
+self := import("@platforma-sdk/workflow-tengo:tpl")
+pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
+slices := import("@platforma-sdk/workflow-tengo:slices")
+assets := import("@platforma-sdk/workflow-tengo:assets")
+exec := import("@platforma-sdk/workflow-tengo:exec")
+
+json := import("json")
+
+self.defineOutputs("abundanceTsv", "propertiesAPrimaryTsv", "propertiesASecondaryTsv", "propertiesBPrimaryTsv", "propertiesBSecondaryTsv")
+
+// ptransformSw := assets.importSoftware("@platforma-open/milaboratories.software-ptransform:main")
+scGroupBuilderSw := assets.importSoftware("@platforma-open/milaboratories.mixcr-clonotyping-2.sc-clonotype-builder:main")
+
+self.body(func(inputs) {
+	byCellTagA := inputs[pConstants.VALUE_FIELD_NAME]
+	inputDataMeta := byCellTagA.getDataAsJson()
+	ll.assert(inputDataMeta.keyLength == 1, "unexpected number of aggregation axes")
+
+	byCellTagB := inputs.byCellTagB
+	propertiesA := inputs.propertiesA
+	propertiesB := inputs.propertiesB
+
+	scClonotypeBuilderCmd := exec.builder().
+		printErrStreamToStdout().
+		software(scGroupBuilderSw).
+		arg("-aaaaaaa").arg("result.tsv")
+
+	for sKey, byCellTagAFile in byCellTagA.inputs() {
+		key := json.decode(sKey)
+		if len(key) != 1 {
+			ll.panic("malformed key: %v", sKey)
+		}
+		sampleId := key[0]
+
+		byCellTagBFile := byCellTagB.inputs()[sKey]
+
+		scClonotypeBuilderCmd.
+			addFile("by_cell_a_" + sampleId + ".tsv", byCellTagAFile).
+			addFile("by_cell_b_" + sampleId + ".tsv", byCellTagBFile)
+	}
+
+	propertiesAFile := propertiesA.inputs()["[]"]
+	propertiesBFile := propertiesB.inputs()["[]"]
+
+	scClonotypeBuilderCmd.
+		addFile("properties_a.tsv", propertiesAFile).
+		addFile("properties_b.tsv", propertiesBFile)
+
+	scClonotypeBuilderCmd.saveFile("abundance.tsv")
+	scClonotypeBuilderCmd.saveFile("properties_a_primary.tsv")
+	scClonotypeBuilderCmd.saveFile("properties_a_secondary.tsv")
+	scClonotypeBuilderCmd.saveFile("properties_b_primary.tsv")
+	scClonotypeBuilderCmd.saveFile("properties_b_secondary.tsv")
+
+	scClonotypeCmd := scClonotypeBuilderCmd.run()
+
+	// TODO add output
+
+	return {
+		abundanceTsv: scClonotypeCmd.getFile("abundance.tsv"),
+		propertiesAPrimaryTsv: scClonotypeCmd.getFile("properties_a_primary.tsv"),
+		propertiesASecondaryTsv: scClonotypeCmd.getFile("properties_a_secondary.tsv"),
+		propertiesBPrimaryTsv: scClonotypeCmd.getFile("properties_b_primary.tsv"),
+		propertiesBSecondaryTsv: scClonotypeCmd.getFile("properties_b_secondary.tsv")
+	}
+})

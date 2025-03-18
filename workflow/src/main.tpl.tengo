@@ -94,7 +94,8 @@ wf.body(func(args) {
 
 	// calculating chains
 	// chains := ["IGHeavy", "IGLight", "TRAlpha", "TRBeta", "TRGamma", "TRDelta"]
-	receptorsOrChains := ["IG", "TRAB", "TRGD"]
+	receptorsOrChains := ["IG", "TCRAB", "TCRGD"]
+	// receptorsOrChains := ["IG"]
 	if !is_undefined(args.chains) {
 		receptorsOrChains = args.chains
 	}

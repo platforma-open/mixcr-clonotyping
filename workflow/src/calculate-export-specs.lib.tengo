@@ -79,6 +79,12 @@ exportSpecOpsFromPreset := func(presetSpecForBack) {
 	}
 }
 
+addSpec := func(columns, additionalSpec) {
+	return slices.map(columns, func(columnSpec) {
+		return maps.deepMerge(columnSpec, additionalSpec)
+	})
+}
+
 calculateExportSpecs := func(presetSpecForBack, blockId) {
 	ops := exportSpecOpsFromPreset(presetSpecForBack)
 
@@ -94,11 +100,19 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 	coreGeneFeatures := assemblingFeatureInfo.coreGeneFeatures
 
 	clonotypeKeyColumns := undefined
+	clonotypeKeyArgs := undefined
 	if !is_undefined(assemblingFeature) {
 		clonotypeKeyColumns = ["nSeq" + assemblingFeature, "bestVGene", "bestJGene"]
+		clonotypeKeyArgs = [
+			[ "-nFeature", assemblingFeature ],
+			[ "-vGene" ],
+			[ "-jGene" ]
+		]
 		if splitByC {
 			clonotypeKeyColumns += ["bestCGene"]
+			clonotypeKeyArgs += [ [ "-cGene" ] ]
 		}
+
 	}
 
 	columnsSpecPerSample := []
@@ -467,12 +481,6 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 
 	// Adding block and segment annotations
 
-	addSpec := func(columns, additionalSpec) {
-		return slices.map(columns, func(columnSpec) {
-			return maps.deepMerge(columnSpec, additionalSpec)
-		})
-	}
-
 	columnsSpecPerSample = addSpec(columnsSpecPerSample, { spec: { domain: {
 		"pl7.app/vdj/clonotypingRunId": blockId
 	} } })
@@ -502,7 +510,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 	// Axes
 
 	axesByClonotypeKey := undefined
-	axesByClonotypeKeyAndCellTag := undefined
+	axesByScClonotypeKey := undefined
 	cellTagColumns := undefined
 
 	if !is_undefined(clonotypeKeyColumns) {
@@ -537,29 +545,47 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 			cellTagColumns = slices.map(cellTags, func(cellTag) {
 				return "tagValue" + cellTag
 			})
-			axesByClonotypeKeyAndCellTag = axesByClonotypeKey + [ {
-				column: "cellTag",
+
+			axesByScClonotypeKey = [ {
+				column: "scClonotypeKey",
 				naRegex: "",
 				spec: {
-					name: "pl7.app/vdj/cellTag",
+					name: "pl7.app/vdj/scClonotypeKey",
 					type: "String",
-					annotations: a(orderP, true, {
-						"pl7.app/label": "Cell tag"
-					})
+					domain: {
+						"pl7.app/vdj/scClonotypeKey/structure": string(json.encode(keyStrincture))
+					},
+					annotations: {
+						"pl7.app/label": "SC Clonotype key",
+						"pl7.app/table/visibility": "optional",
+						"pl7.app/table/orderPriority": "110000"
+					}
 				}
 			} ]
 
-			exportArgs += [ [ "-tags", "Cell" ] ]
+			//	exportArgs += [ [ "-tags", "Cell" ] ]
+			// 	axesByClonotypeKeyAndCellTag = axesByClonotypeKey + [ {
+			// 		column: "cellTag",
+			// 		naRegex: "",
+			// 		spec: {
+			// 			name: "pl7.app/vdj/cellTag",
+			// 			type: "String",
+			// 			annotations: a(orderP, true, {
+			// 				"pl7.app/label": "Cell tag"
+			// 			})
+			// 		}
+			// 	} ]
 		}
 	}
 
 	return {
 		clonotypeKeyColumns: clonotypeKeyColumns,
+		clonotypeKeyArgs: clonotypeKeyArgs,
 
 		cellTagColumns: cellTagColumns,
 
 		axesByClonotypeKey: axesByClonotypeKey,
-		axesByClonotypeKeyAndCellTag: axesByClonotypeKeyAndCellTag,
+		axesByScClonotypeKey: axesByScClonotypeKey,
 
 		columnsSpecPerSample: columnsSpecPerSample,
 		columnsSpecPerClonotype: columnsSpecPerClonotype,

@@ -6,7 +6,7 @@ exec := import("@platforma-sdk/workflow-tengo:exec")
 
 json := import("json")
 
-self.defineOutputs("tsv")
+self.defineOutputs("tsv", "tsvForSingleCell")
 
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:low-memory")
 ptransformSw := assets.importSoftware("@platforma-open/milaboratories.software-ptransform:main")
@@ -19,44 +19,47 @@ self.body(func(inputs) {
 	exportArgs := params.exportArgs
 
 	clonotypeKeyColumns := params.clonotypeKeyColumns
+	clonotypeKeyArgs := params.clonotypeKeyArgs
 	cellTagColumns := params.cellTagColumns
 
 	// Exporting clones from clns file
 
-	mixcrCmdBuilder := exec.builder().
-		inMediumQueue().
-		printErrStreamToStdout().
-		software(mixcrSw).
-		secret("MI_LICENSE", "MI_LICENSE").
-		arg("exportClones").
-		arg("--dont-split-files").
-		arg("--reset-export-clone-table-splitting").
-		arg("--chains").arg(chains)
+	createExport := func(additionalAction) {
+		mixcrCmdBuilder := exec.builder().
+			inMediumQueue().
+			printErrStreamToStdout().
+			software(mixcrSw).
+			secret("MI_LICENSE", "MI_LICENSE").
+			arg("exportClones").
+			arg("--dont-split-files").
+			arg("--drop-default-fields").
+			arg("--reset-export-clone-table-splitting").
+			arg("--chains").arg(chains)
 
-	for argGrp in exportArgs {
-		for arg in argGrp {
-			mixcrCmdBuilder.arg(arg)
-		}
+		additionalAction(mixcrCmdBuilder)
+
+		return mixcrCmdBuilder.
+			arg("clones.clns").
+			addFile("clones.clns", clnsFile).
+			arg("clones.tsv").
+			saveFile("clones.tsv").
+			run()
 	}
 
-	mixcrCmd := mixcrCmdBuilder.
-		arg("clones.clns").
-		addFile("clones.clns", clnsFile).
-		arg("clones.tsv").
-		saveFile("clones.tsv").
-		run()
+	mixcrCmd := createExport(func(mixcrCmdBuilder) {
+		for argGrp in exportArgs {
+			for arg in argGrp {
+				mixcrCmdBuilder.arg(arg)
+			}
+		}
+	})
 
 	unprocessedTsv := mixcrCmd.getFile("clones.tsv")
-	// unprocessedTsvByCellTags := undefined
 
-	// if !is_undefined(cellTagColumns) {
-
-	// }
+	result := {}
 
 	if is_undefined(clonotypeKeyColumns) {
-		return {
-			tsv: unprocessedTsv
-		}
+		result.tsv = unprocessedTsv
 	} else {
 		// Adding clonotypeKey column
 		pWorkflow := {
@@ -78,8 +81,53 @@ self.body(func(inputs) {
 
 		processedTsv := aggregateCmd.getFile("output.tsv")
 
-		return {
-			tsv: processedTsv
-		}
+		result.tsv = processedTsv
 	}
+
+	if !is_undefined(cellTagColumns) {
+		mixcrForSingleCell := createExport(func(mixcrCmdBuilder) {
+			mixcrCmdBuilder.
+				arg("--split-by-tags").arg("Cell").
+				arg("-tags").arg("Cell").
+				arg("-readCount").
+				arg("-isProductive").arg("CDR3")
+
+			for argGrp in clonotypeKeyArgs {
+				for arg in argGrp {
+					mixcrCmdBuilder.arg(arg)
+				}
+			}
+		})
+
+		if is_undefined(clonotypeKeyColumns) {
+			ll.panic("clonotypeKeyColumns is undefined")
+		}
+
+		unprocessedTsvForSingleCell := mixcrForSingleCell.getFile("clones.tsv")
+
+		pWorkflow := {
+			steps: [ {
+				type: "combine_columns_as_json",
+				src: clonotypeKeyColumns,
+				dst: "clonotypeKey"
+			}, {
+				type: "combine_columns_as_json",
+				src: cellTagColumns,
+				dst: "cellTag"
+			} ]
+		}
+
+		aggregateCmd := exec.builder().
+			printErrStreamToStdout().
+			software(ptransformSw).
+			arg("--workflow").arg("wf.json").
+			writeFile("wf.json", json.encode(pWorkflow)).
+			arg("input.tsv").addFile("input.tsv", unprocessedTsvForSingleCell).
+			arg("output.tsv").saveFile("output.tsv").
+			run()
+
+		result.tsvForSingleCell = aggregateCmd.getFile("output.tsv")
+	}
+
+	return result
 })
