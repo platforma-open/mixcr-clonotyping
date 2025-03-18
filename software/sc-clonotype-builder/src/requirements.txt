@@ -1,1 +1,1 @@
-polars-lts-cpu==1.23.0
+pandas==2.2.3
