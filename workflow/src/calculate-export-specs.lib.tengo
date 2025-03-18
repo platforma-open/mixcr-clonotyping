@@ -116,6 +116,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 	}
 
 	columnsSpecPerSample := []
+	columnsSpecPerSampleSc := undefined
 	columnsSpecPerClonotype := []
 
 	// array of array of arg groups
@@ -205,6 +206,52 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 			[ "-uniqueTagFraction", "Molecule" ]
 		]
 		mainAbundanceColumn = "uniqueMoleculeFraction"
+	}
+
+	if isSingleCell {
+		// copying reads and umi counts and fraction removing isPrimary and isAnchor
+		// addSpec(columnsSpecPerSample, {
+		// 	spec: {
+		// 		annotations: {
+		// 			"pl7.app/abundance/isPrimary": undefined,
+		// 			"pl7.app/isAnchor": undefined
+		// 		}
+		// 	}
+		// }) +
+		columnsSpecPerSampleSc = [ {
+			column: "uniqueCellCount",
+			id: "cell-count",
+			allowNA: false,
+			spec: {
+				name: "pl7.app/vdj/uniqueCellCount",
+				valueType: "Long",
+				annotations: a(88000, true, {
+					"pl7.app/min": "1",
+					"pl7.app/isAbundance": "true",
+					"pl7.app/abundance/unit": "cells",
+					"pl7.app/abundance/normalized": "false",
+					"pl7.app/abundance/isPrimary": "true",
+					"pl7.app/isAnchor": "true",
+					"pl7.app/label": "Number of Cells"
+				})
+			}
+		}, {
+			column: "uniqueCellFraction",
+			id: "cell-fraction",
+			allowNA: false,
+			spec: {
+				name: "pl7.app/vdj/uniqueCellFraction",
+				valueType: "Double",
+				annotations: a(88000, true, {
+					"pl7.app/min": "0",
+					"pl7.app/isAbundance": "true",
+					"pl7.app/abundance/unit": "cells",
+					"pl7.app/abundance/normalized": "true",
+					"pl7.app/abundance/isPrimary": "true",
+					"pl7.app/label": "Fraction of Cells"
+				})
+			}
+		} ]
 	}
 
 	// VDJC Hits

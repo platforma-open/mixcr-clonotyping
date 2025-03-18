@@ -227,6 +227,7 @@ self.body(func(inputs) {
 	exportSpecs := calculateExportSpecs(presetSpecForBack, blockId)
 
 	columnsSpecPerSample := exportSpecs.columnsSpecPerSample
+	columnsSpecPerSampleSc := exportSpecs.columnsSpecPerSampleSc
 	columnsSpecPerClonotype := exportSpecs.columnsSpecPerClonotype
 	columnsSpec := exportSpecs.columnsSpec
 
@@ -304,18 +305,6 @@ self.body(func(inputs) {
 	for chain in chains {
 		chainInfo := chainInfos[chain]
 		ll.assert(!is_undefined(chainInfo), "chainInfo not found for chain %v", chain)
-		additionalSpec := {
-			spec: {
-				domain: {
-					"pl7.app/chain": chain
-				}
-			}
-		}
-		columnSpecsTransform := func(specs) {
-			return slices.map(specs, func(spec) {
-				return maps.deepMerge(spec, additionalSpec)
-			})
-		}
 
 		traceSteps := [{type: "milaboratories.mixcr-clonotyping.export", id: blockId + "." + chain, importance: 80, label: chainInfo.name}]
 
@@ -339,7 +328,9 @@ self.body(func(inputs) {
 				xsvType: "tsv",
 				settings: {
 					axes: axesByClonotypeKey,
-					columns: columnSpecsTransform(columnsSpecPerSample),
+					columns: transformSpecs(columnsSpecPerSample, {
+						spec: { domain: { "pl7.app/vdj/chain": chain } }
+					}),
 					storageFormat: "Binary",
 					partitionKeyLength: 0
 				},
@@ -403,7 +394,9 @@ self.body(func(inputs) {
 			xsvType: "tsv",
 			settings: {
 				axes: axesByClonotypeKey,
-				columns: columnSpecsTransform(columnsSpecPerClonotype),
+				columns: transformSpecs(columnsSpecPerClonotype, {
+					spec: { domain: { "pl7.app/vdj/chain": chain } }
+				}),
 				storageFormat: "Binary",
 				partitionKeyLength: 0
 			},
@@ -453,6 +446,22 @@ self.body(func(inputs) {
 					},
 					valueType: "File"
 				},
+				name: "abundanceTsv",
+				path: ["abundanceTsv"]
+			}, {
+				type: "Xsv",
+				xsvType: "tsv",
+				settings: {
+					axes: [ {
+						column: "sampleId",
+						spec: inputSpec.axesSpec[0]
+					} ] + axesByScClonotypeKey,
+					columns: transformSpecs(columnsSpecPerSampleSc, {
+						spec: { domain: { "pl7.app/vdj/receptor": receptor } }
+					}),
+					storageFormat: "Binary",
+					partitionKeyLength: 1
+				},
 				name: "abundanceTable",
 				path: ["abundanceTsv"]
 			} ]
@@ -490,10 +499,11 @@ self.body(func(inputs) {
 						type: "Xsv",
 						xsvType: "tsv",
 						settings: {
-							axes: axesByClonotypeKey,
+							axes: axesByScClonotypeKey,
 							columns: transformSpecs(columnsSpecPerClonotype, {
 								spec: {
 									domain: {
+										"pl7.app/vdj/receptor": receptor,
 										"pl7.app/vdj/scClonotypeChain": chainLetterU
 									},
 									annotations: {
