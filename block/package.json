@@ -33,9 +33,8 @@
       "longDescription": "file:../docs/description.md",
       "changelog": "file:./CHANGELOG.md",
       "tags": [
-        "upstream",
         "airr",
-        "vdj",
+        "upstream",
         "single-cell"
       ],
       "organization": {
@@ -43,7 +42,7 @@
         "url": "https://milaboratories.com/",
         "logo": "file:../logos/organization-logo.png"
       },
-      "marketplaceRanking": 10010
+      "marketplaceRanking": 16850
     }
   },
   "devDependencies": {
