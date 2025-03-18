@@ -87,12 +87,14 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 	hasUmi := ops.hasUmi
 	splitByC := ops.splitByC
 
+	isSingleCell := !is_undefined(cellTags) && len(cellTags) > 0
+
 	assemblingFeatureInfo := assemblingFeatureInfo(assemblingFeature)
 	productiveFeature := assemblingFeatureInfo.productiveFeature
 	coreGeneFeatures := assemblingFeatureInfo.coreGeneFeatures
 
 	clonotypeKeyColumns := undefined
-	if !is_undefined(assemblingFeature) && (is_undefined(cellTags) || len(cellTags) == 0) {
+	if !is_undefined(assemblingFeature) {
 		clonotypeKeyColumns = ["nSeq" + assemblingFeature, "bestVGene", "bestJGene"]
 		if splitByC {
 			clonotypeKeyColumns += ["bestCGene"]
@@ -310,21 +312,21 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 	orderP = 10000
 
 	mutationColumnVariants := [ {
-			name: "Mutations",
-			valueType: "String",
-			labelPart: " mutations in ",
-			idPart: "-mutations-"
-		}, {
-			name: "MutationsCount",
-			valueType: "Int",
-			labelPart: " mutations count in ",
-			idPart: "-mutations-count-"
-		}, {
-			name: "MutationsRate",
-			valueType: "Double",
-			labelPart: " mutations rate in ",
-			idPart: "-mutations-rate-"
-		} ]
+		name: "Mutations",
+		valueType: "String",
+		labelPart: " mutations in ",
+		idPart: "-mutations-"
+	}, {
+		name: "MutationsCount",
+		valueType: "Int",
+		labelPart: " mutations count in ",
+		idPart: "-mutations-count-"
+	}, {
+		name: "MutationsRate",
+		valueType: "Double",
+		labelPart: " mutations rate in ",
+		idPart: "-mutations-rate-"
+	} ]
 
 	for isAminoAcid in [false, true] {
 		alphabetShort := isAminoAcid ? "AA" : "Nt"
@@ -500,10 +502,10 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 	// Axes
 
 	axesByClonotypeKey := undefined
+	axesByClonotypeKeyAndCellTag := undefined
+	cellTagColumns := undefined
 
 	if !is_undefined(clonotypeKeyColumns) {
-		ll.assert(is_undefined(cellTags) || len(cellTags) == 0, "cellTags and clonotypeKeyAxes cannot both be defined")
-
 		// checking that corresponding columns exist in export
 		keyStrincture := []
 		for keyColumn in clonotypeKeyColumns {
@@ -515,91 +517,49 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		}
 
 		axesByClonotypeKey = [ {
-				column: "clonotypeKey",
-				naRegex: "",
-				spec: {
-					name: "pl7.app/vdj/clonotypeKey",
-					type: "String",
-					domain: {
-						"pl7.app/vdj/clonotypeKey/structure": string(json.encode(keyStrincture))
-					},
-					annotations: {
-						"pl7.app/label": "Clonotype key",
-						"pl7.app/table/visibility": "optional",
-						"pl7.app/table/orderPriority": "110000"
-					}
-				}
-			} ]
-	}
-
-	axesByClonotypeId := [ {
-		column: "cloneId",
-		spec: {
-			name: "pl7.app/vdj/cloneId",
-			type: "Long",
-			domain: {
-				"pl7.app/blockId": blockId
-			},
-			annotations: {
-				"pl7.app/min": "0",
-				"pl7.app/label": "Clone id",
-				"pl7.app/table/visibility": "optional",
-				"pl7.app/table/orderPriority": "90000"
+			column: "clonotypeKey",
+			naRegex: "",
+			spec: {
+				name: "pl7.app/vdj/clonotypeKey",
+				type: "String",
+				domain: {
+					"pl7.app/vdj/clonotypeKey/structure": string(json.encode(keyStrincture))
+				},
+				annotations: {
+					"pl7.app/label": "Clonotype key",
+					"pl7.app/table/visibility": "optional",
+					"pl7.app/table/orderPriority": "110000"
 				}
 			}
 		} ]
-	exportArgs += [ [ "-cloneId" ] ]
 
-	orderP = 100000
-	if !is_undefined(cellTags) && len(cellTags) > 0 {
-		for tag in cellTags {
-			label := undefined
-			if tag == "CELL" {
-				label = "Cell tag"
-			} else {
-				label = text.to_title(tag[:4]) + " " + text.to_lower(tag[4:])
-			}
-			axesByClonotypeId += [ {
-					column: "tagValue" + tag,
-					naRegex: "",
-					spec: {
-						name: "pl7.app/vdj/cellTag",
-						type: "String",
-						domain: {
-							"pl7.app/vdj/cellTagId": tag,
-							"pl7.app/vdj/clonotypingRunId": blockId
-						},
-						annotations: a(orderP, true, {
-							"pl7.app/label": label
-						})
-					}
-				} ]
-			orderP -= 1
-		}
-		exportArgs += [ [ "-tags", "Cell" ] ]
-
-		columnsSpec += [ {
-				column: "cellGroup",
-				id: "cell-group",
-				naRegex: "undefined|contamination",
-				allowNA: true,
+		if isSingleCell {
+			cellTagColumns = slices.map(cellTags, func(cellTag) {
+				return "tagValue" + cellTag
+			})
+			axesByClonotypeKeyAndCellTag = axesByClonotypeKey + [ {
+				column: "cellTag",
+				naRegex: "",
 				spec: {
-					name: "pl7.app/vdj/cellGroup",
-					valueType: "Long",
-					annotations: a(24000, true, {
-						"pl7.app/min": "0",
-						"pl7.app/label": "Cell group number"
-					} )
+					name: "pl7.app/vdj/cellTag",
+					type: "String",
+					annotations: a(orderP, true, {
+						"pl7.app/label": "Cell tag"
+					})
 				}
 			} ]
-		exportArgs += [ [ "-cellGroup" ] ]
+
+			exportArgs += [ [ "-tags", "Cell" ] ]
+		}
 	}
 
 	return {
 		clonotypeKeyColumns: clonotypeKeyColumns,
 
-		axesByClonotypeId: axesByClonotypeId,
+		cellTagColumns: cellTagColumns,
+
 		axesByClonotypeKey: axesByClonotypeKey,
+		axesByClonotypeKeyAndCellTag: axesByClonotypeKeyAndCellTag,
 
 		columnsSpecPerSample: columnsSpecPerSample,
 		columnsSpecPerClonotype: columnsSpecPerClonotype,

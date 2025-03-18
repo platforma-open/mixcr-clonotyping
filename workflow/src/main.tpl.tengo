@@ -93,9 +93,10 @@ wf.body(func(args) {
 	presetSpecForBack := presetInfoResult.output("presetSpecForBack", 24 * 60 * 60 * 1000)
 
 	// calculating chains
-	chains := ["IGHeavy", "IGLight", "TRAlpha", "TRBeta", "TRGamma", "TRDelta"]
+	// chains := ["IGHeavy", "IGLight", "TRAlpha", "TRBeta", "TRGamma", "TRDelta"]
+	receptorsOrChains := ["IG", "TRAB", "TRGD"]
 	if !is_undefined(args.chains) {
-		chains = args.chains
+		receptorsOrChains = args.chains
 	}
 
 	runMixcr := render.createEphemeral(processTpl, {
@@ -110,7 +111,7 @@ wf.body(func(args) {
 
 		params: smart.createJsonResource({
 			species: species,
-			chains: chains,
+			receptorsOrChains: receptorsOrChains,
 			limitInput: limitInput,
 			blockId: blockId,
 			presetCommonName: args.presetCommonName,

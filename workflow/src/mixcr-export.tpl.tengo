@@ -19,6 +19,7 @@ self.body(func(inputs) {
 	exportArgs := params.exportArgs
 
 	clonotypeKeyColumns := params.clonotypeKeyColumns
+	cellTagColumns := params.cellTagColumns
 
 	// Exporting clones from clns file
 
@@ -29,6 +30,7 @@ self.body(func(inputs) {
 		secret("MI_LICENSE", "MI_LICENSE").
 		arg("exportClones").
 		arg("--dont-split-files").
+		arg("--reset-export-clone-table-splitting").
 		arg("--chains").arg(chains)
 
 	for argGrp in exportArgs {
@@ -45,6 +47,11 @@ self.body(func(inputs) {
 		run()
 
 	unprocessedTsv := mixcrCmd.getFile("clones.tsv")
+	// unprocessedTsvByCellTags := undefined
+
+	// if !is_undefined(cellTagColumns) {
+
+	// }
 
 	if is_undefined(clonotypeKeyColumns) {
 		return {
