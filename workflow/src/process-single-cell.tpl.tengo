@@ -58,7 +58,10 @@ self.body(func(inputs) {
 	// TODO add output
 
 	return {
+		// must have sampleId and scClonotypeKey columns
 		abundanceTsv: scClonotypeCmd.getFile("abundance.tsv"),
+
+		// must have scClonotypeKey columns
 		propertiesAPrimaryTsv: scClonotypeCmd.getFile("properties_a_primary.tsv"),
 		propertiesASecondaryTsv: scClonotypeCmd.getFile("properties_a_secondary.tsv"),
 		propertiesBPrimaryTsv: scClonotypeCmd.getFile("properties_b_primary.tsv"),
