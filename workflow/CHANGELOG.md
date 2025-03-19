@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.2.2
+
+### Patch Changes
+
+- eeed3eb: Allow N/A in topChain
+
 ## 2.2.1
 
 ### Patch Changes
