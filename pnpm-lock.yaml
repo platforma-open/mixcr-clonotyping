@@ -25,8 +25,8 @@ catalogs:
       specifier: ^1.9.1
       version: 1.9.1
     '@platforma-open/milaboratories.software-mixcr':
-      specifier: 4.7.0-147-develop
-      version: 4.7.0-147-develop
+      specifier: 4.7.0-148-develop
+      version: 4.7.0-148-develop
     '@platforma-open/milaboratories.software-ptransform':
       specifier: ^1.3.1
       version: 1.3.1
@@ -261,7 +261,7 @@ importers:
         version: 2.1.16
       '@platforma-open/milaboratories.software-mixcr':
         specifier: 'catalog:'
-        version: 4.7.0-147-develop
+        version: 4.7.0-148-develop
       '@platforma-open/milaboratories.software-ptransform':
         specifier: 'catalog:'
         version: 1.3.1
@@ -1186,8 +1186,8 @@ packages:
   '@platforma-open/milaboratories.samples-and-data@1.9.8':
     resolution: {integrity: sha512-brIRDe/rk1ON86e7nkLr30+qMLkTuW8X7WRfJwSSmxKL+zhucIljMT3+WwpqfI/jemEf/8wlhQW1A7MB+1ESIA==}
 
-  '@platforma-open/milaboratories.software-mixcr@4.7.0-147-develop':
-    resolution: {integrity: sha512-QpUkEMPII9DtKDC4HSZrJIDHVIfLoVI6uCsROERDYzaRzgGAvLR3l8F8i6UE1UhJ4NFWYLjHCLDgDdPUghT4cg==}
+  '@platforma-open/milaboratories.software-mixcr@4.7.0-148-develop':
+    resolution: {integrity: sha512-fG5qjKqzdYO7Aw90R5HR2yA8DVFavRsBmAUhLaG0QbjG766bCdKWXfOhvYKuDeHiIppXAJYh9exFxBqAczjbFA==}
 
   '@platforma-open/milaboratories.software-ptransform@1.3.1':
     resolution: {integrity: sha512-F/S/fm0PxKl2zpZXWdmjytZdbK33KE5L772xCcs0YLTb02ejpLje9Ls1OUWixgXt1R8ulKtHuiKTVuFkq/wPJw==}
@@ -4998,7 +4998,7 @@ snapshots:
       '@platforma-open/milaboratories.samples-and-data.workflow': 1.10.0
       '@platforma-sdk/model': 1.22.97
 
-  '@platforma-open/milaboratories.software-mixcr@4.7.0-147-develop': {}
+  '@platforma-open/milaboratories.software-mixcr@4.7.0-148-develop': {}
 
   '@platforma-open/milaboratories.software-ptransform@1.3.1': {}
 
