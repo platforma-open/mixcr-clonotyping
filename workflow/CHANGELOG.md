@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.2.1
+
+### Patch Changes
+
+- 40f2800: MiXCR upgrade, higher memory limit in export
+
 ## 2.2.0
 
 ### Minor Changes
