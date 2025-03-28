@@ -16,11 +16,17 @@ const data = reactive<{ presetType: Preset['type'] }>({
 });
 
 const speciesOptions: ListOption[] = [
-  { label: 'Homo sapience', value: 'hsa' },
+  { label: 'Homo sapiens', value: 'hsa' },
   { label: 'Mus musculus', value: 'mmu' },
   { label: 'Lama glama', value: 'lama' },
   { label: 'Alpaca', value: 'alpaca' },
   { label: 'Macaca fascicularis', value: 'mfas' },
+  { label: 'Macaca mulatta', value: 'mmul' },
+  { label: 'Chicken', value: 'gallus'},
+  { label: 'Rabbit', value: 'rabbit' },
+  { label: 'Rat', value: 'rat' },
+  { label: 'Sheep', value: 'sheep' },
+  { label: 'Spalax', value: 'spalax' }
 ];
 
 const presetSourceOptions: ListOption<Preset['type']>[] = [
