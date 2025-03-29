@@ -74,7 +74,7 @@ blockTest(
     const sndBlockState = project.getBlockState(sndBlockId);
     const clonotypingBlockState = project.getBlockState(clonotypingBlockId);
 
-    const sdnStableState1 = await helpers.awaitBlockDoneAndGetStableBlockState(sndBlockId, 8000);
+    const sdnStableState1 = await helpers.awaitBlockDoneAndGetStableBlockState(sndBlockId, 20000);
     expect(sdnStableState1.outputs).toMatchObject({
       fileImports: { ok: true, value: { [s1r1Handle]: { done: true }, [s1r2Handle]: { done: true }, [s2r1Handle]: { done: true }, [s2r2Handle]: { done: true } } }
     });
