@@ -1,5 +1,5 @@
 {
-  "name": "@platforma-open/milaboratories.mixcr-clonotyping-2.sc-clonotype-builder",
+  "name": "@platforma-open/milaboratories.mixcr-clonotyping-2.software",
   "version": "1.0.1",
   "scripts": {
     "build": "pl-pkg build",
@@ -18,7 +18,7 @@
   },
   "block-software": {
     "entrypoints": {
-      "main": {
+      "preprocessing": {
         "binary": {
           "artifact": {
             "type": "python",
@@ -28,7 +28,25 @@
               "toolset": "pip",
               "requirements": "requirements.txt"
             },
-            "root": "./src"
+            "root": "./src/preprocessing"
+          },
+          "cmd": [
+            "python",
+            "{pkg}/preprocessing.py"
+          ]
+        }
+      },
+      "sc-group-builder": {
+        "binary": {
+          "artifact": {
+            "type": "python",
+            "registry": "platforma-open",
+            "environment": "@platforma-open/milaboratories.runenv-python-3:3.12.6",
+            "dependencies": {
+              "toolset": "pip",
+              "requirements": "requirements.txt"
+            },
+            "root": "./src/sc-group-builder"
           },
           "cmd": [
             "python",
@@ -36,7 +54,7 @@
           ]
         }
       },
-      "main1": {
+      "output_processing": {
         "binary": {
           "artifact": {
             "type": "python",
@@ -46,11 +64,11 @@
               "toolset": "pip",
               "requirements": "requirements.txt"
             },
-            "root": "./src"
+            "root": "./src/output_processing"
           },
           "cmd": [
             "python",
-            "{pkg}/sc-group-builder.py"
+            "{pkg}/output_processing.py"
           ]
         }
       }

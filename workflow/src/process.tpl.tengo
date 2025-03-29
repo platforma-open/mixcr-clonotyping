@@ -532,7 +532,7 @@ self.body(func(inputs) {
 				}
 			)
 
-			singleCellResult.addXsvOutputToBuilder(clonotypes, "abundanceTable", "clonotypeProperties/abundance")
+			singleCellResult.addXsvOutputToBuilder(clonotypes, "abundanceTable", "clonotypeProperties/abundance/" + receptor + "/")
 
 			singleCellResult.addXsvOutputToBuilder(clonotypes, "propertiesAPrimary", "clonotypeProperties/" + receptor + "/aPrimary/")
 			singleCellResult.addXsvOutputToBuilder(clonotypes, "propertiesASecondary", "clonotypeProperties/" + receptor + "/aSecondary/")

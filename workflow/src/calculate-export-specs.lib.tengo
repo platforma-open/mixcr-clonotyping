@@ -635,6 +635,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		axesByScClonotypeKey: axesByScClonotypeKey,
 
 		columnsSpecPerSample: columnsSpecPerSample,
+		columnsSpecPerSampleSc: columnsSpecPerSampleSc,
 		columnsSpecPerClonotype: columnsSpecPerClonotype,
 
 		columnsSpec: columnsSpec,

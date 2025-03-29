@@ -94,8 +94,8 @@ wf.body(func(args) {
 
 	// calculating chains
 	// chains := ["IGHeavy", "IGLight", "TRAlpha", "TRBeta", "TRGamma", "TRDelta"]
-	receptorsOrChains := ["IG", "TCRAB", "TCRGD"]
-	// receptorsOrChains := ["IG"]
+	//receptorsOrChains := ["IG", "TCRAB", "TCRGD"]
+ 	receptorsOrChains := ["IG"]
 	if !is_undefined(args.chains) {
 		receptorsOrChains = args.chains
 	}
@@ -129,7 +129,7 @@ wf.body(func(args) {
 			spec: runMixcr.output("reports.spec"),
 			data: runMixcr.output("reports.data")
 		},
-		clones: runMixcr.output("clonotypes"),
+		clonotypes: runMixcr.output("clonotypes"),
 		clns: {
 			spec: runMixcr.output("clns.spec"),
 			data: runMixcr.output("clns.data")

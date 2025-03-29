@@ -1,5 +1,5 @@
 packages:
-  - software/sc-clonotype-builder
+  - software
   - workflow
   - model
   - ui
@@ -7,18 +7,17 @@ packages:
   - test
 
 catalog:
-  '@platforma-sdk/workflow-tengo': ^2.15.16
-  '@platforma-sdk/model': ^1.22.97
-  '@platforma-sdk/ui-vue': ^1.22.97
-  '@platforma-sdk/tengo-builder': ^1.19.2
+  '@platforma-sdk/workflow-tengo': ^3.0.0
+  '@platforma-sdk/model': ^1.24.0
+  '@platforma-sdk/ui-vue': ^1.24.0
+  '@platforma-sdk/tengo-builder': ^2.0.0
   "@platforma-sdk/package-builder": ^2.15.4
-  '@platforma-sdk/block-tools': ^2.5.19
+  '@platforma-sdk/block-tools': ^2.5.23
   '@platforma-sdk/eslint-config': ^1.0.1
 
-  '@platforma-sdk/test': ^1.22.107
+  '@platforma-sdk/test': ^1.24.0
   '@milaboratories/helpers': ^1.6.11
 
-  '@milaboratories/software-pframes-conv': 2.1.16
   "@platforma-open/milaboratories.runenv-python-3": ^1.1.7
   '@platforma-open/milaboratories.software-small-binaries': ^1.15.19
   '@platforma-open/milaboratories.software-mixcr': 4.7.0-147-develop
