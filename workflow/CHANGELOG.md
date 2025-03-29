@@ -1,5 +1,17 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.2.2
+
+### Patch Changes
+
+- eeed3eb: Allow N/A in topChain
+
+## 2.2.1
+
+### Patch Changes
+
+- 40f2800: MiXCR upgrade, higher memory limit in export
+
 ## 2.2.0
 
 ### Minor Changes

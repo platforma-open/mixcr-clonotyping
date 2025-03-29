@@ -508,7 +508,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 			column: "topChains",
 			id: "top-chains",
 			naRegex: "",
-			allowNA: false,
+			allowNA: true,
 			spec: {
 				valueType: "String",
 				name: "pl7.app/vdj/chain",
