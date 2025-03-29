@@ -1,5 +1,5 @@
 packages:
-  - software
+  - single-cell-scripts
   - workflow
   - model
   - ui

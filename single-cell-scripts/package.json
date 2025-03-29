@@ -1,5 +1,5 @@
 {
-  "name": "@platforma-open/milaboratories.mixcr-clonotyping-2.software",
+  "name": "@platforma-open/milaboratories.mixcr-clonotyping-2.single-cell-scripts",
   "version": "1.0.1",
   "scripts": {
     "build": "pl-pkg build",
@@ -11,10 +11,11 @@
   "files": [
     "./dist/**/*"
   ],
-  "dependencies": {},
-  "devDependencies": {
-    "@platforma-sdk/package-builder": "catalog:",
+  "dependencies": {
     "@platforma-open/milaboratories.runenv-python-3": "catalog:"
+  },
+  "devDependencies": {
+    "@platforma-sdk/package-builder": "catalog:"
   },
   "block-software": {
     "entrypoints": {
@@ -32,7 +33,7 @@
           },
           "cmd": [
             "python",
-            "{pkg}/preprocessing.py"
+            "{pkg}/main.py"
           ]
         }
       },
@@ -50,7 +51,7 @@
           },
           "cmd": [
             "python",
-            "{pkg}/sc-group-builder.py"
+            "{pkg}/main.py"
           ]
         }
       },
@@ -64,11 +65,11 @@
               "toolset": "pip",
               "requirements": "requirements.txt"
             },
-            "root": "./src/output_processing"
+            "root": "./src/output-processing"
           },
           "cmd": [
             "python",
-            "{pkg}/output_processing.py"
+            "{pkg}/main.py"
           ]
         }
       }
