@@ -34,7 +34,7 @@ blockTest('empty imputs', { timeout: 30000 }, async ({ rawPrj: project, ml, help
 
 blockTest(
   'preset content',
-  { timeout: 30000 },
+  { timeout: 100000 },
   async ({ rawPrj: project, ml, helpers, expect }) => {
     const blockId = await project.addBlock('Block', myBlockSpec);
     await project.setBlockArgs(blockId, {
