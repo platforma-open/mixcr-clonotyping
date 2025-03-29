@@ -9,12 +9,11 @@
     "do-pack": "rm -f *.tgz && pnpm pack && mv *.tgz package.tgz"
   },
   "dependencies": {
-    "@platforma-open/milaboratories.mixcr-clonotyping-2.software": "workspace:*",
+    "@platforma-open/milaboratories.mixcr-clonotyping-2.single-cell-scripts": "workspace:*",
     "@platforma-sdk/workflow-tengo": "catalog:"
   },
   "devDependencies": {
     "@platforma-sdk/tengo-builder": "catalog:",
-    "@platforma-open/milaboratories.software-small-binaries": "catalog:",
     "@platforma-open/milaboratories.software-mixcr": "catalog:",
     "@platforma-open/milaboratories.software-ptransform": "catalog:",
     "@platforma-sdk/test": "catalog:",

@@ -1,6 +1,7 @@
 ll := import("@platforma-sdk/workflow-tengo:ll")
 self := import("@platforma-sdk/workflow-tengo:tpl")
 pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
+smart := import("@platforma-sdk/workflow-tengo:smart")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 exec := import("@platforma-sdk/workflow-tengo:exec")
 
@@ -56,7 +57,9 @@ self.body(func(inputs) {
 
 	unprocessedTsv := mixcrCmd.getFile("clones.tsv")
 
-	result := {}
+	result := {
+		tsvForSingleCell: smart.createNullResource()
+	}
 
 	if is_undefined(clonotypeKeyColumns) {
 		result.tsv = unprocessedTsv

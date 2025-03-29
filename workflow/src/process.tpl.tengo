@@ -408,16 +408,13 @@ self.body(func(inputs) {
 			}
 		)
 
-		// Collecting results for possible future single cell processing
-
-		perChainResults[chain] = {
-			tsvForSingleCell: exportResults.output("clonotypeTableForSingleCell"),
-			clonotypeProperties: aggregateByCloneKey.output("clonotypeProperties")
-		}
-
-		// Adding results to the output
-
-		if !isSingleCell {
+		if isSingleCell {
+			// collecting results for possible future single cell processing
+			perChainResults[chain] = {
+				tsvForSingleCell: exportResults.output("clonotypeTableForSingleCell"),
+				clonotypeProperties: aggregateByCloneKey.output("clonotypeProperties")
+			}
+		} else {
 			// only adding data outputs if we are in bulk mode
 			exportResults.addXsvOutputToBuilder(clonotypes, "byCloneKeyBySample", "byCloneKeyBySample/" + chain + "/")
 			aggregateByCloneKey.addXsvOutputToBuilder(clonotypes, "byCloneKey", "byCloneKey/" + chain + "/")

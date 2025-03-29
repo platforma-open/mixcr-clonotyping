@@ -9,9 +9,9 @@ json := import("json")
 
 self.defineOutputs("abundanceTsv", "propertiesAPrimaryTsv", "propertiesASecondaryTsv", "propertiesBPrimaryTsv", "propertiesBSecondaryTsv")
 
-scGroupBuilderSw := assets.importSoftware("@platforma-open/milaboratories.mixcr-clonotyping-2.software:sc-group-builder")
-scPreprocessingSw := assets.importSoftware("@platforma-open/milaboratories.mixcr-clonotyping-2.software:preprocessing")
-scOutputProcessingSw := assets.importSoftware("@platforma-open/milaboratories.mixcr-clonotyping-2.software:output_processing")
+scGroupBuilderSw := assets.importSoftware("@platforma-open/milaboratories.mixcr-clonotyping-2.single-cell-scripts:sc-group-builder")
+scPreprocessingSw := assets.importSoftware("@platforma-open/milaboratories.mixcr-clonotyping-2.single-cell-scripts:preprocessing")
+scOutputProcessingSw := assets.importSoftware("@platforma-open/milaboratories.mixcr-clonotyping-2.single-cell-scripts:output-processing")
 
 self.body(func(inputs) {
 	byCellTagA := inputs[pConstants.VALUE_FIELD_NAME]

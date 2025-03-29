@@ -55,7 +55,7 @@
           ]
         }
       },
-      "output_processing": {
+      "output-processing": {
         "binary": {
           "artifact": {
             "type": "python",
