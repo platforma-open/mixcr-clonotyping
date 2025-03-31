@@ -1,5 +1,16 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.1.0
+
+### Minor Changes
+
+- 71e5326: Full support for SC data
+
+### Patch Changes
+
+- Updated dependencies [71e5326]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@2.3.0
+
 ## 2.0.9
 
 ### Patch Changes

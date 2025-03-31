@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.test
 
+## 1.5.4
+
+### Patch Changes
+
+- 71e5326: Test for SC use-case
+
 ## 1.5.3
 
 ### Patch Changes
