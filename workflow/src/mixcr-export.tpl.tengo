@@ -1,5 +1,5 @@
 ll := import("@platforma-sdk/workflow-tengo:ll")
-self := import("@platforma-sdk/workflow-tengo:tpl")
+self := import("@platforma-sdk/workflow-tengo:tpl.light")
 pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 smart := import("@platforma-sdk/workflow-tengo:smart")
 assets := import("@platforma-sdk/workflow-tengo:assets")

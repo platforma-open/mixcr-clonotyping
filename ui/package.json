@@ -29,6 +29,7 @@
     "vite": "catalog:",
     "vitest": "catalog:",
     "vue-tsc": "catalog:",
+    "eslint": "catalog:",
     "rollup-plugin-sourcemaps2": "catalog:"
   }
 }

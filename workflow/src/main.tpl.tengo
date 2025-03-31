@@ -7,12 +7,7 @@ ll := import("@platforma-sdk/workflow-tengo:ll")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 smart := import("@platforma-sdk/workflow-tengo:smart")
 file := import("@platforma-sdk/workflow-tengo:file")
-llPFrames := import("@platforma-sdk/workflow-tengo:pframes.ll")
 pframes := import("@platforma-sdk/workflow-tengo:pframes")
-exec := import("@platforma-sdk/workflow-tengo:exec")
-self := import("@platforma-sdk/workflow-tengo:tpl")
-
-json := import("json")
 
 calculatePresetInfoTpl := assets.importTemplate(":calculate-preset-info")
 processTpl := assets.importTemplate(":process")

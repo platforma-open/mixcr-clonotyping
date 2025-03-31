@@ -1,7 +1,6 @@
 ll := import("@platforma-sdk/workflow-tengo:ll")
-self := import("@platforma-sdk/workflow-tengo:tpl")
+self := import("@platforma-sdk/workflow-tengo:tpl.light")
 pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
-slices := import("@platforma-sdk/workflow-tengo:slices")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 exec := import("@platforma-sdk/workflow-tengo:exec")
 
