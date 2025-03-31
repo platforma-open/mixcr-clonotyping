@@ -1,5 +1,15 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.1.1
+
+### Patch Changes
+
+- e108f59: Dependency upgrade
+- Updated dependencies [e108f59]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.9.1
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.ui@1.10.4
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@2.3.1
+
 ## 2.1.0
 
 ### Minor Changes

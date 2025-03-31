@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping-2.sc-clonotype-builder
 
+## 1.1.0
+
+### Minor Changes
+
+- e108f59: Script re-publication
+
 ## 1.0.2
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.3.1
+
+### Patch Changes
+
+- e108f59: Dependency upgrade
+- Updated dependencies [e108f59]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.single-cell-scripts@1.1.0
+
 ## 2.3.0
 
 ### Minor Changes
