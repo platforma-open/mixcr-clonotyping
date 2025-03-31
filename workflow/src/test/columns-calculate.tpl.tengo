@@ -1,4 +1,4 @@
-self := import("@platforma-sdk/workflow-tengo:tpl")
+self := import("@platforma-sdk/workflow-tengo:tpl.light")
 ll := import("@platforma-sdk/workflow-tengo:ll")
 
 calculateExportSpecs := import(":calculate-export-specs")

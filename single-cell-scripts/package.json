@@ -3,10 +3,8 @@
   "version": "1.0.2",
   "scripts": {
     "build": "pl-pkg build",
-    "prepublishOnly": "pl-pkg publish packages",
-    "do-pack": "rm -f *.tgz && pl-pkg build && pnpm pack && mv platforma-open*.tgz package.tgz",
-    "changeset": "changeset",
-    "version-packages": "changeset version"
+    "prepublishOnly": "pl-pkg publish",
+    "do-pack": "rm -f *.tgz && pl-pkg build && pnpm pack && mv platforma-open*.tgz package.tgz"
   },
   "files": [
     "./dist/**/*"
