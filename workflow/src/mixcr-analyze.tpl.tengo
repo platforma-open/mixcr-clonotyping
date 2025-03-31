@@ -37,7 +37,7 @@ self.body(func(inputs) {
 
 	presetContent := inputs.presetContent.getDataAsJson()
 
-	if !is_map(presetContent) {
+	if !is_map(presetContent) || !is_array(presetContent.pipeline) {
 		ll.panic("malformed presetContent %v", presetContent)
 	}
 
@@ -45,7 +45,7 @@ self.body(func(inputs) {
 
 	hasAssembleContigs := false
 	hasAssembleCells := false
-	for stage in presetContent.analysisStages {
+	for stage in presetContent.pipeline {
 		if stage == "assembleContigs" {
 			hasAssembleContigs = true
 		} else if stage == "assembleCells" {

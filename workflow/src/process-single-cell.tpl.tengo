@@ -1,0 +1,108 @@
+ll := import("@platforma-sdk/workflow-tengo:ll")
+self := import("@platforma-sdk/workflow-tengo:tpl")
+pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
+slices := import("@platforma-sdk/workflow-tengo:slices")
+assets := import("@platforma-sdk/workflow-tengo:assets")
+exec := import("@platforma-sdk/workflow-tengo:exec")
+
+json := import("json")
+
+self.defineOutputs("abundanceTsv", "propertiesAPrimaryTsv", "propertiesASecondaryTsv", "propertiesBPrimaryTsv", "propertiesBSecondaryTsv")
+
+scGroupBuilderSw := assets.importSoftware("@platforma-open/milaboratories.mixcr-clonotyping-2.single-cell-scripts:sc-group-builder")
+scPreprocessingSw := assets.importSoftware("@platforma-open/milaboratories.mixcr-clonotyping-2.single-cell-scripts:preprocessing")
+scOutputProcessingSw := assets.importSoftware("@platforma-open/milaboratories.mixcr-clonotyping-2.single-cell-scripts:output-processing")
+
+self.body(func(inputs) {
+	byCellTagA := inputs[pConstants.VALUE_FIELD_NAME]
+	inputDataMeta := byCellTagA.getDataAsJson()
+	ll.assert(inputDataMeta.keyLength == 1, "unexpected number of aggregation axes")
+
+	byCellTagB := inputs.byCellTagB
+	propertiesA := inputs.propertiesA
+	propertiesB := inputs.propertiesB
+
+	// Creating files map
+	filesMap := {}
+	for k, v in byCellTagA.inputs() {
+		key := json.decode(k)
+		fileName := "by_cell_a_" + key[0] + ".tsv"
+		filesMap[fileName] = v
+	}
+
+	for k, v in byCellTagB.inputs() {
+		key := json.decode(k)
+		fileName := "by_cell_b_" + key[0] + ".tsv"
+		filesMap[fileName] = v
+	}
+
+	scPreprocessingCmd := exec.builder().
+		printErrStreamToStdout().
+		software(scPreprocessingSw).
+		addFiles(filesMap)
+
+	for name, f in filesMap {
+		scPreprocessingCmd = scPreprocessingCmd.arg(name)
+	}
+
+	// Data preprocessing
+	scPreprocessingCmd = scPreprocessingCmd.arg("--output_chainA").arg("chain_a_output.tsv").
+		arg("--output_chainB").arg("chain_b_output.tsv").
+		saveFile("chain_a_output.tsv").
+		saveFile("chain_b_output.tsv")
+	run := scPreprocessingCmd.run()
+	chainAoutput := run.getFile("chain_a_output.tsv")
+	chainBoutput := run.getFile("chain_b_output.tsv")
+
+
+	// Generating scClonotypeKey and abundanceTable
+	scClonotypeBuilderCmd := exec.builder().
+		printErrStreamToStdout().
+		software(scGroupBuilderSw).
+		addFile("chain_a_output.tsv", chainAoutput).
+		addFile("chain_b_output.tsv", chainBoutput).
+		arg("--chainA").arg("chain_a_output.tsv").
+		arg("--chainB").arg("chain_b_output.tsv").
+		arg("--output_clonotype").arg("clonotype.tsv").
+		arg("--output_cell").arg("abundance.tsv").
+		saveFile("clonotype.tsv").
+		saveFile("abundance.tsv")
+	scClonotypeCmd := scClonotypeBuilderCmd.run()
+
+	clonotypeTsv := scClonotypeCmd.getFile("clonotype.tsv")
+	abundanceTsv := scClonotypeCmd.getFile("abundance.tsv")
+
+	propertiesAFile := propertiesA.inputs()["[]"]
+	propertiesBFile := propertiesB.inputs()["[]"]
+
+	// Propagate scClonotypeKey to properties tables
+	scOutputProcessingBuilderCmd := exec.builder().
+		printErrStreamToStdout().
+		software(scOutputProcessingSw).
+		addFile("clonotype.tsv", clonotypeTsv).
+		arg("--main_table").arg("clonotype.tsv").
+		addFile("properties_a.tsv", propertiesAFile).
+		addFile("properties_b.tsv", propertiesBFile).
+		arg("--properties_a").arg("properties_a.tsv").
+		arg("--properties_b").arg("properties_b.tsv").
+		arg("--output_A1").arg("properties_a_primary.tsv").
+		arg("--output_A2").arg("properties_a_secondary.tsv").
+		arg("--output_B1").arg("properties_b_primary.tsv").
+		arg("--output_B2").arg("properties_b_secondary.tsv").
+		saveFile("properties_a_primary.tsv").
+		saveFile("properties_a_secondary.tsv").
+		saveFile("properties_b_primary.tsv").
+		saveFile("properties_b_secondary.tsv")
+	scOutputCmd := scOutputProcessingBuilderCmd.run()
+
+	return {
+		// must have sampleId and scClonotypeKey columns
+		abundanceTsv: abundanceTsv,
+
+		// must have scClonotypeKey columns
+		propertiesAPrimaryTsv: scOutputCmd.getFile("properties_a_primary.tsv"),
+		propertiesASecondaryTsv: scOutputCmd.getFile("properties_a_secondary.tsv"),
+		propertiesBPrimaryTsv: scOutputCmd.getFile("properties_b_primary.tsv"),
+		propertiesBSecondaryTsv: scOutputCmd.getFile("properties_b_secondary.tsv")
+	}
+})

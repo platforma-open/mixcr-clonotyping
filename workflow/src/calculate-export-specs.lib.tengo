@@ -79,6 +79,12 @@ exportSpecOpsFromPreset := func(presetSpecForBack) {
 	}
 }
 
+addSpec := func(columns, additionalSpec) {
+	return slices.map(columns, func(columnSpec) {
+		return maps.deepMerge(columnSpec, additionalSpec)
+	})
+}
+
 calculateExportSpecs := func(presetSpecForBack, blockId) {
 	ops := exportSpecOpsFromPreset(presetSpecForBack)
 
@@ -87,19 +93,30 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 	hasUmi := ops.hasUmi
 	splitByC := ops.splitByC
 
+	isSingleCell := !is_undefined(cellTags) && len(cellTags) > 0
+
 	assemblingFeatureInfo := assemblingFeatureInfo(assemblingFeature)
 	productiveFeature := assemblingFeatureInfo.productiveFeature
 	coreGeneFeatures := assemblingFeatureInfo.coreGeneFeatures
 
 	clonotypeKeyColumns := undefined
-	if !is_undefined(assemblingFeature) && (is_undefined(cellTags) || len(cellTags) == 0) {
+	clonotypeKeyArgs := undefined
+	if !is_undefined(assemblingFeature) {
 		clonotypeKeyColumns = ["nSeq" + assemblingFeature, "bestVGene", "bestJGene"]
+		clonotypeKeyArgs = [
+			[ "-nFeature", assemblingFeature ],
+			[ "-vGene" ],
+			[ "-jGene" ]
+		]
 		if splitByC {
 			clonotypeKeyColumns += ["bestCGene"]
+			clonotypeKeyArgs += [ [ "-cGene" ] ]
 		}
+
 	}
 
 	columnsSpecPerSample := []
+	columnsSpecPerSampleSc := undefined
 	columnsSpecPerClonotype := []
 
 	// array of array of arg groups
@@ -189,6 +206,52 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 			[ "-uniqueTagFraction", "Molecule" ]
 		]
 		mainAbundanceColumn = "uniqueMoleculeFraction"
+	}
+
+	if isSingleCell {
+		// copying reads and umi counts and fraction removing isPrimary and isAnchor
+		// addSpec(columnsSpecPerSample, {
+		// 	spec: {
+		// 		annotations: {
+		// 			"pl7.app/abundance/isPrimary": undefined,
+		// 			"pl7.app/isAnchor": undefined
+		// 		}
+		// 	}
+		// }) +
+		columnsSpecPerSampleSc = [ {
+			column: "uniqueCellCount",
+			id: "cell-count",
+			allowNA: false,
+			spec: {
+				name: "pl7.app/vdj/uniqueCellCount",
+				valueType: "Long",
+				annotations: a(88000, true, {
+					"pl7.app/min": "1",
+					"pl7.app/isAbundance": "true",
+					"pl7.app/abundance/unit": "cells",
+					"pl7.app/abundance/normalized": "false",
+					"pl7.app/abundance/isPrimary": "true",
+					"pl7.app/isAnchor": "true",
+					"pl7.app/label": "Number of Cells"
+				})
+			}
+		}, {
+			column: "uniqueCellFraction",
+			id: "cell-fraction",
+			allowNA: false,
+			spec: {
+				name: "pl7.app/vdj/uniqueCellFraction",
+				valueType: "Double",
+				annotations: a(88000, true, {
+					"pl7.app/min": "0",
+					"pl7.app/isAbundance": "true",
+					"pl7.app/abundance/unit": "cells",
+					"pl7.app/abundance/normalized": "true",
+					"pl7.app/abundance/isPrimary": "true",
+					"pl7.app/label": "Fraction of Cells"
+				})
+			}
+		} ]
 	}
 
 	// VDJC Hits
@@ -310,21 +373,21 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 	orderP = 10000
 
 	mutationColumnVariants := [ {
-			name: "Mutations",
-			valueType: "String",
-			labelPart: " mutations in ",
-			idPart: "-mutations-"
-		}, {
-			name: "MutationsCount",
-			valueType: "Int",
-			labelPart: " mutations count in ",
-			idPart: "-mutations-count-"
-		}, {
-			name: "MutationsRate",
-			valueType: "Double",
-			labelPart: " mutations rate in ",
-			idPart: "-mutations-rate-"
-		} ]
+		name: "Mutations",
+		valueType: "String",
+		labelPart: " mutations in ",
+		idPart: "-mutations-"
+	}, {
+		name: "MutationsCount",
+		valueType: "Int",
+		labelPart: " mutations count in ",
+		idPart: "-mutations-count-"
+	}, {
+		name: "MutationsRate",
+		valueType: "Double",
+		labelPart: " mutations rate in ",
+		idPart: "-mutations-rate-"
+	} ]
 
 	for isAminoAcid in [false, true] {
 		alphabetShort := isAminoAcid ? "AA" : "Nt"
@@ -465,12 +528,6 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 
 	// Adding block and segment annotations
 
-	addSpec := func(columns, additionalSpec) {
-		return slices.map(columns, func(columnSpec) {
-			return maps.deepMerge(columnSpec, additionalSpec)
-		})
-	}
-
 	columnsSpecPerSample = addSpec(columnsSpecPerSample, { spec: { domain: {
 		"pl7.app/vdj/clonotypingRunId": blockId
 	} } })
@@ -500,10 +557,10 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 	// Axes
 
 	axesByClonotypeKey := undefined
+	axesByScClonotypeKey := undefined
+	cellTagColumns := undefined
 
 	if !is_undefined(clonotypeKeyColumns) {
-		ll.assert(is_undefined(cellTags) || len(cellTags) == 0, "cellTags and clonotypeKeyAxes cannot both be defined")
-
 		// checking that corresponding columns exist in export
 		keyStrincture := []
 		for keyColumn in clonotypeKeyColumns {
@@ -515,93 +572,70 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		}
 
 		axesByClonotypeKey = [ {
-				column: "clonotypeKey",
+			column: "clonotypeKey",
+			naRegex: "",
+			spec: {
+				name: "pl7.app/vdj/clonotypeKey",
+				type: "String",
+				domain: {
+					"pl7.app/vdj/clonotypeKey/structure": string(json.encode(keyStrincture))
+				},
+				annotations: {
+					"pl7.app/label": "Clonotype key",
+					"pl7.app/table/visibility": "optional",
+					"pl7.app/table/orderPriority": "110000"
+				}
+			}
+		} ]
+
+		if isSingleCell {
+			cellTagColumns = slices.map(cellTags, func(cellTag) {
+				return "tagValue" + cellTag
+			})
+
+			axesByScClonotypeKey = [ {
+				column: "scClonotypeKey",
 				naRegex: "",
 				spec: {
-					name: "pl7.app/vdj/clonotypeKey",
+					name: "pl7.app/vdj/scClonotypeKey",
 					type: "String",
 					domain: {
-						"pl7.app/vdj/clonotypeKey/structure": string(json.encode(keyStrincture))
+						"pl7.app/vdj/scClonotypeKey/structure": string(json.encode(keyStrincture))
 					},
 					annotations: {
-						"pl7.app/label": "Clonotype key",
+						"pl7.app/label": "SC Clonotype key",
 						"pl7.app/table/visibility": "optional",
 						"pl7.app/table/orderPriority": "110000"
 					}
 				}
 			} ]
-	}
 
-	axesByClonotypeId := [ {
-		column: "cloneId",
-		spec: {
-			name: "pl7.app/vdj/cloneId",
-			type: "Long",
-			domain: {
-				"pl7.app/blockId": blockId
-			},
-			annotations: {
-				"pl7.app/min": "0",
-				"pl7.app/label": "Clone id",
-				"pl7.app/table/visibility": "optional",
-				"pl7.app/table/orderPriority": "90000"
-				}
-			}
-		} ]
-	exportArgs += [ [ "-cloneId" ] ]
-
-	orderP = 100000
-	if !is_undefined(cellTags) && len(cellTags) > 0 {
-		for tag in cellTags {
-			label := undefined
-			if tag == "CELL" {
-				label = "Cell tag"
-			} else {
-				label = text.to_title(tag[:4]) + " " + text.to_lower(tag[4:])
-			}
-			axesByClonotypeId += [ {
-					column: "tagValue" + tag,
-					naRegex: "",
-					spec: {
-						name: "pl7.app/vdj/cellTag",
-						type: "String",
-						domain: {
-							"pl7.app/vdj/cellTagId": tag,
-							"pl7.app/vdj/clonotypingRunId": blockId
-						},
-						annotations: a(orderP, true, {
-							"pl7.app/label": label
-						})
-					}
-				} ]
-			orderP -= 1
+			//	exportArgs += [ [ "-tags", "Cell" ] ]
+			// 	axesByClonotypeKeyAndCellTag = axesByClonotypeKey + [ {
+			// 		column: "cellTag",
+			// 		naRegex: "",
+			// 		spec: {
+			// 			name: "pl7.app/vdj/cellTag",
+			// 			type: "String",
+			// 			annotations: a(orderP, true, {
+			// 				"pl7.app/label": "Cell tag"
+			// 			})
+			// 		}
+			// 	} ]
 		}
-		exportArgs += [ [ "-tags", "Cell" ] ]
-
-		columnsSpec += [ {
-				column: "cellGroup",
-				id: "cell-group",
-				naRegex: "undefined|contamination",
-				allowNA: true,
-				spec: {
-					name: "pl7.app/vdj/cellGroup",
-					valueType: "Long",
-					annotations: a(24000, true, {
-						"pl7.app/min": "0",
-						"pl7.app/label": "Cell group number"
-					} )
-				}
-			} ]
-		exportArgs += [ [ "-cellGroup" ] ]
 	}
 
 	return {
 		clonotypeKeyColumns: clonotypeKeyColumns,
+		clonotypeKeyArgs: clonotypeKeyArgs,
 
-		axesByClonotypeId: axesByClonotypeId,
+		cellTagColumns: cellTagColumns,
+
 		axesByClonotypeKey: axesByClonotypeKey,
+		axesByScClonotypeKey: axesByScClonotypeKey,
 
 		columnsSpecPerSample: columnsSpecPerSample,
+		columnsSpecPerSampleSc: columnsSpecPerSampleSc,
 		columnsSpecPerClonotype: columnsSpecPerClonotype,
 
 		columnsSpec: columnsSpec,

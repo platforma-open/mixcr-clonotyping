@@ -3,6 +3,7 @@
 self := import("@platforma-sdk/workflow-tengo:tpl")
 
 ll := import("@platforma-sdk/workflow-tengo:ll")
+render := import("@platforma-sdk/workflow-tengo:render")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 pframes := import("@platforma-sdk/workflow-tengo:pframes")
 smart := import("@platforma-sdk/workflow-tengo:smart")
@@ -23,6 +24,8 @@ mixcrAnalyzeTpl := assets.importTemplate(":mixcr-analyze")
 mixcrExportTpl := assets.importTemplate(":mixcr-export")
 aggregateByClonotypeKeyTpl := assets.importTemplate(":aggregate-by-clonotype-key")
 
+processSingleCellTpl := assets.importTemplate(":process-single-cell")
+
 self.awaitState("InputsLocked")
 self.awaitState("params", "ResourceReady")
 self.awaitState("inputSpec", "ResourceReady")
@@ -30,19 +33,25 @@ self.awaitState("presetSpecForBack", "ResourceReady")
 self.awaitState("presetContent", "ResourceReady")
 
 chainInfos := {
-	"IGHeavy": { mixcrFilter: "IGH", name: "IG Heavy" },
-	"IGLight": { mixcrFilter: "IGK,IGL", name: "IG Light" },
-	"TRAlpha": { mixcrFilter: "TRA", name: "TR Alpha" },
-	"TRBeta": { mixcrFilter: "TRB", name: "TR Beta" },
-	"TRGamma": { mixcrFilter: "TRD", name: "TR Gamma" },
-	"TRDelta": { mixcrFilter: "TRG", name: "TR Delta" }
+	"IGHeavy": { mixcrFilter: "IGH", name: "IG Heavy", shortName: "Heavy" },
+	"IGLight": { mixcrFilter: "IGK,IGL", name: "IG Light", shortName: "Light" },
+	"TCRAlpha": { mixcrFilter: "TRA", name: "TCR Alpha", shortName: "Alpha" },
+	"TCRBeta": { mixcrFilter: "TRB", name: "TCR Beta", shortName: "Beta" },
+	"TCRGamma": { mixcrFilter: "TRD", name: "TCR Gamma", shortName: "Gamma" },
+	"TCRDelta": { mixcrFilter: "TRG", name: "TCR Delta", shortName: "Delta" }
 }
 
-// TODO better naming
-receptorInfo := {
+// Chain with higher diversity go first
+receptorInfos := {
 	"IG": { chains: ["IGHeavy", "IGLight"], name: "IG" },
-	"TRAB": { chains: ["TRAlpha", "TRBeta"], name: "TRAB" },
-	"TRGD": { chains: ["TRGamma", "TRDelta"], name: "TRGD" }
+	"TCRAB": { chains: ["TCRBeta", "TCRAlpha"], name: "TCR Alpha/Beta" }, // TODO αβ ?
+	"TCRGD": { chains: ["TCRDelta", "TCRGamma"], name: "TCR Gamma/Delta" } // TODO γδ ?
+}
+
+transformSpecs := func(columns, additionalSpec) {
+	return slices.map(columns, func(columnSpec) {
+		return maps.deepTransform(columnSpec, additionalSpec)
+	})
 }
 
 self.body(func(inputs) {
@@ -56,7 +65,8 @@ self.body(func(inputs) {
 
 	params := inputs.params
 	species := params.species
-	chains := params.chains
+	// can be either receptors or chains
+	receptorsOrChains := params.receptorsOrChains
 	limitInput := params.limitInput
 	blockId := params.blockId
 	presetCommonName := params.presetCommonName
@@ -88,6 +98,7 @@ self.body(func(inputs) {
 			hasAssembleCells = true
 		}
 	}
+	isSingleCell := len(presetSpecForBack.cellTags) > 0
 
 	// calculating clns annotations
 
@@ -191,13 +202,17 @@ self.body(func(inputs) {
 	exportSpecs := calculateExportSpecs(presetSpecForBack, blockId)
 
 	columnsSpecPerSample := exportSpecs.columnsSpecPerSample
+	columnsSpecPerSampleSc := exportSpecs.columnsSpecPerSampleSc
 	columnsSpecPerClonotype := exportSpecs.columnsSpecPerClonotype
 	columnsSpec := exportSpecs.columnsSpec
 
 	clonotypeKeyColumns := exportSpecs.clonotypeKeyColumns
+	clonotypeKeyArgs := exportSpecs.clonotypeKeyArgs
+	cellTagColumns := exportSpecs.cellTagColumns
 
-	axesByClonotypeId := exportSpecs.axesByClonotypeId
+	// axesByClonotypeId := exportSpecs.axesByClonotypeId
 	axesByClonotypeKey := exportSpecs.axesByClonotypeKey
+	axesByScClonotypeKey := exportSpecs.axesByScClonotypeKey
 
 	exportArgs := exportSpecs.exportArgs
 
@@ -242,23 +257,33 @@ self.body(func(inputs) {
 
 	clonotypes := pframes.pFrameBuilder()
 
+	chains := []
+	receptors := []
+
+	for chainOrReceptor in receptorsOrChains {
+		if receptorInfos[chainOrReceptor] != undefined {
+			receptors += [chainOrReceptor]
+			chains += receptorInfos[chainOrReceptor].chains
+		} else {
+			if is_undefined(chainInfos[chainOrReceptor]) {
+				ll.panic("chainInfo not found for %v", chainOrReceptor)
+			}
+			if len(receptors) > 0 {
+				ll.panic("mixing receptors and chains is not allowed")
+			}
+			chains += [chainOrReceptor]
+		}
+	}
+
+	perChainResults := {}
+
 	for chain in chains {
 		chainInfo := chainInfos[chain]
 		ll.assert(!is_undefined(chainInfo), "chainInfo not found for chain %v", chain)
-		additionalSpec := {
-			spec: {
-				domain: {
-					"pl7.app/chain": chain
-				}
-			}
-		}
-		columnSpecsTransform := func(specs) {
-			return slices.map(specs, func(spec) {
-				return maps.deepMerge(spec, additionalSpec)
-			})
-		}
 
-		traceSteps := [{type: "milaboratories.mixcr-clonotyping.export", id: blockId + "." + chain, importance: 80, label: chainInfo.name}]
+		//
+		// Exporting CLNS -> TSV
+		//
 
 		exportOutputs := [ {
 			type: "Resource",
@@ -274,18 +299,37 @@ self.body(func(inputs) {
 			path: ["tsv"]
 		} ]
 
-		if !is_undefined(axesByClonotypeKey) {
+		if !is_undefined(axesByClonotypeKey) && !isSingleCell {
+			// only adding data outputs if we are in bulk mode
 			exportOutputs += [ {
 				type: "Xsv",
 				xsvType: "tsv",
 				settings: {
 					axes: axesByClonotypeKey,
-					columns: columnSpecsTransform(columnsSpecPerSample),
+					columns: transformSpecs(columnsSpecPerSample, {
+						spec: { domain: { "pl7.app/vdj/chain": chain } }
+					}),
 					storageFormat: "Binary",
 					partitionKeyLength: 0
 				},
 				name: "byCloneKeyBySample",
 				path: ["tsv"]
+			} ]
+		}
+
+		if isSingleCell {
+			exportOutputs += [ {
+				type: "Resource",
+				spec: {
+					kind: "PColumn",
+					name: "mixcr.com/clonotypeTableForSingleCell",
+					domain: {
+						"pl7.app/vdj/clonotypingRunId": blockId
+					},
+					valueType: "File"
+				},
+				name: "clonotypeTableForSingleCell",
+				path: ["tsvForSingleCell"]
 			} ]
 		}
 
@@ -295,32 +339,57 @@ self.body(func(inputs) {
 			exportOutputs,
 			{
 				// will be automatically propagated to all output specs
-				traceSteps: traceSteps,
+				traceSteps: [{type: "milaboratories.mixcr-clonotyping.export", id: blockId + "." + chain, importance: 80, label: chainInfo.name}],
 
 				extra: {
 					params: {
 						chains: chainInfo.mixcrFilter,
 						clonotypeKeyColumns: clonotypeKeyColumns,
+						clonotypeKeyArgs: clonotypeKeyArgs,
+						cellTagColumns: cellTagColumns,
 						exportArgs: exportArgs
 					}
 				}
 			}
 		)
 
-		exportResults.addXsvOutputToBuilder(clonotypes, "byCloneKeyBySample", "byCloneKeyBySample/" + chain + "/")
+		//
+		// Aggregating the data to produce:
+		//   [clonotypeKey] -> properties
+		// from:
+		//   [sampleId, clonotypeKey] -> properties
+		//
 
 		aggregationOutputs := [ {
-			type: "Xsv",
-			xsvType: "tsv",
-			settings: {
-				axes: axesByClonotypeKey,
-				columns: columnSpecsTransform(columnsSpecPerClonotype),
-				storageFormat: "Binary",
-				partitionKeyLength: 0
+			type: "Resource",
+			spec: {
+				kind: "PColumn",
+				name: "mixcr.com/clonotypeProperties",
+				domain: {
+					"pl7.app/vdj/clonotypingRunId": blockId
+				},
+				valueType: "File"
 			},
-			name: "byCloneKey",
+			name: "clonotypeProperties",
 			path: ["tsv"]
 		} ]
+
+		if !isSingleCell {
+			aggregationOutputs += [ {
+				type: "Xsv",
+				xsvType: "tsv",
+				settings: {
+					axes: axesByClonotypeKey,
+					columns: transformSpecs(columnsSpecPerClonotype, {
+						spec: { domain: { "pl7.app/vdj/chain": chain } }
+					}),
+					storageFormat: "Binary",
+					partitionKeyLength: 0
+				},
+				name: "byCloneKey",
+				path: ["tsv"]
+			} ]
+		}
 
 		aggregateByCloneKey := pframes.processColumn(
 			exportResults.output("clonotypeTable"),
@@ -339,7 +408,134 @@ self.body(func(inputs) {
 			}
 		)
 
-		aggregateByCloneKey.addXsvOutputToBuilder(clonotypes, "byCloneKey", "byCloneKey/" + chain + "/")
+		if isSingleCell {
+			// collecting results for possible future single cell processing
+			perChainResults[chain] = {
+				tsvForSingleCell: exportResults.output("clonotypeTableForSingleCell"),
+				clonotypeProperties: aggregateByCloneKey.output("clonotypeProperties")
+			}
+		} else {
+			// only adding data outputs if we are in bulk mode
+			exportResults.addXsvOutputToBuilder(clonotypes, "byCloneKeyBySample", "byCloneKeyBySample/" + chain + "/")
+			aggregateByCloneKey.addXsvOutputToBuilder(clonotypes, "byCloneKey", "byCloneKey/" + chain + "/")
+		}
+	}
+
+	if isSingleCell {
+		for receptor in receptors {
+			receptorInfo := receptorInfos[receptor]
+
+			singleCellOutputs := [ {
+				type: "Resource",
+				spec: {
+					kind: "PColumn",
+					name: "mixcr.com/singleCellAbundanceTable",
+					domain: {
+						"pl7.app/vdj/clonotypingRunId": blockId
+					},
+					valueType: "File"
+				},
+				name: "abundanceTsv",
+				path: ["abundanceTsv"]
+			}, {
+				type: "Xsv",
+				xsvType: "tsv",
+				settings: {
+					axes: [ {
+						column: "sampleId",
+						spec: inputSpec.axesSpec[0]
+					} ] + axesByScClonotypeKey,
+					columns: transformSpecs(columnsSpecPerSampleSc, {
+						spec: { domain: { "pl7.app/vdj/receptor": receptor } }
+					}),
+					storageFormat: "Binary",
+					partitionKeyLength: 1
+				},
+				name: "abundanceTable",
+				path: ["abundanceTsv"]
+			} ]
+
+			for chainIdx in [0, 1] {
+				// "A" chain is always the one that is more diverse
+				chainLetterU := ["A", "B"][chainIdx]
+				chainNameU := chainInfos[receptorInfo.chains[chainIdx]].name
+				chainNameL := text.to_lower(chainNameU)
+
+				for isPrimary in [true, false] {
+					pPrefixU := isPrimary ? "Primary" : "Secondary"
+					pPrefixL := text.to_lower(pPrefixU)
+
+ 					// i.e. propertiesAPrimary
+					propertiesTableName := "properties" + chainLetterU + pPrefixU
+					// i.e. propertiesAPrimaryTsv
+					propertiesTsvOutputName := propertiesTableName + "Tsv"
+
+					singleCellOutputs += [ {
+						type: "Resource",
+						spec: {
+							kind: "PColumn",
+							name: "mixcr.com/scClonotypeTable/" + chainNameL + pPrefixU,
+							domain: {
+								"pl7.app/vdj/clonotypingRunId": blockId
+							},
+							valueType: "File"
+						},
+						name: propertiesTsvOutputName,
+						path: [ propertiesTsvOutputName ]
+					}, {
+						type: "Xsv",
+						xsvType: "tsv",
+						settings: {
+							axes: axesByScClonotypeKey,
+							columns: transformSpecs(columnsSpecPerClonotype, {
+								spec: {
+									domain: {
+										"pl7.app/vdj/receptor": receptor,
+										"pl7.app/vdj/scClonotypeChain": chainLetterU
+									},
+									annotations: {
+										"pl7.app/label": func(label) {
+											return pPrefixU + " " + chainNameU + " " + label
+										}
+									}
+								}
+							}),
+							storageFormat: "Binary",
+							partitionKeyLength: 0
+						},
+						name: propertiesTableName,
+						path: [ propertiesTsvOutputName ]
+					} ]
+				}
+			}
+
+			chainA := receptorInfo.chains[0]
+			chainB := receptorInfo.chains[1]
+
+			// Using A chain files as main PColumn for xsv conversion through pframes.processColumn.
+			// Since we aggregate by sample, this is just a single pass through the data.
+
+			singleCellResult := pframes.processColumn(
+				perChainResults[chainA].tsvForSingleCell,
+				processSingleCellTpl,
+				singleCellOutputs,
+				{
+					aggregate: ["pl7.app/sampleId"],
+					extra: {
+						byCellTagB: perChainResults[chainB].tsvForSingleCell.data,
+						propertiesA: perChainResults[chainA].clonotypeProperties.data,
+						propertiesB: perChainResults[chainB].clonotypeProperties.data
+					}
+				}
+			)
+
+			singleCellResult.addXsvOutputToBuilder(clonotypes, "abundanceTable", "clonotypeProperties/abundance/" + receptor + "/")
+
+			singleCellResult.addXsvOutputToBuilder(clonotypes, "propertiesAPrimary", "clonotypeProperties/" + receptor + "/aPrimary/")
+			singleCellResult.addXsvOutputToBuilder(clonotypes, "propertiesASecondary", "clonotypeProperties/" + receptor + "/aSecondary/")
+			singleCellResult.addXsvOutputToBuilder(clonotypes, "propertiesBPrimary", "clonotypeProperties/" + receptor + "/bPrimary/")
+			singleCellResult.addXsvOutputToBuilder(clonotypes, "propertiesBSecondary", "clonotypeProperties/" + receptor + "/bSecondary/")
+		}
 	}
 
 	return {
