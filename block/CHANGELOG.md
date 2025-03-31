@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.1.2
+
+### Patch Changes
+
+- df71006: chore: republish block
+
 ## 2.1.1
 
 ### Patch Changes
