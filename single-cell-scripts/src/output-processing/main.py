@@ -2,24 +2,7 @@ import pandas as pd
 import argparse
 import json
 import os
-
-
-def normalize_json_key(json_str):
-    """Standardize JSON formatting for reliable comparisons"""
-    try:
-        # Parse and sort keys alphabetically
-        parsed = json.loads(json_str)
-        return json.dumps(parsed, sort_keys=True, separators=(',', ':'))
-    except json.JSONDecodeError:
-        return None  # or raise error for invalid JSON
-
-
-def clean_keys(df):
-    """Clean and normalize clonotypeKey column in DataFrame"""
-    if 'clonotypeKey' in df.columns:
-        df['clonotypeKey'] = df['clonotypeKey'].apply(normalize_json_key)
-        df = df.dropna(subset=['clonotypeKey'])
-    return df
+import csv
 
 
 def create_empty_mapping_dfs(main_df):
@@ -58,10 +41,10 @@ def create_mapping_dfs(main_df):
 
 def save_results(a_result_1, a_result_2, b_result_1, b_result_2, args):
     """Save results to output files"""
-    a_result_1.to_csv(args.output_A1, sep='\t', index=False)
-    a_result_2.to_csv(args.output_A2, sep='\t', index=False)
-    b_result_1.to_csv(args.output_B1, sep='\t', index=False)
-    b_result_2.to_csv(args.output_B2, sep='\t', index=False)
+    a_result_1.to_csv(args.output_A1, sep='\t', index=False, quoting=csv.QUOTE_NONE)
+    a_result_2.to_csv(args.output_A2, sep='\t', index=False, quoting=csv.QUOTE_NONE)
+    b_result_1.to_csv(args.output_B1, sep='\t', index=False, quoting=csv.QUOTE_NONE)
+    b_result_2.to_csv(args.output_B2, sep='\t', index=False, quoting=csv.QUOTE_NONE)
 
 
 def process_empty_tables(main_df, properties_a, properties_b, args):
@@ -81,14 +64,6 @@ def process_non_empty_tables(main_df, properties_a, properties_b, args):
     """Process case when input tables contain data"""
     # Create mapping DataFrames from main_df
     mapping_a1, mapping_a2, mapping_b1, mapping_b2 = create_mapping_dfs(main_df)
-
-    # Clean and normalize keys
-    properties_a = clean_keys(properties_a)
-    properties_b = clean_keys(properties_b)
-    mapping_a1 = clean_keys(mapping_a1)
-    mapping_a2 = clean_keys(mapping_a2)
-    mapping_b1 = clean_keys(mapping_b1)
-    mapping_b2 = clean_keys(mapping_b2)
 
     # Merge based on full clonotypeKey string
     a_result_1 = properties_a.merge(mapping_a1, on='clonotypeKey')

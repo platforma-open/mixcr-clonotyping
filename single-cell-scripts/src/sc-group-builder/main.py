@@ -22,7 +22,7 @@ def load_and_reformat_data(file_path, chain):
     df["sampleId"] = df["cellTag"].apply(lambda x: x[1] if isinstance(x, list) and len(x) > 1 else "")
 
     # Convert cellTag back to string for sorting (avoids unhashable type error)
-    df["cellTag_str"] = df["cellTag"].apply(lambda x: json.dumps(x) if isinstance(x, list) else x)
+    df["cellTag_str"] = df["cellTag"].apply(lambda x: json.dumps(x, separators=(',', ':')))
 
     # Sort by sample_id, cellTag (string) and descending readCount
     df.sort_values(["sampleId", "cellTag_str", "readCount"], ascending=[True, True, False], inplace=True)
@@ -34,7 +34,7 @@ def load_and_reformat_data(file_path, chain):
     top2 = df[df["rank"] <= 2].copy()
 
     # Convert clonotypeKey back to a JSON string
-    top2["clonotypeKey"] = top2["clonotypeKey"].apply(json.dumps)
+    top2["clonotypeKey"] = top2["clonotypeKey"].apply(json.dumps, separators=(',', ':'))
 
     # Preserve sample_id before pivoting
     top2_sample_ids = top2.groupby("cellTag_str")["sampleId"].first().reset_index()
@@ -97,8 +97,8 @@ def save_results(merged_df, output_clonotype_file, output_cell_file):
     cell_counts["uniqueCellFraction"] = cell_counts.groupby("sampleId")["uniqueCellCount"].transform(lambda x: x / x.sum())
 
     # Save to files
-    clonotype_records.to_csv(output_clonotype_file, sep="\t", index=False)
-    cell_counts.to_csv(output_cell_file, sep="\t", index=False)
+    clonotype_records.to_csv(output_clonotype_file, sep="\t", index=False, quoting=csv.QUOTE_NONE)
+    cell_counts.to_csv(output_cell_file, sep="\t", index=False, quoting=csv.QUOTE_NONE)
 
 def main():
     parser = argparse.ArgumentParser(description="Group VDJ 10x single cell data")
@@ -115,8 +115,8 @@ def main():
     if chainA_df.empty and chainB_df.empty:
         clonotype_columns = ["scClonotypeKey", "clonotypeKeyA1", "clonotypeKeyA2", "clonotypeKeyB1", "clonotypeKeyB2"]
         cell_columns = ["sampleId", "scClonotypeKey", "uniqueCellCount", "uniqueCellFraction"]
-        pd.DataFrame(columns=clonotype_columns).to_csv(args.output_clonotypes, sep="\t", index=False)
-        pd.DataFrame(columns=cell_columns).to_csv(args.output_cells, sep="\t", index=False)
+        pd.DataFrame(columns=clonotype_columns).to_csv(args.output_clonotypes, sep="\t", index=False, quoting=csv.QUOTE_NONE)
+        pd.DataFrame(columns=cell_columns).to_csv(args.output_cells, sep="\t", index=False, quoting=csv.QUOTE_NONE)
         return
 
     merged_df = merge_and_group(chainA_df, chainB_df)

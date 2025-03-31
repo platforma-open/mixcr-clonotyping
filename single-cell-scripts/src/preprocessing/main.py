@@ -1,4 +1,5 @@
 import os
+import csv
 import json
 import pandas as pd
 import argparse
@@ -23,12 +24,9 @@ def main(files, output_chainA, output_chainB):
 
         # Add sample_id to cellTag
         def modify_cell_tag(cell_tag):
-            try:
-                tag_list = json.loads(cell_tag)
-                tag_list.append(sample_id)
-                return json.dumps(tag_list)
-            except Exception:
-                return json.dumps([sample_id])
+            tag_list = json.loads(cell_tag)
+            tag_list.append(sample_id)
+            return json.dumps(tag_list, separators=(',', ':'))
 
         df_filtered['cellTag'] = df_filtered['cellTag'].apply(modify_cell_tag)
 
@@ -46,8 +44,8 @@ def main(files, output_chainA, output_chainB):
     final_b = pd.concat(data_b, ignore_index=True) if data_b else pd.DataFrame(columns=["cellTag", "clonotypeKey", "readCount"])
 
     # Save
-    final_a.to_csv(output_chainA, sep="\t", index=False)
-    final_b.to_csv(output_chainB, sep="\t", index=False)
+    final_a.to_csv(output_chainA, sep="\t", index=False, quoting=csv.QUOTE_NONE)
+    final_b.to_csv(output_chainB, sep="\t", index=False, quoting=csv.QUOTE_NONE)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process specific by_cell_*.tsv files for productive CDR3 filtering.")
