@@ -469,6 +469,9 @@ self.body(func(inputs) {
 							kind: "PColumn",
 							name: "mixcr.com/scClonotypeTable/" + chainNameL + pPrefixU,
 							domain: {
+								"pl7.app/vdj/receptor": receptor,
+								"pl7.app/vdj/scClonotypeChain": chainLetterU,
+								"pl7.app/vdj/scClonotypeChain/index": pPrefixL,
 								"pl7.app/vdj/clonotypingRunId": blockId
 							},
 							valueType: "File"
@@ -484,7 +487,8 @@ self.body(func(inputs) {
 								spec: {
 									domain: {
 										"pl7.app/vdj/receptor": receptor,
-										"pl7.app/vdj/scClonotypeChain": chainLetterU
+										"pl7.app/vdj/scClonotypeChain": chainLetterU,
+										"pl7.app/vdj/scClonotypeChain/index": pPrefixL
 									},
 									annotations: {
 										"pl7.app/label": func(label) {

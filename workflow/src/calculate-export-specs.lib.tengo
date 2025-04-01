@@ -532,6 +532,10 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		"pl7.app/vdj/clonotypingRunId": blockId
 	} } })
 
+	columnsSpecPerSampleSc = addSpec(columnsSpecPerSampleSc, { spec: { domain: {
+		"pl7.app/vdj/clonotypingRunId": blockId
+	} } })
+
 	//   "pl7.app/segmentedBy" annotation indicates columns that can be meaningfully merged across
 	//   different runs (given they have the same name and axes signature).
 	//   Its absence indicates that merging would be semantically meaningless (e.g., abundance
