@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.3.3
+
+### Patch Changes
+
+- 675cd29: Fix for output column domains, ordering and visibility
+
 ## 2.3.2
 
 ### Patch Changes
