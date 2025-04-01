@@ -451,7 +451,7 @@ self.body(func(inputs) {
 			for chainIdx in [0, 1] {
 				// "A" chain is always the one that is more diverse
 				chainLetterU := ["A", "B"][chainIdx]
-				chainNameU := chainInfos[receptorInfo.chains[chainIdx]].name
+				chainNameU := chainInfos[receptorInfo.chains[chainIdx]].shortName
 				chainNameL := text.to_lower(chainNameU)
 
 				for isPrimary in [true, false] {
@@ -463,12 +463,25 @@ self.body(func(inputs) {
 					// i.e. propertiesAPrimaryTsv
 					propertiesTsvOutputName := propertiesTableName + "Tsv"
 
+					annotationsTransformation := {
+						"pl7.app/label": func(label) {
+							return chainNameU + " " + label + " " + pPrefixU
+						}
+					}
+
+					if !isPrimary {
+						annotationsTransformation["pl7.app/table/visibility"] = "optional"
+					}
+
 					singleCellOutputs += [ {
 						type: "Resource",
 						spec: {
 							kind: "PColumn",
 							name: "mixcr.com/scClonotypeTable/" + chainNameL + pPrefixU,
 							domain: {
+								"pl7.app/vdj/receptor": receptor,
+								"pl7.app/vdj/scClonotypeChain": chainLetterU,
+								"pl7.app/vdj/scClonotypeChain/index": pPrefixL,
 								"pl7.app/vdj/clonotypingRunId": blockId
 							},
 							valueType: "File"
@@ -484,13 +497,10 @@ self.body(func(inputs) {
 								spec: {
 									domain: {
 										"pl7.app/vdj/receptor": receptor,
-										"pl7.app/vdj/scClonotypeChain": chainLetterU
+										"pl7.app/vdj/scClonotypeChain": chainLetterU,
+										"pl7.app/vdj/scClonotypeChain/index": pPrefixL
 									},
-									annotations: {
-										"pl7.app/label": func(label) {
-											return pPrefixU + " " + chainNameU + " " + label
-										}
-									}
+									annotations: annotationsTransformation
 								}
 							}),
 							storageFormat: "Binary",

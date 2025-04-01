@@ -85,6 +85,9 @@ addSpec := func(columns, additionalSpec) {
 	})
 }
 
+// Ordering rules
+//   AA Sequences
+
 calculateExportSpecs := func(presetSpecForBack, blockId) {
 	ops := exportSpecOpsFromPreset(presetSpecForBack)
 
@@ -210,14 +213,14 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 
 	if isSingleCell {
 		// copying reads and umi counts and fraction removing isPrimary and isAnchor
-		// addSpec(columnsSpecPerSample, {
-		// 	spec: {
-		// 		annotations: {
-		// 			"pl7.app/abundance/isPrimary": undefined,
-		// 			"pl7.app/isAnchor": undefined
-		// 		}
-		// 	}
-		// }) +
+		columnsSpecPerSample = addSpec(columnsSpecPerSample, {
+			spec: {
+				annotations: {
+					"pl7.app/abundance/isPrimary": undefined,
+					"pl7.app/isAnchor": undefined
+				}
+			}
+		})
 		columnsSpecPerSampleSc = [ {
 			column: "uniqueCellCount",
 			id: "cell-count",
@@ -225,7 +228,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 			spec: {
 				name: "pl7.app/vdj/uniqueCellCount",
 				valueType: "Long",
-				annotations: a(88000, true, {
+				annotations: a(20100, true, {
 					"pl7.app/min": "1",
 					"pl7.app/isAbundance": "true",
 					"pl7.app/abundance/unit": "cells",
@@ -242,7 +245,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 			spec: {
 				name: "pl7.app/vdj/uniqueCellFraction",
 				valueType: "Double",
-				annotations: a(88000, true, {
+				annotations: a(20000, false, {
 					"pl7.app/min": "0",
 					"pl7.app/isAbundance": "true",
 					"pl7.app/abundance/unit": "cells",
@@ -254,48 +257,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		} ]
 	}
 
-	// VDJC Hits
-
 	orderP := 80000
-	geneHitColumnVariants := [ {
-			name: "pl7.app/vdj/geneHitWithAllele",
-			columnNameSuffix: "Hit",
-			idSuffix: "-hit-with-allele",
-			labelSuffix: " hit with allele",
-			argSuffix: "Hit",
-			visible: false
-		}, {
-			name: "pl7.app/vdj/geneHit",
-			columnNameSuffix: "Gene",
-			idSuffix: "-gene",
-			labelSuffix: " gene",
-			argSuffix: "Gene",
-			visible: true
-		} ]
-	for vdjcU in ["V", "D", "J", "C"] {
-		vdjcL := text.to_lower(vdjcU)
-		for variant in geneHitColumnVariants {
-			columnsSpecPerClonotype += [ {
-					column: "best" + vdjcU + variant.columnNameSuffix,
-					id: "best-" + vdjcL + variant.idSuffix,
-					naRegex: "",
-					allowNA: vdjcU == "C" || vdjcU == "D",
-					spec: {
-						name: variant.name,
-						valueType: "String",
-						domain: {
-							"pl7.app/vdj/reference": vdjcU + "Gene"
-						},
-						annotations: a(orderP, variant.visible, {
-							"pl7.app/label": "Best " + vdjcU + variant.labelSuffix,
-							"pl7.app/isDiscreteFilter": "true"
-						})
-					}
-				} ]
-			exportArgs += [ [ "-" + vdjcL + variant.argSuffix ] ]
-			orderP -= 100
-		}
-	}
 
 	// Sequences
 
@@ -323,7 +285,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 				alphabet := isAminoAcid ? "aminoacid" : "nucleotide"
 				alphabetShort := isAminoAcid ? "aa" : "nt"
 				alphabetShortMixcr := isAminoAcid ? "aa" : "n"
-				visibility := (featureU == "CDR3") || (featureU == assemblingFeature)
+				visibility := isSingleCell ? (featureU == "CDR3") && isAminoAcid : (featureU == "CDR3") || (featureU == assemblingFeature)
 				columnsSpecPerClonotype += [ {
 						column: alphabetShortMixcr + "Seq" + imputedU + featureU,
 						id: alphabetShortMixcr + "-seq-" + featureL + (isImputed ? "-imputed" : ""),
@@ -365,6 +327,48 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 				}
 				orderP -= 100
 			}
+		}
+	}
+
+	// VDJC Hits
+
+	geneHitColumnVariants := [ {
+			name: "pl7.app/vdj/geneHitWithAllele",
+			columnNameSuffix: "Hit",
+			idSuffix: "-hit-with-allele",
+			labelSuffix: " hit with allele",
+			argSuffix: "Hit",
+			visible: false
+		}, {
+			name: "pl7.app/vdj/geneHit",
+			columnNameSuffix: "Gene",
+			idSuffix: "-gene",
+			labelSuffix: " gene",
+			argSuffix: "Gene",
+			visible: true
+		} ]
+	for vdjcU in ["V", "D", "J", "C"] {
+		vdjcL := text.to_lower(vdjcU)
+		for variant in geneHitColumnVariants {
+			columnsSpecPerClonotype += [ {
+					column: "best" + vdjcU + variant.columnNameSuffix,
+					id: "best-" + vdjcL + variant.idSuffix,
+					naRegex: "",
+					allowNA: vdjcU == "C" || vdjcU == "D",
+					spec: {
+						name: variant.name,
+						valueType: "String",
+						domain: {
+							"pl7.app/vdj/reference": vdjcU + "Gene"
+						},
+						annotations: a(orderP, variant.visible, {
+							"pl7.app/label": "Best " + vdjcU + variant.labelSuffix,
+							"pl7.app/isDiscreteFilter": "true"
+						})
+					}
+				} ]
+			exportArgs += [ [ "-" + vdjcL + variant.argSuffix ] ]
+			orderP -= 100
 		}
 	}
 
@@ -430,7 +434,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 			specName: "pl7.app/vdj/sequence/productive",
 			label: "Productive",
 			id: "is-productive",
-			visibility: true
+			visibility: false
 		}, {
 			columnPrefix: "isOOF",
 			arg: "-isOOF",
@@ -529,6 +533,10 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 	// Adding block and segment annotations
 
 	columnsSpecPerSample = addSpec(columnsSpecPerSample, { spec: { domain: {
+		"pl7.app/vdj/clonotypingRunId": blockId
+	} } })
+
+	columnsSpecPerSampleSc = addSpec(columnsSpecPerSampleSc, { spec: { domain: {
 		"pl7.app/vdj/clonotypingRunId": blockId
 	} } })
 
