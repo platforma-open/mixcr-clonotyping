@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.4.0
+
+### Minor Changes
+
+- 46dd332: Update value options in Productive column
+
 ## 2.3.3
 
 ### Patch Changes
