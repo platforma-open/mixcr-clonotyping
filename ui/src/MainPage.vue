@@ -1,35 +1,35 @@
 <script setup lang="ts">
 import { AgGridVue } from 'ag-grid-vue3';
 
-import { ClientSideRowModelModule } from 'ag-grid-enterprise';
-import type { ColDef, GridApi, GridOptions, GridReadyEvent } from 'ag-grid-enterprise';
-import { ModuleRegistry } from 'ag-grid-enterprise';
 import type { PlId, Qc } from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
 import type { PlAgHeaderComponentParams } from '@platforma-sdk/ui-vue';
 import {
   AgGridTheme,
+  PlAgCellStatusTag,
+  PlAgChartStackedBarCell,
   PlAgOverlayLoading,
   PlAgOverlayNoRows,
+  PlAgTextAndButtonCell,
   PlBlockPage,
   PlBtnGhost,
   PlMaskIcon24,
   PlSlideModal,
-  PlAgTextAndButtonCell,
-  PlAgCellStatusTag,
-  makeRowNumberColDef,
   autoSizeRowNumberColumn,
+  createAgGridColDef,
+  makeRowNumberColDef,
 } from '@platforma-sdk/ui-vue';
 import { refDebounced, whenever } from '@vueuse/core';
+import type { ColDef, GridApi, GridOptions, GridReadyEvent } from 'ag-grid-enterprise';
+import { ClientSideRowModelModule, ModuleRegistry } from 'ag-grid-enterprise';
 import { reactive, shallowRef, watch } from 'vue';
 import { useApp } from './app';
+import { getAlignmentChartSettings } from './charts/alignmentChartSettings';
+import { getChainsChartSettings } from './charts/chainsChartSettings';
+import { parseProgressString } from './parseProgress';
 import type { MiXCRResult } from './results';
 import { MiXCRResultsFull } from './results';
 import SampleReportPanel from './SampleReportPanel.vue';
 import SettingsPanel from './SettingsPanel.vue';
-import { getAlignmentChartSettings } from './charts/alignmentChartSettings';
-import { getChainsChartSettings } from './charts/chainsChartSettings';
-import { PlAgChartStackedBarCell, createAgGridColDef } from '@platforma-sdk/ui-vue';
-import { parseProgressString } from './parseProgress';
 
 const app = useApp();
 
@@ -122,7 +122,7 @@ const columnDefs: ColDef<MiXCRResult>[] = [
   createAgGridColDef({
     colId: 'qc',
     field: 'qc',
-    width: 96,
+    width: 126,
     cellRendererSelector: (cellData) => {
       const type = (cellData.data?.qc as MiXCRResult['qc'])?.reduce(
         (result: Qc[number]['status'], item) =>

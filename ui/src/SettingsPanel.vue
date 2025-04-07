@@ -4,8 +4,8 @@ import { SupportedPresetList } from '@platforma-open/milaboratories.mixcr-clonot
 import type { ImportFileHandle, PlRef } from '@platforma-sdk/model';
 import { getFilePathFromHandle } from '@platforma-sdk/model';
 import type { ListOption } from '@platforma-sdk/ui-vue';
-import { PlAccordionSection, PlBtnGroup, PlDropdown, PlDropdownRef, PlFileInput, PlTextField, ReactiveFileContent } from '@platforma-sdk/ui-vue';
-import { computed, reactive, watch, ref, watchEffect } from 'vue';
+import { PlAccordionSection, PlBtnGroup, PlDropdown, PlDropdownMulti, PlDropdownRef, PlFileInput, PlTextField, ReactiveFileContent } from '@platforma-sdk/ui-vue';
+import { computed, reactive, watch } from 'vue';
 import { useApp } from './app';
 import { retentive } from './retentive';
 
@@ -54,6 +54,8 @@ const preset = computed(() => {
 const needSpecies = computed(() => preset.value === undefined
   ? undefined
   : (preset.value.requiredFlags.findIndex((f) => f === 'species') >= 0));
+
+const isSingleCell = computed(() => preset.value?.analysisStages.includes('assembleCells') === true);
 
 const allFileImports = computed(() => {
   return { ...(app.model.outputs.prerunFileImports ?? {}), ...(app.model.outputs.mainFileImports ?? {}) };
@@ -118,34 +120,34 @@ function parseNumber(v: string): number {
 }
 
 type LocalState = {
-  tab: "fromFile" | "fromBlock" | undefined;
-}
+  tab: 'fromFile' | 'fromBlock' | undefined;
+};
 
 const state = reactive<LocalState>({
   tab: undefined,
-})
+});
 
 const computedTab = computed({
   get() {
-    return state.tab ?? (app.model.args.libraryFile ? "fromFile" : "fromBlock");
+    return state.tab ?? (app.model.args.libraryFile ? 'fromFile' : 'fromBlock');
   },
   set(tab) {
     state.tab = tab;
   },
 });
 
-watch(computedTab, (newValue, oldValue)=>{
-  if (newValue === "fromFile") {
+watch(computedTab, (newValue, oldValue) => {
+  if (newValue === 'fromFile') {
     app.model.args.inputLibrary = undefined;
   }
-  if (newValue === "fromBlock") {
+  if (newValue === 'fromBlock') {
     app.model.args.libraryFile = undefined;
   }
-})
+});
 
 const librarySourceOptions = [
-  { label: "From library builder", value: "fromBlock" },
-  { label: "From file", value: "fromFile" }
+  { label: 'From library builder', value: 'fromBlock' },
+  { label: 'From file', value: 'fromFile' },
 ] as const satisfies ListOption [];
 
 const computedSpecies = computed({
@@ -153,7 +155,7 @@ const computedSpecies = computed({
   set: (value) => {
     app.model.args.customSpecies = value;
   },
-})
+});
 
 watch(
   () => app.model.args.libraryFile,
@@ -161,7 +163,7 @@ watch(
     if (!newFile) {
       app.model.args.customSpecies = undefined;
     }
-  }
+  },
 );
 
 watch(
@@ -171,15 +173,40 @@ watch(
       const libraryFileName = extractFileName(getFilePathFromHandle(newFile));
       app.model.args.isLibraryFileGzipped = libraryFileName?.toLowerCase().endsWith('.gz') || false;
     }
-  }
+  },
 );
 
+const receptorOrChainsOptions = computed(() => {
+  const receptors = [
+    { value: 'IG', label: 'IG' },
+    { value: 'TCRAB', label: 'TCR-αβ' },
+    { value: 'TCRGD', label: 'TCR-ɣδ' },
+  ];
+  const chains = [
+    { value: 'IGHeavy', label: 'IG Heavy' },
+    { value: 'IGLight', label: 'IG Light' },
+    { value: 'TCRAlpha', label: 'TCR-α' },
+    { value: 'TCRBeta', label: 'TCR-β' },
+    { value: 'TCRGamma', label: 'TCR-ɣ' },
+    { value: 'TCRDelta', label: 'TCR-δ' },
+  ];
+  if (isSingleCell.value) return receptors;
+  return [...receptors, ...chains];
+});
+
+const receptorOrChainsModel = computed({
+  get: () => (app.model.args.chains ?? []),
+  set: (value) => {
+    app.model.args.chains = value ?? [];
+  },
+});
 </script>
 
 <template>
   <PlDropdownRef
     :options="inputOptions" :model-value="app.model.args.input" label="Select dataset"
-    clearable @update:model-value="setInput"
+    clearable
+    @update:model-value="setInput"
   />
 
   <PlBtnGroup v-model="data.presetType" :options="presetSourceOptions" />
@@ -199,33 +226,40 @@ watch(
   />
 
   <PlDropdown v-if="needSpecies" v-model="app.model.args.species" :options="speciesOptions" label="Select species" />
+
+  <PlDropdownMulti v-model="receptorOrChainsModel" label="Receptors" :options="receptorOrChainsOptions" >
+    <template #tooltip>
+      Restrict the analysis to certain receptor types.
+    </template>
+  </PlDropdownMulti>
+
   <PlAccordionSection label="Advanced Settings">
     <PlTextField
       v-model="app.model.args.limitInput" :parse="parseNumber" :clearable="() => undefined"
       label="Take only this number of reads into analysis"
     />
 
-    <PlBtnGroup :options="librarySourceOptions" v-model="computedTab" label="Custom reference library" />
+    <PlBtnGroup v-model="computedTab" :options="librarySourceOptions" label="Custom reference library" />
     <PlDropdownRef
       v-if="computedTab === 'fromBlock'"
-      :options="app.model.outputs.libraryOptions" 
       v-model="app.model.args.inputLibrary"
+      :options="app.model.outputs.libraryOptions"
       label="Custom library"
       clearable
     />
     <template v-if="computedTab === 'fromFile'">
       <PlFileInput
-      v-model="app.model.args.libraryFile"
-      :progress="app.model.outputs.libraryUploadProgress"
-      file-dialog-title="Select library file"
-      clearable
+        v-model="app.model.args.libraryFile"
+        :progress="app.model.outputs.libraryUploadProgress"
+        file-dialog-title="Select library file"
+        clearable
       />
-      <PlTextField v-model="computedSpecies" 
-      :clearable="() => undefined"
-      label="Species"
-      placeholder="Type spicies name"
+      <PlTextField
+        v-model="computedSpecies"
+        :clearable="() => undefined"
+        label="Species"
+        placeholder="Type spicies name"
       />
     </template>
-
   </PlAccordionSection>
 </template>

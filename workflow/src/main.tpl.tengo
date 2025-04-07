@@ -88,9 +88,9 @@ wf.body(func(args) {
 	presetSpecForBack := presetInfoResult.output("presetSpecForBack", 24 * 60 * 60 * 1000)
 
 	// calculating chains
-	// chains := ["IGHeavy", "IGLight", "TRAlpha", "TRBeta", "TRGamma", "TRDelta"]
+	// chains := ["IGHeavy", "IGLight", "TCRAlpha", "TCRBeta", "TCRGamma", "TCRDelta"]
 	//receptorsOrChains := ["IG", "TCRAB", "TCRGD"]
- 	receptorsOrChains := ["IG"]
+ 	receptorsOrChains := ["IG", "TCRAB", "TCRGD"]
 	if !is_undefined(args.chains) {
 		receptorsOrChains = args.chains
 	}

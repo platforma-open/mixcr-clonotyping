@@ -1,5 +1,6 @@
 import type {
-  InferHrefType } from '@platforma-sdk/model';
+  InferHrefType
+} from '@platforma-sdk/model';
 import {
   BlockModel,
   It,
@@ -18,7 +19,9 @@ import { ProgressPrefix } from './progress';
 
 export const platforma = BlockModel.create('Heavy')
 
-  .withArgs<BlockArgs>({})
+  .withArgs<BlockArgs>({
+    chains: ['IG', 'TCRAB', 'TCRGD'],
+  })
 
   .retentiveOutput('presets', (ctx) =>
     ctx.prerun?.resolve({ field: 'presets', assertFieldType: 'Input' })?.getFileHandle(),
@@ -31,8 +34,8 @@ export const platforma = BlockModel.create('Heavy')
   )
 
   .output('libraryOptions', (ctx) =>
-    ctx.resultPool.getOptions((spec) => spec.annotations?.["pl7.app/vdj/isLibrary"] === "true",
-                                        {includeNativeLabel: true, addLabelAsSuffix:true})
+    ctx.resultPool.getOptions((spec) => spec.annotations?.['pl7.app/vdj/isLibrary'] === 'true',
+      { includeNativeLabel: true, addLabelAsSuffix: true }),
   )
 
   .output('datasetSpec', (ctx) => {
@@ -160,7 +163,7 @@ export const platforma = BlockModel.create('Heavy')
     mapResourceFields(getResourceField(StagingOutputs, 'fileImports'), getImportProgress(It)),
   )
   .output(
-    'libraryUploadProgress', (ctx) => ctx.outputs?.resolve({field: 'libraryImportHandle', allowPermanentAbsence: true})?.getImportProgress(), {isActive: true})
+    'libraryUploadProgress', (ctx) => ctx.outputs?.resolve({ field: 'libraryImportHandle', allowPermanentAbsence: true })?.getImportProgress(), { isActive: true })
 
   .sections((_ctx) => {
     return [{ type: 'link', href: '/', label: 'Main' }];
@@ -176,8 +179,9 @@ export type BlockOutputs = InferOutputsType<typeof platforma>;
 export type Href = InferHrefType<typeof platforma>;
 export * from './args';
 export * from './helpers';
+export * from './preset';
+export * from './progress';
 export * from './qc';
 export * from './reports';
-export * from './progress';
-export * from './preset';
 export { BlockArgs };
+
