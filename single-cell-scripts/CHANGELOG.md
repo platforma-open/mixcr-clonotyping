@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping-2.sc-clonotype-builder
 
+## 1.1.1
+
+### Patch Changes
+
+- fedc4ee: Added clonotype key label column for bulk data
+
 ## 1.1.0
 
 ### Minor Changes

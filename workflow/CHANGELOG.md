@@ -1,5 +1,13 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.5.1
+
+### Patch Changes
+
+- fedc4ee: Added clonotype key label column for bulk data
+- Updated dependencies [fedc4ee]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.single-cell-scripts@1.1.1
+
 ## 2.5.0
 
 ### Minor Changes
