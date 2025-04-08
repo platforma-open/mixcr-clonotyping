@@ -1,5 +1,18 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.2.0
+
+### Minor Changes
+
+- 8643dbf: Output column signeture refactoring:
+  - chain and receptor information moved to clonotype key axis
+  - clonotypingRunId domain also moved to clonotype key axis
+
+### Patch Changes
+
+- Updated dependencies [8643dbf]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@2.5.0
+
 ## 2.1.6
 
 ### Patch Changes
