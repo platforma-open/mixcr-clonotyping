@@ -285,9 +285,10 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 				alphabet := isAminoAcid ? "aminoacid" : "nucleotide"
 				alphabetShort := isAminoAcid ? "aa" : "nt"
 				alphabetShortMixcr := isAminoAcid ? "aa" : "n"
+				columnName := alphabetShortMixcr + "Seq" + imputedU + featureU
 				visibility := isSingleCell ? (featureU == "CDR3") && isAminoAcid : (featureU == "CDR3") || (featureU == assemblingFeature)
 				columnsSpecPerClonotype += [ {
-						column: alphabetShortMixcr + "Seq" + imputedU + featureU,
+						column: columnName,
 						id: alphabetShortMixcr + "-seq-" + featureL + (isImputed ? "-imputed" : ""),
 						naRegex: "region_not_covered",
 						spec: {
@@ -303,28 +304,27 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 							})
 						}
 					} ]
-				exportArgs += [ [ "-" + alphabetShortMixcr + "Feature" + imputedU, featureU ] ]
-				if !isImputed && !isAminoAcid {
-					columnsSpecPerSample += [ {
-							column: "minQual" + featureU,
-							id: "min-qual-" + featureL,
-							naRegex: "region_not_covered",
-							spec: {
-								name: "pl7.app/vdj/sequenceQuality",
-								valueType: "Int",
-								domain: {
-									"pl7.app/vdj/quality": "minQuality",
-									"pl7.app/vdj/feature": featureU
-								},
-								annotations: a(orderP - 10, false, {
-									"pl7.app/min": "0",
-									"pl7.app/max": "60",
-									"pl7.app/label": "Min quality " + featureU
-								})
+
+				// label column
+				if isAminoAcid && !isSingleCell && featureU == "CDR3" {
+					columnsSpecPerClonotype += [ {
+						column: columnName,
+						id: "clonotype-label",
+						preProcess: [{
+							type: "regexpReplace",
+							pattern: "^region_not_covered$",
+							replacement: "Unlabelled"
+						}],
+						spec: {
+							name: "pl7.app/label",
+							valueType: "String",
+							annotations: {
+								"pl7.app/label": "Clone label"
 							}
-						} ]
-					exportArgs += [ [ "-minFeatureQuality", featureU ] ]
+						}
+					} ]
 				}
+				exportArgs += [ [ "-" + alphabetShortMixcr + "Feature" + imputedU, featureU ] ]
 				orderP -= 100
 			}
 		}
@@ -595,7 +595,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 						"pl7.app/vdj/clonotypingRunId": blockId
 					},
 					annotations: {
-						"pl7.app/label": "SC Clonotype key",
+						"pl7.app/label": "Clone label",
 						"pl7.app/table/visibility": "optional",
 						"pl7.app/table/orderPriority": "110000",
 						"pl7.app/segmentedBy": string(json.encode(["pl7.app/vdj/clonotypingRunId"]))
