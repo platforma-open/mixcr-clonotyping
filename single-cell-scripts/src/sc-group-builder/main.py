@@ -81,6 +81,8 @@ def merge_and_group(chainA_df, chainB_df):
         merged_df["clonotypeKeyB2"]
     ], dropna=False).ngroup()
 
+    merged_df["scClonotypeKey"] = "C" + merged_df["scClonotypeKey"].astype(str)
+
     return merged_df
 
 def save_results(merged_df, output_clonotype_file, output_cell_file):
