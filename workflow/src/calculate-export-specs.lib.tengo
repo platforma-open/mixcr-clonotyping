@@ -530,30 +530,6 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 
 	// All columns are added
 
-	// Adding block and segment annotations
-
-	columnsSpecPerSample = addSpec(columnsSpecPerSample, { spec: { domain: {
-		"pl7.app/vdj/clonotypingRunId": blockId
-	} } })
-
-	columnsSpecPerSampleSc = addSpec(columnsSpecPerSampleSc, { spec: { domain: {
-		"pl7.app/vdj/clonotypingRunId": blockId
-	} } })
-
-	//   "pl7.app/segmentedBy" annotation indicates columns that can be meaningfully merged across
-	//   different runs (given they have the same name and axes signature).
-	//   Its absence indicates that merging would be semantically meaningless (e.g., abundance
-	//   measurements specific to each analysis)
-
-	columnsSpecPerClonotype = addSpec(columnsSpecPerClonotype, { spec: {
-		domain: {
-			"pl7.app/vdj/clonotypingRunId": blockId
-		},
-		annotations: {
-			"pl7.app/segmentedBy": string(json.encode(["pl7.app/vdj/clonotypingRunId"]))
-		}
-	} })
-
 	columnsSpec := columnsSpecPerSample + columnsSpecPerClonotype
 
 	// Creating a column map for fast search
@@ -579,6 +555,11 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 			keyStrincture += [ toCombinedDomainValue(columnSpec.spec) ]
 		}
 
+		//   "pl7.app/segmentedBy" annotation indicates columns that can be meaningfully merged across
+		//   different runs (given they have the same name and axes signature).
+		//   Its absence indicates that merging would be semantically meaningless (e.g., abundance
+		//   measurements specific to each analysis)
+
 		axesByClonotypeKey = [ {
 			column: "clonotypeKey",
 			naRegex: "",
@@ -586,12 +567,14 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 				name: "pl7.app/vdj/clonotypeKey",
 				type: "String",
 				domain: {
-					"pl7.app/vdj/clonotypeKey/structure": string(json.encode(keyStrincture))
+					"pl7.app/vdj/clonotypeKey/structure": string(json.encode(keyStrincture)),
+					"pl7.app/vdj/clonotypingRunId": blockId
 				},
 				annotations: {
 					"pl7.app/label": "Clonotype key",
 					"pl7.app/table/visibility": "optional",
-					"pl7.app/table/orderPriority": "110000"
+					"pl7.app/table/orderPriority": "110000",
+					"pl7.app/segmentedBy": string(json.encode(["pl7.app/vdj/clonotypingRunId"]))
 				}
 			}
 		} ]
@@ -608,12 +591,14 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 					name: "pl7.app/vdj/scClonotypeKey",
 					type: "String",
 					domain: {
-						"pl7.app/vdj/scClonotypeKey/structure": string(json.encode(keyStrincture))
+						"pl7.app/vdj/scClonotypeKey/structure": string(json.encode(keyStrincture)),
+						"pl7.app/vdj/clonotypingRunId": blockId
 					},
 					annotations: {
 						"pl7.app/label": "SC Clonotype key",
 						"pl7.app/table/visibility": "optional",
-						"pl7.app/table/orderPriority": "110000"
+						"pl7.app/table/orderPriority": "110000",
+						"pl7.app/segmentedBy": string(json.encode(["pl7.app/vdj/clonotypingRunId"]))
 					}
 				}
 			} ]
