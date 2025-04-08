@@ -1,5 +1,13 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.10.5
+
+### Patch Changes
+
+- cd6367a: Added UI control to select receptor or chain
+- Updated dependencies [cd6367a]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.9.2
+
 ## 1.10.4
 
 ### Patch Changes
