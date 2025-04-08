@@ -136,7 +136,7 @@ blockTest(
     await project.setBlockArgs(clonotypingBlockId, {
       input: clonotypingStableState1Outputs.inputOptions[0].ref,
       preset: { type: 'name', name: 'milab-human-dna-xcr-7genes-multiplex' },
-      // chains: ['TRB'],
+      chains: ['IGHeavy', 'IGLight'],
     } satisfies BlockArgs);
 
     const clonotypingStableState2 = (await awaitStableState(
@@ -223,7 +223,7 @@ blockTest(
     const sample2Id = uniquePlId();
     const metaColumn1Id = uniquePlId();
     const dataset1Id = uniquePlId();
-    
+
     const s1r1Handle = await helpers.getLocalFileHandle('./assets/SRR11233623-sc_R1.fastq.gz');
     const s1r2Handle = await helpers.getLocalFileHandle('./assets/SRR11233623-sc_R2.fastq.gz');
 
@@ -308,7 +308,7 @@ blockTest(
       input: clonotypingStableState1Outputs.inputOptions[0].ref,
       preset: { type: 'name', name: '10x-sc-xcr-vdj' },
       species: 'human',
-      // chains: ['TRB'],
+      chains: ['IG'],
     } satisfies BlockArgs);
 
     const clonotypingStableState2 = (await awaitStableState(
@@ -381,8 +381,8 @@ blockTest(
     ).toHaveProperty("pl7.app/vdj/scClonotypeKey/structure");
 
     expect(
-      clonesPfColumnList.some(c => 
-        c.spec.axesSpec.find((s: any) => s.name === 'pl7.app/vdj/scClonotypeKey') && 
+      clonesPfColumnList.some(c =>
+        c.spec.axesSpec.find((s: any) => s.name === 'pl7.app/vdj/scClonotypeKey') &&
         c.spec.axesSpec.find((s: any) => s.name === 'pl7.app/sampleId')
       )
     ).toEqual(true);
