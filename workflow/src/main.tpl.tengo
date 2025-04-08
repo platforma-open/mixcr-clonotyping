@@ -135,7 +135,6 @@ wf.body(func(args) {
 		qc: pframes.exportColumnData(runMixcr.output("qc.data")),
 		reports: pframes.exportColumnData(runMixcr.output("reports.data")),
 		logs: runMixcr.output("logs.data"),
-		clonotypes: pframes.exportFrame(runMixcr.output("clonotypes")),
 		clns: runMixcr.output("clns.data"),
 		fileImports: smart.createMapResource(maps.mapValues(fileImports, func(im) {
 			return im.handle
