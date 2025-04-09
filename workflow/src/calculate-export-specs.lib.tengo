@@ -417,6 +417,9 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 						spec: {
 							valueType: variant.valueType,
 							name: "pl7.app/vdj/sequence/" + alphabetShortMixcr + variant.name,
+							domain: {
+								"pl7.app/vdj/gene": geneU
+							},
 							annotations: a(orderP, false, {
 								"pl7.app/label": alphabetShort + variant.labelPart + geneU + " gene"
 							})
