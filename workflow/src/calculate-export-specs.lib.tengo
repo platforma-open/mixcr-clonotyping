@@ -376,12 +376,14 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 
 	orderP = 10000
 
-	mutationColumnVariants := [ {
-		name: "Mutations",
-		valueType: "String",
-		labelPart: " mutations in ",
-		idPart: "-mutations-"
-	}, {
+	mutationColumnVariants := [ 
+	// {
+	// 	name: "Mutations",
+	// 	valueType: "String",
+	// 	labelPart: " mutations in ",
+	// 	idPart: "-mutations-"
+	// },
+	{
 		name: "MutationsCount",
 		valueType: "Int",
 		labelPart: " mutations count in ",
@@ -435,21 +437,23 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 			label: "Productive",
 			id: "is-productive",
 			visibility: false
-		}, {
-			columnPrefix: "isOOF",
-			arg: "-isOOF",
-			specName: "pl7.app/vdj/sequence/containsOOF",
-			label: "Contains OOF",
-			id: "is-oof",
-			visibility: false
-		}, {
-			columnPrefix: "hasStopsIn",
-			arg: "-hasStops",
-			specName: "pl7.app/vdj/sequence/containsStopCodons",
-			label: "Contains stop codons",
-			id: "has-stops",
-			visibility: false
-		} ]
+		}
+		// {
+		// 	columnPrefix: "isOOF",
+		// 	arg: "-isOOF",
+		// 	specName: "pl7.app/vdj/sequence/containsOOF",
+		// 	label: "Contains OOF",
+		// 	id: "is-oof",
+		// 	visibility: false
+		// }, {
+		// 	columnPrefix: "hasStopsIn",
+		// 	arg: "-hasStops",
+		// 	specName: "pl7.app/vdj/sequence/containsStopCodons",
+		// 	label: "Contains stop codons",
+		// 	id: "has-stops",
+		// 	visibility: false
+		// }
+	]
 	for variant in flagColumnVariants {
 		columnsSpecPerClonotype += [ {
 				column: variant.columnPrefix + productiveFeature,
@@ -470,29 +474,29 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 
 	// Germline sequences
 
-	geneRegions := ["VRegion", "DRegion", "JRegion"]
+	// geneRegions := ["VRegion", "DRegion", "JRegion"]
 
-	for region in geneRegions {
-		columnsSpecPerClonotype += [ {
-				column: "nSeq" + region + "OfGermline",
-				naRegex: "",
-				allowNA: true,
-				id: "n-seq-" + text.to_lower(region) + "-germline",
-				spec: {
-					name: "pl7.app/vdj/germlineSequence",
-					valueType: "String",
-					domain: {
-						"pl7.app/vdj/feature": region,
-						"pl7.app/alphabet": "nucleotide"
-					},
-					annotations: a(orderP, false, {
-						"pl7.app/label": region[0:1] + " germline"
-					})
-				}
-			} ]
-		exportArgs += [ [ "-nFeature", region, "germline" ] ]
-		orderP -= 100
-	}
+	// for region in geneRegions {
+	// 	columnsSpecPerClonotype += [ {
+	// 			column: "nSeq" + region + "OfGermline",
+	// 			naRegex: "",
+	// 			allowNA: true,
+	// 			id: "n-seq-" + text.to_lower(region) + "-germline",
+	// 			spec: {
+	// 				name: "pl7.app/vdj/germlineSequence",
+	// 				valueType: "String",
+	// 				domain: {
+	// 					"pl7.app/vdj/feature": region,
+	// 					"pl7.app/alphabet": "nucleotide"
+	// 				},
+	// 				annotations: a(orderP, false, {
+	// 					"pl7.app/label": region[0:1] + " germline"
+	// 				})
+	// 			}
+	// 		} ]
+	// 	exportArgs += [ [ "-nFeature", region, "germline" ] ]
+	// 	orderP -= 100
+	// }
 
 	// Isotype and chain
 
@@ -527,6 +531,38 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		[ "-isotype", "primary" ],
 		[ "-topChains" ]
 	]
+
+	//Sequence length
+	
+	// for now use only CDR3 length to avoid generating too many columns
+	lengthColumns := ["CDR3"] // assemblingFeatureInfo.nonImputed
+
+	for featureU in lengthColumns {
+		featureL := text.to_lower(featureU)
+		for isAminoAcid in [false, true] {
+			alphabet := isAminoAcid ? "aminoacid" : "nucleotide"
+			alphabetShort := isAminoAcid ? "aa" : "nt"
+			alphabetShortMixcr := isAminoAcid ? "aa" : "n"
+			columnsSpecPerClonotype += [ {
+				column: alphabetShortMixcr + "Length" + featureU,
+				id: alphabetShortMixcr + "-length-" + featureL,
+				naRegex: "region_not_covered",
+				spec: {
+					name: "pl7.app/vdj/sequenceLength",
+					valueType: "Int",
+					domain: {
+						"pl7.app/vdj/feature": featureU,
+						"pl7.app/alphabet": alphabet
+					},
+					annotations: a(orderP, false, {
+						"pl7.app/label": "Length of " + featureU + " " + alphabetShort
+					})
+				}
+			} ]
+			exportArgs += [ [ "-" + alphabetShortMixcr + "Length", featureU ] ]
+			orderP -= 100
+		}
+	}
 
 	// All columns are added
 

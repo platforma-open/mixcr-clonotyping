@@ -1,5 +1,5 @@
 import type {
-  InferHrefType
+  InferHrefType,
 } from '@platforma-sdk/model';
 import {
   BlockModel,
