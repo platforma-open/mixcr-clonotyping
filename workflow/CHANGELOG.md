@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.6.1
+
+### Patch Changes
+
+- 24b689b: Fixes spec for mutation columns (adds pl7.app/vdj/gene domain to make column ids for V and J genes distinguishable)
+
 ## 2.6.0
 
 ### Minor Changes
