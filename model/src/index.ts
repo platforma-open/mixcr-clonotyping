@@ -1,5 +1,5 @@
 import type {
-  InferHrefType
+  InferHrefType,
 } from '@platforma-sdk/model';
 import {
   BlockModel,
@@ -8,10 +8,11 @@ import {
   StagingOutputs,
   getImportProgress,
   getResourceField,
+  isPColumn,
   isPColumnSpec,
   mapResourceFields,
   parseResourceMap,
-  type InferOutputsType
+  type InferOutputsType,
 } from '@platforma-sdk/model';
 import { BlockArgs, BlockArgsValid } from './args';
 import { ProgressPrefix } from './progress';
@@ -74,6 +75,14 @@ export const platforma = BlockModel.create('Heavy')
           (e) => e.key[0] as string,
         )
       : undefined;
+  })
+
+  .output('clones', (ctx) => {
+    const collection = ctx.outputs?.resolve('clonotypes')?.parsePObjectCollection();
+    if (collection === undefined) return undefined;
+    // if (collection === undefined || !collection.isComplete) return undefined;
+    const pColumns = Object.values(collection).filter(isPColumn);
+    return ctx.createPFrame(pColumns);
   })
 
   .retentiveOutput('inputOptions', (ctx) => {
