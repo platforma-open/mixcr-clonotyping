@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.6.0
+
+### Minor Changes
+
+- 4b789fc: Added CDR3 length; removed unnecessary columns; removed pf from outputs
+
 ## 2.5.1
 
 ### Patch Changes
