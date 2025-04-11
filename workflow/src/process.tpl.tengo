@@ -351,8 +351,10 @@ self.body(func(inputs) {
 						clonotypeKeyColumns: clonotypeKeyColumns,
 						clonotypeKeyArgs: clonotypeKeyArgs,
 						cellTagColumns: cellTagColumns,
-						exportArgs: exportArgs
-					}
+						exportArgs: exportArgs,
+						isLibraryFileGzipped: isLibraryFileGzipped
+					},
+					library: library
 				}
 			}
 		)
