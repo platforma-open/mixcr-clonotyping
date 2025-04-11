@@ -46,7 +46,7 @@ assemblingFeatureInfo := func(assemblingFeature) {
 		splittedFeature := text.split(assemblingFeature, "_TO_")
 		if len(splittedFeature) == 2 {
 			if splittedFeature[1] == "FR4" {
-				productiveFeature = "{"+splittedFeature[0] + "Begin:FR4End(-1)}"
+				productiveFeature = splittedFeature[0] + "_TO_FR4(0,-1)"
 				coreVFeature = "{"+splittedFeature[0]+"Begin:FR3End}"
 				coreJFeature = "FR4"
 			} else {
