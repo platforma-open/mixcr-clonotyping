@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.7.0
+
+### Minor Changes
+
+- a3d8933: ampliseq preset bug correction
+
 ## 2.6.1
 
 ### Patch Changes
