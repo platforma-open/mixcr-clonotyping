@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.8.0
+
+### Minor Changes
+
+- 22a4bd4: passing library into exportClones template
+
 ## 2.7.0
 
 ### Minor Changes
