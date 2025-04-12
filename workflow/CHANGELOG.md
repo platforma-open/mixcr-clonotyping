@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.8.2
+
+### Patch Changes
+
+- e84b4df: SDK upgrade to fix empty tables issues & minor corrections to column generation logic
+
 ## 2.8.1
 
 ### Patch Changes
