@@ -535,38 +535,6 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		[ "-topChains" ]
 	]
 
-	//Sequence length
-	
-	// for now use only CDR3 length to avoid generating too many columns
-	lengthColumns := ["CDR3"] // assemblingFeatureInfo.nonImputed
-
-	for featureU in lengthColumns {
-		featureL := text.to_lower(featureU)
-		for isAminoAcid in [false, true] {
-			alphabet := isAminoAcid ? "aminoacid" : "nucleotide"
-			alphabetShort := isAminoAcid ? "aa" : "nt"
-			alphabetShortMixcr := isAminoAcid ? "aa" : "n"
-			columnsSpecPerClonotype += [ {
-				column: alphabetShortMixcr + "Length" + featureU,
-				id: alphabetShortMixcr + "-length-" + featureL,
-				naRegex: "region_not_covered",
-				spec: {
-					name: "pl7.app/vdj/sequenceLength",
-					valueType: "Int",
-					domain: {
-						"pl7.app/vdj/feature": featureU,
-						"pl7.app/alphabet": alphabet
-					},
-					annotations: a(orderP, false, {
-						"pl7.app/label": "Length of " + featureU + " " + alphabetShort
-					})
-				}
-			} ]
-			exportArgs += [ [ "-" + alphabetShortMixcr + "Length", featureU ] ]
-			orderP -= 100
-		}
-	}
-
 	// All columns are added
 
 	columnsSpec := columnsSpecPerSample + columnsSpecPerClonotype
