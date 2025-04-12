@@ -269,7 +269,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		features = ["CDR1", "FR1", "FR2", "CDR2", "FR3", "CDR3", "FR4"]
 		anchorFeature = "CDR3"
 	} else if assemblingFeature != "CDR3" {
-		features = [assemblingFeature, "CDR1", "FR1", "FR2", "CDR2", "FR3", "CDR3", "FR4"]
+		features = ["CDR1", "FR1", "FR2", "CDR2", "FR3", "CDR3", "FR4", assemblingFeature]
 		anchorFeature = assemblingFeature
 	} else {
 		features = ["CDR3"]
@@ -281,12 +281,12 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		imputedL := text.to_lower(imputedU)
 		for featureU in features {
 			featureL := text.to_lower(featureU)
-			for isAminoAcid in [false, true] {
+			for isAminoAcid in [true, false] {
 				alphabet := isAminoAcid ? "aminoacid" : "nucleotide"
 				alphabetShort := isAminoAcid ? "aa" : "nt"
 				alphabetShortMixcr := isAminoAcid ? "aa" : "n"
 				columnName := alphabetShortMixcr + "Seq" + imputedU + featureU
-				visibility := isSingleCell ? (featureU == "CDR3") && isAminoAcid : (featureU == "CDR3") || (featureU == assemblingFeature)
+				visibility := featureU == "CDR3" && (!isSingleCell || isAminoAcid) // isSingleCell ? (featureU == "CDR3") && isAminoAcid : (featureU == "CDR3") || (featureU == assemblingFeature)
 				columnsSpecPerClonotype += [ {
 						column: columnName,
 						id: alphabetShortMixcr + "-seq-" + featureL + (isImputed ? "-imputed" : ""),
@@ -304,6 +304,29 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 							})
 						}
 					} ]
+				exportArgs += [ [ "-" + alphabetShortMixcr + "Feature" + imputedU, featureU ] ]
+				orderP -= 100
+
+				// For now calculate length only for CDR3 to keep the number of columns manageable
+				if featureU == "CDR3" {
+					columnsSpecPerClonotype += [ {
+						column: alphabetShortMixcr + "Length" + featureU,
+						id: alphabetShortMixcr + "-length-" + featureL,
+						naRegex: "region_not_covered",
+						spec: {
+							name: "pl7.app/vdj/sequenceLength",
+							valueType: "Int",
+							domain: {
+								"pl7.app/vdj/feature": featureU,
+								"pl7.app/alphabet": alphabet
+							},
+							annotations: a(orderP, false, {
+								"pl7.app/label": "Length of " + featureU + " " + alphabetShort
+							})
+						}
+					} ]
+					exportArgs += [ [ "-" + alphabetShortMixcr + "Length", featureU ] ]
+				}
 
 				// label column
 				if isAminoAcid && !isSingleCell && featureU == "CDR3" {
@@ -318,14 +341,12 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 						spec: {
 							name: "pl7.app/label",
 							valueType: "String",
-							annotations: {
+							annotations: a(100000, false, {
 								"pl7.app/label": "Clone label"
-							}
+							})
 						}
 					} ]
 				}
-				exportArgs += [ [ "-" + alphabetShortMixcr + "Feature" + imputedU, featureU ] ]
-				orderP -= 100
 			}
 		}
 	}
@@ -376,7 +397,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 
 	orderP = 10000
 
-	mutationColumnVariants := [ 
+	mutationColumnVariants := [
 	// {
 	// 	name: "Mutations",
 	// 	valueType: "String",
