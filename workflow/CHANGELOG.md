@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.8.1
+
+### Patch Changes
+
+- f838dd2: Remove CDR3 length column from output
+
 ## 2.8.0
 
 ### Minor Changes
