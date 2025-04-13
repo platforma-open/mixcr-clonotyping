@@ -272,7 +272,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 					"pl7.app/label": "Fraction of Cells"
 				})
 			}
-		}, columnsSpecPerClonotype ]
+		}, sampleCountColumn ]
 	} else {
 		columnsSpecPerClonotype += [ sampleCountColumn ]
 	}
