@@ -121,7 +121,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 	columnsSpecPerSample := []
 	columnsSpecPerSampleSc := undefined
 	columnsSpecPerClonotype := []
-	columnsSpecPerClonotypeSc := []
+	columnsSpecPerClonotypeSc := undefined
 
 	// array of array of arg groups
 	exportArgs := []
@@ -274,7 +274,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 				})
 			}
 		} ]
-		columnsSpecPerClonotypeSc += [ sampleCountColumn ]
+		columnsSpecPerClonotypeSc = [ sampleCountColumn ]
 	} else {
 		columnsSpecPerClonotype += [ sampleCountColumn ]
 	}
@@ -500,6 +500,8 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		// 	visibility: false
 		// }
 	]
+	mainProductiveColumn := flagColumnVariants[0].columnPrefix + productiveFeature
+	mainProductiveArgs := [ flagColumnVariants[0].arg, productiveFeature ]
 	for variant in flagColumnVariants {
 		columnsSpecPerClonotype += [ {
 				column: variant.columnPrefix + productiveFeature,
@@ -685,6 +687,8 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		columnsSpec: columnsSpec,
 
 		mainAbundanceColumn: mainAbundanceColumn,
+		mainProductiveColumn: mainProductiveColumn,
+		mainProductiveArgs: mainProductiveArgs,
 
 		exportArgs: exportArgs
 	}

@@ -60,6 +60,7 @@ self.body(func(inputs) {
 		software(scGroupBuilderSw).
 		addFile("chain_a_output.tsv", chainAoutput).
 		addFile("chain_b_output.tsv", chainBoutput).
+		arg("--only_full_clonotypes").
 		arg("--chainA").arg("chain_a_output.tsv").
 		arg("--chainB").arg("chain_b_output.tsv").
 		arg("--output_clonotype").arg("clonotype.tsv").
