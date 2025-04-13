@@ -4,6 +4,7 @@ pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 slices := import("@platforma-sdk/workflow-tengo:slices")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 exec := import("@platforma-sdk/workflow-tengo:exec")
+maps := import("@platforma-sdk/workflow-tengo:maps")
 
 json := import("json")
 
@@ -52,7 +53,9 @@ self.body(func(inputs) {
 		arg("--workflow").arg("wf.json").
 		writeFile("wf.json", json.encode(pWorkflow))
 
-	for sKey, inputFile in inputData.inputs() {
+	inputMap := inputData.inputs()
+	for sKey in maps.getKeys(inputMap) {
+		inputFile := inputMap[sKey]
 		key := json.decode(sKey)
 		if len(key) != 1 {
 			ll.panic("malformed key: %v", sKey)

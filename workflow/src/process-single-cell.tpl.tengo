@@ -3,6 +3,7 @@ self := import("@platforma-sdk/workflow-tengo:tpl.light")
 pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 exec := import("@platforma-sdk/workflow-tengo:exec")
+maps := import("@platforma-sdk/workflow-tengo:maps")
 
 json := import("json")
 
@@ -23,13 +24,17 @@ self.body(func(inputs) {
 
 	// Creating files map
 	filesMap := {}
-	for k, v in byCellTagA.inputs() {
+	inputMapA := byCellTagA.inputs()
+	for k in maps.getKeys(inputMapA) {
+		v := inputMapA[k]
 		key := json.decode(k)
 		fileName := "by_cell_a_" + key[0] + ".tsv"
 		filesMap[fileName] = v
 	}
 
-	for k, v in byCellTagB.inputs() {
+	inputMapB := byCellTagB.inputs()
+	for k in maps.getKeys(inputMapB) {
+		v := inputMapB[k]
 		key := json.decode(k)
 		fileName := "by_cell_b_" + key[0] + ".tsv"
 		filesMap[fileName] = v
@@ -40,7 +45,7 @@ self.body(func(inputs) {
 		software(scPreprocessingSw).
 		addFiles(filesMap)
 
-	for name, f in filesMap {
+	for name in maps.getKeys(filesMap) {
 		scPreprocessingCmd = scPreprocessingCmd.arg(name)
 	}
 
