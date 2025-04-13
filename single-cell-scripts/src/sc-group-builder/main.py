@@ -134,7 +134,7 @@ def main():
 
     # If both input tables are empty (only headers), output empty tables (only headers)
     if chainA_df.empty and chainB_df.empty:
-        clonotype_columns = ["scClonotypeKey", "clonotypeKeyA1", "clonotypeKeyA2", "clonotypeKeyB1", "clonotypeKeyB2"]
+        clonotype_columns = ["scClonotypeKey", "clonotypeKeyA1", "clonotypeKeyA2", "clonotypeKeyB1", "clonotypeKeyB2", "sampleCount"]
         cell_columns = ["sampleId", "scClonotypeKey", "uniqueCellCount", "uniqueCellFraction"]
         pd.DataFrame(columns=clonotype_columns).to_csv(args.output_clonotypes, sep="\t", index=False, quoting=csv.QUOTE_NONE)
         pd.DataFrame(columns=cell_columns).to_csv(args.output_cells, sep="\t", index=False, quoting=csv.QUOTE_NONE)

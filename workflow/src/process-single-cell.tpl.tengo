@@ -6,7 +6,7 @@ exec := import("@platforma-sdk/workflow-tengo:exec")
 
 json := import("json")
 
-self.defineOutputs("abundanceTsv", "propertiesAPrimaryTsv", "propertiesASecondaryTsv", "propertiesBPrimaryTsv", "propertiesBSecondaryTsv")
+self.defineOutputs("abundanceTsv", "clonotypeTsv", "propertiesAPrimaryTsv", "propertiesASecondaryTsv", "propertiesBPrimaryTsv", "propertiesBSecondaryTsv")
 
 scGroupBuilderSw := assets.importSoftware("@platforma-open/milaboratories.mixcr-clonotyping-2.single-cell-scripts:sc-group-builder")
 scPreprocessingSw := assets.importSoftware("@platforma-open/milaboratories.mixcr-clonotyping-2.single-cell-scripts:preprocessing")
@@ -97,6 +97,8 @@ self.body(func(inputs) {
 	return {
 		// must have sampleId and scClonotypeKey columns
 		abundanceTsv: abundanceTsv,
+		// used for aggregates (i.e. sampleCount)
+		clonotypeTsv: clonotypeTsv,
 
 		// must have scClonotypeKey columns
 		propertiesAPrimaryTsv: scOutputCmd.getFile("properties_a_primary.tsv"),

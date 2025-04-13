@@ -121,6 +121,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 	columnsSpecPerSample := []
 	columnsSpecPerSampleSc := undefined
 	columnsSpecPerClonotype := []
+	columnsSpecPerClonotypeSc := []
 
 	// array of array of arg groups
 	exportArgs := []
@@ -272,7 +273,8 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 					"pl7.app/label": "Fraction of Cells"
 				})
 			}
-		}, sampleCountColumn ]
+		} ]
+		columnsSpecPerClonotypeSc += [ sampleCountColumn ]
 	} else {
 		columnsSpecPerClonotype += [ sampleCountColumn ]
 	}
@@ -678,6 +680,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		columnsSpecPerSample: columnsSpecPerSample,
 		columnsSpecPerSampleSc: columnsSpecPerSampleSc,
 		columnsSpecPerClonotype: columnsSpecPerClonotype,
+		columnsSpecPerClonotypeSc: columnsSpecPerClonotypeSc,
 
 		columnsSpec: columnsSpec,
 
