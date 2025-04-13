@@ -21,6 +21,14 @@ self.body(func(inputs) {
 	mainAbundanceColumn := params.mainAbundanceColumn
 	clonotypeColumns := params.clonotypeColumns
 
+	pickCols := []
+	for col in clonotypeColumns {
+		if col == "sampleCount" {
+			continue
+		}
+		pickCols = append(pickCols, [col, col])
+	}
+
 	// Adding clonotypeKey column
 	pWorkflow := {
 		steps: [ {
@@ -29,9 +37,11 @@ self.body(func(inputs) {
 			aggregations: [ {
 				type: "max_by",
 				rankingCol: mainAbundanceColumn,
-				pickCols: slices.map(clonotypeColumns, func(col) {
-					return [col, col]
-				})
+				pickCols: pickCols
+			}, {
+				type: "count",
+				src: mainAbundanceColumn,
+				dst: "sampleCount"
 			} ]
 		} ]
 	}

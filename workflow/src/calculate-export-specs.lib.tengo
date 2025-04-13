@@ -247,6 +247,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 				valueType: "Double",
 				annotations: a(20000, false, {
 					"pl7.app/min": "0",
+					"pl7.app/max": "1",
 					"pl7.app/isAbundance": "true",
 					"pl7.app/abundance/unit": "cells",
 					"pl7.app/abundance/normalized": "true",
@@ -256,6 +257,24 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 			}
 		} ]
 	}
+
+	// Adding sampleCount column spec to PerClonotype list
+	columnsSpecPerClonotype += [{
+		column: "sampleCount",
+		id: "sample-count",
+		allowNA: false,
+		spec: {
+			name: "pl7.app/vdj/sampleCount",
+			valueType: "Int",
+			annotations: a(87110, true, {
+				"pl7.app/min": "1",
+				"pl7.app/isAbundance": "true",
+				"pl7.app/abundance/unit": "samples",
+				"pl7.app/abundance/normalized": "false",
+				"pl7.app/label": "Number of Samples"
+			})
+		}
+	}]
 
 	orderP := 80000
 
