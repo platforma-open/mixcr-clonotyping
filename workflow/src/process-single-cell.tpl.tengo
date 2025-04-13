@@ -42,11 +42,10 @@ self.body(func(inputs) {
 
 	scPreprocessingCmd := exec.builder().
 		printErrStreamToStdout().
-		software(scPreprocessingSw).
-		addFiles(filesMap)
+		software(scPreprocessingSw)
 
 	for name in maps.getKeys(filesMap) {
-		scPreprocessingCmd = scPreprocessingCmd.arg(name)
+		scPreprocessingCmd.addFile(name, filesMap[name]).arg(name)
 	}
 
 	// Data preprocessing
