@@ -211,6 +211,23 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		mainAbundanceColumn = "uniqueMoleculeFraction"
 	}
 
+	sampleCountColumn := {
+		column: "sampleCount",
+		id: "sample-count",
+		allowNA: false,
+		spec: {
+			name: "pl7.app/vdj/sampleCount",
+			valueType: "Int",
+			annotations: a(87110, true, {
+				"pl7.app/min": "1",
+				"pl7.app/isAbundance": "true",
+				"pl7.app/abundance/unit": "samples",
+				"pl7.app/abundance/normalized": "false",
+				"pl7.app/label": "Number of Samples"
+			})
+		}
+	}
+
 	if isSingleCell {
 		// copying reads and umi counts and fraction removing isPrimary and isAnchor
 		columnsSpecPerSample = addSpec(columnsSpecPerSample, {
@@ -255,26 +272,10 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 					"pl7.app/label": "Fraction of Cells"
 				})
 			}
-		} ]
+		}, columnsSpecPerClonotype ]
+	} else {
+		columnsSpecPerClonotype += [ sampleCountColumn ]
 	}
-
-	// Adding sampleCount column spec to PerClonotype list
-	columnsSpecPerClonotype += [{
-		column: "sampleCount",
-		id: "sample-count",
-		allowNA: false,
-		spec: {
-			name: "pl7.app/vdj/sampleCount",
-			valueType: "Int",
-			annotations: a(87110, true, {
-				"pl7.app/min": "1",
-				"pl7.app/isAbundance": "true",
-				"pl7.app/abundance/unit": "samples",
-				"pl7.app/abundance/normalized": "false",
-				"pl7.app/label": "Number of Samples"
-			})
-		}
-	}]
 
 	orderP := 80000
 
