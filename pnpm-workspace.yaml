@@ -7,15 +7,15 @@ packages:
   - test
 
 catalog:
-  '@platforma-sdk/workflow-tengo': ^4.0.8
+  '@platforma-sdk/workflow-tengo': ^4.1.0
   '@platforma-sdk/model': ^1.29.2
-  '@platforma-sdk/ui-vue': ^1.29.2
-  '@platforma-sdk/tengo-builder': ^2.0.3
+  '@platforma-sdk/ui-vue': ^1.29.5
+  '@platforma-sdk/tengo-builder': ^2.1.0
   '@platforma-sdk/package-builder': ^2.15.6
   '@platforma-sdk/block-tools': ^2.5.36
   '@platforma-sdk/eslint-config': ^1.0.3
 
-  '@platforma-sdk/test': ^1.29.3
+  '@platforma-sdk/test': ^1.29.8
   '@milaboratories/helpers': ^1.6.11
 
   "@platforma-open/milaboratories.runenv-python-3": ^1.1.7
@@ -43,7 +43,7 @@ catalog:
   'ag-grid-enterprise': &ag-grid ^33.1.1
   'ag-grid-vue3': *ag-grid
 
-  '@changesets/cli': ^2.28.1
+  '@changesets/cli': ^2.29.0
 
   # other blocks used in tests
 
