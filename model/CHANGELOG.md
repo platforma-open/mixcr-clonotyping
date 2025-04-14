@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.10.1
+
+### Patch Changes
+
+- e03cacd: updating dependencies and republish software
+
 ## 1.10.0
 
 ### Minor Changes

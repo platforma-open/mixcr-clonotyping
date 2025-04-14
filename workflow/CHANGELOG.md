@@ -1,5 +1,13 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.10.1
+
+### Patch Changes
+
+- e03cacd: updating dependencies and republish software
+- Updated dependencies [e03cacd]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.single-cell-scripts@1.1.2
+
 ## 2.10.0
 
 ### Minor Changes

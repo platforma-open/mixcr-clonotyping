@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping-2.sc-clonotype-builder
 
+## 1.1.2
+
+### Patch Changes
+
+- e03cacd: updating dependencies and republish software
+
 ## 1.1.1
 
 ### Patch Changes
