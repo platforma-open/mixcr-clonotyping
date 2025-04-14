@@ -121,6 +121,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 	columnsSpecPerSample := []
 	columnsSpecPerSampleSc := undefined
 	columnsSpecPerClonotype := []
+	columnsSpecPerClonotypeSc := undefined
 
 	// array of array of arg groups
 	exportArgs := []
@@ -211,6 +212,23 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		mainAbundanceColumn = "uniqueMoleculeFraction"
 	}
 
+	sampleCountColumn := {
+		column: "sampleCount",
+		id: "sample-count",
+		allowNA: false,
+		spec: {
+			name: "pl7.app/vdj/sampleCount",
+			valueType: "Int",
+			annotations: a(87110, true, {
+				"pl7.app/min": "1",
+				"pl7.app/isAbundance": "true",
+				"pl7.app/abundance/unit": "samples",
+				"pl7.app/abundance/normalized": "false",
+				"pl7.app/label": "Number of Samples"
+			})
+		}
+	}
+
 	if isSingleCell {
 		// copying reads and umi counts and fraction removing isPrimary and isAnchor
 		columnsSpecPerSample = addSpec(columnsSpecPerSample, {
@@ -256,25 +274,10 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 				})
 			}
 		} ]
+		columnsSpecPerClonotypeSc = [ sampleCountColumn ]
+	} else {
+		columnsSpecPerClonotype += [ sampleCountColumn ]
 	}
-
-	// Adding sampleCount column spec to PerClonotype list
-	columnsSpecPerClonotype += [{
-		column: "sampleCount",
-		id: "sample-count",
-		allowNA: false,
-		spec: {
-			name: "pl7.app/vdj/sampleCount",
-			valueType: "Int",
-			annotations: a(87110, true, {
-				"pl7.app/min": "1",
-				"pl7.app/isAbundance": "true",
-				"pl7.app/abundance/unit": "samples",
-				"pl7.app/abundance/normalized": "false",
-				"pl7.app/label": "Number of Samples"
-			})
-		}
-	}]
 
 	orderP := 80000
 
@@ -497,6 +500,8 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		// 	visibility: false
 		// }
 	]
+	mainProductiveColumn := flagColumnVariants[0].columnPrefix + productiveFeature
+	mainProductiveArgs := [ flagColumnVariants[0].arg, productiveFeature ]
 	for variant in flagColumnVariants {
 		columnsSpecPerClonotype += [ {
 				column: variant.columnPrefix + productiveFeature,
@@ -677,10 +682,13 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		columnsSpecPerSample: columnsSpecPerSample,
 		columnsSpecPerSampleSc: columnsSpecPerSampleSc,
 		columnsSpecPerClonotype: columnsSpecPerClonotype,
+		columnsSpecPerClonotypeSc: columnsSpecPerClonotypeSc,
 
 		columnsSpec: columnsSpec,
 
 		mainAbundanceColumn: mainAbundanceColumn,
+		mainProductiveColumn: mainProductiveColumn,
+		mainProductiveArgs: mainProductiveArgs,
 
 		exportArgs: exportArgs
 	}

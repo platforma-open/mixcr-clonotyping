@@ -85,10 +85,17 @@ def merge_and_group(chainA_df, chainB_df):
 
     return merged_df
 
-def save_results(merged_df, output_clonotype_file, output_cell_file):
+def save_results(merged_df, output_clonotype_file, output_cell_file, args):
+    # Calculate number of samples per scClonotypeKey
+    sample_counts = merged_df.groupby("scClonotypeKey")["sampleId"].nunique().reset_index()
+    sample_counts.rename(columns={"sampleId": "sampleCount"}, inplace=True)
+
     clonotype_records = merged_df[
         ["scClonotypeKey", "clonotypeKeyA1", "clonotypeKeyA2", "clonotypeKeyB1", "clonotypeKeyB2"]
     ].drop_duplicates()
+
+    # Merge the sample counts into clonotype records
+    clonotype_records = pd.merge(clonotype_records, sample_counts, on="scClonotypeKey", how="left")
 
     # Count cells by scClonotypeKey and sample_id
     cell_counts = merged_df.groupby(["scClonotypeKey", "sampleId"]).size().reset_index(name="count")
@@ -97,6 +104,17 @@ def save_results(merged_df, output_clonotype_file, output_cell_file):
     cell_counts = cell_counts[["sampleId", "scClonotypeKey", "count"]]
     cell_counts = cell_counts.rename(columns={"count": "uniqueCellCount"})
     cell_counts["uniqueCellFraction"] = cell_counts.groupby("sampleId")["uniqueCellCount"].transform(lambda x: x / x.sum())
+
+    # Apply filtering if the flag is set
+    if args.only_full_clonotypes:
+        # Keep only clonotypes where both primary chains are present ("NA" indicates absence)
+        clonotype_records = clonotype_records[
+            (clonotype_records["clonotypeKeyA1"] != "NA") &
+            (clonotype_records["clonotypeKeyB1"] != "NA")
+        ]
+        # Filter cell_counts to only include scClonotypeKeys present in the filtered clonotype_records
+        valid_sc_clonotype_keys = clonotype_records["scClonotypeKey"].unique()
+        cell_counts = cell_counts[cell_counts["scClonotypeKey"].isin(valid_sc_clonotype_keys)]
 
     # Save to files
     clonotype_records.to_csv(output_clonotype_file, sep="\t", index=False, quoting=csv.QUOTE_NONE)
@@ -108,6 +126,7 @@ def main():
     parser.add_argument("--chainB", required=True, help="Path to the Chain B input file")
     parser.add_argument("--output_clonotypes", required=True, help="Path to output clonotypes file")
     parser.add_argument("--output_cells", required=True, help="Path to output cell tags file")
+    parser.add_argument("--only_full_clonotypes", action="store_true", help="Output only clonotypes with both primary chains defined")
     args = parser.parse_args()
 
     chainA_df = load_and_reformat_data(args.chainA, "A")
@@ -115,14 +134,14 @@ def main():
 
     # If both input tables are empty (only headers), output empty tables (only headers)
     if chainA_df.empty and chainB_df.empty:
-        clonotype_columns = ["scClonotypeKey", "clonotypeKeyA1", "clonotypeKeyA2", "clonotypeKeyB1", "clonotypeKeyB2"]
+        clonotype_columns = ["scClonotypeKey", "clonotypeKeyA1", "clonotypeKeyA2", "clonotypeKeyB1", "clonotypeKeyB2", "sampleCount"]
         cell_columns = ["sampleId", "scClonotypeKey", "uniqueCellCount", "uniqueCellFraction"]
         pd.DataFrame(columns=clonotype_columns).to_csv(args.output_clonotypes, sep="\t", index=False, quoting=csv.QUOTE_NONE)
         pd.DataFrame(columns=cell_columns).to_csv(args.output_cells, sep="\t", index=False, quoting=csv.QUOTE_NONE)
         return
 
     merged_df = merge_and_group(chainA_df, chainB_df)
-    save_results(merged_df, args.output_clonotypes, args.output_cells)
+    save_results(merged_df, args.output_clonotypes, args.output_cells, args)
 
 if __name__ == "__main__":
     main()

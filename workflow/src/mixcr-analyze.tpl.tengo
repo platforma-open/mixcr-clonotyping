@@ -8,6 +8,7 @@ exec := import("@platforma-sdk/workflow-tengo:exec")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 pcolumn := import("@platforma-sdk/workflow-tengo:pframes.pcolumn")
 times := import("times")
+maps := import("@platforma-sdk/workflow-tengo:maps")
 
 json := import("json")
 
@@ -92,16 +93,19 @@ self.body(func(inputs) {
 			arg(preset.name)
 	}
 
+	inputMap := inputData.inputs()
 	if inputDataMeta.keyLength == 0 {
 		ll.assert(aggregationAxesNames == [], "unexpected aggregation axes names")
-		inputFile := inputData.inputs()["[]"]
+		// Assuming only one key "[]" exists here, no need for sorted iteration
+		inputFile := inputMap["[]"]
 		ll.assert(!is_undefined(inputFile), "unexpected agg group structure")
 		inputFileName := "input." + fileExtension
 		mixcrCmdBuilder.addFile(inputFileName, inputFile)
 		mixcrCmdBuilder.arg(inputFileName)
 	} else if inputDataMeta.keyLength == 1 {
 		ll.assert(aggregationAxesNames == ["pl7.app/sequencing/readIndex"], "unexpected aggregation axes names")
-		for sKey, inputFile in inputData.inputs() {
+		for sKey in maps.getKeys(inputMap) {
+			inputFile := inputMap[sKey]
 			key := json.decode(sKey)
 			if len(key) != 1 {
 				ll.panic("malformed key: %v", sKey)
@@ -115,7 +119,8 @@ self.body(func(inputs) {
 		mixcrCmdBuilder.arg("input_{{R}}." + fileExtension)
 	} else if inputDataMeta.keyLength == 2 {
 		ll.assert(aggregationAxesNames == ["pl7.app/sequencing/lane", "pl7.app/sequencing/readIndex"], "unexpected aggregation axes names")
-		for sKey, inputFile in inputData.inputs() {
+		for sKey in maps.getKeys(inputMap) {
+			inputFile := inputMap[sKey]
 			key := json.decode(sKey)
 			if len(key) != 2 {
 				ll.panic("malformed key: %v", sKey)

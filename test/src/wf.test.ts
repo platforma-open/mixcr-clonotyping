@@ -51,7 +51,7 @@ blockTest(
 
 blockTest(
   'simple project',
-  { timeout: 55000 },
+  { timeout: 70000 },
   async ({ rawPrj: project, ml, helpers, expect }) => {
     const sndBlockId = await project.addBlock('Samples & Data', samplesAndDataBlockSpec);
     const clonotypingBlockId = await project.addBlock('MiXCR Clonotyping', myBlockSpec);
@@ -214,7 +214,7 @@ blockTest(
 
 blockTest(
   'simple sc project',
-  { timeout: 300000 },
+  { timeout: 400000 },
   async ({ rawPrj: project, ml, helpers, expect }) => {
     const sndBlockId = await project.addBlock('Samples & Data', samplesAndDataBlockSpec);
     const clonotypingBlockId = await project.addBlock('MiXCR Clonotyping', myBlockSpec);

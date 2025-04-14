@@ -37,6 +37,7 @@ self.body(func(inputs) {
 			arg("--dont-split-files").
 			arg("--drop-default-fields").
 			arg("--reset-export-clone-table-splitting").
+			arg("--export-productive-clones-only").
 			arg("--chains").arg(chains)
 
 		if library {

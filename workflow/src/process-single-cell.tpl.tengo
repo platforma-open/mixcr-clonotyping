@@ -3,10 +3,11 @@ self := import("@platforma-sdk/workflow-tengo:tpl.light")
 pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 exec := import("@platforma-sdk/workflow-tengo:exec")
+maps := import("@platforma-sdk/workflow-tengo:maps")
 
 json := import("json")
 
-self.defineOutputs("abundanceTsv", "propertiesAPrimaryTsv", "propertiesASecondaryTsv", "propertiesBPrimaryTsv", "propertiesBSecondaryTsv")
+self.defineOutputs("abundanceTsv", "clonotypeTsv", "propertiesAPrimaryTsv", "propertiesASecondaryTsv", "propertiesBPrimaryTsv", "propertiesBSecondaryTsv")
 
 scGroupBuilderSw := assets.importSoftware("@platforma-open/milaboratories.mixcr-clonotyping-2.single-cell-scripts:sc-group-builder")
 scPreprocessingSw := assets.importSoftware("@platforma-open/milaboratories.mixcr-clonotyping-2.single-cell-scripts:preprocessing")
@@ -23,13 +24,17 @@ self.body(func(inputs) {
 
 	// Creating files map
 	filesMap := {}
-	for k, v in byCellTagA.inputs() {
+	inputMapA := byCellTagA.inputs()
+	for k in maps.getKeys(inputMapA) {
+		v := inputMapA[k]
 		key := json.decode(k)
 		fileName := "by_cell_a_" + key[0] + ".tsv"
 		filesMap[fileName] = v
 	}
 
-	for k, v in byCellTagB.inputs() {
+	inputMapB := byCellTagB.inputs()
+	for k in maps.getKeys(inputMapB) {
+		v := inputMapB[k]
 		key := json.decode(k)
 		fileName := "by_cell_b_" + key[0] + ".tsv"
 		filesMap[fileName] = v
@@ -37,11 +42,10 @@ self.body(func(inputs) {
 
 	scPreprocessingCmd := exec.builder().
 		printErrStreamToStdout().
-		software(scPreprocessingSw).
-		addFiles(filesMap)
+		software(scPreprocessingSw)
 
-	for name, f in filesMap {
-		scPreprocessingCmd = scPreprocessingCmd.arg(name)
+	for name in maps.getKeys(filesMap) {
+		scPreprocessingCmd.addFile(name, filesMap[name]).arg(name)
 	}
 
 	// Data preprocessing
@@ -60,6 +64,7 @@ self.body(func(inputs) {
 		software(scGroupBuilderSw).
 		addFile("chain_a_output.tsv", chainAoutput).
 		addFile("chain_b_output.tsv", chainBoutput).
+		arg("--only_full_clonotypes").
 		arg("--chainA").arg("chain_a_output.tsv").
 		arg("--chainB").arg("chain_b_output.tsv").
 		arg("--output_clonotype").arg("clonotype.tsv").
@@ -97,6 +102,8 @@ self.body(func(inputs) {
 	return {
 		// must have sampleId and scClonotypeKey columns
 		abundanceTsv: abundanceTsv,
+		// used for aggregates (i.e. sampleCount)
+		clonotypeTsv: clonotypeTsv,
 
 		// must have scClonotypeKey columns
 		propertiesAPrimaryTsv: scOutputCmd.getFile("properties_a_primary.tsv"),
