@@ -1,5 +1,12 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.10.0
+
+### Minor Changes
+
+- b334fd0: Aggregated column "Number Of Samples" added to per-clonotype output
+  Exported clonotypes are limited only to productive & full-receptor
+
 ## 2.9.0
 
 ### Minor Changes
