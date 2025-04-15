@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@platforma-open/milaboratories.mixcr-clonotyping-2.single-cell-scripts": "workspace:*",
+    "@platforma-open/milaboratories.mixcr-clonotyping-2.hash-column": "workspace:*",
     "@platforma-sdk/workflow-tengo": "catalog:"
   },
   "devDependencies": {

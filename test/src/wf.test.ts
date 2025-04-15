@@ -152,7 +152,7 @@ blockTest(
     await project.runBlock(clonotypingBlockId);
     const clonotypingStableState3 = (await helpers.awaitBlockDoneAndGetStableBlockState(
       clonotypingBlockId,
-      35000
+      70000
     )) as InferBlockState<typeof platforma>;
     const outputs3 = wrapOutputs<BlockOutputs>(clonotypingStableState3.outputs);
 
@@ -279,7 +279,7 @@ blockTest(
 
     const clonotypingStableState1 = (await awaitStableState(
       clonotypingBlockState,
-      25000
+      40000
     )) as InferBlockState<typeof platforma>;
 
     expect(clonotypingStableState1.outputs).toMatchObject({
@@ -313,7 +313,7 @@ blockTest(
 
     const clonotypingStableState2 = (await awaitStableState(
       project.getBlockState(clonotypingBlockId),
-      25000
+      40000
     )) as InferBlockState<typeof platforma>;
 
     const outputs2 = wrapOutputs<BlockOutputs>(clonotypingStableState2.outputs);

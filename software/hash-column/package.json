@@ -1,0 +1,40 @@
+{
+  "name": "@platforma-open/milaboratories.mixcr-clonotyping-2.hash-column",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "pl-pkg build",
+    "prepublishOnly": "pl-pkg publish",
+    "do-pack": "rm -f *.tgz && pl-pkg build && pnpm pack && mv platforma-open*.tgz package.tgz"
+  },
+  "files": [
+    "./dist/**/*"
+  ],
+  "dependencies": {
+    "@platforma-open/milaboratories.runenv-python-3": "catalog:"
+  },
+  "devDependencies": {
+    "@platforma-sdk/package-builder": "catalog:"
+  },
+  "block-software": {
+    "entrypoints": {
+      "main": {
+        "binary": {
+          "artifact": {
+            "type": "python",
+            "registry": "platforma-open",
+            "environment": "@platforma-open/milaboratories.runenv-python-3:3.12.6",
+            "dependencies": {
+              "toolset": "pip",
+              "requirements": "requirements.txt"
+            },
+            "root": "./src"
+          },
+          "cmd": [
+            "python",
+            "{pkg}/main.py"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,2 @@
+polars-hash==0.5.2
+polars-lts-cpu==1.23.0
