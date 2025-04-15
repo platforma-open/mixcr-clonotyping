@@ -1,5 +1,16 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.3.0
+
+### Minor Changes
+
+- 0db1bdf: Migration to hash-based cloonotype keys
+
+### Patch Changes
+
+- Updated dependencies [0db1bdf]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@2.11.0
+
 ## 2.2.10
 
 ### Patch Changes
