@@ -11,6 +11,7 @@ self.defineOutputs("tsv", "tsvForSingleCell")
 
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:low-memory")
 ptransformSw := assets.importSoftware("@platforma-open/milaboratories.software-ptransform:main")
+hashColumnSw := assets.importSoftware("@platforma-open/milaboratories.mixcr-clonotyping-2.hash-column:main")
 
 self.body(func(inputs) {
 	clnsFile := inputs[pConstants.VALUE_FIELD_NAME]
@@ -75,25 +76,25 @@ self.body(func(inputs) {
 	if is_undefined(clonotypeKeyColumns) {
 		result.tsv = unprocessedTsv
 	} else {
-		// Adding clonotypeKey column
-		pWorkflow := {
-			steps: [ {
-				type: "combine_columns_as_json",
-				src: clonotypeKeyColumns,
-				dst: "clonotypeKey"
-			} ]
+		hashCmdBuilder := exec.builder().
+			printErrStreamToStdout().
+			software(hashColumnSw).
+			arg("--input-table").arg("input.tsv").
+			addFile("input.tsv", unprocessedTsv).
+			arg("--output-table").arg("output.tsv").
+			arg("--calculate")
+
+		for col in clonotypeKeyColumns {
+			hashCmdBuilder.arg(col)
 		}
 
-		aggregateCmd := exec.builder().
-			printErrStreamToStdout().
-			software(ptransformSw).
-			arg("--workflow").arg("wf.json").
-			writeFile("wf.json", json.encode(pWorkflow)).
-			arg("input.tsv").addFile("input.tsv", unprocessedTsv).
-			arg("output.tsv").saveFile("output.tsv").
+		hashCmdBuilder.arg("clonotypeKey")
+
+		hashCmd := hashCmdBuilder.
+			saveFile("output.tsv").
 			run()
 
-		processedTsv := aggregateCmd.getFile("output.tsv")
+		processedTsv := hashCmd.getFile("output.tsv")
 
 		result.tsv = processedTsv
 	}
@@ -141,6 +142,33 @@ self.body(func(inputs) {
 			run()
 
 		result.tsvForSingleCell = aggregateCmd.getFile("output.tsv")
+
+		// uncomment this to use hashes
+
+		// hashCmdBuilderSingleCell := exec.builder().
+		// 	printErrStreamToStdout().
+		// 	software(hashColumnSw).
+		// 	arg("--input-table").arg("input.tsv").
+		// 	addFile("input.tsv", unprocessedTsvForSingleCell).
+		// 	arg("--output-table").arg("output.tsv")
+
+		// hashCmdBuilderSingleCell.arg("--calculate")
+		// for col in clonotypeKeyColumns {
+		// 	hashCmdBuilderSingleCell.arg(col)
+		// }
+		// hashCmdBuilderSingleCell.arg("clonotypeKey")
+
+		// hashCmdBuilderSingleCell.arg("--calculate")
+		// for col in cellTagColumns {
+		// 	hashCmdBuilderSingleCell.arg(col)
+		// }
+		// hashCmdBuilderSingleCell.arg("cellTag")
+
+		// hashCmdSingleCell := hashCmdBuilderSingleCell.
+		// 	saveFile("output.tsv").
+		// 	run()
+
+		// result.tsvForSingleCell = hashCmdSingleCell.getFile("output.tsv")
 	}
 
 	return result

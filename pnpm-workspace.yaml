@@ -1,5 +1,6 @@
 packages:
   - software/single-cell-scripts
+  - software/hash-column
   - workflow
   - model
   - ui

@@ -158,6 +158,16 @@ importers:
         specifier: 'catalog:'
         version: 2.1.8(@types/node@22.7.5)
 
+  software/hash-column:
+    dependencies:
+      '@platforma-open/milaboratories.runenv-python-3':
+        specifier: 'catalog:'
+        version: 1.1.9
+    devDependencies:
+      '@platforma-sdk/package-builder':
+        specifier: 'catalog:'
+        version: 2.15.6
+
   software/single-cell-scripts:
     dependencies:
       '@platforma-open/milaboratories.runenv-python-3':
@@ -256,6 +266,9 @@ importers:
 
   workflow:
     dependencies:
+      '@platforma-open/milaboratories.mixcr-clonotyping-2.hash-column':
+        specifier: workspace:*
+        version: link:../software/hash-column
       '@platforma-open/milaboratories.mixcr-clonotyping-2.single-cell-scripts':
         specifier: workspace:*
         version: link:../software/single-cell-scripts
