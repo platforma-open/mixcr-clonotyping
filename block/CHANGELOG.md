@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.3.2
+
+### Patch Changes
+
+- 531175b: Updated block metadata
+
 ## 2.3.1
 
 ### Patch Changes
