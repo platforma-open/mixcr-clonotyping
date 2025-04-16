@@ -1,3 +1,5 @@
+//tengo:hash_override D70EDB25-6FF6-4615-966D-B79B04B5751C
+
 // mixcr analyze
 
 self := import("@platforma-sdk/workflow-tengo:tpl")
