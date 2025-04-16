@@ -125,9 +125,9 @@ def main():
         hash_expressions = []
         for input_cols, output_name in calculation_specs:
 
-            # Concatenate specified columns for this calculation
+            # Concatenate specified columns for this calculation, filling nulls with empty strings
             concat_expr = pl.concat_str(
-                [pl.col(c) for c in input_cols], separator=args.delimiter
+                [pl.col(c).fill_null("") for c in input_cols], separator=args.delimiter
             )
 
             # Calculate SHA256 hash (returns hex string)
