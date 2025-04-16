@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping-2.sc-clonotype-builder
 
+## 1.1.3
+
+### Patch Changes
+
+- 90a29d2: SDK upgrade
+
 ## 1.1.2
 
 ### Patch Changes

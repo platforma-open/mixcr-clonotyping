@@ -1,5 +1,19 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.12.0
+
+### Minor Changes
+
+- 90a29d2: Fix mixcr-analyze template hash
+
+### Patch Changes
+
+- 90a29d2: SDK upgrade
+- Updated dependencies [18e0e70]
+- Updated dependencies [90a29d2]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.hash-column@1.1.1
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.single-cell-scripts@1.1.3
+
 ## 2.11.0
 
 ### Minor Changes

@@ -1,5 +1,13 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.10.8
+
+### Patch Changes
+
+- 90a29d2: SDK upgrade
+- Updated dependencies [90a29d2]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.10.2
+
 ## 1.10.7
 
 ### Patch Changes
