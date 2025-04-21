@@ -568,7 +568,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 			spec: {
 				valueType: "String",
 				name: "pl7.app/vdj/chain",
-				annotations: a(orderP, true, {
+				annotations: a(orderP, false, {
 					"pl7.app/label": "Chain",
 					"pl7.app/isDiscreteFilter": "true",
 					"pl7.app/discreteValues": "['TRA','TRB','TRG','TRD','IGH','IGK','IGL']"
