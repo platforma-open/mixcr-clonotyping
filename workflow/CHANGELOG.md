@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.13.0
+
+### Minor Changes
+
+- b1f6427: species added, visibility of chain columns set to optional, mixcr updated to 4.7.0-164-develop
+
 ## 2.12.0
 
 ### Minor Changes
