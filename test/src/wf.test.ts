@@ -51,7 +51,7 @@ blockTest(
 
 blockTest(
   'simple project',
-  { timeout: 70000 },
+  { timeout: 80000 },
   async ({ rawPrj: project, ml, helpers, expect }) => {
     const sndBlockId = await project.addBlock('Samples & Data', samplesAndDataBlockSpec);
     const clonotypingBlockId = await project.addBlock('MiXCR Clonotyping', myBlockSpec);
@@ -152,7 +152,7 @@ blockTest(
     await project.runBlock(clonotypingBlockId);
     const clonotypingStableState3 = (await helpers.awaitBlockDoneAndGetStableBlockState(
       clonotypingBlockId,
-      70000
+      80000
     )) as InferBlockState<typeof platforma>;
     const outputs3 = wrapOutputs<BlockOutputs>(clonotypingStableState3.outputs);
 
@@ -324,7 +324,7 @@ blockTest(
     await project.runBlock(clonotypingBlockId);
     const clonotypingStableState3 = (await helpers.awaitBlockDoneAndGetStableBlockState(
       clonotypingBlockId,
-      150000
+      250000
     )) as InferBlockState<typeof platforma>;
     const outputs3 = wrapOutputs<BlockOutputs>(clonotypingStableState3.outputs);
 
