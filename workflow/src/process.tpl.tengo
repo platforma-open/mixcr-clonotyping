@@ -120,6 +120,9 @@ self.body(func(inputs) {
 		"mixcr.com/umiTags": joinOrUndefined(presetSpecForBack.umiTags),
 		"pl7.app/label": "MiXCR Clonesets"
 	})
+	if libraryId {
+		clnsAnnotations["pl7.app/vdj/libraryId"] = libraryId
+	}
 	if hasAssembleContigs {
 		clnsAnnotations["mixcr.com/contigsAssembled"] = "true"
 	}

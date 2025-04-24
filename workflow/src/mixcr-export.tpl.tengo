@@ -32,6 +32,7 @@ self.body(func(inputs) {
 		mixcrCmdBuilder := exec.builder().
 			inMediumQueue().
 			printErrStreamToStdout().
+			dontSaveStdoutOrStderr().
 			software(mixcrSw).
 			secret("MI_LICENSE", "MI_LICENSE").
 			arg("exportClones").
