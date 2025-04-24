@@ -472,6 +472,13 @@ self.body(func(inputs) {
 				path: ["clonotypeTsv"]
 			} ]
 
+			//removing columns from secondary chain except aaSeqCDR3
+			columnsSpecPerClonotypeSecondary := []
+			for col in columnsSpecPerClonotype {
+				if col.column == "aaSeqCDR3" {
+					columnsSpecPerClonotypeSecondary += [ col ]
+				}
+			}
 			for chainIdx in [0, 1] {
 				// "A" chain is always the one that is more diverse
 				chainLetterU := ["A", "B"][chainIdx]
@@ -517,7 +524,7 @@ self.body(func(inputs) {
 						xsvType: "tsv",
 						settings: {
 							axes: axesByScClonotypeKeyWithReceptor,
-							columns: transformSpecs(columnsSpecPerClonotype, {
+							columns: transformSpecs(isPrimary ? columnsSpecPerClonotype : columnsSpecPerClonotypeSecondary, {
 								spec: {
 									domain: {
 										"pl7.app/vdj/scClonotypeChain": chainLetterU,

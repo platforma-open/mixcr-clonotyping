@@ -31,7 +31,7 @@ jobs:
       test: true
       test-script-name: 'test'
       pnpm-recursive-tests: false
-      team-id: 'ciplopen'
+      team-id: 'ciplopen-mixcr-clonotyping'
 
       publish-to-public: 'true'
       package-path: 'block'

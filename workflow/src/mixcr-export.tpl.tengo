@@ -75,7 +75,8 @@ self.body(func(inputs) {
 
 	if is_undefined(clonotypeKeyColumns) {
 		result.tsv = unprocessedTsv
-	} else {
+		
+	} else if is_undefined(cellTagColumns) {
 		hashCmdBuilder := exec.builder().
 			printErrStreamToStdout().
 			software(hashColumnSw).
@@ -95,6 +96,28 @@ self.body(func(inputs) {
 			run()
 
 		processedTsv := hashCmd.getFile("output.tsv")
+
+		result.tsv = processedTsv
+
+	} else {
+		pWorkflow := {
+			steps: [ {
+				type: "combine_columns_as_json",
+				src: clonotypeKeyColumns,
+				dst: "clonotypeKey"
+			} ]
+		}
+
+		aggregateCmd := exec.builder().
+			printErrStreamToStdout().
+			software(ptransformSw).
+			arg("--workflow").arg("wf.json").
+			writeFile("wf.json", json.encode(pWorkflow)).
+			arg("input.tsv").addFile("input.tsv", unprocessedTsv).
+			arg("output.tsv").saveFile("output.tsv").
+			run()
+
+		processedTsv := aggregateCmd.getFile("output.tsv")
 
 		result.tsv = processedTsv
 	}
