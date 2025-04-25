@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.14.1
+
+### Patch Changes
+
+- 748457a: Upgrade mixcr version to prevent crash with custom library with custom C gene names
+
 ## 2.14.0
 
 ### Minor Changes
