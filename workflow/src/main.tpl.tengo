@@ -136,14 +136,14 @@ wf.body(func(args) {
 	}
 
 	if !is_undefined(args.libraryFile) {
-		// If library file is provided, we need to exported
+		// If library file is provided, we need to exported it for native mixcr blocks to use it (i.e. SHM trees)
 		exports.library := {
 			data: library,
 			spec: {
 				kind: "File",
 				name: "pl7.app/vdj/library",
 				domain: {
-					"pl7.app/vdj/libraryId": libraryId
+					"pl7.app/vdj/libraryId": libraryId // == blockId
 				},
 				annotations: {
 					"pl7.app/species": species,
