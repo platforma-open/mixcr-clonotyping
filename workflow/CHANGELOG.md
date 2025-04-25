@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.14.0
+
+### Minor Changes
+
+- dc86a17: single cell export and removing columns for secondary clones except CDR3 aa
+
 ## 2.13.0
 
 ### Minor Changes
