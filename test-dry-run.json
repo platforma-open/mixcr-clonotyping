@@ -1,5 +1,5 @@
 {
-  "id": "2wE1imdlQH6fmZJInanXB1AKtSo",
+  "id": "2wLmXMPzv9Zg56yB68kmF8fMnaz",
   "version": "1",
   "turboVersion": "2.5.0",
   "monorepo": true,
@@ -35,12 +35,12 @@
       "taskId": "@platforma-open/milaboratories.mixcr-clonotyping-2#build",
       "task": "build",
       "package": "@platforma-open/milaboratories.mixcr-clonotyping-2",
-      "hash": "751ffecaef8e8686",
+      "hash": "99944300e7599866",
       "inputs": {
-        "CHANGELOG.md": "acfec85c0e41524823d25cbb5574046cf3d23b46",
+        "CHANGELOG.md": "bba5c8a3eb7e5e41a2819137b5663ff0b7f865d9",
         "index.d.ts": "1ba908d82f37b11a66fc326a88a79ee6ef965fc7",
         "index.js": "e7798d420641e13b2104408b1cf4df20f67c654e",
-        "package.json": "c6332af10d5ced97c8bb2c1d3d741a3f450b47bb"
+        "package.json": "3ee9d6afc9e0827dc7031d60023d9f1893f0f703"
       },
       "hashOfExternalDependencies": "d8a4b2e5edc60b5c",
       "cache": {
@@ -110,12 +110,12 @@
       "taskId": "@platforma-open/milaboratories.mixcr-clonotyping-2#test",
       "task": "test",
       "package": "@platforma-open/milaboratories.mixcr-clonotyping-2",
-      "hash": "587da9d2af350062",
+      "hash": "0e09b08965fc0fb1",
       "inputs": {
-        "CHANGELOG.md": "acfec85c0e41524823d25cbb5574046cf3d23b46",
+        "CHANGELOG.md": "bba5c8a3eb7e5e41a2819137b5663ff0b7f865d9",
         "index.d.ts": "1ba908d82f37b11a66fc326a88a79ee6ef965fc7",
         "index.js": "e7798d420641e13b2104408b1cf4df20f67c654e",
-        "package.json": "c6332af10d5ced97c8bb2c1d3d741a3f450b47bb"
+        "package.json": "3ee9d6afc9e0827dc7031d60023d9f1893f0f703"
       },
       "hashOfExternalDependencies": "d8a4b2e5edc60b5c",
       "cache": {
@@ -705,7 +705,7 @@
       "taskId": "@platforma-open/milaboratories.mixcr-clonotyping-2.test#build",
       "task": "build",
       "package": "@platforma-open/milaboratories.mixcr-clonotyping-2.test",
-      "hash": "4d30e22f548a3b13",
+      "hash": "f24cd02a49bda171",
       "inputs": {
         "CHANGELOG.md": "99597cf84aa5faf5cd17a67fd05f93a007a88b77",
         "assets/.gitkeep": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
@@ -789,7 +789,7 @@
       "taskId": "@platforma-open/milaboratories.mixcr-clonotyping-2.test#test",
       "task": "test",
       "package": "@platforma-open/milaboratories.mixcr-clonotyping-2.test",
-      "hash": "38a6e24d28000a60",
+      "hash": "3dedc30e7f566542",
       "inputs": {
         "CHANGELOG.md": "99597cf84aa5faf5cd17a67fd05f93a007a88b77",
         "assets/.gitkeep": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
@@ -1068,11 +1068,11 @@
       "taskId": "@platforma-open/milaboratories.mixcr-clonotyping-2.workflow#build",
       "task": "build",
       "package": "@platforma-open/milaboratories.mixcr-clonotyping-2.workflow",
-      "hash": "b918bdd5c37c77d8",
+      "hash": "cda23c930040baf3",
       "inputs": {
-        "CHANGELOG.md": "37e6e6c575c2dee5f72354edeedab3ba7136cf2a",
+        "CHANGELOG.md": "5a96ea6179e8dcc18af016071775efb545075c8c",
         "format.el": "b168a1ac097463794e06d0e92c1e11da73486887",
-        "package.json": "598c1cd0698be77803c047d2983a44701df99536",
+        "package.json": "5b7178a8b0737f2b65e804c6ba43a82e0a2d119b",
         "scripts/build-static.mjs": "060c96cd05ad47d2733fcfcea37f941a70804ef3",
         "src/aggregate-by-clonotype-key.tpl.tengo": "5dba852bc7b28401269c5da8a7f5eae5ef4a3ec5",
         "src/calculate-export-specs.lib.tengo": "777ec23fbcf16a0cc78a97a909236a4c9592a013",
@@ -1080,7 +1080,7 @@
         "src/list-presets.tpl.tengo": "f087c8cc73544fb9d30c0dd4e00541eb135a72a7",
         "src/main.tpl.tengo": "75fff7c8b6f05c9dbece38603da43a2ce8a3c5ce",
         "src/mixcr-analyze.tpl.tengo": "01fe728ce1c2ee60f4940ab6c4280d4763457f24",
-        "src/mixcr-export.tpl.tengo": "7c077b4cffa14e2c56bd48b44e47c14bad92cc58",
+        "src/mixcr-export.tpl.tengo": "8a07a9ec8375d00bdde6a3af636669ee9e129027",
         "src/prerun.tpl.tengo": "a78f5e2f09445f1b3556aabc91356cc337726e31",
         "src/process-single-cell.tpl.tengo": "23a692fc066791a23cd2cb4ef8165bc44e71687a",
         "src/process.tpl.tengo": "30f355242150a8aae4d9e5db07a164c47b6ad464",
@@ -1157,11 +1157,11 @@
       "taskId": "@platforma-open/milaboratories.mixcr-clonotyping-2.workflow#test",
       "task": "test",
       "package": "@platforma-open/milaboratories.mixcr-clonotyping-2.workflow",
-      "hash": "5ce00e461ba3d07b",
+      "hash": "9e2aea8dd328a54e",
       "inputs": {
-        "CHANGELOG.md": "37e6e6c575c2dee5f72354edeedab3ba7136cf2a",
+        "CHANGELOG.md": "5a96ea6179e8dcc18af016071775efb545075c8c",
         "format.el": "b168a1ac097463794e06d0e92c1e11da73486887",
-        "package.json": "598c1cd0698be77803c047d2983a44701df99536",
+        "package.json": "5b7178a8b0737f2b65e804c6ba43a82e0a2d119b",
         "scripts/build-static.mjs": "060c96cd05ad47d2733fcfcea37f941a70804ef3",
         "src/aggregate-by-clonotype-key.tpl.tengo": "5dba852bc7b28401269c5da8a7f5eae5ef4a3ec5",
         "src/calculate-export-specs.lib.tengo": "777ec23fbcf16a0cc78a97a909236a4c9592a013",
@@ -1169,7 +1169,7 @@
         "src/list-presets.tpl.tengo": "f087c8cc73544fb9d30c0dd4e00541eb135a72a7",
         "src/main.tpl.tengo": "75fff7c8b6f05c9dbece38603da43a2ce8a3c5ce",
         "src/mixcr-analyze.tpl.tengo": "01fe728ce1c2ee60f4940ab6c4280d4763457f24",
-        "src/mixcr-export.tpl.tengo": "7c077b4cffa14e2c56bd48b44e47c14bad92cc58",
+        "src/mixcr-export.tpl.tengo": "8a07a9ec8375d00bdde6a3af636669ee9e129027",
         "src/prerun.tpl.tengo": "a78f5e2f09445f1b3556aabc91356cc337726e31",
         "src/process-single-cell.tpl.tengo": "23a692fc066791a23cd2cb4ef8165bc44e71687a",
         "src/process.tpl.tengo": "30f355242150a8aae4d9e5db07a164c47b6ad464",
@@ -1243,7 +1243,7 @@
   "user": "github-merge-queue[bot]",
   "scm": {
     "type": "git",
-    "sha": "47283319fab0a3eddba7c8a5e10b5bd5aa577b9a",
+    "sha": "e5675f66658613ce5235b0d93301b39207fa34fe",
     "branch": "main"
   }
 }

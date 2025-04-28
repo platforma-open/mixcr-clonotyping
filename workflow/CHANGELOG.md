@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.14.2
+
+### Patch Changes
+
+- 7a78090: Drop logs in mixcr export to prevent CID conflicts in results deduplication
+
 ## 2.14.1
 
 ### Patch Changes
