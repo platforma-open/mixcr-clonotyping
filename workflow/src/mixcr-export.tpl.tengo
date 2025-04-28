@@ -57,6 +57,7 @@ self.body(func(inputs) {
 			addFile("clones.clns", clnsFile).
 			arg("clones.tsv").
 			saveFile("clones.tsv").
+			cacheHours(3).
 			run()
 	}
 
@@ -76,7 +77,7 @@ self.body(func(inputs) {
 
 	if is_undefined(clonotypeKeyColumns) {
 		result.tsv = unprocessedTsv
-		
+
 	} else if is_undefined(cellTagColumns) {
 		hashCmdBuilder := exec.builder().
 			printErrStreamToStdout().
