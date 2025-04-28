@@ -59,16 +59,19 @@ wf.body(func(args) {
 	isLibraryFileGzipped := false
 
 	library := false
+	libraryId := undefined
 	species := args.species
 	libraryImportHandle := undefined
 	if !is_undefined(args.resolvedLibraryInput) {
 		library = args.resolvedLibraryInput.data
+		libraryId = args.resolvedLibraryInput.spec["domain"]["pl7.app/vdj/libraryId"]
 		librarySpec := args.resolvedLibraryInput.spec
 		species = librarySpec["annotations"]["pl7.app/species"]
 	} else if !is_undefined(args.libraryFile) {
 		fImport := file.importFile(args.libraryFile)
 		libraryImportHandle = fImport.handle
 		library = fImport.file
+		libraryId = blockId
 		species = args.customSpecies
 		isLibraryFileGzipped = args.isLibraryFileGzipped
 	}
@@ -110,6 +113,7 @@ wf.body(func(args) {
 			receptorsOrChains: receptorsOrChains,
 			limitInput: limitInput,
 			blockId: blockId,
+			libraryId: libraryId,
 			presetCommonName: args.presetCommonName,
 			isLibraryFileGzipped: isLibraryFileGzipped
 		})
@@ -129,6 +133,26 @@ wf.body(func(args) {
 			spec: runMixcr.output("clns.spec"),
 			data: runMixcr.output("clns.data")
 		}
+	}
+
+	if !is_undefined(args.libraryFile) {
+		// If library file is provided, we need to exported it for native mixcr blocks to use it (i.e. SHM trees)
+		exports.library = {
+			data: library,
+			spec: {
+				kind: "File",
+				name: "pl7.app/vdj/library",
+				domain: {
+					"pl7.app/vdj/libraryId": libraryId // == blockId
+				},
+				annotations: {
+					"pl7.app/species": species,
+					"pl7.app/vdj/isLibrary": "true",
+					"pl7.app/vdj/libraryFormat": (isLibraryFileGzipped ? "repseqio.json.gz" : "repseqio.json"),
+					"pl7.app/label": "Library from MiXCR Clonotyping"
+				}
+			}
+	 	}
 	}
 
 	outputs := {
