@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.15.0
+
+### Minor Changes
+
+- 20cd6f5: Exporting library if provided as file & attaching libraryId to clns output spec
+
 ## 2.14.2
 
 ### Patch Changes
