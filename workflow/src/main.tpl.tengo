@@ -137,7 +137,7 @@ wf.body(func(args) {
 
 	if !is_undefined(args.libraryFile) {
 		// If library file is provided, we need to exported it for native mixcr blocks to use it (i.e. SHM trees)
-		exports.library := {
+		exports.library = {
 			data: library,
 			spec: {
 				kind: "File",
@@ -148,6 +148,7 @@ wf.body(func(args) {
 				annotations: {
 					"pl7.app/species": species,
 					"pl7.app/vdj/isLibrary": "true",
+					"pl7.app/vdj/libraryFormat": (isLibraryFileGzipped ? "repseqio.json.gz" : "repseqio.json"),
 					"pl7.app/label": "Library from MiXCR Clonotyping"
 				}
 			}
