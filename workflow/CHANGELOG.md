@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.15.1
+
+### Patch Changes
+
+- 1c2dc52: Add --force-overwrite option to avoid rare bug
+
 ## 2.15.0
 
 ### Minor Changes
