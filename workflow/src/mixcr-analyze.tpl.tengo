@@ -143,6 +143,7 @@ self.body(func(inputs) {
 	}
 
 	mixcrCmdBuilder.arg("result")
+	mixcrCmdBuilder.arg("--force-overwrite")
 
 	mixcrCmdBuilder.saveFile("result.qc.json")
 	mixcrCmdBuilder.saveFile(clnsFileName)
