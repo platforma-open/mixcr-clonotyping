@@ -45,6 +45,7 @@ catalog:
   'ag-grid-vue3': *ag-grid
 
   '@changesets/cli': ^2.29.1
+  'js-yaml': ^4.1.0
 
   # other blocks used in tests
 

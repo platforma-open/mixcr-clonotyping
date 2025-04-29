@@ -9,11 +9,13 @@
     "do-pack": "turbo run do-pack",
     "watch": "turbo watch build",
     "changeset": "changeset",
-    "version-packages": "changeset version"
+    "version-packages": "changeset version",
+    "update-sdk": "node scripts/update-sdk-packages.js"
   },
   "devDependencies": {
     "turbo": "catalog:",
-    "@changesets/cli": "catalog:"
+    "@changesets/cli": "catalog:",
+    "js-yaml": "catalog:"
   },
   "packageManager": "pnpm@9.12.0",
   "//": {
