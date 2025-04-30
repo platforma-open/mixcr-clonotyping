@@ -66,6 +66,9 @@ catalogs:
     eslint:
       specifier: ^9.24.0
       version: 9.24.0
+    js-yaml:
+      specifier: ^4.1.0
+      version: 4.1.0
     rollup-plugin-sourcemaps2:
       specifier: ^0.5.0
       version: 0.5.0
@@ -104,6 +107,9 @@ importers:
       '@changesets/cli':
         specifier: 'catalog:'
         version: 2.29.1
+      js-yaml:
+        specifier: 'catalog:'
+        version: 4.1.0
       turbo:
         specifier: 'catalog:'
         version: 2.5.0
