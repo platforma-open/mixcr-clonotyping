@@ -36,26 +36,30 @@ assemblingFeatureInfo := func(assemblingFeature) {
 	productiveFeature := undefined
 	coreVFeature := undefined
 	coreJFeature := undefined
-	splittedFeature1 := text.split(assemblingFeature, "_TO_")
-	splittedFeature2 := text.split(assemblingFeature, ":")
-	if assemblingFeature == "CDR3" || is_undefined(assemblingFeature) {
-		productiveFeature = "CDR3"
-	} else if assemblingFeature == "VDJRegion" {
-		productiveFeature = "VDJRegion(0,-1)"
-		coreVFeature = "{FR1Begin:FR3End}"
-		coreJFeature = "FR4"
-	} else if len(splittedFeature1) == 2 {
-		if splittedFeature1[1] == "FR4" {
-			productiveFeature = splittedFeature1[0] + "_TO_FR4(0,-1)"
-			coreVFeature = "{"+splittedFeature1[0]+"Begin:FR3End}"
+	if assemblingFeature {
+		splittedFeature1 := text.split(assemblingFeature, "_TO_")
+		splittedFeature2 := text.split(assemblingFeature, ":")
+		if assemblingFeature == "CDR3" {
+			productiveFeature = "CDR3"
+		} else if assemblingFeature == "VDJRegion" {
+			productiveFeature = "VDJRegion(0,-1)"
+			coreVFeature = "{FR1Begin:FR3End}"
 			coreJFeature = "FR4"
-		} else {
+		} else if len(splittedFeature1) == 2 {
+			if splittedFeature1[1] == "FR4" {
+				productiveFeature = splittedFeature1[0] + "_TO_FR4(0,-1)"
+				coreVFeature = "{"+splittedFeature1[0]+"Begin:FR3End}"
+				coreJFeature = "FR4"
+			} else {
+				productiveFeature = assemblingFeature
+				coreVFeature = "{"+splittedFeature1[0]+"Begin:FR3End}"
+			}
+		} else if len(splittedFeature2) == 2 {
 			productiveFeature = assemblingFeature
-			coreVFeature = "{"+splittedFeature1[0]+"Begin:FR3End}"
+			coreVFeature = splittedFeature2[0]+":FR3End}"
 		}
-	} else if len(splittedFeature2) == 2 {
-		productiveFeature = assemblingFeature
-		coreVFeature = splittedFeature2[0]+":FR3End}"
+	} else {
+		productiveFeature = "CDR3"
 	}
 	return {
 		productiveFeature: productiveFeature,
