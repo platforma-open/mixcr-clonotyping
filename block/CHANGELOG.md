@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.3.9
+
+### Patch Changes
+
+- 671e6b8: bump runenv-python-3 to allow venv to work on windows
+
 ## 2.3.8
 
 ### Patch Changes
