@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.16.0
+
+### Minor Changes
+
+- 632c7c0: fixed bugs with assemblingFeature and updated ptransform to 1.4.0
+
 ## 2.15.1
 
 ### Patch Changes
