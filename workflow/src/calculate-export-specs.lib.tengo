@@ -36,24 +36,30 @@ assemblingFeatureInfo := func(assemblingFeature) {
 	productiveFeature := undefined
 	coreVFeature := undefined
 	coreJFeature := undefined
-	if assemblingFeature == "CDR3" || is_undefined(assemblingFeature) {
-		productiveFeature = "CDR3"
-	} else if assemblingFeature == "VDJRegion" {
-		productiveFeature = "VDJRegion(0,-1)"
-		coreVFeature = "{FR1Begin:FR3End}"
-		coreJFeature = "FR4"
-	} else {
-		splittedFeature := text.split(assemblingFeature, "_TO_")
-		if len(splittedFeature) == 2 {
-			if splittedFeature[1] == "FR4" {
-				productiveFeature = splittedFeature[0] + "_TO_FR4(0,-1)"
-				coreVFeature = "{"+splittedFeature[0]+"Begin:FR3End}"
+	if assemblingFeature {
+		splittedFeature1 := text.split(assemblingFeature, "_TO_")
+		splittedFeature2 := text.split(assemblingFeature, ":")
+		if assemblingFeature == "CDR3" {
+			productiveFeature = "CDR3"
+		} else if assemblingFeature == "VDJRegion" {
+			productiveFeature = "VDJRegion(0,-1)"
+			coreVFeature = "{FR1Begin:FR3End}"
+			coreJFeature = "FR4"
+		} else if len(splittedFeature1) == 2 {
+			if splittedFeature1[1] == "FR4" {
+				productiveFeature = splittedFeature1[0] + "_TO_FR4(0,-1)"
+				coreVFeature = "{"+splittedFeature1[0]+"Begin:FR3End}"
 				coreJFeature = "FR4"
 			} else {
 				productiveFeature = assemblingFeature
-				coreVFeature = "{"+splittedFeature[0]+"Begin:FR3End}"
+				coreVFeature = "{"+splittedFeature1[0]+"Begin:FR3End}"
 			}
+		} else if len(splittedFeature2) == 2 {
+			productiveFeature = assemblingFeature
+			coreVFeature = splittedFeature2[0]+":FR3End}"
 		}
+	} else {
+		productiveFeature = "CDR3"
 	}
 	return {
 		productiveFeature: productiveFeature,
@@ -62,6 +68,14 @@ assemblingFeatureInfo := func(assemblingFeature) {
 			J: coreJFeature
 		}
 	}
+}
+
+// sometimes we need to format assembling feature to be used in column ids
+formatId := func(input) {
+    noNums := text.re_replace(`\(\s*-?\d+(\s*,\s*-?\d+)*\s*\)`, input, "")
+    noBraces := text.re_replace(`[{}\(\)]`, noNums, "")
+    result   := text.re_replace(`:`, noBraces, "-")
+    return result
 }
 
 exportSpecOpsFromPreset := func(presetSpecForBack) {
@@ -302,7 +316,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		imputedU := isImputed ? "Imputed" : ""
 		imputedL := text.to_lower(imputedU)
 		for featureU in features {
-			featureL := text.to_lower(featureU)
+			featureL := text.to_lower(formatId(featureU))
 			for isAminoAcid in [true, false] {
 				alphabet := isAminoAcid ? "aminoacid" : "nucleotide"
 				alphabetShort := isAminoAcid ? "aa" : "nt"
