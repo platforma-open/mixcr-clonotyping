@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.3.11
+
+### Patch Changes
+
+- 9e609d1: bump version of runenv-python-3 in trasitive deps
+
 ## 2.3.10
 
 ### Patch Changes
