@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.17.0
+
+### Minor Changes
+
+- 50d0b31: isAssemblingFeature in domain
+
 ## 2.16.0
 
 ### Minor Changes
