@@ -7,7 +7,7 @@ json := import("json")
 a := func(order, defaultVisibility, spec) {
 	return maps.merge(spec, {
 		"pl7.app/table/orderPriority": string(order),
-		"pl7.app/table/visibility": defaultVisibility ? "default" : "optional"
+		"pl7.app/table/visibility": is_undefined(defaultVisibility) ? "hidden" : defaultVisibility ? "default" : "optional"
 	})
 }
 
@@ -18,6 +18,11 @@ a := func(order, defaultVisibility, spec) {
 inFrameFeatures := {
 	"FR4": "FR4InFrame",
 	"VDJRegion": "VDJRegionInFrame"
+}
+
+annotationMappings := {
+	"CDRs": "{\"1\":\"CDR1\",\"2\":\"CDR2\",\"3\":\"CDR3\"}",
+	"Segments": "{\"1\":\"V\",\"2\":\"D\",\"3\":\"J\",\"4\":\"C\"}"
 }
 
 toCombinedDomainValue := func(spec) {
@@ -397,6 +402,10 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 
 	// Sequences
 
+	// nAnnotationOfCDRsForVDJRegionInFrame
+	// aaAnnotationOfSegmentsForVDJRegionInFrame
+	annotationTypes := assemblingFeature == "CDR3" ? ["Segments"] : ["CDRs", "Segments"]
+
 	for isImputed in ( is_undefined(assemblingFeature) ? [false, true] : [false] ) {
 		imputedU := isImputed ? "Imputed" : ""
 		imputedL := text.to_lower(imputedU)
@@ -435,6 +444,34 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 					} ]
 				exportArgs += [ [ "-" + alphabetShortMixcr + "Feature" + imputedU, featureInFrameU ] ]
 				orderP -= 100
+
+				// Adding sequence annotation columns for assembling feature
+				if !isImputed && featureU == assemblingFeature {
+					for annotationType in annotationTypes {
+						columnName := alphabetShortMixcr + "AnnotationOf" + annotationType + "For" + featureInFrameU
+						columnsSpecPerClonotype += [ {
+							column: columnName,
+							id: alphabetShortMixcr + "-annotation-" + annotationType + "-" + featureInFrameL,
+							naRegex: "region_not_covered",
+							spec: {
+								name: "pl7.app/vdj/sequence/annotation",
+								valueType: "String",
+								domain: {
+									"pl7.app/vdj/feature": featureInFrameU,
+									"pl7.app/alphabet": alphabet,
+									"pl7.app/sequence/annotation/type": annotationType
+								},
+								annotations: a(orderP, undefined, {
+									"pl7.app/label": annotationType + " annotation for " + featureInFrameU + " " + alphabetShort,
+									"pl7.app/sequence/annotation/mapping": annotationMappings[annotationType],
+									"pl7.app/sequence/isAnnotation": "true"
+								})
+							}
+						} ]
+						exportArgs += [ [ "-" + alphabetShortMixcr + "AnnotationString", annotationType, featureInFrameU ] ]
+						orderP -= 100
+					}
+				}
 
 				// For now calculate length only for CDR3 to keep the number of columns manageable
 				if featureU == "CDR3" {

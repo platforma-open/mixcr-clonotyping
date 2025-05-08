@@ -6,3 +6,4 @@
 - added two aggregated columns: Mean Fraction Of UMIs/Reads, Supprting UMIs/Reads
 - support for RNA-Seq preset
 - fallback for in-frame features for amino-acid sequence columns (for FR4 and VDJRegion)
+- annotation strings for nucleotide and amino-acid sequences of assembling feature
