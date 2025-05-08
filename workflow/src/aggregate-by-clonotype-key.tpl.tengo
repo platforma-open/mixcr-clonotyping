@@ -19,12 +19,13 @@ self.body(func(inputs) {
 	ll.assert(inputDataMeta.keyLength == 1, "unexpected number of aggregation axes")
 
 	params := inputs.params
-	mainAbundanceColumn := params.mainAbundanceColumn
+	mainAbundanceColumnNormalized := params.mainAbundanceColumnNormalized
+	mainAbundanceColumnUnnormalized := params.mainAbundanceColumnUnnormalized
 	clonotypeColumns := params.clonotypeColumns
 
 	pickCols := []
 	for col in clonotypeColumns {
-		if col == "sampleCount" {
+		if col == "sampleCount" || col == mainAbundanceColumnNormalized + "Mean" || col == mainAbundanceColumnUnnormalized + "Sum" {
 			continue
 		}
 		pickCols = append(pickCols, [col, col])
@@ -37,13 +38,21 @@ self.body(func(inputs) {
 			groupBy: ["clonotypeKey"],
 			aggregations: [ {
 				type: "max_by",
-				rankingCol: mainAbundanceColumn,
+				rankingCol: mainAbundanceColumnNormalized,
 				pickCols: pickCols
 			}, {
 				type: "count",
-				src: mainAbundanceColumn,
+				src: mainAbundanceColumnNormalized,
 				dst: "sampleCount"
-			} ]
+			}, {
+				type: "sum",
+				src: mainAbundanceColumnUnnormalized,
+				dst: mainAbundanceColumnUnnormalized + "Sum"
+			}, {
+				type: "mean",
+				src: mainAbundanceColumnNormalized,
+				dst: mainAbundanceColumnNormalized + "Mean"
+			}]
 		} ]
 	}
 
