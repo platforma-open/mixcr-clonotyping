@@ -214,7 +214,8 @@ self.body(func(inputs) {
 
 	exportArgs := exportSpecs.exportArgs
 
-	mainAbundanceColumn := exportSpecs.mainAbundanceColumn
+	mainAbundanceColumnNormalized := exportSpecs.mainAbundanceColumnNormalized
+	mainAbundanceColumnUnnormalized := exportSpecs.mainAbundanceColumnUnnormalized
 
 	if is_undefined(axesByClonotypeKey) {
 		ll.panic("Absent clonotype key not supported")
@@ -408,7 +409,8 @@ self.body(func(inputs) {
 				aggregate: ["pl7.app/sampleId"],
 				extra: {
 					params: {
-						mainAbundanceColumn: mainAbundanceColumn,
+						mainAbundanceColumnNormalized: mainAbundanceColumnNormalized,
+						mainAbundanceColumnUnnormalized: mainAbundanceColumnUnnormalized,
 						clonotypeColumns: slices.map(columnsSpecPerClonotype, func(col) {
 							return col.column
 						})

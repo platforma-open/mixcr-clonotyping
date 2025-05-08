@@ -181,7 +181,42 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		[ "-readCount" ],
 		[ "-readFraction" ]
 	]
-	mainAbundanceColumn := "readFraction"
+
+	mainAbundanceColumnUnnormalized := "readCount"
+	mainAbundanceColumnNormalized := "readFraction"
+
+	mainAbundanceColumnAggregates := [{
+		column: mainAbundanceColumnUnnormalized + "Sum",
+		id: "read-count-total",
+		allowNA: false,
+		spec: {
+			name: "pl7.app/vdj/readCountTotal",
+			valueType: "Int",
+			annotations: a(87120, true, {
+				"pl7.app/min": "1",
+				"pl7.app/isAbundance": "true",
+				"pl7.app/abundance/unit": "reads",
+				"pl7.app/abundance/normalized": "false",
+				"pl7.app/label": "Supporting Reads"
+			})
+		}
+	}, {
+		column: mainAbundanceColumnNormalized + "Mean",
+		id: "read-fraction-mean",
+		allowNA: false,
+		spec: {
+			name: "pl7.app/vdj/readFractionMean",
+			valueType: "Double",
+			annotations: a(87130, true, {
+				"pl7.app/min": "0",
+				"pl7.app/max": "1",
+				"pl7.app/isAbundance": "true",
+				"pl7.app/abundance/unit": "reads",
+				"pl7.app/abundance/normalized": "true",
+				"pl7.app/label": "Mean Fraction of Reads"
+			})
+		}
+	}]
 
 	if hasUmi {
 		columnsSpecPerSample += [ {
@@ -223,7 +258,40 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 			[ "-uniqueTagCount", "Molecule" ],
 			[ "-uniqueTagFraction", "Molecule" ]
 		]
-		mainAbundanceColumn = "uniqueMoleculeFraction"
+		mainAbundanceColumnNormalized = "uniqueMoleculeFraction"
+		mainAbundanceColumnUnnormalized = "uniqueMoleculeCount"
+		mainAbundanceColumnAggregates = [ {
+			column: mainAbundanceColumnUnnormalized + "Sum",
+			id: "umi-count-total",
+			allowNA: false,
+			spec: {
+				name: "pl7.app/vdj/uniqueMoleculeCountTotal",
+				valueType: "Long",
+				annotations: a(87120, true, {
+					"pl7.app/min": "1",
+					"pl7.app/isAbundance": "true",
+					"pl7.app/abundance/unit": "molecules",
+					"pl7.app/abundance/normalized": "false",
+					"pl7.app/label": "Supporting UMIs"
+				})
+			}
+		}, {
+			column: mainAbundanceColumnNormalized + "Mean",
+			id: "umi-fraction-mean",
+			allowNA: false,
+			spec: {
+				name: "pl7.app/vdj/uniqueMoleculeFractionMean",
+				valueType: "Double",
+				annotations: a(87130, true, {
+					"pl7.app/min": "0",
+					"pl7.app/max": "1",
+					"pl7.app/isAbundance": "true",
+					"pl7.app/abundance/unit": "molecules",
+					"pl7.app/abundance/normalized": "true",
+					"pl7.app/label": "Mean Fraction of UMIs"
+				})
+			}
+		} ]
 	}
 
 	sampleCountColumn := {
@@ -291,6 +359,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		columnsSpecPerClonotypeSc = [ sampleCountColumn ]
 	} else {
 		columnsSpecPerClonotype += [ sampleCountColumn ]
+		columnsSpecPerClonotype += mainAbundanceColumnAggregates
 	}
 
 	orderP := 80000
@@ -336,6 +405,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 							},
 							annotations: a(orderP, visibility, {
 								"pl7.app/vdj/isAssemblingFeature": featureU == anchorFeature ? "true" : "false",
+								"pl7.app/vdj/isMainSequence": featureU == anchorFeature ? "true" : "false",
 								"pl7.app/vdj/imputed": string(isImputed),
 								"pl7.app/label": featureU + " " + alphabetShort
 							})
@@ -701,7 +771,9 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 
 		columnsSpec: columnsSpec,
 
-		mainAbundanceColumn: mainAbundanceColumn,
+		mainAbundanceColumnNormalized: mainAbundanceColumnNormalized,
+		mainAbundanceColumnUnnormalized: mainAbundanceColumnUnnormalized,
+
 		mainProductiveColumn: mainProductiveColumn,
 		mainProductiveArgs: mainProductiveArgs,
 
