@@ -5,7 +5,7 @@
     "build": "turbo run build",
     "build:dev": "PL_PKG_DEV=local turbo run build",
     "test": "PL_PKG_DEV=local turbo run test --concurrency 1",
-    "test:dry-run": "turbo run test --dry-run=json",
+    "test:dry-run": "PL_PKG_DEV=local turbo run test --dry-run=json",
     "mark-stable": "turbo run mark-stable",
     "do-pack": "turbo run do-pack",
     "watch": "turbo watch build",
