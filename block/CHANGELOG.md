@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.4.1
+
+### Patch Changes
+
+- a501b25: bump workflow tengo version
+
 ## 2.4.0
 
 ### Minor Changes
