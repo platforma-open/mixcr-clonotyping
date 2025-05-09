@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.18.2
+
+### Patch Changes
+
+- dab4944: Update workflow-tengo SDK to bring fresh fixes for python execution on windows
+
 ## 2.18.1
 
 ### Patch Changes
