@@ -7,8 +7,22 @@ json := import("json")
 a := func(order, defaultVisibility, spec) {
 	return maps.merge(spec, {
 		"pl7.app/table/orderPriority": string(order),
-		"pl7.app/table/visibility": defaultVisibility ? "default" : "optional"
+		"pl7.app/table/visibility": is_undefined(defaultVisibility) ? "hidden" : defaultVisibility ? "default" : "optional"
 	})
+}
+
+/**
+ * Mapping from original featuers to their in-frame variants when available.
+ * This is used to avoid showing non-informative features in the clonotype browser.
+ */
+inFrameFeatures := {
+	"FR4": "FR4InFrame",
+	"VDJRegion": "VDJRegionInFrame"
+}
+
+annotationMappings := {
+	"CDRs": "{\"1\":\"CDR1\",\"2\":\"CDR2\",\"3\":\"CDR3\"}",
+	"Segments": "{\"1\":\"V\",\"2\":\"D\",\"3\":\"J\",\"4\":\"C\"}"
 }
 
 toCombinedDomainValue := func(spec) {
@@ -42,7 +56,7 @@ assemblingFeatureInfo := func(assemblingFeature) {
 		if assemblingFeature == "CDR3" {
 			productiveFeature = "CDR3"
 		} else if assemblingFeature == "VDJRegion" {
-			productiveFeature = "VDJRegion(0,-1)"
+			productiveFeature = "VDJRegionInFrame"
 			coreVFeature = "{FR1Begin:FR3End}"
 			coreJFeature = "FR4"
 		} else if len(splittedFeature1) == 2 {
@@ -116,8 +130,31 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 	productiveFeature := assemblingFeatureInfo.productiveFeature
 	coreGeneFeatures := assemblingFeatureInfo.coreGeneFeatures
 
+	// column with nucleotide sequence of this feature will be marked as anchor
+	anchorFeature := undefined;
+
+	features := undefined
+	if is_undefined(assemblingFeature) {
+		features = ["CDR1", "FR1", "FR2", "CDR2", "FR3", "CDR3", "FR4"]
+
+		// override assembling feature returned by the mixcr, we assume that if it is undefined,
+		// it means that the assembling feature is CDR3, and assemble contigs is executed with null
+		// subcloning region
+		// TODO return more detailed information from MiXCR
+		assemblingFeature = "CDR3"
+
+		anchorFeature = "CDR3"
+	} else if assemblingFeature != "CDR3" {
+		features = ["CDR1", "FR1", "FR2", "CDR2", "FR3", "CDR3", "FR4", assemblingFeature]
+		anchorFeature = assemblingFeature
+	} else {
+		features = ["CDR3"]
+		anchorFeature = "CDR3"
+	}
+
 	clonotypeKeyColumns := undefined
 	clonotypeKeyArgs := undefined
+
 	if !is_undefined(assemblingFeature) {
 		clonotypeKeyColumns = ["nSeq" + assemblingFeature, "bestVGene", "bestJGene"]
 		clonotypeKeyArgs = [
@@ -129,7 +166,6 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 			clonotypeKeyColumns += ["bestCGene"]
 			clonotypeKeyArgs += [ [ "-cGene" ] ]
 		}
-
 	}
 
 	columnsSpecPerSample := []
@@ -181,7 +217,42 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		[ "-readCount" ],
 		[ "-readFraction" ]
 	]
-	mainAbundanceColumn := "readFraction"
+
+	mainAbundanceColumnUnnormalized := "readCount"
+	mainAbundanceColumnNormalized := "readFraction"
+
+	mainAbundanceColumnAggregates := [{
+		column: mainAbundanceColumnUnnormalized + "Sum",
+		id: "read-count-total",
+		allowNA: false,
+		spec: {
+			name: "pl7.app/vdj/readCountTotal",
+			valueType: "Int",
+			annotations: a(87120, true, {
+				"pl7.app/min": "1",
+				"pl7.app/isAbundance": "true",
+				"pl7.app/abundance/unit": "reads",
+				"pl7.app/abundance/normalized": "false",
+				"pl7.app/label": "Supporting Reads"
+			})
+		}
+	}, {
+		column: mainAbundanceColumnNormalized + "Mean",
+		id: "read-fraction-mean",
+		allowNA: false,
+		spec: {
+			name: "pl7.app/vdj/readFractionMean",
+			valueType: "Double",
+			annotations: a(87130, true, {
+				"pl7.app/min": "0",
+				"pl7.app/max": "1",
+				"pl7.app/isAbundance": "true",
+				"pl7.app/abundance/unit": "reads",
+				"pl7.app/abundance/normalized": "true",
+				"pl7.app/label": "Mean Fraction of Reads"
+			})
+		}
+	}]
 
 	if hasUmi {
 		columnsSpecPerSample += [ {
@@ -223,7 +294,40 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 			[ "-uniqueTagCount", "Molecule" ],
 			[ "-uniqueTagFraction", "Molecule" ]
 		]
-		mainAbundanceColumn = "uniqueMoleculeFraction"
+		mainAbundanceColumnNormalized = "uniqueMoleculeFraction"
+		mainAbundanceColumnUnnormalized = "uniqueMoleculeCount"
+		mainAbundanceColumnAggregates = [ {
+			column: mainAbundanceColumnUnnormalized + "Sum",
+			id: "umi-count-total",
+			allowNA: false,
+			spec: {
+				name: "pl7.app/vdj/uniqueMoleculeCountTotal",
+				valueType: "Long",
+				annotations: a(87120, true, {
+					"pl7.app/min": "1",
+					"pl7.app/isAbundance": "true",
+					"pl7.app/abundance/unit": "molecules",
+					"pl7.app/abundance/normalized": "false",
+					"pl7.app/label": "Supporting UMIs"
+				})
+			}
+		}, {
+			column: mainAbundanceColumnNormalized + "Mean",
+			id: "umi-fraction-mean",
+			allowNA: false,
+			spec: {
+				name: "pl7.app/vdj/uniqueMoleculeFractionMean",
+				valueType: "Double",
+				annotations: a(87130, true, {
+					"pl7.app/min": "0",
+					"pl7.app/max": "1",
+					"pl7.app/isAbundance": "true",
+					"pl7.app/abundance/unit": "molecules",
+					"pl7.app/abundance/normalized": "true",
+					"pl7.app/label": "Mean Fraction of UMIs"
+				})
+			}
+		} ]
 	}
 
 	sampleCountColumn := {
@@ -291,26 +395,16 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		columnsSpecPerClonotypeSc = [ sampleCountColumn ]
 	} else {
 		columnsSpecPerClonotype += [ sampleCountColumn ]
+		columnsSpecPerClonotype += mainAbundanceColumnAggregates
 	}
 
 	orderP := 80000
 
 	// Sequences
 
-	// column with nucleotide sequence of this feature will be marked as anchor
-	anchorFeature := undefined;
-
-	features := undefined
-	if is_undefined(assemblingFeature) {
-		features = ["CDR1", "FR1", "FR2", "CDR2", "FR3", "CDR3", "FR4"]
-		anchorFeature = "CDR3"
-	} else if assemblingFeature != "CDR3" {
-		features = ["CDR1", "FR1", "FR2", "CDR2", "FR3", "CDR3", "FR4", assemblingFeature]
-		anchorFeature = assemblingFeature
-	} else {
-		features = ["CDR3"]
-		anchorFeature = "CDR3"
-	}
+	// nAnnotationOfCDRsForVDJRegionInFrame
+	// aaAnnotationOfSegmentsForVDJRegionInFrame
+	annotationTypes := assemblingFeature == "CDR3" ? ["Segments"] : ["CDRs", "Segments"]
 
 	for isImputed in ( is_undefined(assemblingFeature) ? [false, true] : [false] ) {
 		imputedU := isImputed ? "Imputed" : ""
@@ -318,31 +412,66 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		for featureU in features {
 			featureL := text.to_lower(formatId(featureU))
 			for isAminoAcid in [true, false] {
+				featureInFrameU := isAminoAcid ? inFrameFeatures[featureU] : featureU
+				if is_undefined(featureInFrameU) {
+					featureInFrameU = featureU
+				}
+				featureInFrameL := text.to_lower(formatId(featureInFrameU))
+
 				alphabet := isAminoAcid ? "aminoacid" : "nucleotide"
 				alphabetShort := isAminoAcid ? "aa" : "nt"
 				alphabetShortMixcr := isAminoAcid ? "aa" : "n"
-				columnName := alphabetShortMixcr + "Seq" + imputedU + featureU
+				columnName := alphabetShortMixcr + "Seq" + imputedU + featureInFrameU
 				visibility := featureU == "CDR3" && (!isSingleCell || isAminoAcid) // isSingleCell ? (featureU == "CDR3") && isAminoAcid : (featureU == "CDR3") || (featureU == assemblingFeature)
 				columnsSpecPerClonotype += [ {
 						column: columnName,
-						id: alphabetShortMixcr + "-seq-" + featureL + (isImputed ? "-imputed" : ""),
+						id: alphabetShortMixcr + "-seq-" + featureInFrameL + (isImputed ? "-imputed" : ""),
 						naRegex: "region_not_covered",
 						spec: {
 							name: "pl7.app/vdj/sequence",
 							valueType: "String",
 							domain: {
-								"pl7.app/vdj/feature": featureU,
+								"pl7.app/vdj/feature": featureInFrameU,
 								"pl7.app/alphabet": alphabet
 							},
 							annotations: a(orderP, visibility, {
 								"pl7.app/vdj/isAssemblingFeature": featureU == anchorFeature ? "true" : "false",
+								"pl7.app/vdj/isMainSequence": featureU == anchorFeature ? "true" : "false",
 								"pl7.app/vdj/imputed": string(isImputed),
-								"pl7.app/label": featureU + " " + alphabetShort
+								"pl7.app/label": featureInFrameU + " " + alphabetShort
 							})
 						}
 					} ]
-				exportArgs += [ [ "-" + alphabetShortMixcr + "Feature" + imputedU, featureU ] ]
+				exportArgs += [ [ "-" + alphabetShortMixcr + "Feature" + imputedU, featureInFrameU ] ]
 				orderP -= 100
+
+				// Adding sequence annotation columns for assembling feature
+				if !isImputed && featureU == assemblingFeature {
+					for annotationType in annotationTypes {
+						columnName := alphabetShortMixcr + "AnnotationOf" + annotationType + "For" + featureInFrameU
+						columnsSpecPerClonotype += [ {
+							column: columnName,
+							id: alphabetShortMixcr + "-annotation-" + annotationType + "-" + featureInFrameL,
+							naRegex: "region_not_covered",
+							spec: {
+								name: "pl7.app/vdj/sequence/annotation",
+								valueType: "String",
+								domain: {
+									"pl7.app/vdj/feature": featureInFrameU,
+									"pl7.app/alphabet": alphabet,
+									"pl7.app/sequence/annotation/type": annotationType
+								},
+								annotations: a(orderP, undefined, {
+									"pl7.app/label": annotationType + " annotation for " + featureInFrameU + " " + alphabetShort,
+									"pl7.app/sequence/annotation/mapping": annotationMappings[annotationType],
+									"pl7.app/sequence/isAnnotation": "true"
+								})
+							}
+						} ]
+						exportArgs += [ [ "-" + alphabetShortMixcr + "AnnotationString", annotationType, featureInFrameU ] ]
+						orderP -= 100
+					}
+				}
 
 				// For now calculate length only for CDR3 to keep the number of columns manageable
 				if featureU == "CDR3" {
@@ -701,7 +830,9 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 
 		columnsSpec: columnsSpec,
 
-		mainAbundanceColumn: mainAbundanceColumn,
+		mainAbundanceColumnNormalized: mainAbundanceColumnNormalized,
+		mainAbundanceColumnUnnormalized: mainAbundanceColumnUnnormalized,
+
 		mainProductiveColumn: mainProductiveColumn,
 		mainProductiveArgs: mainProductiveArgs,
 

@@ -1,5 +1,14 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.18.0
+
+### Minor Changes
+
+- 2a9ce2a: - added two aggregated columns: Mean Fraction Of UMIs/Reads, Supprting UMIs/Reads
+  - support for RNA-Seq preset
+  - fallback for in-frame features for amino-acid sequence columns (for FR4 and VDJRegion)
+  - annotation strings for nucleotide and amino-acid sequences of assembling feature
+
 ## 2.17.0
 
 ### Minor Changes
