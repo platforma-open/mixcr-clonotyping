@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.4.4
+
+### Patch Changes
+
+- e198e5f: python scripts doesn't execute without installed python
+
 ## 2.4.3
 
 ### Patch Changes
