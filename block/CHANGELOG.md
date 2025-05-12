@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.4.5
+
+### Patch Changes
+
+- 4fe4a50: update transitive dependencies
+
 ## 2.4.4
 
 ### Patch Changes
