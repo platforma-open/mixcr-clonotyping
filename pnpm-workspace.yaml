@@ -21,7 +21,7 @@ catalog:
 
   '@platforma-open/milaboratories.runenv-python-3': ^1.1.13
   '@platforma-open/milaboratories.software-mixcr': 4.7.0-169-develop
-  '@platforma-open/milaboratories.software-ptransform': ^1.4.2
+  '@platforma-open/milaboratories.software-ptransform': ^1.4.3
 
   'vue': ^3.5.13
   'vue-tsc': ^2.2.10
