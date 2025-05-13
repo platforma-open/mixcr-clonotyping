@@ -32,7 +32,9 @@
     }
   },
   "pnpm": {
-    "overrides": {}
+    "overrides": {
+      "@platforma-sdk/workflow-tengo": "file:/Users/popoffvg/Documents/git/mil/platforma/sdk/workflow-tengo/package.tgz"
+    }
   },
   "///": {
     "pnpm": {
@@ -46,3 +48,4 @@
     }
   }
 }
+
