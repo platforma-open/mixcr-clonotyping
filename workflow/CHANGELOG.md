@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.18.3
+
+### Patch Changes
+
+- 46c5291: increase pip install timeout
+
 ## 2.18.2
 
 ### Patch Changes
