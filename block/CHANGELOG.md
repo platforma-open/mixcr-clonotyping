@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.4.6
+
+### Patch Changes
+
+- 800ce81: update runenv-python
+
 ## 2.4.5
 
 ### Patch Changes
