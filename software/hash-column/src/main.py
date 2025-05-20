@@ -4,6 +4,7 @@ from typing import List, Tuple
 
 import polars as pl
 import polars_hash as plh  # Assuming polars_hash registers extensions automatically
+import base64 as b64_std # Standard library for base64/base32
 
 
 def parse_calculate_args(calculate_args: List[List[str]]) -> List[Tuple[List[str], str]]:
@@ -142,6 +143,26 @@ def main():
 
             # Add the aliased expression to the list
             hash_expressions.append(hash_base64_expr.alias(output_name))
+
+            # --- Add Base32 encoded column ---
+            # Decode base64 to bytes, then encode to base32
+            # Polars doesn't have a direct base32 encode, so we use a UDF (apply)
+            # Ensure 'base64' and 'base32_lib' are imported if not already standard
+            # For this example, assuming 'base64' for decode and a hypothetical 'base32_lib.b32encode'
+            # Since direct polars base32 is not available, we will use apply with standard libraries.
+            # Python's base64.b32encode requires bytes.
+
+            hash_bytes_expr = hash_base64_expr.str.decode('base64') # Decodes base64 string to binary/bytes column
+
+            # Apply a Python function to encode bytes to base32 string
+            # The input to the lambda 'x' will be a Series of bytes
+            # We need to handle potential nulls if any step before could produce them for the hash_bytes_expr
+            hash_base32_expr = hash_bytes_expr.map_elements(
+                lambda b: f"C-{b64_std.b32encode(b).decode('utf-8')[:6]}" if b is not None else None,
+                return_dtype=pl.String
+            )
+            hash_expressions.append(hash_base32_expr.alias(output_name + "Label"))
+            # --- End Base32 encoded column ---
 
 
         # --- Add Columns and Write Output ---

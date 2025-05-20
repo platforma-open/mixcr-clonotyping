@@ -7,16 +7,16 @@ import csv
 
 def create_empty_mapping_dfs(main_df):
     """Create empty mapping DataFrames based on main_df to obtain expected headers"""
-    mapping_a1 = main_df[['scClonotypeKey', 'clonotypeKeyA1']].rename(
+    mapping_a1 = main_df[['scClonotypeKey', 'clonotypeKeyA1', 'clonotypeKeyLabel']].rename(
         columns={'clonotypeKeyA1': 'clonotypeKey'}
     )
-    mapping_a2 = main_df[['scClonotypeKey', 'clonotypeKeyA2']].rename(
+    mapping_a2 = main_df[['scClonotypeKey', 'clonotypeKeyA2', 'clonotypeKeyLabel']].rename(
         columns={'clonotypeKeyA2': 'clonotypeKey'}
     )
-    mapping_b1 = main_df[['scClonotypeKey', 'clonotypeKeyB1']].rename(
+    mapping_b1 = main_df[['scClonotypeKey', 'clonotypeKeyB1', 'clonotypeKeyLabel']].rename(
         columns={'clonotypeKeyB1': 'clonotypeKey'}
     )
-    mapping_b2 = main_df[['scClonotypeKey', 'clonotypeKeyB2']].rename(
+    mapping_b2 = main_df[['scClonotypeKey', 'clonotypeKeyB2', 'clonotypeKeyLabel']].rename(
         columns={'clonotypeKeyB2': 'clonotypeKey'}
     )
     return mapping_a1, mapping_a2, mapping_b1, mapping_b2
@@ -24,16 +24,16 @@ def create_empty_mapping_dfs(main_df):
 
 def create_mapping_dfs(main_df):
     """Create mapping DataFrames from main_df, dropping rows with missing keys"""
-    mapping_a1 = main_df[['scClonotypeKey', 'clonotypeKeyA1']].rename(
+    mapping_a1 = main_df[['scClonotypeKey', 'clonotypeKeyA1', 'clonotypeKeyLabel']].rename(
         columns={'clonotypeKeyA1': 'clonotypeKey'}
     ).dropna()
-    mapping_a2 = main_df[['scClonotypeKey', 'clonotypeKeyA2']].rename(
+    mapping_a2 = main_df[['scClonotypeKey', 'clonotypeKeyA2', 'clonotypeKeyLabel']].rename(
         columns={'clonotypeKeyA2': 'clonotypeKey'}
     ).dropna()
-    mapping_b1 = main_df[['scClonotypeKey', 'clonotypeKeyB1']].rename(
+    mapping_b1 = main_df[['scClonotypeKey', 'clonotypeKeyB1', 'clonotypeKeyLabel']].rename(
         columns={'clonotypeKeyB1': 'clonotypeKey'}
     ).dropna()
-    mapping_b2 = main_df[['scClonotypeKey', 'clonotypeKeyB2']].rename(
+    mapping_b2 = main_df[['scClonotypeKey', 'clonotypeKeyB2', 'clonotypeKeyLabel']].rename(
         columns={'clonotypeKeyB2': 'clonotypeKey'}
     ).dropna()
     return mapping_a1, mapping_a2, mapping_b1, mapping_b2
@@ -58,7 +58,6 @@ def process_empty_tables(main_df, properties_a, properties_b, args):
     b_result_2 = properties_b.merge(mapping_b2, on='clonotypeKey')
 
     save_results(a_result_1, a_result_2, b_result_1, b_result_2, args)
-
 
 def process_non_empty_tables(main_df, properties_a, properties_b, args):
     """Process case when input tables contain data"""
