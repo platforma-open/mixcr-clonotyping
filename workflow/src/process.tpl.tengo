@@ -411,8 +411,10 @@ self.body(func(inputs) {
 					params: {
 						mainAbundanceColumnNormalized: mainAbundanceColumnNormalized,
 						mainAbundanceColumnUnnormalized: mainAbundanceColumnUnnormalized,
-						clonotypeColumns: slices.map(columnsSpecPerClonotype, func(col) {
+						clonotypeColumns: slices.filter(slices.map(columnsSpecPerClonotype, func(col) {
 							return col.column
+						}), func(el) {
+							return !isSingleCell || el != "clonotypeKeyLabel"
 						})
 					}
 				}

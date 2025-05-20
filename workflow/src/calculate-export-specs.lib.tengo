@@ -493,26 +493,6 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 					} ]
 					exportArgs += [ [ "-" + alphabetShortMixcr + "Length", featureU ] ]
 				}
-
-				// label column
-				if isAminoAcid && !isSingleCell && featureU == "CDR3" {
-					columnsSpecPerClonotype += [ {
-						column: columnName,
-						id: "clonotype-label",
-						preProcess: [{
-							type: "regexpReplace",
-							pattern: "^region_not_covered$",
-							replacement: "Unlabelled"
-						}],
-						spec: {
-							name: "pl7.app/label",
-							valueType: "String",
-							annotations: a(100000, false, {
-								"pl7.app/label": "Clone label"
-							})
-						}
-					} ]
-				}
 			}
 		}
 	}
@@ -724,6 +704,24 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		[ "-topChains" ]
 	]
 
+
+	// clonotype label
+	columnsSpecPerClonotype += [ {
+		column: "clonotypeKeyLabel",
+		id: "clonotype-label",
+		preProcess: [{
+			type: "regexpReplace",
+			pattern: "^region_not_covered$",
+			replacement: "Unlabelled"
+		}],
+		spec: {
+			name: "pl7.app/label",
+			valueType: "String",
+			annotations: a(100000, false, {
+				"pl7.app/label": "Clone Id"
+			})
+		}
+	} ]
 	// All columns are added
 
 	columnsSpec := columnsSpecPerSample + columnsSpecPerClonotype
@@ -768,7 +766,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 				},
 				annotations: {
 					"pl7.app/label": "Clonotype key",
-					"pl7.app/table/visibility": "optional",
+					"pl7.app/table/visibility": "default",
 					"pl7.app/table/orderPriority": "110000",
 					"pl7.app/segmentedBy": string(json.encode(["pl7.app/vdj/clonotypingRunId"]))
 				}
@@ -792,7 +790,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 					},
 					annotations: {
 						"pl7.app/label": "Clone label",
-						"pl7.app/table/visibility": "optional",
+						"pl7.app/table/visibility": "default",
 						"pl7.app/table/orderPriority": "110000",
 						"pl7.app/segmentedBy": string(json.encode(["pl7.app/vdj/clonotypingRunId"]))
 					}

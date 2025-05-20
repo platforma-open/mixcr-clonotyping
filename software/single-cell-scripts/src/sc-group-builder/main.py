@@ -2,6 +2,9 @@ import csv
 import pandas as pd
 import json
 import argparse
+import hashlib
+import base64
+
 
 def load_and_reformat_data(file_path, chain):
     # Read the TSV file
@@ -81,7 +84,11 @@ def merge_and_group(chainA_df, chainB_df):
         merged_df["clonotypeKeyB2"]
     ], dropna=False).ngroup()
 
-    merged_df["scClonotypeKey"] = "C" + merged_df["scClonotypeKey"].astype(str)
+    # @TODO: normal way in future
+    merged_df['clonotypeKeyLabel'] = merged_df['scClonotypeKey'].apply(
+        lambda x: base64.b32encode(bytes.fromhex(hashlib.sha256(str(x).encode()).hexdigest()[:24])).decode('utf-8')
+    )
+    merged_df["clonotypeKeyLabel"] = "C-" + merged_df["clonotypeKeyLabel"].str[:6]
 
     return merged_df
 
@@ -91,7 +98,7 @@ def save_results(merged_df, output_clonotype_file, output_cell_file, args):
     sample_counts.rename(columns={"sampleId": "sampleCount"}, inplace=True)
 
     clonotype_records = merged_df[
-        ["scClonotypeKey", "clonotypeKeyA1", "clonotypeKeyA2", "clonotypeKeyB1", "clonotypeKeyB2"]
+        ["scClonotypeKey", "clonotypeKeyLabel", "clonotypeKeyA1", "clonotypeKeyA2", "clonotypeKeyB1", "clonotypeKeyB2"]
     ].drop_duplicates()
 
     # Merge the sample counts into clonotype records
@@ -134,7 +141,7 @@ def main():
 
     # If both input tables are empty (only headers), output empty tables (only headers)
     if chainA_df.empty and chainB_df.empty:
-        clonotype_columns = ["scClonotypeKey", "clonotypeKeyA1", "clonotypeKeyA2", "clonotypeKeyB1", "clonotypeKeyB2", "sampleCount"]
+        clonotype_columns = ["scClonotypeKey", "clonotypeKeyLabel", "clonotypeKeyA1", "clonotypeKeyA2", "clonotypeKeyB1", "clonotypeKeyB2", "sampleCount"]
         cell_columns = ["sampleId", "scClonotypeKey", "uniqueCellCount", "uniqueCellFraction"]
         pd.DataFrame(columns=clonotype_columns).to_csv(args.output_clonotypes, sep="\t", index=False, quoting=csv.QUOTE_NONE)
         pd.DataFrame(columns=cell_columns).to_csv(args.output_cells, sep="\t", index=False, quoting=csv.QUOTE_NONE)
