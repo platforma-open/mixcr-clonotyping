@@ -706,9 +706,10 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 
 
 	// clonotype label
-	columnsSpecPerClonotype += [ {
-		column: "clonotypeKeyLabel",
-		id: "clonotype-label",
+	if isSingleCell {
+		columnsSpecPerClonotypeSc += [ {
+			column: "clonotypeKeyLabel",
+			id: "clonotype-label",
 		preProcess: [{
 			type: "regexpReplace",
 			pattern: "^region_not_covered$",
@@ -718,10 +719,28 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 			name: "pl7.app/label",
 			valueType: "String",
 			annotations: a(100000, false, {
-				"pl7.app/label": "Clone Id"
-			})
-		}
-	} ]
+					"pl7.app/label": "Clone Id"
+				})
+			}
+		} ]
+	} else {
+		columnsSpecPerClonotype += [ {
+			column: "clonotypeKeyLabel",
+			id: "clonotype-label",
+		preProcess: [{
+			type: "regexpReplace",
+			pattern: "^region_not_covered$",
+			replacement: "Unlabelled"
+		}],
+		spec: {
+			name: "pl7.app/label",
+			valueType: "String",
+			annotations: a(100000, false, {
+					"pl7.app/label": "Clone Id"
+				})
+			}
+		} ]
+	}
 	// All columns are added
 
 	columnsSpec := columnsSpecPerSample + columnsSpecPerClonotype
