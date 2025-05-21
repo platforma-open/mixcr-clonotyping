@@ -32,7 +32,10 @@
     }
   },
   "pnpm": {
-    "overrides": {}
+    "overrides": {
+      "@platforma-sdk/workflow-tengo": "file:/Users/dbolotin/mi/core/platforma/sdk/workflow-tengo/package.tgz",
+      "@platforma-open/software-ptabler": "file:/Users/dbolotin/mi/core/ptabler/software/package.tgz"
+    }
   },
   "///": {
     "pnpm": {

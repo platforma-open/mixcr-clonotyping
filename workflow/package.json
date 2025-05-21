@@ -11,12 +11,13 @@
   "dependencies": {
     "@platforma-open/milaboratories.mixcr-clonotyping-2.single-cell-scripts": "workspace:*",
     "@platforma-open/milaboratories.mixcr-clonotyping-2.hash-column": "workspace:*",
-    "@platforma-sdk/workflow-tengo": "catalog:"
+    "@platforma-sdk/workflow-tengo": "catalog:",
+    "@platforma-open/milaboratories.software-mixcr": "catalog:",
+    "@platforma-open/milaboratories.software-ptransform": "catalog:",
+    "@platforma-open/software-ptabler": "catalog:"
   },
   "devDependencies": {
     "@platforma-sdk/tengo-builder": "catalog:",
-    "@platforma-open/milaboratories.software-mixcr": "catalog:",
-    "@platforma-open/milaboratories.software-ptransform": "catalog:",
     "@platforma-sdk/test": "catalog:",
     "vitest": "catalog:",
     "typescript": "catalog:"

@@ -5,12 +5,13 @@ slices := import("@platforma-sdk/workflow-tengo:slices")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 exec := import("@platforma-sdk/workflow-tengo:exec")
 maps := import("@platforma-sdk/workflow-tengo:maps")
+clonotypeLabel := import(":clonotype-label")
 
 json := import("json")
 
 self.defineOutputs("tsv")
 
-ptransformSw := assets.importSoftware("@platforma-open/milaboratories.software-ptransform:main")
+ptablerSw := assets.importSoftware("@platforma-open/software-ptabler:main")
 
 self.body(func(inputs) {
 	inputData := inputs[pConstants.VALUE_FIELD_NAME]
@@ -23,46 +24,13 @@ self.body(func(inputs) {
 	mainAbundanceColumnUnnormalized := params.mainAbundanceColumnUnnormalized
 	clonotypeColumns := params.clonotypeColumns
 
-	pickCols := []
-	for col in clonotypeColumns {
-		if col == "sampleCount" || col == mainAbundanceColumnNormalized + "Mean" || col == mainAbundanceColumnUnnormalized + "Sum" {
-			continue
-		}
-		pickCols = append(pickCols, [col, col])
-	}
+	// ptabler workflow steps
+	ptablerSteps := []
 
-	// Adding clonotypeKey column
-	pWorkflow := {
-		steps: [ {
-			type: "aggregate",
-			groupBy: ["clonotypeKey"],
-			aggregations: [ {
-				type: "max_by",
-				rankingCol: mainAbundanceColumnNormalized,
-				pickCols: pickCols
-			}, {
-				type: "count",
-				src: mainAbundanceColumnNormalized,
-				dst: "sampleCount"
-			}, {
-				type: "sum",
-				src: mainAbundanceColumnUnnormalized,
-				dst: mainAbundanceColumnUnnormalized + "Sum"
-			}, {
-				type: "mean",
-				src: mainAbundanceColumnNormalized,
-				dst: mainAbundanceColumnNormalized + "Mean"
-			}]
-		} ]
-	}
-
-	aggregateBuilderCmd := exec.builder().
-		printErrStreamToStdout().
-		software(ptransformSw).
-		arg("--workflow").arg("wf.json").
-		writeFile("wf.json", json.encode(pWorkflow))
-
+	// Input files processing
 	inputMap := inputData.inputs()
+	inputTableNames := []
+
 	for sKey in maps.getKeys(inputMap) {
 		inputFile := inputMap[sKey]
 		key := json.decode(sKey)
@@ -70,16 +38,124 @@ self.body(func(inputs) {
 			ll.panic("malformed key: %v", sKey)
 		}
 		sampleId := key[0]
-		aggregateBuilderCmd.
-			arg(sampleId + ".tsv").
-			addFile(sampleId + ".tsv", inputFile)
+		inputFileName := sampleId + ".tsv"
+		// Use sampleId for table name, ensuring it's a valid identifier (Tengo/JSON strings should be fine)
+		inputTableName := "table_" + sampleId // Prefixing to ensure it's a safe table name
+
+		ptablerSteps = append(ptablerSteps, {
+			type: "read_csv",
+			file: inputFileName,
+			name: inputTableName,
+			delimiter: "\t"
+		})
+		inputTableNames = append(inputTableNames, inputTableName)
 	}
 
-	aggregateCmd := aggregateBuilderCmd.
-		arg("output.tsv").saveFile("output.tsv").
+	currentTable := ""
+	if len(inputTableNames) == 1 {
+		currentTable = inputTableNames[0]
+	} else if len(inputTableNames) > 1 {
+		currentTable = "concatenated_input_data" // Define a name for the concatenated table
+		ptablerSteps = append(ptablerSteps, {
+			type: "concatenate",
+			inputTables: inputTableNames,
+			outputTable: currentTable
+		})
+	} else {
+		ll.panic("no input files found")
+	}
+
+
+	// Aggregations
+	aggregations := []
+
+	// max_by aggregations
+	for col in clonotypeColumns {
+		if col == "sampleCount" || col == mainAbundanceColumnNormalized + "Mean" || col == mainAbundanceColumnUnnormalized + "Sum" || col == "clonotypeLabel" {
+			continue
+		}
+		aggregations = append(aggregations, {
+			name: col,
+			aggregation: "max_by",
+			expression: { type: "col", name: col },
+			by: [{ type: "col", name: mainAbundanceColumnNormalized }]
+		})
+	}
+
+	// count aggregation
+	aggregations = append(aggregations, {
+		name: "sampleCount",
+		aggregation: "count",
+		expression: { type: "col", name: mainAbundanceColumnNormalized }
+	})
+
+	// sum aggregation
+	aggregations = append(aggregations, {
+		name: mainAbundanceColumnUnnormalized + "Sum",
+		aggregation: "sum",
+		expression: { type: "col", name: mainAbundanceColumnUnnormalized }
+	})
+
+	// mean aggregation
+	aggregations = append(aggregations, {
+		name: mainAbundanceColumnNormalized + "Mean",
+		aggregation: "mean",
+		expression: { type: "col", name: mainAbundanceColumnNormalized }
+	})
+
+	ptablerSteps = append(ptablerSteps, {
+		type: "aggregate",
+		inputTable: currentTable,
+		outputTable: "aggregated_table",
+		groupBy: ["clonotypeKey"],
+		aggregations: aggregations
+	})
+
+	// Generate clonotype label steps
+	ptablerSteps += clonotypeLabel.generateClonotypeLabelSteps("clonotypeKey", "clonotypeLabel", "aggregated_table")
+
+	// Output step
+	outputFileName := "output.tsv"
+
+	// Define which columns to include in the final output TSV
+	outputColNames := ["clonotypeKey"]
+	for agg in aggregations {
+		outputColNames = append(outputColNames, agg.name)
+	}
+	outputColNames = append(outputColNames, "clonotypeLabel")
+
+	ptablerSteps = append(ptablerSteps, {
+		type: "write_csv",
+		table: "aggregated_table",
+		file: outputFileName,
+		delimiter: "\t",
+		columns: outputColNames // Specify output columns
+	})
+
+	ptablerWorkflow := {
+		workflow: ptablerSteps
+	}
+
+	ptablerCmdBuilder := exec.builder().
+		printErrStreamToStdout().
+		software(ptablerSw).
+		arg("workflow.json").
+		writeFile("workflow.json", json.encode(ptablerWorkflow))
+
+	// Add input files to the command
+	for sKey in maps.getKeys(inputMap) {
+		inputFile := inputMap[sKey]
+		key := json.decode(sKey)
+		sampleId := key[0]
+		fileName := sampleId + ".tsv"
+		ptablerCmdBuilder.addFile(fileName, inputFile)
+	}
+
+	ptablerCmd := ptablerCmdBuilder.
+		saveFile(outputFileName).
 		run()
 
-	processedTsv := aggregateCmd.getFile("output.tsv")
+	processedTsv := ptablerCmd.getFile(outputFileName)
 
 	return {
 		tsv: processedTsv

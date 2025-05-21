@@ -220,6 +220,8 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 
 	mainAbundanceColumnUnnormalized := "readCount"
 	mainAbundanceColumnNormalized := "readFraction"
+	mainAbundanceColumnUnnormalizedArgs := [ [ "-readCount" ] ]
+	mainAbundanceColumnNormalizedArgs := [ [ "-readFraction" ] ]
 
 	mainAbundanceColumnAggregates := [{
 		column: mainAbundanceColumnUnnormalized + "Sum",
@@ -294,8 +296,12 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 			[ "-uniqueTagCount", "Molecule" ],
 			[ "-uniqueTagFraction", "Molecule" ]
 		]
+
 		mainAbundanceColumnNormalized = "uniqueMoleculeFraction"
 		mainAbundanceColumnUnnormalized = "uniqueMoleculeCount"
+		mainAbundanceColumnNormalizedArgs = [ [ "-uniqueTagFraction", "Molecule" ] ]
+		mainAbundanceColumnUnnormalizedArgs = [ [ "-uniqueTagCount", "Molecule" ] ]
+
 		mainAbundanceColumnAggregates = [ {
 			column: mainAbundanceColumnUnnormalized + "Sum",
 			id: "umi-count-total",
@@ -495,24 +501,24 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 				}
 
 				// label column
-				if isAminoAcid && !isSingleCell && featureU == "CDR3" {
-					columnsSpecPerClonotype += [ {
-						column: columnName,
-						id: "clonotype-label",
-						preProcess: [{
-							type: "regexpReplace",
-							pattern: "^region_not_covered$",
-							replacement: "Unlabelled"
-						}],
-						spec: {
-							name: "pl7.app/label",
-							valueType: "String",
-							annotations: a(100000, false, {
-								"pl7.app/label": "Clone label"
-							})
-						}
-					} ]
-				}
+				// if isAminoAcid && !isSingleCell && featureU == "CDR3" {
+				// 	columnsSpecPerClonotype += [ {
+				// 		column: columnName,
+				// 		id: "clonotype-label",
+				// 		preProcess: [{
+				// 			type: "regexpReplace",
+				// 			pattern: "^region_not_covered$",
+				// 			replacement: "Unlabelled"
+				// 		}],
+				// 		spec: {
+				// 			name: "pl7.app/label",
+				// 			valueType: "String",
+				// 			annotations: a(100000, false, {
+				// 				"pl7.app/label": "Clone label"
+				// 			})
+				// 		}
+				// 	} ]
+				// }
 			}
 		}
 	}
@@ -644,8 +650,8 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		// 	visibility: false
 		// }
 	]
-	mainProductiveColumn := flagColumnVariants[0].columnPrefix + productiveFeature
-	mainProductiveArgs := [ flagColumnVariants[0].arg, productiveFeature ]
+	mainIsProductiveColumn := flagColumnVariants[0].columnPrefix + productiveFeature
+	mainIsProductiveArgs := [ [ flagColumnVariants[0].arg, productiveFeature ] ]
 	for variant in flagColumnVariants {
 		columnsSpecPerClonotype += [ {
 				column: variant.columnPrefix + productiveFeature,
@@ -723,6 +729,18 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		[ "-isotype", "primary" ],
 		[ "-topChains" ]
 	]
+
+	columnsSpecPerClonotype += [ {
+		column: "clonotypeLabel",
+		id: "clonotype-label",
+		spec: {
+			name: "pl7.app/label",
+			valueType: "String",
+			annotations: a(100000, false, {
+				"pl7.app/label": "Clone label"
+			})
+		}
+	} ]
 
 	// All columns are added
 
@@ -831,10 +849,12 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		columnsSpec: columnsSpec,
 
 		mainAbundanceColumnNormalized: mainAbundanceColumnNormalized,
+		mainAbundanceColumnNormalizedArgs: mainAbundanceColumnNormalizedArgs,
 		mainAbundanceColumnUnnormalized: mainAbundanceColumnUnnormalized,
+		mainAbundanceColumnUnnormalizedArgs: mainAbundanceColumnUnnormalizedArgs,
 
-		mainProductiveColumn: mainProductiveColumn,
-		mainProductiveArgs: mainProductiveArgs,
+		mainIsProductiveColumn: mainIsProductiveColumn,
+		mainIsProductiveArgs: mainIsProductiveArgs,
 
 		exportArgs: exportArgs
 	}

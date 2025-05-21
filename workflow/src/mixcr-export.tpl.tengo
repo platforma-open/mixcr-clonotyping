@@ -10,8 +10,7 @@ json := import("json")
 self.defineOutputs("tsv", "tsvForSingleCell")
 
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:low-memory")
-ptransformSw := assets.importSoftware("@platforma-open/milaboratories.software-ptransform:main")
-hashColumnSw := assets.importSoftware("@platforma-open/milaboratories.mixcr-clonotyping-2.hash-column:main")
+ptablerSw := assets.importSoftware("@platforma-open/software-ptabler:main")
 
 self.body(func(inputs) {
 	clnsFile := inputs[pConstants.VALUE_FIELD_NAME]
@@ -25,6 +24,31 @@ self.body(func(inputs) {
 	clonotypeKeyColumns := params.clonotypeKeyColumns
 	clonotypeKeyArgs := params.clonotypeKeyArgs
 	cellTagColumns := params.cellTagColumns
+
+	mainAbundanceColumnNormalized := params.mainAbundanceColumnNormalized
+	mainAbundanceColumnUnnormalized := params.mainAbundanceColumnUnnormalized
+	mainAbundanceColumnNormalizedArgs := params.mainAbundanceColumnNormalizedArgs
+	mainAbundanceColumnUnnormalizedArgs := params.mainAbundanceColumnUnnormalizedArgs
+	mainIsProductiveColumn := params.mainIsProductiveColumn
+	mainIsProductiveArgs := params.mainIsProductiveArgs
+
+	hashKeyDerivationExpression := func(sourceColumns) {
+		strJoinOperands := []
+		for colName in sourceColumns {
+			strJoinOperands = append(strJoinOperands, { type: "col", name: colName })
+		}
+		return {
+			type: "hash",
+			hashType: "sha256",
+			encoding: "base64_alphanumeric",
+			bits: 120,
+			value: {
+				type: "str_join",
+				operands: strJoinOperands,
+				delimiter: "#"
+			}
+		}
+	}
 
 	// Exporting clones from clns file
 
@@ -76,124 +100,96 @@ self.body(func(inputs) {
 	}
 
 	if is_undefined(clonotypeKeyColumns) {
-		result.tsv = unprocessedTsv
-
-	} else if is_undefined(cellTagColumns) {
-		hashCmdBuilder := exec.builder().
-			printErrStreamToStdout().
-			software(hashColumnSw).
-			arg("--input-table").arg("input.tsv").
-			addFile("input.tsv", unprocessedTsv).
-			arg("--output-table").arg("output.tsv").
-			arg("--calculate")
-
-		for col in clonotypeKeyColumns {
-			hashCmdBuilder.arg(col)
-		}
-
-		hashCmdBuilder.arg("clonotypeKey")
-
-		hashCmd := hashCmdBuilder.
-			saveFile("output.tsv").
-			run()
-
-		processedTsv := hashCmd.getFile("output.tsv")
-
-		result.tsv = processedTsv
-
-	} else {
-		pWorkflow := {
-			steps: [ {
-				type: "combine_columns_as_json",
-				src: clonotypeKeyColumns,
-				dst: "clonotypeKey"
-			} ]
-		}
-
-		aggregateCmd := exec.builder().
-			printErrStreamToStdout().
-			software(ptransformSw).
-			arg("--workflow").arg("wf.json").
-			writeFile("wf.json", json.encode(pWorkflow)).
-			arg("input.tsv").addFile("input.tsv", unprocessedTsv).
-			arg("output.tsv").saveFile("output.tsv").
-			run()
-
-		processedTsv := aggregateCmd.getFile("output.tsv")
-
-		result.tsv = processedTsv
+		ll.panic("clonotypeKeyColumns is undefined")
 	}
+
+	ptablerSteps := [ {
+		type: "read_csv",
+		file: "input.tsv",
+		name: "input_table",
+		delimiter: "\t"
+	} ]
+
+	ptablerSteps = append(ptablerSteps, {
+		type: "add_columns",
+		table: "input_table",
+		columns: [ {
+			name: "clonotypeKey",
+			expression: hashKeyDerivationExpression(clonotypeKeyColumns)
+		} ]
+	})
+
+	ptablerSteps = append(ptablerSteps, {
+		type: "write_csv",
+		table: "input_table",
+		file: "output.tsv",
+		delimiter: "\t"
+	})
+
+	ptablerCmd := exec.builder().
+		printErrStreamToStdout().
+		software(ptablerSw).
+		arg("workflow.json").
+		writeFile("workflow.json", json.encode({
+			workflow: ptablerSteps
+		})).
+		addFile("input.tsv", unprocessedTsv).
+		saveFile("output.tsv").
+		run()
+
+	processedTsv := ptablerCmd.getFile("output.tsv")
+
+	result.tsv = processedTsv
 
 	if !is_undefined(cellTagColumns) {
 		mixcrForSingleCell := createExport(func(mixcrCmdBuilder) {
 			mixcrCmdBuilder.
 				arg("--split-by-tags").arg("Cell").
-				arg("-tags").arg("Cell").
-				arg("-readCount").
-				arg("-isProductive").arg("CDR3")
+				arg("-tags").arg("Cell")
 
-			for argGrp in clonotypeKeyArgs {
+			for argGrp in (clonotypeKeyArgs + mainIsProductiveArgs + mainAbundanceColumnUnnormalizedArgs) {
 				for arg in argGrp {
 					mixcrCmdBuilder.arg(arg)
 				}
 			}
 		})
 
-		if is_undefined(clonotypeKeyColumns) {
-			ll.panic("clonotypeKeyColumns is undefined")
-		}
-
 		unprocessedTsvForSingleCell := mixcrForSingleCell.getFile("clones.tsv")
 
-		pWorkflow := {
-			steps: [ {
-				type: "combine_columns_as_json",
-				src: clonotypeKeyColumns,
-				dst: "clonotypeKey"
+		ptablerStepsForSingleCell := [ {
+			type: "read_csv",
+			file: "input.tsv",
+			name: "input_table_sc",
+			delimiter: "\t"
+		}, {
+			type: "add_columns",
+			table: "input_table_sc",
+			columns: [ {
+				name: "clonotypeKey",
+				expression: hashKeyDerivationExpression(clonotypeKeyColumns)
 			}, {
-				type: "combine_columns_as_json",
-				src: cellTagColumns,
-				dst: "cellTag"
+				name: "cellKey",
+				expression: hashKeyDerivationExpression(cellTagColumns)
 			} ]
-		}
+		}, {
+			type: "write_csv",
+			table: "input_table_sc",
+			file: "output.tsv",
+			delimiter: "\t"
+		} ]
 
-		aggregateCmd := exec.builder().
+		ptablerCmdSingleCell := exec.builder().
 			printErrStreamToStdout().
-			software(ptransformSw).
-			arg("--workflow").arg("wf.json").
-			writeFile("wf.json", json.encode(pWorkflow)).
-			arg("input.tsv").addFile("input.tsv", unprocessedTsvForSingleCell).
-			arg("output.tsv").saveFile("output.tsv").
+			software(ptablerSw).
+			arg("workflow_sc.json").
+			writeFile("workflow_sc.json", json.encode({
+				workflow: ptablerStepsForSingleCell
+			})).
+			addFile("input.tsv", unprocessedTsvForSingleCell).
+			saveFile("output.tsv").
 			run()
 
-		result.tsvForSingleCell = aggregateCmd.getFile("output.tsv")
-
-		// uncomment this to use hashes
-
-		// hashCmdBuilderSingleCell := exec.builder().
-		// 	printErrStreamToStdout().
-		// 	software(hashColumnSw).
-		// 	arg("--input-table").arg("input.tsv").
-		// 	addFile("input.tsv", unprocessedTsvForSingleCell).
-		// 	arg("--output-table").arg("output.tsv")
-
-		// hashCmdBuilderSingleCell.arg("--calculate")
-		// for col in clonotypeKeyColumns {
-		// 	hashCmdBuilderSingleCell.arg(col)
-		// }
-		// hashCmdBuilderSingleCell.arg("clonotypeKey")
-
-		// hashCmdBuilderSingleCell.arg("--calculate")
-		// for col in cellTagColumns {
-		// 	hashCmdBuilderSingleCell.arg(col)
-		// }
-		// hashCmdBuilderSingleCell.arg("cellTag")
-
-		// hashCmdSingleCell := hashCmdBuilderSingleCell.
-		// 	saveFile("output.tsv").
-		// 	run()
-
-		// result.tsvForSingleCell = hashCmdSingleCell.getFile("output.tsv")
+		result.tsvForSingleCell = ptablerCmdSingleCell.getFile("output.tsv")
 	}
 
 	return result

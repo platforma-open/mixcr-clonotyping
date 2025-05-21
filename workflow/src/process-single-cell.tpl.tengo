@@ -13,6 +13,8 @@ scPreprocessingSw := assets.importSoftware("@platforma-open/milaboratories.mixcr
 scGroupBuilderSw := assets.importSoftware("@platforma-open/milaboratories.mixcr-clonotyping-2.single-cell-scripts:sc-group-builder")
 scOutputProcessingSw := assets.importSoftware("@platforma-open/milaboratories.mixcr-clonotyping-2.single-cell-scripts:output-processing")
 
+ptablerSw := assets.importSoftware("@platforma-open/software-ptabler:main")
+
 self.body(func(inputs) {
 	byCellTagA := inputs[pConstants.VALUE_FIELD_NAME]
 	inputDataMeta := byCellTagA.getDataAsJson()
@@ -22,50 +24,153 @@ self.body(func(inputs) {
 	propertiesA := inputs.propertiesA
 	propertiesB := inputs.propertiesB
 
-	// Creating files map
-	filesMap := {}
-	inputMapA := byCellTagA.inputs()
-	for k in maps.getKeys(inputMapA) {
-		v := inputMapA[k]
-		key := json.decode(k)
-		fileName := "by_cell_a_" + key[0] + ".tsv"
-		filesMap[fileName] = v
+	mainAbundanceColumn := inputs.params.mainAbundanceColumn
+	mainIsProductiveColumn := inputs.params.mainIsProductiveColumn
+
+	/**
+	 * Universal preprocessing step for A and B chain files
+	 * @param byCellTag: Map<string:[sampleId], tsv_by_cell_tag>
+	 * @return the output file
+	 */
+	preprocessByCell := func(byCellTag) {
+		internalOutputFileName := "ptabler_output.tsv"
+		ptablerSteps := []
+		inputTableNames := []
+
+		ptablerCmdBuilder := exec.builder().
+			printErrStreamToStdout().
+			software(ptablerSw)
+
+		inputMap := byCellTag.inputs()
+		maps.forEach(inputMap, func(sKey, inputFile) {
+			key := json.decode(sKey)
+			ll.assert(len(key) == 1, "preprocessByCell: byCellTag key should have one element, got %v", key)
+			sampleId := key[0]
+
+			fileNameForExecAndPtablerRead := "by_cell_" + sampleId + ".tsv"
+			tableNameInPtabler := "by_cell_" + sampleId
+
+			ptablerCmdBuilder.addFile(fileNameForExecAndPtablerRead, inputFile)
+
+			ptablerSteps = append(ptablerSteps, {
+				type: "read_csv",
+				file: fileNameForExecAndPtablerRead,
+				name: tableNameInPtabler,
+				delimiter: "\t"
+			})
+
+			ptablerSteps = append(ptablerSteps, {
+				type: "add_columns",
+				table: tableNameInPtabler,
+				columns: [
+					{ name: "sampleId", expression: { type: "const", value: sampleId } }
+				]
+			})
+			inputTableNames = append(inputTableNames, tableNameInPtabler)
+		})
+
+		ll.assert(len(inputTableNames) > 0, "No input files to process in preprocessByCell")
+
+		columnsForInitialConcatenation := ["cellKey", "clonotypeKey", mainAbundanceColumn, "sampleId", mainIsProductiveColumn]
+
+		ptablerSteps = append(ptablerSteps, {
+			type: "concatenate",
+			inputTables: inputTableNames,
+			outputTable: "concatenated_data",
+			columns: columnsForInitialConcatenation
+		})
+
+		ptablerSteps = append(ptablerSteps, {
+			type: "add_columns",
+			table: "concatenated_data",
+			columns: [
+				{
+					name: "rawChainRank",
+					expression: {
+						type: "rank",
+						partitionBy: [{ type: "col", name: "sampleId" }, { type: "col", name: "cellTag" }],
+						orderBy: [{ type: "col", name: mainAbundanceColumn }],
+						descending: true // Highest abundance gets rank 1
+					}
+				}
+			]
+		})
+
+		ptablerSteps = append(ptablerSteps, {
+			type: "filter",
+			inputTable: "concatenated_data",
+			outputTable: "concatenated_data_filtered_by_raw_rank",
+			condition: {
+				type: "le",
+				lhs: { type: "col", name: "rawChainRank" },
+				rhs: { type: "const", value: 2 }
+			}
+		})
+
+		// Add chainRank: rank by isProductive (True first) then by abundance (desc) within sampleId+cellTag
+		// For orderBy:
+		// 1. isProductiveNumeric: "True" -> 0, "False" -> 1 (for ascending sort)
+		// 2. negativeAbundance: mainAbundanceColumn * -1 (for ascending sort by this, meaning descending by original abundance)
+		isProductiveNumericExpr := {
+			type: "when_then_otherwise",
+			conditions: [{
+				when: { type: "eq", lhs: { type: "col", name: mainIsProductiveColumn }, rhs: { type: "const", value: "True" } },
+				then: { type: "const", value: 0 }
+			}],
+			otherwise: { type: "const", value: 1 }
+		}
+		negativeAbundanceExpr := {
+			type: "multiply",
+			lhs: { type: "col", name: mainAbundanceColumn },
+			rhs: { type: "const", value: -1 }
+		}
+
+		ptablerSteps = append(ptablerSteps, {
+			type: "add_columns",
+			table: "concatenated_data_filtered_by_raw_rank",
+			columns: [
+				{
+					name: "chainRank",
+					expression: {
+						type: "rank",
+						partitionBy: [{ type: "col", name: "sampleId" }, { type: "col", name: "cellTag" }],
+						orderBy: [isProductiveNumericExpr, negativeAbundanceExpr],
+						descending: false // Standard rank 1, 2, 3...
+					}
+				}
+			]
+		})
+
+		ptablerSteps = append(ptablerSteps, {
+			type: "write_csv",
+			table: "concatenated_data_filtered_by_raw_rank",
+			file: internalOutputFileName,
+			delimiter: "\t"
+		})
+
+		ptablerWorkflow := {
+			workflow: ptablerSteps
+		}
+
+		ptablerCmdBuilder.
+			writeFile("workflow.json", json.encode(ptablerWorkflow)).
+			arg("workflow.json").
+			saveFile(internalOutputFileName)
+
+		runResult := ptablerCmdBuilder.run()
+		return runResult.getFile(internalOutputFileName)
 	}
 
-	inputMapB := byCellTagB.inputs()
-	for k in maps.getKeys(inputMapB) {
-		v := inputMapB[k]
-		key := json.decode(k)
-		fileName := "by_cell_b_" + key[0] + ".tsv"
-		filesMap[fileName] = v
-	}
+	chainAoutput := preprocessByCell(byCellTagA)
+	chainBoutput := preprocessByCell(byCellTagB)
 
-	scPreprocessingCmd := exec.builder().
-		printErrStreamToStdout().
-		software(scPreprocessingSw)
-
-	for name in maps.getKeys(filesMap) {
-		scPreprocessingCmd.addFile(name, filesMap[name]).arg(name)
-	}
-
-	// Data preprocessing
-	scPreprocessingCmd = scPreprocessingCmd.arg("--output_chainA").arg("chain_a_output.tsv").
-		arg("--output_chainB").arg("chain_b_output.tsv").
-		saveFile("chain_a_output.tsv").
-		saveFile("chain_b_output.tsv")
-	run := scPreprocessingCmd.run()
-	chainAoutput := run.getFile("chain_a_output.tsv")
-	chainBoutput := run.getFile("chain_b_output.tsv")
-
-
-	// Generating scClonotypeKey and abundanceTable
 	scClonotypeBuilderCmd := exec.builder().
 		printErrStreamToStdout().
 		software(scGroupBuilderSw).
 		addFile("chain_a_output.tsv", chainAoutput).
 		addFile("chain_b_output.tsv", chainBoutput).
 		arg("--only_full_clonotypes").
-		arg("--chainA").arg("chain_a_output.tsv").
+		arg("--chainAqwe").arg("chain_a_output.tsv").
 		arg("--chainB").arg("chain_b_output.tsv").
 		arg("--output_clonotype").arg("clonotype.tsv").
 		arg("--output_cell").arg("abundance.tsv").

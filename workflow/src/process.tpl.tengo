@@ -7,6 +7,7 @@ assets := import("@platforma-sdk/workflow-tengo:assets")
 pframes := import("@platforma-sdk/workflow-tengo:pframes")
 slices := import("@platforma-sdk/workflow-tengo:slices")
 maps := import("@platforma-sdk/workflow-tengo:maps")
+sets := import("@platforma-sdk/workflow-tengo:sets")
 
 calculateExportSpecs := import(":calculate-export-specs")
 
@@ -214,8 +215,13 @@ self.body(func(inputs) {
 
 	exportArgs := exportSpecs.exportArgs
 
+	mainIsProductiveColumn := exportSpecs.mainIsProductiveColumn
+	mainIsProductiveArgs := exportSpecs.mainIsProductiveArgs
+
 	mainAbundanceColumnNormalized := exportSpecs.mainAbundanceColumnNormalized
 	mainAbundanceColumnUnnormalized := exportSpecs.mainAbundanceColumnUnnormalized
+	mainAbundanceColumnNormalizedArgs := exportSpecs.mainAbundanceColumnNormalizedArgs
+	mainAbundanceColumnUnnormalizedArgs := exportSpecs.mainAbundanceColumnUnnormalizedArgs
 
 	if is_undefined(axesByClonotypeKey) {
 		ll.panic("Absent clonotype key not supported")
@@ -356,6 +362,14 @@ self.body(func(inputs) {
 						chains: chainInfo.mixcrFilter,
 						clonotypeKeyColumns: clonotypeKeyColumns,
 						clonotypeKeyArgs: clonotypeKeyArgs,
+
+						mainIsProductiveColumn: mainIsProductiveColumn,
+						mainIsProductiveArgs: mainIsProductiveArgs,
+						mainAbundanceColumnNormalized: mainAbundanceColumnNormalized,
+						mainAbundanceColumnUnnormalized: mainAbundanceColumnUnnormalized,
+						mainAbundanceColumnNormalizedArgs: mainAbundanceColumnNormalizedArgs,
+						mainAbundanceColumnUnnormalizedArgs: mainAbundanceColumnUnnormalizedArgs,
+
 						cellTagColumns: cellTagColumns,
 						exportArgs: exportArgs,
 						isLibraryFileGzipped: isLibraryFileGzipped
@@ -411,9 +425,12 @@ self.body(func(inputs) {
 					params: {
 						mainAbundanceColumnNormalized: mainAbundanceColumnNormalized,
 						mainAbundanceColumnUnnormalized: mainAbundanceColumnUnnormalized,
-						clonotypeColumns: slices.map(columnsSpecPerClonotype, func(col) {
-							return col.column
-						})
+						// Converting to set and back to slice to remove duplicates
+						clonotypeColumns: sets.toSlice(sets.fromSlice(
+							slices.map(columnsSpecPerClonotype, func(col) {
+								return col.column
+							})
+						))
 					}
 				}
 			}
@@ -563,7 +580,11 @@ self.body(func(inputs) {
 					extra: {
 						byCellTagB: perChainResults[chainB].tsvForSingleCell.data,
 						propertiesA: perChainResults[chainA].clonotypeProperties.data,
-						propertiesB: perChainResults[chainB].clonotypeProperties.data
+						propertiesB: perChainResults[chainB].clonotypeProperties.data,
+						params: {
+							mainAbundanceColumn: mainAbundanceColumnUnnormalized,
+							mainIsProductiveColumn: mainIsProductiveColumn
+						}
 					}
 				}
 			)
