@@ -38,7 +38,9 @@ self.body(func(inputs) {
 		inputTableNames := []
 
 		ptablerCmdBuilder := exec.builder().
+			inMediumQueue().
 			printErrStreamToStdout().
+			dontSaveStdoutOrStderr().
 			software(ptablerSw)
 
 		inputMap := byCellTag.inputs()
@@ -88,7 +90,7 @@ self.body(func(inputs) {
 					name: "rawChainRank",
 					expression: {
 						type: "rank",
-						partitionBy: [{ type: "col", name: "sampleId" }, { type: "col", name: "cellTag" }],
+						partitionBy: [{ type: "col", name: "sampleId" }, { type: "col", name: "cellKey" }],
 						orderBy: [{ type: "col", name: mainAbundanceColumn }],
 						descending: true // Highest abundance gets rank 1
 					}
@@ -133,7 +135,7 @@ self.body(func(inputs) {
 					name: "chainRank",
 					expression: {
 						type: "rank",
-						partitionBy: [{ type: "col", name: "sampleId" }, { type: "col", name: "cellTag" }],
+						partitionBy: [{ type: "col", name: "sampleId" }, { type: "col", name: "cellKey" }],
 						orderBy: [isProductiveNumericExpr, negativeAbundanceExpr],
 						descending: false // Standard rank 1, 2, 3...
 					}
@@ -145,7 +147,8 @@ self.body(func(inputs) {
 			type: "write_csv",
 			table: "concatenated_data_filtered_by_raw_rank",
 			file: internalOutputFileName,
-			delimiter: "\t"
+			delimiter: "\t",
+			columns: columnsForInitialConcatenation + ["chainRank"] // excluding rawChainRank
 		})
 
 		ptablerWorkflow := {

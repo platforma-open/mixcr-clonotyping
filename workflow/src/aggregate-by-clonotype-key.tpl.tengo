@@ -22,7 +22,13 @@ self.body(func(inputs) {
 	params := inputs.params
 	mainAbundanceColumnNormalized := params.mainAbundanceColumnNormalized
 	mainAbundanceColumnUnnormalized := params.mainAbundanceColumnUnnormalized
+	// { column: string; type: string }
 	clonotypeColumns := params.clonotypeColumns
+
+	// Construct schema for read_csv
+	schemaForReadCsv := [
+		{ column: "clonotypeKey", type: "String" }
+	] + clonotypeColumns
 
 	// ptabler workflow steps
 	ptablerSteps := []
@@ -46,7 +52,8 @@ self.body(func(inputs) {
 			type: "read_csv",
 			file: inputFileName,
 			name: inputTableName,
-			delimiter: "\t"
+			delimiter: "\t",
+			schema: schemaForReadCsv
 		})
 		inputTableNames = append(inputTableNames, inputTableName)
 	}
@@ -71,13 +78,13 @@ self.body(func(inputs) {
 
 	// max_by aggregations
 	for col in clonotypeColumns {
-		if col == "sampleCount" || col == mainAbundanceColumnNormalized + "Mean" || col == mainAbundanceColumnUnnormalized + "Sum" || col == "clonotypeLabel" {
+		if col.column == "sampleCount" || col.column == mainAbundanceColumnNormalized + "Mean" || col.column == mainAbundanceColumnUnnormalized + "Sum" || col.column == "clonotypeLabel" {
 			continue
 		}
 		aggregations = append(aggregations, {
-			name: col,
+			name: col.column,
 			aggregation: "max_by",
-			expression: { type: "col", name: col },
+			expression: { type: "col", name: col.column },
 			by: [{ type: "col", name: mainAbundanceColumnNormalized }]
 		})
 	}

@@ -2,6 +2,7 @@ ll := import("@platforma-sdk/workflow-tengo:ll")
 self := import("@platforma-sdk/workflow-tengo:tpl.light")
 pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 smart := import("@platforma-sdk/workflow-tengo:smart")
+slices := import("@platforma-sdk/workflow-tengo:slices")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 exec := import("@platforma-sdk/workflow-tengo:exec")
 
@@ -23,6 +24,9 @@ self.body(func(inputs) {
 
 	clonotypeKeyColumns := params.clonotypeKeyColumns
 	clonotypeKeyArgs := params.clonotypeKeyArgs
+	// { column: string; type: string }
+	clonotypeColumns := params.clonotypeColumns
+
 	cellTagColumns := params.cellTagColumns
 
 	mainAbundanceColumnNormalized := params.mainAbundanceColumnNormalized
@@ -107,7 +111,8 @@ self.body(func(inputs) {
 		type: "read_csv",
 		file: "input.tsv",
 		name: "input_table",
-		delimiter: "\t"
+		delimiter: "\t",
+		schema: clonotypeColumns
 	} ]
 
 	ptablerSteps = append(ptablerSteps, {
@@ -127,7 +132,9 @@ self.body(func(inputs) {
 	})
 
 	ptablerCmd := exec.builder().
+		inMediumQueue().
 		printErrStreamToStdout().
+		dontSaveStdoutOrStderr().
 		software(ptablerSw).
 		arg("workflow.json").
 		writeFile("workflow.json", json.encode({
@@ -160,7 +167,10 @@ self.body(func(inputs) {
 			type: "read_csv",
 			file: "input.tsv",
 			name: "input_table_sc",
-			delimiter: "\t"
+			delimiter: "\t",
+			schema: slices.map(clonotypeKeyColumns + cellTagColumns, func(col) {
+				return { column: col, type: "String" }
+			})
 		}, {
 			type: "add_columns",
 			table: "input_table_sc",
@@ -179,7 +189,9 @@ self.body(func(inputs) {
 		} ]
 
 		ptablerCmdSingleCell := exec.builder().
+			inMediumQueue().
 			printErrStreamToStdout().
+			dontSaveStdoutOrStderr().
 			software(ptablerSw).
 			arg("workflow_sc.json").
 			writeFile("workflow_sc.json", json.encode({

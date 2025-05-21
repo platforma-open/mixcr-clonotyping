@@ -203,7 +203,6 @@ self.body(func(inputs) {
 	columnsSpecPerSampleSc := exportSpecs.columnsSpecPerSampleSc
 	columnsSpecPerClonotype := exportSpecs.columnsSpecPerClonotype
 	columnsSpecPerClonotypeSc := exportSpecs.columnsSpecPerClonotypeSc
-	// columnsSpec := exportSpecs.columnsSpec
 
 	clonotypeKeyColumns := exportSpecs.clonotypeKeyColumns
 	clonotypeKeyArgs := exportSpecs.clonotypeKeyArgs
@@ -290,6 +289,17 @@ self.body(func(inputs) {
 
 	perChainResults := {}
 
+	// mapping removing duplicates
+	clonotypeColumns := []
+	clonotypeColumnsAdded := {}
+	for col in columnsSpecPerClonotype {
+		if !clonotypeColumnsAdded[col.column] {
+			clonotypeColumns += [ { column: col.column, type: col.spec.valueType } ]
+			clonotypeColumnsAdded[col.column] = true
+		}
+	}
+
+
 	for chain in chains {
 		chainInfo := chainInfos[chain]
 		ll.assert(!is_undefined(chainInfo), "chainInfo not found for chain %v", chain)
@@ -362,6 +372,7 @@ self.body(func(inputs) {
 						chains: chainInfo.mixcrFilter,
 						clonotypeKeyColumns: clonotypeKeyColumns,
 						clonotypeKeyArgs: clonotypeKeyArgs,
+						clonotypeColumns: clonotypeColumns,
 
 						mainIsProductiveColumn: mainIsProductiveColumn,
 						mainIsProductiveArgs: mainIsProductiveArgs,
@@ -425,12 +436,7 @@ self.body(func(inputs) {
 					params: {
 						mainAbundanceColumnNormalized: mainAbundanceColumnNormalized,
 						mainAbundanceColumnUnnormalized: mainAbundanceColumnUnnormalized,
-						// Converting to set and back to slice to remove duplicates
-						clonotypeColumns: sets.toSlice(sets.fromSlice(
-							slices.map(columnsSpecPerClonotype, func(col) {
-								return col.column
-							})
-						))
+						clonotypeColumns: clonotypeColumns
 					}
 				}
 			}
