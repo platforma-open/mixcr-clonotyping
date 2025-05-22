@@ -24,8 +24,6 @@ self.body(func(inputs) {
 
 	clonotypeKeyColumns := params.clonotypeKeyColumns
 	clonotypeKeyArgs := params.clonotypeKeyArgs
-	// { column: string; type: string }
-	clonotypeColumns := params.clonotypeColumns
 
 	cellTagColumns := params.cellTagColumns
 
@@ -39,7 +37,7 @@ self.body(func(inputs) {
 	hashKeyDerivationExpression := func(sourceColumns) {
 		strJoinOperands := []
 		for colName in sourceColumns {
-			strJoinOperands = append(strJoinOperands, { type: "col", name: colName })
+			strJoinOperands += [ { type: "col", name: colName } ]
 		}
 		return {
 			type: "hash",
@@ -112,24 +110,39 @@ self.body(func(inputs) {
 		file: "input.tsv",
 		name: "input_table",
 		delimiter: "\t",
-		schema: clonotypeColumns
+		schema: [ { column: "readCount", type: "Double" } ],
+		inferSchema: false // other columns will be treated as strings
 	} ]
 
-	ptablerSteps = append(ptablerSteps, {
+	// rounding and casting readCount to Long
+	ptablerSteps += [ {
+		type: "add_columns",
+		table: "input_table",
+		columns: [ {
+			name: "readCount",
+			expression: {
+				type: "cast",
+				dtype: "Long",
+				value: { type: "round", value: { type: "col", name: "readCount" } }
+			}
+		} ]
+	} ]
+
+	ptablerSteps += [ {
 		type: "add_columns",
 		table: "input_table",
 		columns: [ {
 			name: "clonotypeKey",
 			expression: hashKeyDerivationExpression(clonotypeKeyColumns)
 		} ]
-	})
+	} ]
 
-	ptablerSteps = append(ptablerSteps, {
+	ptablerSteps += [ {
 		type: "write_csv",
 		table: "input_table",
 		file: "output.tsv",
 		delimiter: "\t"
-	})
+	} ]
 
 	ptablerCmd := exec.builder().
 		inMediumQueue().
@@ -168,9 +181,7 @@ self.body(func(inputs) {
 			file: "input.tsv",
 			name: "input_table_sc",
 			delimiter: "\t",
-			schema: slices.map(clonotypeKeyColumns + cellTagColumns, func(col) {
-				return { column: col, type: "String" }
-			})
+			inferSchema: false // all columns will be treated as strings
 		}, {
 			type: "add_columns",
 			table: "input_table_sc",

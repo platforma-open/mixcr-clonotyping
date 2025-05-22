@@ -170,7 +170,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 
 	columnsSpecPerSample := []
 	columnsSpecPerSampleSc := undefined
-	columnsSpecPerClonotype := []
+	columnsSpecPerClonotypeNoAggregates := []
 	columnsSpecPerClonotypeSc := undefined
 
 	// array of array of arg groups
@@ -223,7 +223,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 	mainAbundanceColumnUnnormalizedArgs := [ [ "-readCount" ] ]
 	mainAbundanceColumnNormalizedArgs := [ [ "-readFraction" ] ]
 
-	mainAbundanceColumnAggregates := [{
+	columnsSpecPerClonotypeAggregates := [{
 		column: mainAbundanceColumnUnnormalized + "Sum",
 		id: "read-count-total",
 		allowNA: false,
@@ -302,7 +302,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		mainAbundanceColumnNormalizedArgs = [ [ "-uniqueTagFraction", "Molecule" ] ]
 		mainAbundanceColumnUnnormalizedArgs = [ [ "-uniqueTagCount", "Molecule" ] ]
 
-		mainAbundanceColumnAggregates = [ {
+		columnsSpecPerClonotypeAggregates = [ {
 			column: mainAbundanceColumnUnnormalized + "Sum",
 			id: "umi-count-total",
 			allowNA: false,
@@ -353,6 +353,20 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		}
 	}
 
+	columnsSpecPerClonotypeAggregates += [ sampleCountColumn ]
+
+	clonotypeLabelColumn := {
+		column: "clonotypeLabel",
+		id: "clonotype-label",
+		spec: {
+			name: "pl7.app/label",
+			valueType: "String",
+			annotations: a(100000, false, {
+				"pl7.app/label": "Clone label"
+			})
+		}
+	}
+
 	if isSingleCell {
 		// copying reads and umi counts and fraction removing isPrimary and isAnchor
 		columnsSpecPerSample = addSpec(columnsSpecPerSample, {
@@ -398,10 +412,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 				})
 			}
 		} ]
-		columnsSpecPerClonotypeSc = [ sampleCountColumn ]
-	} else {
-		columnsSpecPerClonotype += [ sampleCountColumn ]
-		columnsSpecPerClonotype += mainAbundanceColumnAggregates
+		columnsSpecPerClonotypeSc = [ sampleCountColumn, clonotypeLabelColumn ]
 	}
 
 	orderP := 80000
@@ -429,7 +440,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 				alphabetShortMixcr := isAminoAcid ? "aa" : "n"
 				columnName := alphabetShortMixcr + "Seq" + imputedU + featureInFrameU
 				visibility := featureU == "CDR3" && (!isSingleCell || isAminoAcid) // isSingleCell ? (featureU == "CDR3") && isAminoAcid : (featureU == "CDR3") || (featureU == assemblingFeature)
-				columnsSpecPerClonotype += [ {
+				columnsSpecPerClonotypeNoAggregates += [ {
 						column: columnName,
 						id: alphabetShortMixcr + "-seq-" + featureInFrameL + (isImputed ? "-imputed" : ""),
 						naRegex: "region_not_covered",
@@ -455,7 +466,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 				if !isImputed && featureU == assemblingFeature {
 					for annotationType in annotationTypes {
 						columnName := alphabetShortMixcr + "AnnotationOf" + annotationType + "For" + featureInFrameU
-						columnsSpecPerClonotype += [ {
+						columnsSpecPerClonotypeNoAggregates += [ {
 							column: columnName,
 							id: alphabetShortMixcr + "-annotation-" + annotationType + "-" + featureInFrameL,
 							naRegex: "region_not_covered",
@@ -481,7 +492,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 
 				// For now calculate length only for CDR3 to keep the number of columns manageable
 				if featureU == "CDR3" {
-					columnsSpecPerClonotype += [ {
+					columnsSpecPerClonotypeNoAggregates += [ {
 						column: alphabetShortMixcr + "Length" + featureU,
 						id: alphabetShortMixcr + "-length-" + featureL,
 						naRegex: "region_not_covered",
@@ -543,7 +554,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 	for vdjcU in ["V", "D", "J", "C"] {
 		vdjcL := text.to_lower(vdjcU)
 		for variant in geneHitColumnVariants {
-			columnsSpecPerClonotype += [ {
+			columnsSpecPerClonotypeNoAggregates += [ {
 					column: "best" + vdjcU + variant.columnNameSuffix,
 					id: "best-" + vdjcL + variant.idSuffix,
 					naRegex: "",
@@ -602,7 +613,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 			}
 
 			for variant in mutationColumnVariants {
-				columnsSpecPerClonotype += [ {
+				columnsSpecPerClonotypeNoAggregates += [ {
 						column: alphabetShortMixcr + variant.name + coreFeature,
 						id: alphabetShortMixcr + variant.idPart + geneL,
 						allowNA: true,
@@ -653,7 +664,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 	mainIsProductiveColumn := flagColumnVariants[0].columnPrefix + productiveFeature
 	mainIsProductiveArgs := [ [ flagColumnVariants[0].arg, productiveFeature ] ]
 	for variant in flagColumnVariants {
-		columnsSpecPerClonotype += [ {
+		columnsSpecPerClonotypeNoAggregates += [ {
 				column: variant.columnPrefix + productiveFeature,
 				id: variant.id,
 				allowNA: false,
@@ -698,7 +709,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 
 	// Isotype and chain
 
-	columnsSpecPerClonotype += [ {
+	columnsSpecPerClonotypeNoAggregates += [ {
 			column: "isotypePrimary",
 			id: "isotype",
 			naRegex: "",
@@ -730,21 +741,11 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		[ "-topChains" ]
 	]
 
-	columnsSpecPerClonotype += [ {
-		column: "clonotypeLabel",
-		id: "clonotype-label",
-		spec: {
-			name: "pl7.app/label",
-			valueType: "String",
-			annotations: a(100000, false, {
-				"pl7.app/label": "Clone label"
-			})
-		}
-	} ]
+	columnsSpecPerClonotypeNoAggregates += [ clonotypeLabelColumn ]
 
 	// All columns are added
 
-	columnsSpec := columnsSpecPerSample + columnsSpecPerClonotype
+	columnsSpec := columnsSpecPerSample + columnsSpecPerClonotypeNoAggregates + columnsSpecPerClonotypeAggregates
 
 	// Creating a column map for fast search
 	columnsByName := {}
@@ -843,7 +844,8 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 
 		columnsSpecPerSample: columnsSpecPerSample,
 		columnsSpecPerSampleSc: columnsSpecPerSampleSc,
-		columnsSpecPerClonotype: columnsSpecPerClonotype,
+		columnsSpecPerClonotypeNoAggregates: columnsSpecPerClonotypeNoAggregates,
+		columnsSpecPerClonotypeAggregates: columnsSpecPerClonotypeAggregates,
 		columnsSpecPerClonotypeSc: columnsSpecPerClonotypeSc,
 
 		columnsSpec: columnsSpec,

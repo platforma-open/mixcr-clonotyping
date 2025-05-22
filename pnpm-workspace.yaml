@@ -1,6 +1,4 @@
 packages:
-  - software/single-cell-scripts
-  - software/hash-column
   - workflow
   - model
   - ui
@@ -21,7 +19,7 @@ catalog:
 
   '@platforma-open/milaboratories.runenv-python-3': ^1.1.14
   '@platforma-open/milaboratories.software-mixcr': 4.7.0-169-develop
-  '@platforma-open/software-ptabler': 1.1.0
+  '@platforma-open/software-ptabler': 1.2.0
 
   'vue': ^3.5.14
   'vue-tsc': ^2.2.10

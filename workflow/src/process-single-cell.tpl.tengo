@@ -4,6 +4,8 @@ pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 exec := import("@platforma-sdk/workflow-tengo:exec")
 maps := import("@platforma-sdk/workflow-tengo:maps")
+slices := import("@platforma-sdk/workflow-tengo:slices")
+clonotypeLabel := import(":clonotype-label")
 
 json := import("json")
 
@@ -23,7 +25,7 @@ self.body(func(inputs) {
 	mainAbundanceColumn := inputs.params.mainAbundanceColumn
 	mainIsProductiveColumn := inputs.params.mainIsProductiveColumn
 
-	clonotypeColumns := inputs.params.clonotypeColumns
+	schemaPerClonotypeNoAggregates := inputs.params.schemaPerClonotypeNoAggregates
 
 	//
 	// Preprocessing
@@ -60,7 +62,14 @@ self.body(func(inputs) {
 				type: "read_csv",
 				file: fileNameForExecAndPtablerRead,
 				name: tableNameInPtabler,
-				delimiter: "\t"
+				delimiter: "\t",
+				schema: [
+					{ column: "cellKey", type: "String" },
+					{ column: "clonotypeKey", type: "String" },
+					{ column: mainAbundanceColumn, type: "Long" },
+					{ column: mainIsProductiveColumn, type: "String" }
+				],
+				inferSchema: false // don't infer schema for other columns to prevent possible incomatibilities of columns during concatenation
 			})
 
 			ptablerSteps = append(ptablerSteps, {
@@ -342,13 +351,17 @@ self.body(func(inputs) {
 				}
 			}
 		}]
-	}, {
+	} ]
+
+	cellGroupingSteps += clonotypeLabel.generateClonotypeLabelSteps("scClonotypeKey", "clonotypeLabel", "clonotype_table")
+
+	cellGroupingSteps += [ {
 		// Write clonotype table output
 		type: "write_csv",
 		table: "clonotype_table",
 		file: "clonotype.tsv",
 		delimiter: "\t",
-		columns: ["scClonotypeKey", "clonotypeKeyA1", "clonotypeKeyA2", "clonotypeKeyB1", "clonotypeKeyB2", "sampleCount"]
+		columns: ["scClonotypeKey", "clonotypeKeyA1", "clonotypeKeyA2", "clonotypeKeyB1", "clonotypeKeyB2", "sampleCount", "clonotypeLabel"]
 	}, {
 		// Write abundance (cell counts) table output
 		type: "write_csv",
@@ -391,50 +404,39 @@ self.body(func(inputs) {
 		{ column: "clonotypeKeyA2", type: "String" },
 		{ column: "clonotypeKeyB1", type: "String" },
 		{ column: "clonotypeKeyB2", type: "String" },
-		{ column: "sampleCount", type: "String" }
+		{ column: "sampleCount", type: "Int" }
 	]
 
-	// Schema for properties_a.tsv and properties_b.tsv
-	// These files contain clonotypeKey and the columns defined in clonotypeColumns
-	clonotypeColumnsParam := inputs.params.clonotypeColumns
-	if is_undefined(clonotypeColumnsParam) {
-		ll.panic("inputs.params.clonotypeColumns is undefined. This is required for properties schema.")
-	}
-
-	jsonPropertiesSchema := [{ column: "clonotypeKey", type: "String" }]
 	clonotypeColumnNames := []
-	for cc in clonotypeColumnsParam {
-		// All columns read as String, as python script did dtype=str
-		jsonPropertiesSchema += [{ column: cc.column, type: "String" }]
+	for cc in schemaPerClonotypeNoAggregates {
 		clonotypeColumnNames += [cc.column]
 	}
 
-	// Define the columns for the final output files.
-	// Python pandas merge results in: clonotypeKey (from properties), other_props_cols, scClonotypeKey (from mapping)
-	// Order chosen: scClonotypeKey, clonotypeKey, other_props_cols
 	finalOutputColumns := ["scClonotypeKey", "clonotypeKey"] + clonotypeColumnNames
 
-	// Read initial tables
 	outputProcessingSteps += [{
 		type: "read_csv",
-		file: "clonotype_input.tsv", // Internal name for ptabler, corresponds to clonotypeTsv
+		file: "clonotype_input.tsv",
 		name: "main_clonotypes",
 		delimiter: "\t",
-		schema: clonotypeTableSchema
+		schema: clonotypeTableSchema,
+		inferSchema: false
 	}]
 	outputProcessingSteps += [{
 		type: "read_csv",
-		file: "properties_a_input.tsv", // Internal name, corresponds to propertiesAFile
+		file: "properties_a_input.tsv",
 		name: "props_a",
 		delimiter: "\t",
-		schema: jsonPropertiesSchema
+		schema: [{ column: "clonotypeKey", type: "String" }],
+		inferSchema: false
 	}]
 	outputProcessingSteps += [{
 		type: "read_csv",
 		file: "properties_b_input.tsv", // Internal name, corresponds to propertiesBFile
 		name: "props_b",
 		delimiter: "\t",
-		schema: jsonPropertiesSchema
+		schema: [{ column: "clonotypeKey", type: "String" }],
+		inferSchema: false
 	}]
 
 	chainMappings := [
@@ -444,17 +446,9 @@ self.body(func(inputs) {
 		{ chainKeyCol: "clonotypeKeyB2", propsTable: "props_b", internalOutTable: "props_b2_joined", finalOutFile: "properties_b_secondary.tsv" }
 	]
 
-	// Prepare `leftColumns` object for the join step (selecting all columns from properties tables)
-	// Format: [{ column: "originalName", rename: "newNameIfDifferent" }, ...]
-	propsJoinColumnMappings := [{ column: "clonotypeKey" }]
-	for ccName in clonotypeColumnNames {
-		propsJoinColumnMappings += [{ column: ccName }]
-	}
-
 	for mapping in chainMappings {
 		filteredClonotypesName := "main_clonotypes_filtered_" + mapping.chainKeyCol
 
-		// 1. Filter main_clonotypes to include only rows where the current chainKeyCol is not null.
 		outputProcessingSteps += [{
 			type: "filter",
 			inputTable: "main_clonotypes",
@@ -462,8 +456,6 @@ self.body(func(inputs) {
 			condition: { type: "is_not_na", value: { type: "col", name: mapping.chainKeyCol } }
 		}]
 
-		// 2. Add the 'clonotypeKey' column (renamed from current chainKeyCol) to this filtered table.
-		// This modifies `filteredClonotypesName` in place by adding the column.
 		outputProcessingSteps += [{
 			type: "add_columns",
 			table: filteredClonotypesName,
@@ -471,22 +463,21 @@ self.body(func(inputs) {
 				{ name: "clonotypeKey", expression: { type: "col", name: mapping.chainKeyCol } }
 			]
 		}]
-		// Now `filteredClonotypesName` has its original columns plus "clonotypeKey" (derived from mapping.chainKeyCol).
 
-		// 3. Join the properties table with the prepared (filtered and augmented) clonotypes table.
 		outputProcessingSteps += [{
 			type: "join",
 			leftTable: mapping.propsTable,
 			rightTable: filteredClonotypesName,
 			outputTable: mapping.internalOutTable,
 			leftOn: ["clonotypeKey"],
-			rightOn: ["clonotypeKey"], // Join on the "clonotypeKey" derived from chainKeyCol
+			rightOn: ["clonotypeKey"],
 			how: "inner",
-			leftColumns: propsJoinColumnMappings,    // Selects all columns from the properties table as ColumnMapping[]
-			rightColumns: [{ column: "scClonotypeKey" }] // Selects scClonotypeKey from the right as ColumnMapping[]
+			leftColumns: slices.map(clonotypeColumnNames, func(col) {
+				return { column: col }
+			}),
+			rightColumns: [{ column: "scClonotypeKey" }]
 		}]
 
-		// 4. Write the result.
 		outputProcessingSteps += [{
 			type: "write_csv",
 			table: mapping.internalOutTable,
@@ -514,7 +505,8 @@ self.body(func(inputs) {
 	return {
 		// must have sampleId and scClonotypeKey columns
 		abundanceTsv: abundanceTsv,
-		// used for aggregates (i.e. sampleCount)
+
+		// used for aggregates (i.e. sampleCount and clonotypeLabel)
 		clonotypeTsv: clonotypeTsv,
 
 		// must have scClonotypeKey columns

@@ -22,13 +22,11 @@ self.body(func(inputs) {
 	params := inputs.params
 	mainAbundanceColumnNormalized := params.mainAbundanceColumnNormalized
 	mainAbundanceColumnUnnormalized := params.mainAbundanceColumnUnnormalized
-	// { column: string; type: string }
-	clonotypeColumns := params.clonotypeColumns
 
-	// Construct schema for read_csv
-	schemaForReadCsv := [
-		{ column: "clonotypeKey", type: "String" }
-	] + clonotypeColumns
+	// { column: string; type: string }
+	schemaPerClonotypeNoAggregates := params.schemaPerClonotypeNoAggregates
+	schemaPerClonotypeAggregates := params.schemaPerClonotypeAggregates
+	schemaPerSample := params.schemaPerSample
 
 	// ptabler workflow steps
 	ptablerSteps := []
@@ -53,7 +51,9 @@ self.body(func(inputs) {
 			file: inputFileName,
 			name: inputTableName,
 			delimiter: "\t",
-			schema: schemaForReadCsv
+			schema: schemaPerSample + // these contain abundancies
+					[ { column: "clonotypeKey", type: "String" } ],
+			inferSchema: false // don't infer schema for other columns to prevent possible incomatibilities of columns during concatenation
 		})
 		inputTableNames = append(inputTableNames, inputTableName)
 	}
@@ -77,8 +77,8 @@ self.body(func(inputs) {
 	aggregations := []
 
 	// max_by aggregations
-	for col in clonotypeColumns {
-		if col.column == "sampleCount" || col.column == mainAbundanceColumnNormalized + "Mean" || col.column == mainAbundanceColumnUnnormalized + "Sum" || col.column == "clonotypeLabel" {
+	for col in schemaPerClonotypeNoAggregates {
+		if col.column == "clonotypeLabel" {
 			continue
 		}
 		aggregations = append(aggregations, {

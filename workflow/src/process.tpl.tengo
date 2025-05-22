@@ -201,7 +201,8 @@ self.body(func(inputs) {
 
 	columnsSpecPerSample := exportSpecs.columnsSpecPerSample
 	columnsSpecPerSampleSc := exportSpecs.columnsSpecPerSampleSc
-	columnsSpecPerClonotype := exportSpecs.columnsSpecPerClonotype
+	columnsSpecPerClonotypeNoAggregates := exportSpecs.columnsSpecPerClonotypeNoAggregates
+	columnsSpecPerClonotypeAggregates := exportSpecs.columnsSpecPerClonotypeAggregates
 	columnsSpecPerClonotypeSc := exportSpecs.columnsSpecPerClonotypeSc
 
 	clonotypeKeyColumns := exportSpecs.clonotypeKeyColumns
@@ -290,15 +291,17 @@ self.body(func(inputs) {
 	perChainResults := {}
 
 	// mapping removing duplicates
-	clonotypeColumns := []
-	clonotypeColumnsAdded := {}
-	for col in columnsSpecPerClonotype {
-		if !clonotypeColumnsAdded[col.column] {
-			clonotypeColumns += [ { column: col.column, type: col.spec.valueType } ]
-			clonotypeColumnsAdded[col.column] = true
+	columnsToSchema := func(columns) {
+		schema := []
+		columnsAdded := {}
+		for col in columns {
+			if !columnsAdded[col.column] {
+				schema += [ { column: col.column, type: col.spec.valueType } ]
+				columnsAdded[col.column] = true
+			}
 		}
+		return schema
 	}
-
 
 	for chain in chains {
 		chainInfo := chainInfos[chain]
@@ -372,7 +375,6 @@ self.body(func(inputs) {
 						chains: chainInfo.mixcrFilter,
 						clonotypeKeyColumns: clonotypeKeyColumns,
 						clonotypeKeyArgs: clonotypeKeyArgs,
-						clonotypeColumns: clonotypeColumns,
 
 						mainIsProductiveColumn: mainIsProductiveColumn,
 						mainIsProductiveArgs: mainIsProductiveArgs,
@@ -417,7 +419,7 @@ self.body(func(inputs) {
 				xsvType: "tsv",
 				settings: {
 					axes: axesByClonotypeKeyWithChain,
-					columns: columnsSpecPerClonotype,
+					columns: columnsSpecPerClonotypeNoAggregates + columnsSpecPerClonotypeAggregates,
 					storageFormat: "Binary",
 					partitionKeyLength: 0
 				},
@@ -436,7 +438,9 @@ self.body(func(inputs) {
 					params: {
 						mainAbundanceColumnNormalized: mainAbundanceColumnNormalized,
 						mainAbundanceColumnUnnormalized: mainAbundanceColumnUnnormalized,
-						clonotypeColumns: clonotypeColumns
+						schemaPerClonotypeNoAggregates: columnsToSchema(columnsSpecPerClonotypeNoAggregates),
+						schemaPerClonotypeAggregates: columnsToSchema(columnsSpecPerClonotypeAggregates),
+						schemaPerSample: columnsToSchema(columnsSpecPerSample)
 					}
 				}
 			}
@@ -503,7 +507,7 @@ self.body(func(inputs) {
 
 			//removing columns from secondary chain except aaSeqCDR3
 			columnsSpecPerClonotypeSecondary := []
-			for col in columnsSpecPerClonotype {
+			for col in columnsSpecPerClonotypeNoAggregates {
 				if col.column == "aaSeqCDR3" {
 					columnsSpecPerClonotypeSecondary += [ col ]
 				}
@@ -553,7 +557,7 @@ self.body(func(inputs) {
 						xsvType: "tsv",
 						settings: {
 							axes: axesByScClonotypeKeyWithReceptor,
-							columns: transformSpecs(isPrimary ? columnsSpecPerClonotype : columnsSpecPerClonotypeSecondary, {
+							columns: transformSpecs(isPrimary ? columnsSpecPerClonotypeNoAggregates : columnsSpecPerClonotypeSecondary, {
 								spec: {
 									domain: {
 										"pl7.app/vdj/scClonotypeChain": chainLetterU,
@@ -590,7 +594,7 @@ self.body(func(inputs) {
 						params: {
 							mainAbundanceColumn: mainAbundanceColumnUnnormalized,
 							mainIsProductiveColumn: mainIsProductiveColumn,
-							clonotypeColumns: clonotypeColumns
+							schemaPerClonotypeNoAggregates: columnsToSchema(columnsSpecPerClonotypeNoAggregates)
 						}
 					}
 				}
