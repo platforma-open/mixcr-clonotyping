@@ -1277,7 +1277,7 @@ packages:
     resolution: {integrity: sha512-821vFDjvn1myYF8sJBWht8vxVLxE/6pUWWOTrnANNXmGrFF8eTlUF/sH24hu3CUXYZklr31zBVysLwUlNxXNMA==}
 
   '@platforma-open/software-ptabler@file:../../core/ptabler/software/package.tgz':
-    resolution: {integrity: sha512-TSFWN3lB0Zes3RQXDlA2d8iIYZuAOnCI2loP98wT30r50knd6bSH75UGPqFrgEgKsB9pUUIgYavYENQwYg3hdg==, tarball: file:../../core/ptabler/software/package.tgz}
+    resolution: {integrity: sha512-FGez5h3597XdujCf4KbKB2eyMxlVdxYfJj9AUK+5VszIqOO3NM5db9e6nDHBmpJ6m2L+TTl/EYH+iLPXX0K/Cg==, tarball: file:../../core/ptabler/software/package.tgz}
     version: 1.0.1
 
   '@platforma-sdk/block-tools@2.5.47':

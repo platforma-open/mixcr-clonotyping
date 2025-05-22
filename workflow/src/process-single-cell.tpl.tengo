@@ -27,6 +27,12 @@ self.body(func(inputs) {
 	mainAbundanceColumn := inputs.params.mainAbundanceColumn
 	mainIsProductiveColumn := inputs.params.mainIsProductiveColumn
 
+	clonotypeColumns := inputs.params.clonotypeColumns
+
+	//
+	// Preprocessing
+	//
+
 	/**
 	 * Universal preprocessing step for A and B chain files
 	 * @param byCellTag: Map<string:[sampleId], tsv_by_cell_tag>
@@ -167,45 +173,347 @@ self.body(func(inputs) {
 	chainAoutput := preprocessByCell(byCellTagA)
 	chainBoutput := preprocessByCell(byCellTagB)
 
-	scClonotypeBuilderCmd := exec.builder().
+	//
+	// Cell grouping
+	//
+
+	// Create ptabler workflow instead of using sc-group-builder
+	cellGroupingSteps := [ {
+		type: "read_csv",
+		file: "chain_a_output.tsv",
+		name: "chain_a_table",
+		delimiter: "\t"
+	}, {
+		type: "read_csv",
+		file: "chain_b_output.tsv",
+		name: "chain_b_table",
+		delimiter: "\t"
+	} ]
+
+	// Dynamically generate filter steps for chains A and B, ranks 1 and 2
+	for chain in ["a", "b"] {
+		for rank in [1, 2] {
+			cellGroupingSteps += [ {
+				type: "filter",
+				inputTable: "chain_" + chain + "_table",
+				outputTable: "chain_" + chain + "_rank" + string(rank),
+				condition: {
+					type: "eq",
+					lhs: { type: "col", name: "chainRank" },
+					rhs: { type: "const", value: rank }
+				}
+			} ]
+		}
+	}
+
+	cellGroupingSteps += [ {
+		// Join A1 and A2 by sampleId and cellKey
+		type: "join",
+		leftTable: "chain_a_rank1",
+		rightTable: "chain_a_rank2",
+		outputTable: "chain_a_merged",
+		leftOn: ["sampleId", "cellKey"],
+		rightOn: ["sampleId", "cellKey"],
+		coalesce: true,
+		how: "full",
+		leftColumns: [
+			{ column: "clonotypeKey", rename: "clonotypeKeyA1" }
+		],
+		rightColumns: [
+			{ column: "clonotypeKey", rename: "clonotypeKeyA2" }
+		]
+	}, {
+		// Join B1 and B2 by sampleId and cellKey
+		type: "join",
+		leftTable: "chain_b_rank1",
+		rightTable: "chain_b_rank2",
+		outputTable: "chain_b_merged",
+		leftOn: ["sampleId", "cellKey"],
+		rightOn: ["sampleId", "cellKey"],
+		coalesce: true,
+		how: "full",
+		leftColumns: [
+			{ column: "clonotypeKey", rename: "clonotypeKeyB1" }
+		],
+		rightColumns: [
+			{ column: "clonotypeKey", rename: "clonotypeKeyB2" }
+		]
+	}, {
+		// Join chain A and chain B merged tables
+		type: "join",
+		leftTable: "chain_a_merged",
+		rightTable: "chain_b_merged",
+		outputTable: "all_chains_merged",
+		leftOn: ["sampleId", "cellKey"],
+		rightOn: ["sampleId", "cellKey"],
+		coalesce: true,
+		how: "full"
+	}, {
+		// Add scClonotypeKey column
+		type: "add_columns",
+		table: "all_chains_merged",
+		columns: [{
+			name: "scClonotypeKey",
+			expression: {
+				type: "hash",
+				hashType: "sha256",
+				encoding: "base64_alphanumeric",
+				bits: 120,
+				value: {
+					type: "str_join",
+					operands: [{
+						type: "fill_na",
+						input: { type: "col", name: "clonotypeKeyA1" },
+						fillValue: { type: "const", value: "NA" }
+					}, {
+						type: "fill_na",
+						input: { type: "col", name: "clonotypeKeyA2" },
+						fillValue: { type: "const", value: "NA" }
+					}, {
+						type: "fill_na",
+						input: { type: "col", name: "clonotypeKeyB1" },
+						fillValue: { type: "const", value: "NA" }
+					}, {
+						type: "fill_na",
+						input: { type: "col", name: "clonotypeKeyB2" },
+						fillValue: { type: "const", value: "NA" }
+					}],
+					delimiter: "#"
+				}
+			}
+		}]
+	}, {
+		// Filter to keep only complete clonotypes (A1 and B1 present)
+		type: "filter",
+		inputTable: "all_chains_merged",
+		outputTable: "all_chains_filtered",
+		condition: {
+			type: "and",
+			operands: [{
+				type: "neq",
+				lhs: {
+					type: "fill_na",
+					input: { type: "col", name: "clonotypeKeyA1" },
+					fillValue: { type: "const", value: "NA" }
+				},
+				rhs: { type: "const", value: "NA" }
+			}, {
+				type: "neq",
+				lhs: {
+					type: "fill_na",
+					input: { type: "col", name: "clonotypeKeyB1" },
+					fillValue: { type: "const", value: "NA" }
+				},
+				rhs: { type: "const", value: "NA" }
+			}]
+		}
+	}, {
+		// Create clonotype table
+		type: "aggregate",
+		inputTable: "all_chains_filtered",
+		outputTable: "clonotype_table",
+		groupBy: ["scClonotypeKey", "clonotypeKeyA1", "clonotypeKeyA2", "clonotypeKeyB1", "clonotypeKeyB2"],
+		aggregations: [{
+			name: "sampleCount",
+			aggregation: "n_unique",
+			expression: { type: "col", name: "sampleId" }
+		}]
+	}, {
+		// Count cells by scClonotypeKey and sampleId
+		type: "aggregate",
+		inputTable: "all_chains_filtered",
+		outputTable: "cell_counts",
+		groupBy: ["sampleId", "scClonotypeKey"],
+		aggregations: [{
+			name: "uniqueCellCount",
+			aggregation: "count",
+			expression: { type: "col", name: "cellKey" }
+		}]
+	}, {
+		// Add uniqueCellFraction column
+		type: "add_columns",
+		table: "cell_counts",
+		columns: [{
+			name: "uniqueCellFraction",
+			expression: {
+				type: "truediv",
+				lhs: { type: "col", name: "uniqueCellCount" },
+				rhs: {
+					type: "aggregate",
+					aggregation: "sum",
+					value: { type: "col", name: "uniqueCellCount" },
+					partitionBy: [{ type: "col", name: "sampleId" }]
+				}
+			}
+		}]
+	}, {
+		// Write clonotype table output
+		type: "write_csv",
+		table: "clonotype_table",
+		file: "clonotype.tsv",
+		delimiter: "\t",
+		columns: ["scClonotypeKey", "clonotypeKeyA1", "clonotypeKeyA2", "clonotypeKeyB1", "clonotypeKeyB2", "sampleCount"]
+	}, {
+		// Write abundance (cell counts) table output
+		type: "write_csv",
+		table: "cell_counts",
+		file: "abundance.tsv",
+		delimiter: "\t",
+		columns: ["sampleId", "scClonotypeKey", "uniqueCellCount", "uniqueCellFraction"]
+	} ]
+
+	ptablerCmd := exec.builder().
 		printErrStreamToStdout().
-		software(scGroupBuilderSw).
+		software(ptablerSw).
+		arg("workflow.json").
+		writeFile("workflow.json", json.encode({
+			workflow: cellGroupingSteps
+		})).
 		addFile("chain_a_output.tsv", chainAoutput).
 		addFile("chain_b_output.tsv", chainBoutput).
-		arg("--only_full_clonotypes").
-		arg("--chainAqwe").arg("chain_a_output.tsv").
-		arg("--chainB").arg("chain_b_output.tsv").
-		arg("--output_clonotype").arg("clonotype.tsv").
-		arg("--output_cell").arg("abundance.tsv").
 		saveFile("clonotype.tsv").
-		saveFile("abundance.tsv")
-	scClonotypeCmd := scClonotypeBuilderCmd.run()
+		saveFile("abundance.tsv").
+		run()
 
-	clonotypeTsv := scClonotypeCmd.getFile("clonotype.tsv")
-	abundanceTsv := scClonotypeCmd.getFile("abundance.tsv")
+	clonotypeTsv := ptablerCmd.getFile("clonotype.tsv")
+	abundanceTsv := ptablerCmd.getFile("abundance.tsv")
+
+	//
+	// Output processing - Reimplemented with PTabler
+	//
 
 	propertiesAFile := propertiesA.inputs()["[]"]
 	propertiesBFile := propertiesB.inputs()["[]"]
 
-	// Propagate scClonotypeKey to properties tables
-	scOutputProcessingBuilderCmd := exec.builder().
+	outputProcessingSteps := []
+
+	// Schema for clonotype.tsv (main_clonotypes table)
+	// All columns read as String, consistent with python script's dtype=str
+	clonotypeTableSchema := [
+		{ column: "scClonotypeKey", type: "String" },
+		{ column: "clonotypeKeyA1", type: "String" },
+		{ column: "clonotypeKeyA2", type: "String" },
+		{ column: "clonotypeKeyB1", type: "String" },
+		{ column: "clonotypeKeyB2", type: "String" },
+		{ column: "sampleCount", type: "String" }
+	]
+
+	// Schema for properties_a.tsv and properties_b.tsv
+	// These files contain clonotypeKey and the columns defined in clonotypeColumns
+	clonotypeColumnsParam := inputs.params.clonotypeColumns
+	if is_undefined(clonotypeColumnsParam) {
+		ll.panic("inputs.params.clonotypeColumns is undefined. This is required for properties schema.")
+	}
+
+	jsonPropertiesSchema := [{ column: "clonotypeKey", type: "String" }]
+	clonotypeColumnNames := []
+	for cc in clonotypeColumnsParam {
+		// All columns read as String, as python script did dtype=str
+		jsonPropertiesSchema += [{ column: cc.column, type: "String" }]
+		clonotypeColumnNames += [cc.column]
+	}
+
+	// Define the columns for the final output files.
+	// Python pandas merge results in: clonotypeKey (from properties), other_props_cols, scClonotypeKey (from mapping)
+	// Order chosen: scClonotypeKey, clonotypeKey, other_props_cols
+	finalOutputColumns := ["scClonotypeKey", "clonotypeKey"] + clonotypeColumnNames
+
+	// Read initial tables
+	outputProcessingSteps += [{
+		type: "read_csv",
+		file: "clonotype_input.tsv", // Internal name for ptabler, corresponds to clonotypeTsv
+		name: "main_clonotypes",
+		delimiter: "\t",
+		schema: clonotypeTableSchema
+	}]
+	outputProcessingSteps += [{
+		type: "read_csv",
+		file: "properties_a_input.tsv", // Internal name, corresponds to propertiesAFile
+		name: "props_a",
+		delimiter: "\t",
+		schema: jsonPropertiesSchema
+	}]
+	outputProcessingSteps += [{
+		type: "read_csv",
+		file: "properties_b_input.tsv", // Internal name, corresponds to propertiesBFile
+		name: "props_b",
+		delimiter: "\t",
+		schema: jsonPropertiesSchema
+	}]
+
+	chainMappings := [
+		{ chainKeyCol: "clonotypeKeyA1", propsTable: "props_a", internalOutTable: "props_a1_joined", finalOutFile: "properties_a_primary.tsv" },
+		{ chainKeyCol: "clonotypeKeyA2", propsTable: "props_a", internalOutTable: "props_a2_joined", finalOutFile: "properties_a_secondary.tsv" },
+		{ chainKeyCol: "clonotypeKeyB1", propsTable: "props_b", internalOutTable: "props_b1_joined", finalOutFile: "properties_b_primary.tsv" },
+		{ chainKeyCol: "clonotypeKeyB2", propsTable: "props_b", internalOutTable: "props_b2_joined", finalOutFile: "properties_b_secondary.tsv" }
+	]
+
+	// Prepare `leftColumns` object for the join step (selecting all columns from properties tables)
+	// Format: [{ column: "originalName", rename: "newNameIfDifferent" }, ...]
+	propsJoinColumnMappings := [{ column: "clonotypeKey" }]
+	for ccName in clonotypeColumnNames {
+		propsJoinColumnMappings += [{ column: ccName }]
+	}
+
+	for mapping in chainMappings {
+		filteredClonotypesName := "main_clonotypes_filtered_" + mapping.chainKeyCol
+
+		// 1. Filter main_clonotypes to include only rows where the current chainKeyCol is not null.
+		outputProcessingSteps += [{
+			type: "filter",
+			inputTable: "main_clonotypes",
+			outputTable: filteredClonotypesName,
+			condition: { type: "is_not_na", value: { type: "col", name: mapping.chainKeyCol } }
+		}]
+
+		// 2. Add the 'clonotypeKey' column (renamed from current chainKeyCol) to this filtered table.
+		// This modifies `filteredClonotypesName` in place by adding the column.
+		outputProcessingSteps += [{
+			type: "add_columns",
+			table: filteredClonotypesName,
+			columns: [
+				{ name: "clonotypeKey", expression: { type: "col", name: mapping.chainKeyCol } }
+			]
+		}]
+		// Now `filteredClonotypesName` has its original columns plus "clonotypeKey" (derived from mapping.chainKeyCol).
+
+		// 3. Join the properties table with the prepared (filtered and augmented) clonotypes table.
+		outputProcessingSteps += [{
+			type: "join",
+			leftTable: mapping.propsTable,
+			rightTable: filteredClonotypesName,
+			outputTable: mapping.internalOutTable,
+			leftOn: ["clonotypeKey"],
+			rightOn: ["clonotypeKey"], // Join on the "clonotypeKey" derived from chainKeyCol
+			how: "inner",
+			leftColumns: propsJoinColumnMappings,    // Selects all columns from the properties table as ColumnMapping[]
+			rightColumns: [{ column: "scClonotypeKey" }] // Selects scClonotypeKey from the right as ColumnMapping[]
+		}]
+
+		// 4. Write the result.
+		outputProcessingSteps += [{
+			type: "write_csv",
+			table: mapping.internalOutTable,
+			file: mapping.finalOutFile,
+			delimiter: "\t",
+			columns: finalOutputColumns
+		}]
+	}
+
+	ptablerOutputProcessingCmdBuilder := exec.builder().
 		printErrStreamToStdout().
-		software(scOutputProcessingSw).
-		addFile("clonotype.tsv", clonotypeTsv).
-		arg("--main_table").arg("clonotype.tsv").
-		addFile("properties_a.tsv", propertiesAFile).
-		addFile("properties_b.tsv", propertiesBFile).
-		arg("--properties_a").arg("properties_a.tsv").
-		arg("--properties_b").arg("properties_b.tsv").
-		arg("--output_A1").arg("properties_a_primary.tsv").
-		arg("--output_A2").arg("properties_a_secondary.tsv").
-		arg("--output_B1").arg("properties_b_primary.tsv").
-		arg("--output_B2").arg("properties_b_secondary.tsv").
-		saveFile("properties_a_primary.tsv").
-		saveFile("properties_a_secondary.tsv").
-		saveFile("properties_b_primary.tsv").
-		saveFile("properties_b_secondary.tsv")
-	scOutputCmd := scOutputProcessingBuilderCmd.run()
+		software(ptablerSw).
+		arg("workflow.json").
+		writeFile("workflow.json", json.encode({ workflow: outputProcessingSteps })).
+		addFile("clonotype_input.tsv", clonotypeTsv).
+		addFile("properties_a_input.tsv", propertiesAFile).
+		addFile("properties_b_input.tsv", propertiesBFile)
+
+	for mapping in chainMappings {
+		ptablerOutputProcessingCmdBuilder.saveFile(mapping.finalOutFile)
+	}
+
+	outputProcessingRunResult := ptablerOutputProcessingCmdBuilder.run()
 
 	return {
 		// must have sampleId and scClonotypeKey columns
@@ -214,9 +522,9 @@ self.body(func(inputs) {
 		clonotypeTsv: clonotypeTsv,
 
 		// must have scClonotypeKey columns
-		propertiesAPrimaryTsv: scOutputCmd.getFile("properties_a_primary.tsv"),
-		propertiesASecondaryTsv: scOutputCmd.getFile("properties_a_secondary.tsv"),
-		propertiesBPrimaryTsv: scOutputCmd.getFile("properties_b_primary.tsv"),
-		propertiesBSecondaryTsv: scOutputCmd.getFile("properties_b_secondary.tsv")
+		propertiesAPrimaryTsv: outputProcessingRunResult.getFile(chainMappings[0].finalOutFile),
+		propertiesASecondaryTsv: outputProcessingRunResult.getFile(chainMappings[1].finalOutFile),
+		propertiesBPrimaryTsv: outputProcessingRunResult.getFile(chainMappings[2].finalOutFile),
+		propertiesBSecondaryTsv: outputProcessingRunResult.getFile(chainMappings[3].finalOutFile)
 	}
 })

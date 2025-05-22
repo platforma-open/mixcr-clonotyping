@@ -589,7 +589,8 @@ self.body(func(inputs) {
 						propertiesB: perChainResults[chainB].clonotypeProperties.data,
 						params: {
 							mainAbundanceColumn: mainAbundanceColumnUnnormalized,
-							mainIsProductiveColumn: mainIsProductiveColumn
+							mainIsProductiveColumn: mainIsProductiveColumn,
+							clonotypeColumns: clonotypeColumns
 						}
 					}
 				}

@@ -85,4 +85,12 @@ ll := import("@platforma-sdk/workflow-tengo:ll")
 - Always place imports at the top of the file
 - Prefer denser solutions if certain part of the code can be abstracted out into a function
 - Find and read additional types, functions and examples of code if you understand that you dont have enough information
-- Think really hard
+- Prefer formatting of nested data structures, to save some excess indentions:
+<tengo>
+a := [ {
+    f: 1
+}, {
+    f: 2
+} ]
+</tengo>
+
