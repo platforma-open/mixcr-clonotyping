@@ -27,7 +27,8 @@
         "@milaboratories/uikit": "file:/Users/dbolotin/milab/core/platforma/lib/ui/uikit/package.tgz",
         "@platforma-sdk/workflow-tengo": "file:/Users/dbolotin/mi/core/platforma/sdk/workflow-tengo/package.tgz",
         "@platforma-sdk/tengo-builder": "file:/Users/dbolotin/mi/core/platforma/tools/tengo-builder/package.tgz",
-        "@milaboratories/pl-middle-layer": "file:/Users/dbolotin/mi/core/platforma/lib/node/pl-middle-layer/package.tgz"
+        "@milaboratories/pl-middle-layer": "file:/Users/dbolotin/mi/core/platforma/lib/node/pl-middle-layer/package.tgz",
+        "@platforma-open/software-ptabler": "file:/Users/dbolotin/mi/core/ptabler/software/package.tgz"
       }
     }
   },
