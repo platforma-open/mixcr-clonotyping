@@ -6,15 +6,15 @@ packages:
   - test
 
 catalog:
-  '@platforma-sdk/workflow-tengo': ^4.5.1
-  '@platforma-sdk/model': ^1.30.37
-  '@platforma-sdk/ui-vue': ^1.31.1
-  '@platforma-sdk/tengo-builder': ^2.1.4
+  '@platforma-sdk/workflow-tengo': ^4.5.3
+  '@platforma-sdk/model': ^1.31.6
+  '@platforma-sdk/ui-vue': ^1.31.6
+  '@platforma-sdk/tengo-builder': ^2.1.5
   '@platforma-sdk/package-builder': ^2.16.0
-  '@platforma-sdk/block-tools': ^2.5.47
+  '@platforma-sdk/block-tools': ^2.5.49
   '@platforma-sdk/eslint-config': ^1.0.3
 
-  '@platforma-sdk/test': ^1.30.39
+  '@platforma-sdk/test': ^1.31.9
   '@milaboratories/helpers': ^1.6.11
 
   '@platforma-open/milaboratories.runenv-python-3': ^1.1.14
@@ -32,7 +32,7 @@ catalog:
   'turbo': ^2.5.3
 
   'vite': ^6.3.5
-  'vitest': ~2.1.8
+  'vitest': ~2.1.9
   '@vitejs/plugin-vue': ^5.2.4
   'rollup-plugin-sourcemaps2': ^0.5.2
   'eslint': ^9.27.0
