@@ -209,7 +209,8 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 				"pl7.app/abundance/unit": "reads",
 				"pl7.app/abundance/normalized": "true",
 				"pl7.app/abundance/isPrimary": !hasUmi ? "true" : undefined,
-				"pl7.app/label": "Fraction of reads"
+				"pl7.app/label": "Fraction of reads",
+				"pl7.app/format": ".2p"
 			})
 		}
 	} ]
@@ -251,7 +252,8 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 				"pl7.app/isAbundance": "true",
 				"pl7.app/abundance/unit": "reads",
 				"pl7.app/abundance/normalized": "true",
-				"pl7.app/label": "Mean Fraction of Reads"
+				"pl7.app/label": "Mean Fraction of Reads",
+				"pl7.app/format": ".2p"
 			})
 		}
 	}]
@@ -288,7 +290,8 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 						"pl7.app/abundance/unit": "molecules",
 						"pl7.app/abundance/normalized": "true",
 						"pl7.app/abundance/isPrimary": "true",
-						"pl7.app/label": "Fraction of UMIs"
+						"pl7.app/label": "Fraction of UMIs",
+						"pl7.app/format": ".2p"
 					})
 				}
 			} ]
@@ -330,7 +333,8 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 					"pl7.app/isAbundance": "true",
 					"pl7.app/abundance/unit": "molecules",
 					"pl7.app/abundance/normalized": "true",
-					"pl7.app/label": "Mean Fraction of UMIs"
+					"pl7.app/label": "Mean Fraction of UMIs",
+					"pl7.app/format": ".2p"
 				})
 			}
 		} ]
@@ -408,7 +412,8 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 					"pl7.app/abundance/unit": "cells",
 					"pl7.app/abundance/normalized": "true",
 					"pl7.app/abundance/isPrimary": "true",
-					"pl7.app/label": "Fraction of Cells"
+					"pl7.app/label": "Fraction of Cells",
+					"pl7.app/format": ".2p"
 				})
 			}
 		} ]
@@ -786,8 +791,8 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 					"pl7.app/vdj/clonotypingRunId": blockId
 				},
 				annotations: {
-					"pl7.app/label": "Clonotype key",
-					"pl7.app/table/visibility": "optional",
+					"pl7.app/label": "Clonotype ID",
+					"pl7.app/table/visibility": "default",
 					"pl7.app/table/orderPriority": "110000",
 					"pl7.app/segmentedBy": string(json.encode(["pl7.app/vdj/clonotypingRunId"]))
 				}
