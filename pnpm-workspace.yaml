@@ -6,21 +6,20 @@ packages:
   - test
 
 catalog:
-  '@platforma-sdk/workflow-tengo': ^4.5.3
+  '@platforma-sdk/workflow-tengo': ^4.6.0
   '@platforma-sdk/model': ^1.31.6
-  '@platforma-sdk/ui-vue': ^1.31.6
+  '@platforma-sdk/ui-vue': ^1.31.11
   '@platforma-sdk/tengo-builder': ^2.1.5
   '@platforma-sdk/package-builder': ^2.16.0
   '@platforma-sdk/block-tools': ^2.5.49
   '@platforma-sdk/eslint-config': ^1.0.3
 
-  '@platforma-sdk/test': ^1.31.9
+  '@platforma-sdk/test': ^1.31.11
   '@milaboratories/helpers': ^1.6.11
 
-  '@platforma-open/milaboratories.runenv-python-3': ^1.1.14
   '@platforma-open/milaboratories.software-mixcr': 4.7.0-169-develop
 
-  'vue': ^3.5.14
+  'vue': ^3.5.15
   'vue-tsc': ^2.2.10
 
   'zod': ~3.23.8
