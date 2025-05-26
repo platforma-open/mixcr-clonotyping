@@ -11,7 +11,7 @@ json := import("json")
 self.defineOutputs("tsv", "tsvForSingleCell")
 
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:low-memory")
-ptablerSw := assets.importSoftware("@platforma-open/software-ptabler:main")
+ptablerSw := assets.importSoftware("@platforma-open/milaboratories.software-ptabler:main")
 
 self.body(func(inputs) {
 	clnsFile := inputs[pConstants.VALUE_FIELD_NAME]

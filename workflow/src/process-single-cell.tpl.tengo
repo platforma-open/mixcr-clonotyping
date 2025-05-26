@@ -11,7 +11,7 @@ json := import("json")
 
 self.defineOutputs("abundanceTsv", "clonotypeTsv", "propertiesAPrimaryTsv", "propertiesASecondaryTsv", "propertiesBPrimaryTsv", "propertiesBSecondaryTsv")
 
-ptablerSw := assets.importSoftware("@platforma-open/software-ptabler:main")
+ptablerSw := assets.importSoftware("@platforma-open/milaboratories.software-ptabler:main")
 
 self.body(func(inputs) {
 	byCellTagA := inputs[pConstants.VALUE_FIELD_NAME]

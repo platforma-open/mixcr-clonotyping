@@ -84,6 +84,38 @@ generateClonotypeLabelSteps := func(clonotypeKeyCol, clonotypeLabelCol, targetTa
     return steps
 }
 
+addClonotypeLabelColumnsPt := func(df, clonotypeKeyCol, clonotypeLabelCol, pt) {
+    prefixTempCol := clonotypeLabelCol + "_prefix_temp"
+    rankTempCol := clonotypeLabelCol + "_rank_temp"
+
+    // Add prefix_temp column (digits removed, first 5 chars, uppercased)
+    df = df.withColumns(
+        pt.col(clonotypeKeyCol).
+            strReplace("\\d", "", { replaceAll: true }).
+            strSlice(0, 5).               // Take first 5 characters
+            strToUpper().                 // Convert to uppercase
+            alias(prefixTempCol)
+    )
+
+    // Add rank_temp column - rank of the clonotypeKeyCol within each prefixTempCol group
+    df = df.withColumns(
+        pt.rank(pt.col(clonotypeKeyCol)).  // Rank based on clonotypeKeyCol (default ascending)
+            over(pt.col(prefixTempCol)).   // Partition by prefixTempCol
+            alias(rankTempCol)
+    )
+
+    // Add final clonotypeLabelCol column (C-XXXXX or C-XXXXX-RANK)
+    df = df.withColumns(
+        pt.when(pt.col(rankTempCol).gt(pt.lit(1))).
+            then(pt.concatStr([pt.lit("C"), pt.col(prefixTempCol), pt.col(rankTempCol).cast("String")], { delimiter: "-" })).
+            otherwise(pt.concatStr([pt.lit("C"), pt.col(prefixTempCol)], { delimiter: "-" })).
+            alias(clonotypeLabelCol)
+    )
+
+    return df.withoutColumns(prefixTempCol, rankTempCol)
+}
+
 export {
-	generateClonotypeLabelSteps: generateClonotypeLabelSteps
+	generateClonotypeLabelSteps: generateClonotypeLabelSteps,
+    addClonotypeLabelColumnsPt: addClonotypeLabelColumnsPt
 }

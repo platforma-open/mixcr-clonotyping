@@ -2,16 +2,13 @@ ll := import("@platforma-sdk/workflow-tengo:ll")
 self := import("@platforma-sdk/workflow-tengo:tpl")
 pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 slices := import("@platforma-sdk/workflow-tengo:slices")
-assets := import("@platforma-sdk/workflow-tengo:assets")
-exec := import("@platforma-sdk/workflow-tengo:exec")
 maps := import("@platforma-sdk/workflow-tengo:maps")
 clonotypeLabel := import(":clonotype-label")
+pt := import("@platforma-sdk/workflow-tengo:pt")
 
 json := import("json")
 
 self.defineOutputs("tsv")
-
-ptablerSw := assets.importSoftware("@platforma-open/software-ptabler:main")
 
 self.body(func(inputs) {
 	inputData := inputs[pConstants.VALUE_FIELD_NAME]
@@ -25,15 +22,14 @@ self.body(func(inputs) {
 
 	// { column: string; type: string }
 	schemaPerClonotypeNoAggregates := params.schemaPerClonotypeNoAggregates
-	schemaPerClonotypeAggregates := params.schemaPerClonotypeAggregates
 	schemaPerSample := params.schemaPerSample
 
-	// ptabler workflow steps
-	ptablerSteps := []
+	wf := pt.workflow()
+	dataFrames := []
 
-	// Input files processing
 	inputMap := inputData.inputs()
-	inputTableNames := []
+
+	baseSchemaForRead := schemaPerSample + [ { column: "clonotypeKey", type: "String" } ]
 
 	for sKey in maps.getKeys(inputMap) {
 		inputFile := inputMap[sKey]
@@ -42,127 +38,54 @@ self.body(func(inputs) {
 			ll.panic("malformed key: %v", sKey)
 		}
 		sampleId := key[0]
-		inputFileName := sampleId + ".tsv"
-		// Use sampleId for table name, ensuring it's a valid identifier (Tengo/JSON strings should be fine)
-		inputTableName := "table_" + sampleId // Prefixing to ensure it's a safe table name
+		dfId := "table_" + sampleId
 
-		ptablerSteps = append(ptablerSteps, {
-			type: "read_csv",
-			file: inputFileName,
-			name: inputTableName,
-			delimiter: "\t",
-			schema: schemaPerSample + // these contain abundancies
-					[ { column: "clonotypeKey", type: "String" } ],
-			inferSchema: false // don't infer schema for other columns to prevent possible incomatibilities of columns during concatenation
+		df := wf.frame({
+			file: inputFile,
+			xsvType: "tsv",
+			schema: baseSchemaForRead
+		}, {
+			id: dfId,
+			inferSchema: false
 		})
-		inputTableNames = append(inputTableNames, inputTableName)
+		dataFrames = append(dataFrames, df)
 	}
 
-	currentTable := ""
-	if len(inputTableNames) == 1 {
-		currentTable = inputTableNames[0]
-	} else if len(inputTableNames) > 1 {
-		currentTable = "concatenated_input_data" // Define a name for the concatenated table
-		ptablerSteps = append(ptablerSteps, {
-			type: "concatenate",
-			inputTables: inputTableNames,
-			outputTable: currentTable
-		})
-	} else {
+	currentDf := undefined
+	if len(dataFrames) == 0 {
 		ll.panic("no input files found")
+	} else if len(dataFrames) == 1 {
+		currentDf = dataFrames[0]
+	} else {
+		currentDf = pt.concat(dataFrames)
 	}
 
+	aggExpressions := []
 
-	// Aggregations
-	aggregations := []
-
-	// max_by aggregations
-	for col in schemaPerClonotypeNoAggregates {
-		if col.column == "clonotypeLabel" {
+	for colDef in schemaPerClonotypeNoAggregates {
+		if colDef.column == "clonotypeLabel" {
 			continue
 		}
-		aggregations = append(aggregations, {
-			name: col.column,
-			aggregation: "max_by",
-			expression: { type: "col", name: col.column },
-			by: [{ type: "col", name: mainAbundanceColumnNormalized }]
-		})
+		aggExpressions = append(aggExpressions,
+			pt.col(colDef.column).maxBy(pt.col(mainAbundanceColumnNormalized)).alias(colDef.column)
+		)
 	}
 
-	// count aggregation
-	aggregations = append(aggregations, {
-		name: "sampleCount",
-		aggregation: "count",
-		expression: { type: "col", name: mainAbundanceColumnNormalized }
-	})
+	aggExpressions = append(aggExpressions,
+		pt.col(mainAbundanceColumnNormalized).count().alias("sampleCount"),
+		pt.col(mainAbundanceColumnUnnormalized).sum().alias(mainAbundanceColumnUnnormalized + "Sum"),
+		pt.col(mainAbundanceColumnNormalized).mean().alias(mainAbundanceColumnNormalized + "Mean")
+	)
 
-	// sum aggregation
-	aggregations = append(aggregations, {
-		name: mainAbundanceColumnUnnormalized + "Sum",
-		aggregation: "sum",
-		expression: { type: "col", name: mainAbundanceColumnUnnormalized }
-	})
+	aggregatedDf := currentDf.groupBy("clonotypeKey").agg(aggExpressions...)
 
-	// mean aggregation
-	aggregations = append(aggregations, {
-		name: mainAbundanceColumnNormalized + "Mean",
-		aggregation: "mean",
-		expression: { type: "col", name: mainAbundanceColumnNormalized }
-	})
+	aggregatedDf = clonotypeLabel.addClonotypeLabelColumnsPt(aggregatedDf, "clonotypeKey", "clonotypeLabel", pt)
 
-	ptablerSteps = append(ptablerSteps, {
-		type: "aggregate",
-		inputTable: currentTable,
-		outputTable: "aggregated_table",
-		groupBy: ["clonotypeKey"],
-		aggregations: aggregations
-	})
+	aggregatedDf.save("output.tsv")
 
-	// Generate clonotype label steps
-	ptablerSteps += clonotypeLabel.generateClonotypeLabelSteps("clonotypeKey", "clonotypeLabel", "aggregated_table")
+	ptablerResult := wf.run()
 
-	// Output step
-	outputFileName := "output.tsv"
-
-	// Define which columns to include in the final output TSV
-	outputColNames := ["clonotypeKey"]
-	for agg in aggregations {
-		outputColNames = append(outputColNames, agg.name)
-	}
-	outputColNames = append(outputColNames, "clonotypeLabel")
-
-	ptablerSteps = append(ptablerSteps, {
-		type: "write_csv",
-		table: "aggregated_table",
-		file: outputFileName,
-		delimiter: "\t",
-		columns: outputColNames // Specify output columns
-	})
-
-	ptablerWorkflow := {
-		workflow: ptablerSteps
-	}
-
-	ptablerCmdBuilder := exec.builder().
-		printErrStreamToStdout().
-		software(ptablerSw).
-		arg("workflow.json").
-		writeFile("workflow.json", json.encode(ptablerWorkflow))
-
-	// Add input files to the command
-	for sKey in maps.getKeys(inputMap) {
-		inputFile := inputMap[sKey]
-		key := json.decode(sKey)
-		sampleId := key[0]
-		fileName := sampleId + ".tsv"
-		ptablerCmdBuilder.addFile(fileName, inputFile)
-	}
-
-	ptablerCmd := ptablerCmdBuilder.
-		saveFile(outputFileName).
-		run()
-
-	processedTsv := ptablerCmd.getFile(outputFileName)
+	processedTsv := ptablerResult.getFile("output.tsv")
 
 	return {
 		tsv: processedTsv
