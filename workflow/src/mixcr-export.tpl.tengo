@@ -2,16 +2,17 @@ ll := import("@platforma-sdk/workflow-tengo:ll")
 self := import("@platforma-sdk/workflow-tengo:tpl.light")
 pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 smart := import("@platforma-sdk/workflow-tengo:smart")
+slices := import("@platforma-sdk/workflow-tengo:slices")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 exec := import("@platforma-sdk/workflow-tengo:exec")
+pt := import("@platforma-sdk/workflow-tengo:pt")
 
 json := import("json")
 
 self.defineOutputs("tsv", "tsvForSingleCell")
 
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:low-memory")
-ptransformSw := assets.importSoftware("@platforma-open/milaboratories.software-ptransform:main")
-hashColumnSw := assets.importSoftware("@platforma-open/milaboratories.mixcr-clonotyping-2.hash-column:main")
+ptablerSw := assets.importSoftware("@platforma-open/milaboratories.software-ptabler:main")
 
 self.body(func(inputs) {
 	clnsFile := inputs[pConstants.VALUE_FIELD_NAME]
@@ -24,7 +25,18 @@ self.body(func(inputs) {
 
 	clonotypeKeyColumns := params.clonotypeKeyColumns
 	clonotypeKeyArgs := params.clonotypeKeyArgs
+
 	cellTagColumns := params.cellTagColumns
+
+	mainAbundanceColumnUnnormalizedArgs := params.mainAbundanceColumnUnnormalizedArgs
+	mainIsProductiveArgs := params.mainIsProductiveArgs
+
+	hashKeyDerivationExpressionPt := func(sourceColumns) {
+		return pt.concatStr(
+			slices.map(sourceColumns, func(colName) { return pt.col(colName) }),
+			{delimiter: "#"}
+		).hash("sha256", "base64_alphanumeric", 120)
+	}
 
 	// Exporting clones from clns file
 
@@ -76,124 +88,57 @@ self.body(func(inputs) {
 	}
 
 	if is_undefined(clonotypeKeyColumns) {
-		result.tsv = unprocessedTsv
-
-	} else if is_undefined(cellTagColumns) {
-		hashCmdBuilder := exec.builder().
-			printErrStreamToStdout().
-			software(hashColumnSw).
-			arg("--input-table").arg("input.tsv").
-			addFile("input.tsv", unprocessedTsv).
-			arg("--output-table").arg("output.tsv").
-			arg("--calculate")
-
-		for col in clonotypeKeyColumns {
-			hashCmdBuilder.arg(col)
-		}
-
-		hashCmdBuilder.arg("clonotypeKey")
-
-		hashCmd := hashCmdBuilder.
-			saveFile("output.tsv").
-			run()
-
-		processedTsv := hashCmd.getFile("output.tsv")
-
-		result.tsv = processedTsv
-
-	} else {
-		pWorkflow := {
-			steps: [ {
-				type: "combine_columns_as_json",
-				src: clonotypeKeyColumns,
-				dst: "clonotypeKey"
-			} ]
-		}
-
-		aggregateCmd := exec.builder().
-			printErrStreamToStdout().
-			software(ptransformSw).
-			arg("--workflow").arg("wf.json").
-			writeFile("wf.json", json.encode(pWorkflow)).
-			arg("input.tsv").addFile("input.tsv", unprocessedTsv).
-			arg("output.tsv").saveFile("output.tsv").
-			run()
-
-		processedTsv := aggregateCmd.getFile("output.tsv")
-
-		result.tsv = processedTsv
+		ll.panic("clonotypeKeyColumns is undefined")
 	}
+
+	// PTabler processing for main TSV output
+	wfMain := pt.workflow()
+	frameInputMap := {
+		file: unprocessedTsv,
+		xsvType: "tsv",
+		schema: [ { column: "readCount", type: "Double" } ]
+	}
+	dfMain := wfMain.frame(frameInputMap, { inferSchema: false, id: "input_table" })
+
+	dfMain.addColumns(
+		pt.col("readCount").round().cast("Long").alias("readCount")
+	)
+	dfMain.addColumns(
+		hashKeyDerivationExpressionPt(clonotypeKeyColumns).alias("clonotypeKey")
+	)
+
+	dfMain.save("output.tsv")
+	ptablerResultMain := wfMain.run()
+	processedTsv := ptablerResultMain.getFile("output.tsv")
+	result.tsv = processedTsv
 
 	if !is_undefined(cellTagColumns) {
 		mixcrForSingleCell := createExport(func(mixcrCmdBuilder) {
 			mixcrCmdBuilder.
 				arg("--split-by-tags").arg("Cell").
-				arg("-tags").arg("Cell").
-				arg("-readCount").
-				arg("-isProductive").arg("CDR3")
+				arg("-tags").arg("Cell")
 
-			for argGrp in clonotypeKeyArgs {
+			for argGrp in (clonotypeKeyArgs + mainIsProductiveArgs + mainAbundanceColumnUnnormalizedArgs) {
 				for arg in argGrp {
 					mixcrCmdBuilder.arg(arg)
 				}
 			}
 		})
 
-		if is_undefined(clonotypeKeyColumns) {
-			ll.panic("clonotypeKeyColumns is undefined")
-		}
-
 		unprocessedTsvForSingleCell := mixcrForSingleCell.getFile("clones.tsv")
 
-		pWorkflow := {
-			steps: [ {
-				type: "combine_columns_as_json",
-				src: clonotypeKeyColumns,
-				dst: "clonotypeKey"
-			}, {
-				type: "combine_columns_as_json",
-				src: cellTagColumns,
-				dst: "cellTag"
-			} ]
-		}
+		// PTabler processing for single-cell TSV output
+		wfSingleCell := pt.workflow()
+		dfSingleCell := wfSingleCell.frame(unprocessedTsvForSingleCell, { xsvType: "tsv", inferSchema: false })
 
-		aggregateCmd := exec.builder().
-			printErrStreamToStdout().
-			software(ptransformSw).
-			arg("--workflow").arg("wf.json").
-			writeFile("wf.json", json.encode(pWorkflow)).
-			arg("input.tsv").addFile("input.tsv", unprocessedTsvForSingleCell).
-			arg("output.tsv").saveFile("output.tsv").
-			run()
+		dfSingleCell.addColumns(
+			hashKeyDerivationExpressionPt(clonotypeKeyColumns).alias("clonotypeKey"),
+			hashKeyDerivationExpressionPt(cellTagColumns).alias("cellKey")
+		)
 
-		result.tsvForSingleCell = aggregateCmd.getFile("output.tsv")
-
-		// uncomment this to use hashes
-
-		// hashCmdBuilderSingleCell := exec.builder().
-		// 	printErrStreamToStdout().
-		// 	software(hashColumnSw).
-		// 	arg("--input-table").arg("input.tsv").
-		// 	addFile("input.tsv", unprocessedTsvForSingleCell).
-		// 	arg("--output-table").arg("output.tsv")
-
-		// hashCmdBuilderSingleCell.arg("--calculate")
-		// for col in clonotypeKeyColumns {
-		// 	hashCmdBuilderSingleCell.arg(col)
-		// }
-		// hashCmdBuilderSingleCell.arg("clonotypeKey")
-
-		// hashCmdBuilderSingleCell.arg("--calculate")
-		// for col in cellTagColumns {
-		// 	hashCmdBuilderSingleCell.arg(col)
-		// }
-		// hashCmdBuilderSingleCell.arg("cellTag")
-
-		// hashCmdSingleCell := hashCmdBuilderSingleCell.
-		// 	saveFile("output.tsv").
-		// 	run()
-
-		// result.tsvForSingleCell = hashCmdSingleCell.getFile("output.tsv")
+		dfSingleCell.save("output.tsv")
+		ptablerResultSingleCell := wfSingleCell.run()
+		result.tsvForSingleCell = ptablerResultSingleCell.getFile("output.tsv")
 	}
 
 	return result

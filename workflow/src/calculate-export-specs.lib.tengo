@@ -170,7 +170,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 
 	columnsSpecPerSample := []
 	columnsSpecPerSampleSc := undefined
-	columnsSpecPerClonotype := []
+	columnsSpecPerClonotypeNoAggregates := []
 	columnsSpecPerClonotypeSc := undefined
 
 	// array of array of arg groups
@@ -209,7 +209,8 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 				"pl7.app/abundance/unit": "reads",
 				"pl7.app/abundance/normalized": "true",
 				"pl7.app/abundance/isPrimary": !hasUmi ? "true" : undefined,
-				"pl7.app/label": "Fraction of reads"
+				"pl7.app/label": "Fraction of reads",
+				"pl7.app/format": ".2p"
 			})
 		}
 	} ]
@@ -220,8 +221,10 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 
 	mainAbundanceColumnUnnormalized := "readCount"
 	mainAbundanceColumnNormalized := "readFraction"
+	mainAbundanceColumnUnnormalizedArgs := [ [ "-readCount" ] ]
+	mainAbundanceColumnNormalizedArgs := [ [ "-readFraction" ] ]
 
-	mainAbundanceColumnAggregates := [{
+	columnsSpecPerClonotypeAggregates := [{
 		column: mainAbundanceColumnUnnormalized + "Sum",
 		id: "read-count-total",
 		allowNA: false,
@@ -249,7 +252,8 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 				"pl7.app/isAbundance": "true",
 				"pl7.app/abundance/unit": "reads",
 				"pl7.app/abundance/normalized": "true",
-				"pl7.app/label": "Mean Fraction of Reads"
+				"pl7.app/label": "Mean Fraction of Reads",
+				"pl7.app/format": ".2p"
 			})
 		}
 	}]
@@ -286,7 +290,8 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 						"pl7.app/abundance/unit": "molecules",
 						"pl7.app/abundance/normalized": "true",
 						"pl7.app/abundance/isPrimary": "true",
-						"pl7.app/label": "Fraction of UMIs"
+						"pl7.app/label": "Fraction of UMIs",
+						"pl7.app/format": ".2p"
 					})
 				}
 			} ]
@@ -294,9 +299,13 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 			[ "-uniqueTagCount", "Molecule" ],
 			[ "-uniqueTagFraction", "Molecule" ]
 		]
+
 		mainAbundanceColumnNormalized = "uniqueMoleculeFraction"
 		mainAbundanceColumnUnnormalized = "uniqueMoleculeCount"
-		mainAbundanceColumnAggregates = [ {
+		mainAbundanceColumnNormalizedArgs = [ [ "-uniqueTagFraction", "Molecule" ] ]
+		mainAbundanceColumnUnnormalizedArgs = [ [ "-uniqueTagCount", "Molecule" ] ]
+
+		columnsSpecPerClonotypeAggregates = [ {
 			column: mainAbundanceColumnUnnormalized + "Sum",
 			id: "umi-count-total",
 			allowNA: false,
@@ -324,7 +333,8 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 					"pl7.app/isAbundance": "true",
 					"pl7.app/abundance/unit": "molecules",
 					"pl7.app/abundance/normalized": "true",
-					"pl7.app/label": "Mean Fraction of UMIs"
+					"pl7.app/label": "Mean Fraction of UMIs",
+					"pl7.app/format": ".2p"
 				})
 			}
 		} ]
@@ -343,6 +353,20 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 				"pl7.app/abundance/unit": "samples",
 				"pl7.app/abundance/normalized": "false",
 				"pl7.app/label": "Number of Samples"
+			})
+		}
+	}
+
+	columnsSpecPerClonotypeAggregates += [ sampleCountColumn ]
+
+	clonotypeLabelColumn := {
+		column: "clonotypeLabel",
+		id: "clonotype-label",
+		spec: {
+			name: "pl7.app/label",
+			valueType: "String",
+			annotations: a(100000, false, {
+				"pl7.app/label": "Clone label"
 			})
 		}
 	}
@@ -388,14 +412,12 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 					"pl7.app/abundance/unit": "cells",
 					"pl7.app/abundance/normalized": "true",
 					"pl7.app/abundance/isPrimary": "true",
-					"pl7.app/label": "Fraction of Cells"
+					"pl7.app/label": "Fraction of Cells",
+					"pl7.app/format": ".2p"
 				})
 			}
 		} ]
-		columnsSpecPerClonotypeSc = [ sampleCountColumn ]
-	} else {
-		columnsSpecPerClonotype += [ sampleCountColumn ]
-		columnsSpecPerClonotype += mainAbundanceColumnAggregates
+		columnsSpecPerClonotypeSc = [ sampleCountColumn, clonotypeLabelColumn ]
 	}
 
 	orderP := 80000
@@ -423,7 +445,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 				alphabetShortMixcr := isAminoAcid ? "aa" : "n"
 				columnName := alphabetShortMixcr + "Seq" + imputedU + featureInFrameU
 				visibility := featureU == "CDR3" && (!isSingleCell || isAminoAcid) // isSingleCell ? (featureU == "CDR3") && isAminoAcid : (featureU == "CDR3") || (featureU == assemblingFeature)
-				columnsSpecPerClonotype += [ {
+				columnsSpecPerClonotypeNoAggregates += [ {
 						column: columnName,
 						id: alphabetShortMixcr + "-seq-" + featureInFrameL + (isImputed ? "-imputed" : ""),
 						naRegex: "region_not_covered",
@@ -438,6 +460,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 								"pl7.app/vdj/isAssemblingFeature": featureU == anchorFeature ? "true" : "false",
 								"pl7.app/vdj/isMainSequence": featureU == anchorFeature ? "true" : "false",
 								"pl7.app/vdj/imputed": string(isImputed),
+								"pl7.app/table/fontFamily": "monospace",
 								"pl7.app/label": featureInFrameU + " " + alphabetShort
 							})
 						}
@@ -449,7 +472,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 				if !isImputed && featureU == assemblingFeature {
 					for annotationType in annotationTypes {
 						columnName := alphabetShortMixcr + "AnnotationOf" + annotationType + "For" + featureInFrameU
-						columnsSpecPerClonotype += [ {
+						columnsSpecPerClonotypeNoAggregates += [ {
 							column: columnName,
 							id: alphabetShortMixcr + "-annotation-" + annotationType + "-" + featureInFrameL,
 							naRegex: "region_not_covered",
@@ -475,7 +498,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 
 				// For now calculate length only for CDR3 to keep the number of columns manageable
 				if featureU == "CDR3" {
-					columnsSpecPerClonotype += [ {
+					columnsSpecPerClonotypeNoAggregates += [ {
 						column: alphabetShortMixcr + "Length" + featureU,
 						id: alphabetShortMixcr + "-length-" + featureL,
 						naRegex: "region_not_covered",
@@ -495,24 +518,24 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 				}
 
 				// label column
-				if isAminoAcid && !isSingleCell && featureU == "CDR3" {
-					columnsSpecPerClonotype += [ {
-						column: columnName,
-						id: "clonotype-label",
-						preProcess: [{
-							type: "regexpReplace",
-							pattern: "^region_not_covered$",
-							replacement: "Unlabelled"
-						}],
-						spec: {
-							name: "pl7.app/label",
-							valueType: "String",
-							annotations: a(100000, false, {
-								"pl7.app/label": "Clone label"
-							})
-						}
-					} ]
-				}
+				// if isAminoAcid && !isSingleCell && featureU == "CDR3" {
+				// 	columnsSpecPerClonotype += [ {
+				// 		column: columnName,
+				// 		id: "clonotype-label",
+				// 		preProcess: [{
+				// 			type: "regexpReplace",
+				// 			pattern: "^region_not_covered$",
+				// 			replacement: "Unlabelled"
+				// 		}],
+				// 		spec: {
+				// 			name: "pl7.app/label",
+				// 			valueType: "String",
+				// 			annotations: a(100000, false, {
+				// 				"pl7.app/label": "Clone label"
+				// 			})
+				// 		}
+				// 	} ]
+				// }
 			}
 		}
 	}
@@ -537,7 +560,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 	for vdjcU in ["V", "D", "J", "C"] {
 		vdjcL := text.to_lower(vdjcU)
 		for variant in geneHitColumnVariants {
-			columnsSpecPerClonotype += [ {
+			columnsSpecPerClonotypeNoAggregates += [ {
 					column: "best" + vdjcU + variant.columnNameSuffix,
 					id: "best-" + vdjcL + variant.idSuffix,
 					naRegex: "",
@@ -596,7 +619,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 			}
 
 			for variant in mutationColumnVariants {
-				columnsSpecPerClonotype += [ {
+				columnsSpecPerClonotypeNoAggregates += [ {
 						column: alphabetShortMixcr + variant.name + coreFeature,
 						id: alphabetShortMixcr + variant.idPart + geneL,
 						allowNA: true,
@@ -644,10 +667,10 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		// 	visibility: false
 		// }
 	]
-	mainProductiveColumn := flagColumnVariants[0].columnPrefix + productiveFeature
-	mainProductiveArgs := [ flagColumnVariants[0].arg, productiveFeature ]
+	mainIsProductiveColumn := flagColumnVariants[0].columnPrefix + productiveFeature
+	mainIsProductiveArgs := [ [ flagColumnVariants[0].arg, productiveFeature ] ]
 	for variant in flagColumnVariants {
-		columnsSpecPerClonotype += [ {
+		columnsSpecPerClonotypeNoAggregates += [ {
 				column: variant.columnPrefix + productiveFeature,
 				id: variant.id,
 				allowNA: false,
@@ -692,7 +715,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 
 	// Isotype and chain
 
-	columnsSpecPerClonotype += [ {
+	columnsSpecPerClonotypeNoAggregates += [ {
 			column: "isotypePrimary",
 			id: "isotype",
 			naRegex: "",
@@ -724,9 +747,11 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		[ "-topChains" ]
 	]
 
+	columnsSpecPerClonotypeNoAggregates += [ clonotypeLabelColumn ]
+
 	// All columns are added
 
-	columnsSpec := columnsSpecPerSample + columnsSpecPerClonotype
+	columnsSpec := columnsSpecPerSample + columnsSpecPerClonotypeNoAggregates + columnsSpecPerClonotypeAggregates
 
 	// Creating a column map for fast search
 	columnsByName := {}
@@ -767,8 +792,9 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 					"pl7.app/vdj/clonotypingRunId": blockId
 				},
 				annotations: {
-					"pl7.app/label": "Clonotype key",
-					"pl7.app/table/visibility": "optional",
+					"pl7.app/label": "Clonotype ID",
+					"pl7.app/table/fontFamily": "monospace",
+					"pl7.app/table/visibility": "default",
 					"pl7.app/table/orderPriority": "110000",
 					"pl7.app/segmentedBy": string(json.encode(["pl7.app/vdj/clonotypingRunId"]))
 				}
@@ -791,8 +817,9 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 						"pl7.app/vdj/clonotypingRunId": blockId
 					},
 					annotations: {
-						"pl7.app/label": "Clone label",
-						"pl7.app/table/visibility": "optional",
+						"pl7.app/label": "Clonotype ID",
+						"pl7.app/table/fontFamily": "monospace",
+						"pl7.app/table/visibility": "default",
 						"pl7.app/table/orderPriority": "110000",
 						"pl7.app/segmentedBy": string(json.encode(["pl7.app/vdj/clonotypingRunId"]))
 					}
@@ -825,16 +852,19 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 
 		columnsSpecPerSample: columnsSpecPerSample,
 		columnsSpecPerSampleSc: columnsSpecPerSampleSc,
-		columnsSpecPerClonotype: columnsSpecPerClonotype,
+		columnsSpecPerClonotypeNoAggregates: columnsSpecPerClonotypeNoAggregates,
+		columnsSpecPerClonotypeAggregates: columnsSpecPerClonotypeAggregates,
 		columnsSpecPerClonotypeSc: columnsSpecPerClonotypeSc,
 
 		columnsSpec: columnsSpec,
 
 		mainAbundanceColumnNormalized: mainAbundanceColumnNormalized,
+		mainAbundanceColumnNormalizedArgs: mainAbundanceColumnNormalizedArgs,
 		mainAbundanceColumnUnnormalized: mainAbundanceColumnUnnormalized,
+		mainAbundanceColumnUnnormalizedArgs: mainAbundanceColumnUnnormalizedArgs,
 
-		mainProductiveColumn: mainProductiveColumn,
-		mainProductiveArgs: mainProductiveArgs,
+		mainIsProductiveColumn: mainIsProductiveColumn,
+		mainIsProductiveArgs: mainIsProductiveArgs,
 
 		exportArgs: exportArgs
 	}

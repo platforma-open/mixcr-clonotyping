@@ -2,15 +2,13 @@ ll := import("@platforma-sdk/workflow-tengo:ll")
 self := import("@platforma-sdk/workflow-tengo:tpl")
 pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 slices := import("@platforma-sdk/workflow-tengo:slices")
-assets := import("@platforma-sdk/workflow-tengo:assets")
-exec := import("@platforma-sdk/workflow-tengo:exec")
 maps := import("@platforma-sdk/workflow-tengo:maps")
+clonotypeLabel := import(":clonotype-label")
+pt := import("@platforma-sdk/workflow-tengo:pt")
 
 json := import("json")
 
 self.defineOutputs("tsv")
-
-ptransformSw := assets.importSoftware("@platforma-open/milaboratories.software-ptransform:main")
 
 self.body(func(inputs) {
 	inputData := inputs[pConstants.VALUE_FIELD_NAME]
@@ -21,48 +19,18 @@ self.body(func(inputs) {
 	params := inputs.params
 	mainAbundanceColumnNormalized := params.mainAbundanceColumnNormalized
 	mainAbundanceColumnUnnormalized := params.mainAbundanceColumnUnnormalized
-	clonotypeColumns := params.clonotypeColumns
 
-	pickCols := []
-	for col in clonotypeColumns {
-		if col == "sampleCount" || col == mainAbundanceColumnNormalized + "Mean" || col == mainAbundanceColumnUnnormalized + "Sum" {
-			continue
-		}
-		pickCols = append(pickCols, [col, col])
-	}
+	// { column: string; type: string }
+	schemaPerClonotypeNoAggregates := params.schemaPerClonotypeNoAggregates
+	schemaPerSample := params.schemaPerSample
 
-	// Adding clonotypeKey column
-	pWorkflow := {
-		steps: [ {
-			type: "aggregate",
-			groupBy: ["clonotypeKey"],
-			aggregations: [ {
-				type: "max_by",
-				rankingCol: mainAbundanceColumnNormalized,
-				pickCols: pickCols
-			}, {
-				type: "count",
-				src: mainAbundanceColumnNormalized,
-				dst: "sampleCount"
-			}, {
-				type: "sum",
-				src: mainAbundanceColumnUnnormalized,
-				dst: mainAbundanceColumnUnnormalized + "Sum"
-			}, {
-				type: "mean",
-				src: mainAbundanceColumnNormalized,
-				dst: mainAbundanceColumnNormalized + "Mean"
-			}]
-		} ]
-	}
-
-	aggregateBuilderCmd := exec.builder().
-		printErrStreamToStdout().
-		software(ptransformSw).
-		arg("--workflow").arg("wf.json").
-		writeFile("wf.json", json.encode(pWorkflow))
+	wf := pt.workflow()
+	dataFrames := []
 
 	inputMap := inputData.inputs()
+
+	baseSchemaForRead := schemaPerSample + [ { column: "clonotypeKey", type: "String" } ]
+
 	for sKey in maps.getKeys(inputMap) {
 		inputFile := inputMap[sKey]
 		key := json.decode(sKey)
@@ -70,16 +38,54 @@ self.body(func(inputs) {
 			ll.panic("malformed key: %v", sKey)
 		}
 		sampleId := key[0]
-		aggregateBuilderCmd.
-			arg(sampleId + ".tsv").
-			addFile(sampleId + ".tsv", inputFile)
+		dfId := "table_" + sampleId
+
+		df := wf.frame({
+			file: inputFile,
+			xsvType: "tsv",
+			schema: baseSchemaForRead
+		}, {
+			id: dfId,
+			inferSchema: false
+		})
+		dataFrames = append(dataFrames, df)
 	}
 
-	aggregateCmd := aggregateBuilderCmd.
-		arg("output.tsv").saveFile("output.tsv").
-		run()
+	currentDf := undefined
+	if len(dataFrames) == 0 {
+		ll.panic("no input files found")
+	} else if len(dataFrames) == 1 {
+		currentDf = dataFrames[0]
+	} else {
+		currentDf = pt.concat(dataFrames)
+	}
 
-	processedTsv := aggregateCmd.getFile("output.tsv")
+	aggExpressions := []
+
+	for colDef in schemaPerClonotypeNoAggregates {
+		if colDef.column == "clonotypeLabel" {
+			continue
+		}
+		aggExpressions = append(aggExpressions,
+			pt.col(colDef.column).maxBy(pt.col(mainAbundanceColumnNormalized)).alias(colDef.column)
+		)
+	}
+
+	aggExpressions = append(aggExpressions,
+		pt.col(mainAbundanceColumnNormalized).count().alias("sampleCount"),
+		pt.col(mainAbundanceColumnUnnormalized).sum().alias(mainAbundanceColumnUnnormalized + "Sum"),
+		pt.col(mainAbundanceColumnNormalized).mean().alias(mainAbundanceColumnNormalized + "Mean")
+	)
+
+	aggregatedDf := currentDf.groupBy("clonotypeKey").agg(aggExpressions...)
+
+	aggregatedDf = clonotypeLabel.addClonotypeLabelColumnsPt(aggregatedDf, "clonotypeKey", "clonotypeLabel", pt)
+
+	aggregatedDf.save("output.tsv")
+
+	ptablerResult := wf.run()
+
+	processedTsv := ptablerResult.getFile("output.tsv")
 
 	return {
 		tsv: processedTsv
