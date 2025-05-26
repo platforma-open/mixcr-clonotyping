@@ -460,6 +460,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 								"pl7.app/vdj/isAssemblingFeature": featureU == anchorFeature ? "true" : "false",
 								"pl7.app/vdj/isMainSequence": featureU == anchorFeature ? "true" : "false",
 								"pl7.app/vdj/imputed": string(isImputed),
+								"pl7.app/table/fontFamily": "monospace",
 								"pl7.app/label": featureInFrameU + " " + alphabetShort
 							})
 						}
@@ -792,6 +793,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 				},
 				annotations: {
 					"pl7.app/label": "Clonotype ID",
+					"pl7.app/table/fontFamily": "monospace",
 					"pl7.app/table/visibility": "default",
 					"pl7.app/table/orderPriority": "110000",
 					"pl7.app/segmentedBy": string(json.encode(["pl7.app/vdj/clonotypingRunId"]))
