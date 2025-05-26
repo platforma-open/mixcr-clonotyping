@@ -5,6 +5,7 @@ smart := import("@platforma-sdk/workflow-tengo:smart")
 slices := import("@platforma-sdk/workflow-tengo:slices")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 exec := import("@platforma-sdk/workflow-tengo:exec")
+pt := import("@platforma-sdk/workflow-tengo:pt")
 
 json := import("json")
 
@@ -27,29 +28,14 @@ self.body(func(inputs) {
 
 	cellTagColumns := params.cellTagColumns
 
-	mainAbundanceColumnNormalized := params.mainAbundanceColumnNormalized
-	mainAbundanceColumnUnnormalized := params.mainAbundanceColumnUnnormalized
-	mainAbundanceColumnNormalizedArgs := params.mainAbundanceColumnNormalizedArgs
 	mainAbundanceColumnUnnormalizedArgs := params.mainAbundanceColumnUnnormalizedArgs
-	mainIsProductiveColumn := params.mainIsProductiveColumn
 	mainIsProductiveArgs := params.mainIsProductiveArgs
 
-	hashKeyDerivationExpression := func(sourceColumns) {
-		strJoinOperands := []
-		for colName in sourceColumns {
-			strJoinOperands += [ { type: "col", name: colName } ]
-		}
-		return {
-			type: "hash",
-			hashType: "sha256",
-			encoding: "base64_alphanumeric",
-			bits: 120,
-			value: {
-				type: "str_join",
-				operands: strJoinOperands,
-				delimiter: "#"
-			}
-		}
+	hashKeyDerivationExpressionPt := func(sourceColumns) {
+		return pt.concatStr(
+			slices.map(sourceColumns, func(colName) { return pt.col(colName) }),
+			{delimiter: "#"}
+		).hash("sha256", "base64_alphanumeric", 120)
 	}
 
 	// Exporting clones from clns file
@@ -105,60 +91,25 @@ self.body(func(inputs) {
 		ll.panic("clonotypeKeyColumns is undefined")
 	}
 
-	ptablerSteps := [ {
-		type: "read_csv",
-		file: "input.tsv",
-		name: "input_table",
-		delimiter: "\t",
-		schema: [ { column: "readCount", type: "Double" } ],
-		inferSchema: false // other columns will be treated as strings
-	} ]
+	// PTabler processing for main TSV output
+	wfMain := pt.workflow()
+	frameInputMap := {
+		file: unprocessedTsv,
+		xsvType: "tsv",
+		schema: [ { column: "readCount", type: "Double" } ]
+	}
+	dfMain := wfMain.frame(frameInputMap, { inferSchema: false, id: "input_table" })
 
-	// rounding and casting readCount to Long
-	ptablerSteps += [ {
-		type: "add_columns",
-		table: "input_table",
-		columns: [ {
-			name: "readCount",
-			expression: {
-				type: "cast",
-				dtype: "Long",
-				value: { type: "round", value: { type: "col", name: "readCount" } }
-			}
-		} ]
-	} ]
+	dfMain.addColumns(
+		pt.col("readCount").round().cast("Long").alias("readCount")
+	)
+	dfMain.addColumns(
+		hashKeyDerivationExpressionPt(clonotypeKeyColumns).alias("clonotypeKey")
+	)
 
-	ptablerSteps += [ {
-		type: "add_columns",
-		table: "input_table",
-		columns: [ {
-			name: "clonotypeKey",
-			expression: hashKeyDerivationExpression(clonotypeKeyColumns)
-		} ]
-	} ]
-
-	ptablerSteps += [ {
-		type: "write_csv",
-		table: "input_table",
-		file: "output.tsv",
-		delimiter: "\t"
-	} ]
-
-	ptablerCmd := exec.builder().
-		inMediumQueue().
-		printErrStreamToStdout().
-		dontSaveStdoutOrStderr().
-		software(ptablerSw).
-		arg("workflow.json").
-		writeFile("workflow.json", json.encode({
-			workflow: ptablerSteps
-		})).
-		addFile("input.tsv", unprocessedTsv).
-		saveFile("output.tsv").
-		run()
-
-	processedTsv := ptablerCmd.getFile("output.tsv")
-
+	dfMain.save("output.tsv")
+	ptablerResultMain := wfMain.run()
+	processedTsv := ptablerResultMain.getFile("output.tsv")
 	result.tsv = processedTsv
 
 	if !is_undefined(cellTagColumns) {
@@ -176,43 +127,18 @@ self.body(func(inputs) {
 
 		unprocessedTsvForSingleCell := mixcrForSingleCell.getFile("clones.tsv")
 
-		ptablerStepsForSingleCell := [ {
-			type: "read_csv",
-			file: "input.tsv",
-			name: "input_table_sc",
-			delimiter: "\t",
-			inferSchema: false // all columns will be treated as strings
-		}, {
-			type: "add_columns",
-			table: "input_table_sc",
-			columns: [ {
-				name: "clonotypeKey",
-				expression: hashKeyDerivationExpression(clonotypeKeyColumns)
-			}, {
-				name: "cellKey",
-				expression: hashKeyDerivationExpression(cellTagColumns)
-			} ]
-		}, {
-			type: "write_csv",
-			table: "input_table_sc",
-			file: "output.tsv",
-			delimiter: "\t"
-		} ]
+		// PTabler processing for single-cell TSV output
+		wfSingleCell := pt.workflow()
+		dfSingleCell := wfSingleCell.frame(unprocessedTsvForSingleCell, { xsvType: "tsv", inferSchema: false })
 
-		ptablerCmdSingleCell := exec.builder().
-			inMediumQueue().
-			printErrStreamToStdout().
-			dontSaveStdoutOrStderr().
-			software(ptablerSw).
-			arg("workflow_sc.json").
-			writeFile("workflow_sc.json", json.encode({
-				workflow: ptablerStepsForSingleCell
-			})).
-			addFile("input.tsv", unprocessedTsvForSingleCell).
-			saveFile("output.tsv").
-			run()
+		dfSingleCell.addColumns(
+			hashKeyDerivationExpressionPt(clonotypeKeyColumns).alias("clonotypeKey"),
+			hashKeyDerivationExpressionPt(cellTagColumns).alias("cellKey")
+		)
 
-		result.tsvForSingleCell = ptablerCmdSingleCell.getFile("output.tsv")
+		dfSingleCell.save("output.tsv")
+		ptablerResultSingleCell := wfSingleCell.run()
+		result.tsvForSingleCell = ptablerResultSingleCell.getFile("output.tsv")
 	}
 
 	return result

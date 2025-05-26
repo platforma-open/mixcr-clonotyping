@@ -21,9 +21,6 @@ catalogs:
     '@platforma-open/milaboratories.software-mixcr':
       specifier: 4.7.0-169-develop
       version: 4.7.0-169-develop
-    '@platforma-open/milaboratories.software-ptabler':
-      specifier: ^1.6.0
-      version: 1.6.0
     '@platforma-sdk/block-tools':
       specifier: ^2.5.49
       version: 2.5.49
@@ -249,9 +246,6 @@ importers:
       '@platforma-open/milaboratories.software-mixcr':
         specifier: 'catalog:'
         version: 4.7.0-169-develop
-      '@platforma-open/milaboratories.software-ptabler':
-        specifier: 'catalog:'
-        version: 1.6.0
       '@platforma-sdk/workflow-tengo':
         specifier: file:/Users/dbolotin/mi/core/platforma/sdk/workflow-tengo/package.tgz
         version: file:../../core/platforma/sdk/workflow-tengo/package.tgz
@@ -1318,7 +1312,7 @@ packages:
     resolution: {integrity: sha512-6Leked5zKhAWo0aE8XUjU4mCtUEHROUyyiksn8OrFhOBp9HN4vOt+vt6436K4prVtYzYTBLBDSRijoxmNWqLuA==}
 
   '@platforma-sdk/workflow-tengo@file:../../core/platforma/sdk/workflow-tengo/package.tgz':
-    resolution: {integrity: sha512-XrfyA5fgeBogDgC76RuqdN3QO+C/ihnzPYiSE/mQJuDwgVAsPOljdhK91vuQxk6i3NH7BKTQcslD6gbZJzmUJg==, tarball: file:../../core/platforma/sdk/workflow-tengo/package.tgz}
+    resolution: {integrity: sha512-hyCzAfbcxgFC5aZ1OEAadmX2GzXHcc4+cAPdl035qOITN8+OPxm9nfQ0g+vy1PcHgYpWAiaPWEm0axt4Pq29iw==, tarball: file:../../core/platforma/sdk/workflow-tengo/package.tgz}
     version: 4.5.3
 
   '@protobuf-ts/grpc-transport@2.9.6':

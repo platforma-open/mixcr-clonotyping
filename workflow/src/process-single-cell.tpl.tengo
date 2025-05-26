@@ -6,8 +6,8 @@ exec := import("@platforma-sdk/workflow-tengo:exec")
 maps := import("@platforma-sdk/workflow-tengo:maps")
 slices := import("@platforma-sdk/workflow-tengo:slices")
 clonotypeLabel := import(":clonotype-label")
-
 json := import("json")
+pt := import("@platforma-sdk/workflow-tengo:pt")
 
 self.defineOutputs("abundanceTsv", "clonotypeTsv", "propertiesAPrimaryTsv", "propertiesASecondaryTsv", "propertiesBPrimaryTsv", "propertiesBSecondaryTsv")
 
@@ -37,15 +37,8 @@ self.body(func(inputs) {
 	 * @return the output file
 	 */
 	preprocessByCell := func(byCellTag) {
-		internalOutputFileName := "ptabler_output.tsv"
-		ptablerSteps := []
-		inputTableNames := []
-
-		ptablerCmdBuilder := exec.builder().
-			inMediumQueue().
-			printErrStreamToStdout().
-			dontSaveStdoutOrStderr().
-			software(ptablerSw)
+		wf := pt.workflow()
+		sampleDataFrames := []
 
 		inputMap := byCellTag.inputs()
 		maps.forEach(inputMap, func(sKey, inputFile) {
@@ -53,351 +46,167 @@ self.body(func(inputs) {
 			ll.assert(len(key) == 1, "preprocessByCell: byCellTag key should have one element, got %v", key)
 			sampleId := key[0]
 
-			fileNameForExecAndPtablerRead := "by_cell_" + sampleId + ".tsv"
-			tableNameInPtabler := "by_cell_" + sampleId
-
-			ptablerCmdBuilder.addFile(fileNameForExecAndPtablerRead, inputFile)
-
-			ptablerSteps = append(ptablerSteps, {
-				type: "read_csv",
-				file: fileNameForExecAndPtablerRead,
-				name: tableNameInPtabler,
-				delimiter: "\t",
+			// Create a DataFrame for the current sample's file
+			sampleDf := wf.frame(inputFile, {
+				xsvType: "tsv",
 				schema: [
 					{ column: "cellKey", type: "String" },
 					{ column: "clonotypeKey", type: "String" },
-					{ column: mainAbundanceColumn, type: "Long" },
-					{ column: mainIsProductiveColumn, type: "String" }
+					{ column: mainAbundanceColumn, type: "Long" }, // Ensure mainAbundanceColumn is treated as Long
+					{ column: mainIsProductiveColumn, type: "String" } // Keep as String for direct comparison
 				],
-				inferSchema: false // don't infer schema for other columns to prevent possible incomatibilities of columns during concatenation
-			})
+				inferSchema: false // Disable further inference so columns not defined in schema are interpreted as strings
+			}).withColumns(
+				pt.col("cellKey"), pt.col("clonotypeKey"), pt.col(mainAbundanceColumn), pt.col(mainIsProductiveColumn)
+			)
 
-			ptablerSteps = append(ptablerSteps, {
-				type: "add_columns",
-				table: tableNameInPtabler,
-				columns: [
-					{ name: "sampleId", expression: { type: "const", value: sampleId } }
-				]
-			})
-			inputTableNames = append(inputTableNames, tableNameInPtabler)
+			// Add sampleId column
+			sampleDfWithId := sampleDf.addColumns(
+				pt.lit(sampleId).alias("sampleId")
+			)
+			sampleDataFrames = append(sampleDataFrames, sampleDfWithId)
 		})
 
-		ll.assert(len(inputTableNames) > 0, "No input files to process in preprocessByCell")
+		ll.assert(len(sampleDataFrames) > 0, "No input files to process in preprocessByCell")
 
-		columnsForInitialConcatenation := ["cellKey", "clonotypeKey", mainAbundanceColumn, "sampleId", mainIsProductiveColumn]
+		concatenatedDf := pt.concat(sampleDataFrames)
 
-		ptablerSteps = append(ptablerSteps, {
-			type: "concatenate",
-			inputTables: inputTableNames,
-			outputTable: "concatenated_data",
-			columns: columnsForInitialConcatenation
-		})
+		// Add rawChainRank column
+		dfWithRawRank := concatenatedDf.withColumns(
+			pt.rank(pt.col(mainAbundanceColumn), {descending: true}).
+				over([pt.col("sampleId"), pt.col("cellKey")]).
+				alias("rawChainRank")
+		)
 
-		ptablerSteps = append(ptablerSteps, {
-			type: "add_columns",
-			table: "concatenated_data",
-			columns: [
-				{
-					name: "rawChainRank",
-					expression: {
-						type: "rank",
-						partitionBy: [{ type: "col", name: "sampleId" }, { type: "col", name: "cellKey" }],
-						orderBy: [{ type: "col", name: mainAbundanceColumn }],
-						descending: true // Highest abundance gets rank 1
-					}
-				}
-			]
-		})
+		// Filter by rawChainRank <= 2
+		dfFilteredByRawRank := dfWithRawRank.filter(
+			pt.col("rawChainRank").le(2)
+		)
 
-		ptablerSteps = append(ptablerSteps, {
-			type: "filter",
-			inputTable: "concatenated_data",
-			outputTable: "concatenated_data_filtered_by_raw_rank",
-			condition: {
-				type: "le",
-				lhs: { type: "col", name: "rawChainRank" },
-				rhs: { type: "const", value: 2 }
-			}
-		})
-
-		// Add chainRank: rank by isProductive (True first) then by abundance (desc) within sampleId+cellTag
-		// For orderBy:
+		// Prepare expressions for chainRank ordering
 		// 1. isProductiveNumeric: "True" -> 0, "False" -> 1 (for ascending sort)
+		isProductiveNumericExpr := pt.when(pt.col(mainIsProductiveColumn).eq("True")).
+			then(pt.lit(0)).
+			otherwise(pt.lit(1))
+
 		// 2. negativeAbundance: mainAbundanceColumn * -1 (for ascending sort by this, meaning descending by original abundance)
-		isProductiveNumericExpr := {
-			type: "when_then_otherwise",
-			conditions: [{
-				when: { type: "eq", lhs: { type: "col", name: mainIsProductiveColumn }, rhs: { type: "const", value: "True" } },
-				then: { type: "const", value: 0 }
-			}],
-			otherwise: { type: "const", value: 1 }
-		}
-		negativeAbundanceExpr := {
-			type: "multiply",
-			lhs: { type: "col", name: mainAbundanceColumn },
-			rhs: { type: "const", value: -1 }
-		}
+		negativeAbundanceExpr := pt.col(mainAbundanceColumn).multiply(-1)
 
-		ptablerSteps = append(ptablerSteps, {
-			type: "add_columns",
-			table: "concatenated_data_filtered_by_raw_rank",
-			columns: [
-				{
-					name: "chainRank",
-					expression: {
-						type: "rank",
-						partitionBy: [{ type: "col", name: "sampleId" }, { type: "col", name: "cellKey" }],
-						orderBy: [isProductiveNumericExpr, negativeAbundanceExpr],
-						descending: false // Standard rank 1, 2, 3...
-					}
-				}
-			]
-		})
+		// Add chainRank column and remove temp column rawChainRank
+		dfWithChainRank := dfFilteredByRawRank.withColumns(
+			pt.rank([
+					isProductiveNumericExpr,
+					negativeAbundanceExpr
+				], {descending: false}).
+				over([pt.col("sampleId"), pt.col("cellKey")]).
+				alias("chainRank")
+		).withoutColumns("rawChainRank")
 
-		ptablerSteps = append(ptablerSteps, {
-			type: "write_csv",
-			table: "concatenated_data_filtered_by_raw_rank",
-			file: internalOutputFileName,
-			delimiter: "\t",
-			columns: columnsForInitialConcatenation + ["chainRank"] // excluding rawChainRank
-		})
+		dfWithChainRank.save("output.tsv")
 
-		ptablerWorkflow := {
-			workflow: ptablerSteps
-		}
-
-		ptablerCmdBuilder.
-			writeFile("workflow.json", json.encode(ptablerWorkflow)).
-			arg("workflow.json").
-			saveFile(internalOutputFileName)
-
-		runResult := ptablerCmdBuilder.run()
-		return runResult.getFile(internalOutputFileName)
+		// Run the workflow
+		runResult := wf.run()
+		return runResult.getFile("output.tsv")
 	}
 
-	chainAoutput := preprocessByCell(byCellTagA)
-	chainBoutput := preprocessByCell(byCellTagB)
+	chainAOutput := preprocessByCell(byCellTagA)
+	chainBOutput := preprocessByCell(byCellTagB)
 
 	//
-	// Cell grouping
+	// Cell grouping - Reimplemented with PTabler pt API
 	//
+	cellGroupingWf := pt.workflow()
 
-	// Create ptabler workflow instead of using sc-group-builder
-	cellGroupingSteps := [ {
-		type: "read_csv",
-		file: "chain_a_output.tsv",
-		name: "chain_a_table",
-		delimiter: "\t"
-	}, {
-		type: "read_csv",
-		file: "chain_b_output.tsv",
-		name: "chain_b_table",
-		delimiter: "\t"
-	} ]
+	chainATableDf := cellGroupingWf.frame(chainAOutput, {xsvType: "tsv"})
+	chainBTableDf := cellGroupingWf.frame(chainBOutput, {xsvType: "tsv"})
 
 	// Dynamically generate filter steps for chains A and B, ranks 1 and 2
-	for chain in ["a", "b"] {
-		for rank in [1, 2] {
-			cellGroupingSteps += [ {
-				type: "filter",
-				inputTable: "chain_" + chain + "_table",
-				outputTable: "chain_" + chain + "_rank" + string(rank),
-				condition: {
-					type: "eq",
-					lhs: { type: "col", name: "chainRank" },
-					rhs: { type: "const", value: rank }
-				}
-			} ]
+	// Store resulting DataFrames in a map for easier access
+	rankedDfs := {}
+	for chainData in [{prefix: "a", df: chainATableDf}, {prefix: "b", df: chainBTableDf}] {
+		for rankVal in [1, 2] {
+			dfKey := "chain_" + chainData.prefix + "_rank" + string(rankVal) + "_df"
+			rankedDfs[dfKey] = chainData.df.filter(pt.col("chainRank").eq(rankVal))
 		}
 	}
 
-	cellGroupingSteps += [ {
-		// Join A1 and A2 by sampleId and cellKey
-		type: "join",
-		leftTable: "chain_a_rank1",
-		rightTable: "chain_a_rank2",
-		outputTable: "chain_a_merged",
-		leftOn: ["sampleId", "cellKey"],
-		rightOn: ["sampleId", "cellKey"],
-		coalesce: true,
+	chainAMergedDf := rankedDfs["chain_a_rank1_df"].join(rankedDfs["chain_a_rank2_df"], {
 		how: "full",
-		leftColumns: [
-			{ column: "clonotypeKey", rename: "clonotypeKeyA1" }
-		],
-		rightColumns: [
-			{ column: "clonotypeKey", rename: "clonotypeKeyA2" }
-		]
-	}, {
-		// Join B1 and B2 by sampleId and cellKey
-		type: "join",
-		leftTable: "chain_b_rank1",
-		rightTable: "chain_b_rank2",
-		outputTable: "chain_b_merged",
-		leftOn: ["sampleId", "cellKey"],
-		rightOn: ["sampleId", "cellKey"],
+		on: ["sampleId", "cellKey"],
 		coalesce: true,
+		leftColumns: [{ column: "clonotypeKey", rename: "clonotypeKeyA1" }],
+		rightColumns: [{ column: "clonotypeKey", rename: "clonotypeKeyA2" }]
+	})
+
+	chainBMergedDf := rankedDfs["chain_b_rank1_df"].join(rankedDfs["chain_b_rank2_df"], {
 		how: "full",
-		leftColumns: [
-			{ column: "clonotypeKey", rename: "clonotypeKeyB1" }
-		],
-		rightColumns: [
-			{ column: "clonotypeKey", rename: "clonotypeKeyB2" }
-		]
-	}, {
-		// Join chain A and chain B merged tables
-		type: "join",
-		leftTable: "chain_a_merged",
-		rightTable: "chain_b_merged",
-		outputTable: "all_chains_merged",
-		leftOn: ["sampleId", "cellKey"],
-		rightOn: ["sampleId", "cellKey"],
+		on: ["sampleId", "cellKey"],
 		coalesce: true,
-		how: "full"
-	}, {
-		// Add scClonotypeKey column
-		type: "add_columns",
-		table: "all_chains_merged",
-		columns: [{
-			name: "scClonotypeKey",
-			expression: {
-				type: "hash",
-				hashType: "sha256",
-				encoding: "base64_alphanumeric",
-				bits: 120,
-				value: {
-					type: "str_join",
-					operands: [{
-						type: "fill_na",
-						input: { type: "col", name: "clonotypeKeyA1" },
-						fillValue: { type: "const", value: "NA" }
-					}, {
-						type: "fill_na",
-						input: { type: "col", name: "clonotypeKeyA2" },
-						fillValue: { type: "const", value: "NA" }
-					}, {
-						type: "fill_na",
-						input: { type: "col", name: "clonotypeKeyB1" },
-						fillValue: { type: "const", value: "NA" }
-					}, {
-						type: "fill_na",
-						input: { type: "col", name: "clonotypeKeyB2" },
-						fillValue: { type: "const", value: "NA" }
-					}],
-					delimiter: "#"
-				}
-			}
-		}]
-	}, {
-		// Filter to keep only complete clonotypes (A1 and B1 present)
-		type: "filter",
-		inputTable: "all_chains_merged",
-		outputTable: "all_chains_filtered",
-		condition: {
-			type: "and",
-			operands: [{
-				type: "neq",
-				lhs: {
-					type: "fill_na",
-					input: { type: "col", name: "clonotypeKeyA1" },
-					fillValue: { type: "const", value: "NA" }
-				},
-				rhs: { type: "const", value: "NA" }
-			}, {
-				type: "neq",
-				lhs: {
-					type: "fill_na",
-					input: { type: "col", name: "clonotypeKeyB1" },
-					fillValue: { type: "const", value: "NA" }
-				},
-				rhs: { type: "const", value: "NA" }
-			}]
-		}
-	}, {
-		// Create clonotype table
-		type: "aggregate",
-		inputTable: "all_chains_filtered",
-		outputTable: "clonotype_table",
-		groupBy: ["scClonotypeKey", "clonotypeKeyA1", "clonotypeKeyA2", "clonotypeKeyB1", "clonotypeKeyB2"],
-		aggregations: [{
-			name: "sampleCount",
-			aggregation: "n_unique",
-			expression: { type: "col", name: "sampleId" }
-		}]
-	}, {
-		// Count cells by scClonotypeKey and sampleId
-		type: "aggregate",
-		inputTable: "all_chains_filtered",
-		outputTable: "cell_counts",
-		groupBy: ["sampleId", "scClonotypeKey"],
-		aggregations: [{
-			name: "uniqueCellCount",
-			aggregation: "count",
-			expression: { type: "col", name: "cellKey" }
-		}]
-	}, {
-		// Add uniqueCellFraction column
-		type: "add_columns",
-		table: "cell_counts",
-		columns: [{
-			name: "uniqueCellFraction",
-			expression: {
-				type: "truediv",
-				lhs: { type: "col", name: "uniqueCellCount" },
-				rhs: {
-					type: "aggregate",
-					aggregation: "sum",
-					value: { type: "col", name: "uniqueCellCount" },
-					partitionBy: [{ type: "col", name: "sampleId" }]
-				}
-			}
-		}]
-	} ]
+		leftColumns: [{ column: "clonotypeKey", rename: "clonotypeKeyB1" }],
+		rightColumns: [{ column: "clonotypeKey", rename: "clonotypeKeyB2" }]
+	})
 
-	cellGroupingSteps += clonotypeLabel.generateClonotypeLabelSteps("scClonotypeKey", "clonotypeLabel", "clonotype_table")
+	allChainsMergedDf := chainAMergedDf.join(chainBMergedDf, {
+		how: "full",
+		on: ["sampleId", "cellKey"],
+		coalesce: true
+	})
 
-	cellGroupingSteps += [ {
-		// Write clonotype table output
-		type: "write_csv",
-		table: "clonotype_table",
-		file: "clonotype.tsv",
-		delimiter: "\t",
-		columns: ["scClonotypeKey", "clonotypeKeyA1", "clonotypeKeyA2", "clonotypeKeyB1", "clonotypeKeyB2", "sampleCount", "clonotypeLabel"]
-	}, {
-		// Write abundance (cell counts) table output
-		type: "write_csv",
-		table: "cell_counts",
-		file: "abundance.tsv",
-		delimiter: "\t",
-		columns: ["sampleId", "scClonotypeKey", "uniqueCellCount", "uniqueCellFraction"]
-	} ]
+	scClonotypeKeyExpr := pt.concatStr(
+		[
+			pt.col("clonotypeKeyA1").fillNull("NA"),
+			pt.col("clonotypeKeyA2").fillNull("NA"),
+			pt.col("clonotypeKeyB1").fillNull("NA"),
+			pt.col("clonotypeKeyB2").fillNull("NA")
+		],
+		{delimiter: "#"}
+	).hash("sha256", "base64_alphanumeric", 120).alias("scClonotypeKey")
 
-	ptablerCmd := exec.builder().
-		printErrStreamToStdout().
-		software(ptablerSw).
-		arg("workflow.json").
-		writeFile("workflow.json", json.encode({
-			workflow: cellGroupingSteps
-		})).
-		addFile("chain_a_output.tsv", chainAoutput).
-		addFile("chain_b_output.tsv", chainBoutput).
-		saveFile("clonotype.tsv").
-		saveFile("abundance.tsv").
-		run()
+	allChainsMergedWithScKeyDf := allChainsMergedDf.withColumns(scClonotypeKeyExpr)
 
-	clonotypeTsv := ptablerCmd.getFile("clonotype.tsv")
-	abundanceTsv := ptablerCmd.getFile("abundance.tsv")
+	filterCondition := pt.and(
+		pt.col("clonotypeKeyA1").isNotNull(),
+		pt.col("clonotypeKeyB1").isNotNull()
+	)
+	allChainsFilteredDf := allChainsMergedWithScKeyDf.filter(filterCondition)
+
+	clonotypeTableDf := allChainsFilteredDf.groupBy(
+		"scClonotypeKey", "clonotypeKeyA1", "clonotypeKeyA2", "clonotypeKeyB1", "clonotypeKeyB2"
+	).agg(
+		pt.col("sampleId").nUnique().alias("sampleCount")
+	)
+
+	clonotypeTableDf = clonotypeLabel.addClonotypeLabelColumnsPt(clonotypeTableDf, "scClonotypeKey", "clonotypeLabel", pt)
+
+	clonotypeTableDf.save("clonotype.tsv")
+
+	cellCountsDf := allChainsFilteredDf.groupBy("sampleId", "scClonotypeKey").agg(
+		pt.col("cellKey").count().alias("uniqueCellCount")
+	)
+
+	cellCountsWithFractionDf := cellCountsDf.withColumns(
+		pt.col("uniqueCellCount").truediv(
+			pt.col("uniqueCellCount").sum().over("sampleId")
+		).alias("uniqueCellFraction")
+	)
+
+	cellCountsWithFractionDf.save("abundance.tsv")
+
+	cellGroupingRunResult := cellGroupingWf.run()
+
+	clonotypeTsv := cellGroupingRunResult.getFile("clonotype.tsv")
+	abundanceTsv := cellGroupingRunResult.getFile("abundance.tsv")
 
 	//
-	// Output processing - Reimplemented with PTabler
+	// Output processing - Reimplemented with PTabler pt API
 	//
 
 	propertiesAFile := propertiesA.inputs()["[]"]
 	propertiesBFile := propertiesB.inputs()["[]"]
 
-	outputProcessingSteps := []
+	outputProcessingWf := pt.workflow()
 
 	// Schema for clonotype.tsv (main_clonotypes table)
-	// All columns read as String, consistent with python script's dtype=str
 	clonotypeTableSchema := [
 		{ column: "scClonotypeKey", type: "String" },
 		{ column: "clonotypeKeyA1", type: "String" },
@@ -407,37 +216,35 @@ self.body(func(inputs) {
 		{ column: "sampleCount", type: "Int" }
 	]
 
+	mainClonotypesDf := outputProcessingWf.frame(clonotypeTsv, {
+		xsvType: "tsv",
+		schema: clonotypeTableSchema,
+		inferSchema: false
+	})
+
+	propsASchema := [{ column: "clonotypeKey", type: "String" }]
+	propsADf := outputProcessingWf.frame(propertiesAFile, {
+		xsvType: "tsv",
+		schema: propsASchema,
+		inferSchema: false
+	})
+
+	propsBSchema := [{ column: "clonotypeKey", type: "String" }]
+	propsBDf := outputProcessingWf.frame(propertiesBFile, {
+		xsvType: "tsv",
+		id: "props_b",
+		schema: propsBSchema,
+		inferSchema: false
+	})
+
+
 	clonotypeColumnNames := []
 	for cc in schemaPerClonotypeNoAggregates {
-		clonotypeColumnNames += [cc.column]
+		clonotypeColumnNames = append(clonotypeColumnNames, cc.column)
 	}
 
 	finalOutputColumns := ["scClonotypeKey", "clonotypeKey"] + clonotypeColumnNames
 
-	outputProcessingSteps += [{
-		type: "read_csv",
-		file: "clonotype_input.tsv",
-		name: "main_clonotypes",
-		delimiter: "\t",
-		schema: clonotypeTableSchema,
-		inferSchema: false
-	}]
-	outputProcessingSteps += [{
-		type: "read_csv",
-		file: "properties_a_input.tsv",
-		name: "props_a",
-		delimiter: "\t",
-		schema: [{ column: "clonotypeKey", type: "String" }],
-		inferSchema: false
-	}]
-	outputProcessingSteps += [{
-		type: "read_csv",
-		file: "properties_b_input.tsv", // Internal name, corresponds to propertiesBFile
-		name: "props_b",
-		delimiter: "\t",
-		schema: [{ column: "clonotypeKey", type: "String" }],
-		inferSchema: false
-	}]
 
 	chainMappings := [
 		{ chainKeyCol: "clonotypeKeyA1", propsTable: "props_a", internalOutTable: "props_a1_joined", finalOutFile: "properties_a_primary.tsv" },
@@ -446,61 +253,34 @@ self.body(func(inputs) {
 		{ chainKeyCol: "clonotypeKeyB2", propsTable: "props_b", internalOutTable: "props_b2_joined", finalOutFile: "properties_b_secondary.tsv" }
 	]
 
+	propsMapDfs := {
+		"props_a": propsADf,
+		"props_b": propsBDf
+	}
+
 	for mapping in chainMappings {
-		filteredClonotypesName := "main_clonotypes_filtered_" + mapping.chainKeyCol
+		filteredClonotypesDf := mainClonotypesDf.filter(
+			pt.col(mapping.chainKeyCol).isNotNull()
+		)
 
-		outputProcessingSteps += [{
-			type: "filter",
-			inputTable: "main_clonotypes",
-			outputTable: filteredClonotypesName,
-			condition: { type: "is_not_na", value: { type: "col", name: mapping.chainKeyCol } }
-		}]
+		filteredClonotypesWithKeyDf := filteredClonotypesDf.withColumns(
+			pt.col(mapping.chainKeyCol).alias("clonotypeKey")
+		)
 
-		outputProcessingSteps += [{
-			type: "add_columns",
-			table: filteredClonotypesName,
-			columns: [
-				{ name: "clonotypeKey", expression: { type: "col", name: mapping.chainKeyCol } }
-			]
-		}]
+		leftDfForJoin := propsMapDfs[mapping.propsTable]
 
-		outputProcessingSteps += [{
-			type: "join",
-			leftTable: mapping.propsTable,
-			rightTable: filteredClonotypesName,
-			outputTable: mapping.internalOutTable,
-			leftOn: ["clonotypeKey"],
-			rightOn: ["clonotypeKey"],
+		joinedDf := leftDfForJoin.join(filteredClonotypesWithKeyDf, {
 			how: "inner",
-			leftColumns: slices.map(clonotypeColumnNames, func(col) {
-				return { column: col }
-			}),
-			rightColumns: [{ column: "scClonotypeKey" }]
-		}]
+			on: ["clonotypeKey"]
+		})
 
-		outputProcessingSteps += [{
-			type: "write_csv",
-			table: mapping.internalOutTable,
-			file: mapping.finalOutFile,
-			delimiter: "\t",
-			columns: finalOutputColumns
-		}]
+		joinedDf.save(mapping.finalOutFile, {
+			columns: finalOutputColumns,
+			xsvType: "tsv"
+		})
 	}
 
-	ptablerOutputProcessingCmdBuilder := exec.builder().
-		printErrStreamToStdout().
-		software(ptablerSw).
-		arg("workflow.json").
-		writeFile("workflow.json", json.encode({ workflow: outputProcessingSteps })).
-		addFile("clonotype_input.tsv", clonotypeTsv).
-		addFile("properties_a_input.tsv", propertiesAFile).
-		addFile("properties_b_input.tsv", propertiesBFile)
-
-	for mapping in chainMappings {
-		ptablerOutputProcessingCmdBuilder.saveFile(mapping.finalOutFile)
-	}
-
-	outputProcessingRunResult := ptablerOutputProcessingCmdBuilder.run()
+	outputProcessingRunResult := outputProcessingWf.run()
 
 	return {
 		// must have sampleId and scClonotypeKey columns

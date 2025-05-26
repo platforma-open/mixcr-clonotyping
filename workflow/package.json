@@ -10,8 +10,7 @@
   },
   "dependencies": {
     "@platforma-sdk/workflow-tengo": "catalog:",
-    "@platforma-open/milaboratories.software-mixcr": "catalog:",
-    "@platforma-open/milaboratories.software-ptabler": "catalog:"
+    "@platforma-open/milaboratories.software-mixcr": "catalog:"
   },
   "devDependencies": {
     "@platforma-sdk/tengo-builder": "catalog:",
