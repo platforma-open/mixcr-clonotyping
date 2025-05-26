@@ -33,8 +33,7 @@
     }
   },
   "pnpm": {
-    "overrides": {
-    }
+    "overrides": {}
   },
   "///": {
     "pnpm": {

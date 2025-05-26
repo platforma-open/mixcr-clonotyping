@@ -6,7 +6,7 @@ packages:
   - test
 
 catalog:
-  '@platforma-sdk/workflow-tengo': ^4.6.0
+  '@platforma-sdk/workflow-tengo': ^4.6.1
   '@platforma-sdk/model': ^1.31.6
   '@platforma-sdk/ui-vue': ^1.31.11
   '@platforma-sdk/tengo-builder': ^2.1.5
@@ -14,7 +14,7 @@ catalog:
   '@platforma-sdk/block-tools': ^2.5.49
   '@platforma-sdk/eslint-config': ^1.0.3
 
-  '@platforma-sdk/test': ^1.31.11
+  '@platforma-sdk/test': ^1.31.13
   '@milaboratories/helpers': ^1.6.11
 
   '@platforma-open/milaboratories.software-mixcr': 4.7.0-169-develop
