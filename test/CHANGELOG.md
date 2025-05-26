@@ -1,5 +1,12 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.test
 
+## 1.6.0
+
+### Minor Changes
+
+- 4f09d25: - All table transformations migrated from ptransform and custop python scripts to universal PT API
+  - Enhance export specifications by adding format property for fraction and sequence columns
+
 ## 1.5.10
 
 ### Patch Changes
