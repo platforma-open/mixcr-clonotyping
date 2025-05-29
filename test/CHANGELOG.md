@@ -1,5 +1,13 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.test
 
+## 1.6.1
+
+### Patch Changes
+
+- fdf3e57: SDK Upgrade to fixed redundant partitioning of exports
+- Updated dependencies [fdf3e57]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.11.1
+
 ## 1.6.0
 
 ### Minor Changes

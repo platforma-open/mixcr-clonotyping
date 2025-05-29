@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.19.1
+
+### Patch Changes
+
+- fdf3e57: SDK Upgrade to fixed redundant partitioning of exports
+
 ## 2.19.0
 
 ### Minor Changes
