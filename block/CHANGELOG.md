@@ -1,5 +1,13 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.5.2
+
+### Patch Changes
+
+- fc18b70: SDK Upgrade: fixes await logic and prevents unexpected freezes
+- Updated dependencies [fc18b70]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@2.19.2
+
 ## 2.5.1
 
 ### Patch Changes
