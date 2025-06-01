@@ -73,7 +73,6 @@ wf.body(func(args) {
 		libraryId = args.resolvedLibraryInput.spec["domain"]["pl7.app/vdj/libraryId"]
 		librarySpec := args.resolvedLibraryInput.spec
 		species = librarySpec["annotations"]["pl7.app/species"]
-		receptorsOrChains = json.decode(librarySpec["annotations"]["pl7.app/vdj/chain"])
 	} else if !is_undefined(args.libraryFile) {
 		fImport := file.importFile(args.libraryFile)
 		libraryImportHandle = fImport.handle

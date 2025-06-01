@@ -22,11 +22,11 @@ const speciesOptions: ListOption[] = [
   { label: 'Alpaca', value: 'alpaca' },
   { label: 'Macaca fascicularis', value: 'mfas' },
   { label: 'Macaca mulatta', value: 'mmul' },
-  { label: 'Chicken', value: 'gallus'},
+  { label: 'Chicken', value: 'gallus' },
   { label: 'Rabbit', value: 'rabbit' },
   { label: 'Rat', value: 'rat' },
   { label: 'Sheep', value: 'sheep' },
-  { label: 'Spalax', value: 'spalax' }
+  { label: 'Spalax', value: 'spalax' },
 ];
 
 const presetSourceOptions: ListOption<Preset['type']>[] = [
@@ -127,10 +127,12 @@ function parseNumber(v: string): number {
 
 type LocalState = {
   tab: 'fromFile' | 'fromBlock' | undefined;
+  hasAutoSelectedChains: boolean;
 };
 
 const state = reactive<LocalState>({
   tab: undefined,
+  hasAutoSelectedChains: false,
 });
 
 const computedTab = computed({
@@ -142,7 +144,7 @@ const computedTab = computed({
   },
 });
 
-watch(computedTab, (newValue, oldValue) => {
+watch(computedTab, (newValue) => {
   if (newValue === 'fromFile') {
     app.model.args.inputLibrary = undefined;
   }
@@ -182,6 +184,28 @@ watch(
   },
 );
 
+// Extract chains from library spec
+const libraryChains = computed(() => {
+  if (computedTab.value !== 'fromBlock' || !app.model.args.inputLibrary) {
+    return undefined;
+  }
+
+  const spec = app.model.outputs.datasetSpec;
+  if (!spec) return undefined;
+
+  const chainString = spec.annotations?.['pl7.app/vdj/chain'];
+  if (!chainString) return undefined;
+
+  try {
+    // The chain annotation should be a JSON-encoded array of chains
+    const chains = JSON.parse(chainString) as string[];
+    // Remove duplicates using Set
+    return [...new Set(chains)];
+  } catch {
+    return undefined;
+  }
+});
+
 const receptorOrChainsOptions = computed(() => {
   const receptors = [
     { value: 'IG', label: 'IG' },
@@ -196,7 +220,17 @@ const receptorOrChainsOptions = computed(() => {
     { value: 'TCRGamma', label: 'TCR-ɣ' },
     { value: 'TCRDelta', label: 'TCR-δ' },
   ];
+
+  // If single cell mode, only return receptors
   if (isSingleCell.value) return receptors;
+
+  // If library chains are available, filter chains to only those available in the library
+  if (libraryChains.value && libraryChains.value.length > 0) {
+    const filteredChains = chains.filter((chain) => libraryChains.value!.includes(chain.value));
+    return filteredChains;
+  }
+
+  // Otherwise return all options
   return [...receptors, ...chains];
 });
 
@@ -205,6 +239,34 @@ const receptorOrChainsModel = computed({
   set: (value) => {
     app.model.args.chains = value ?? [];
   },
+});
+
+// Watch for when library chains become available and auto-select them
+watch(libraryChains, (newChains) => {
+  if (newChains && newChains.length > 0 && !state.hasAutoSelectedChains) {
+    const currentChains = app.model.args.chains || [];
+
+    const isCurrentlyDefaultPlaceholder = currentChains.length === 3
+      && currentChains.includes('IG')
+      && currentChains.includes('TCRAB')
+      && currentChains.includes('TCRGD');
+
+    if (isCurrentlyDefaultPlaceholder) {
+      app.model.args.chains = [...newChains];
+    }
+    state.hasAutoSelectedChains = true;
+  }
+});
+
+// Watch for library removal or changes in app.model.args.inputLibrary
+watch(() => app.model.args.inputLibrary, (newLibrary, oldLibrary) => {
+  if (newLibrary !== oldLibrary) {
+    state.hasAutoSelectedChains = false;
+  }
+
+  if (oldLibrary && !newLibrary && computedTab.value === 'fromBlock') {
+    app.model.args.chains = ['IG', 'TCRAB', 'TCRGD'];
+  }
 });
 </script>
 
