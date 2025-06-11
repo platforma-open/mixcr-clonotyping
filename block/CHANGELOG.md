@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.5.3
+
+### Patch Changes
+
+- 99fb0f4: chore: update deps
+
 ## 2.5.2
 
 ### Patch Changes
