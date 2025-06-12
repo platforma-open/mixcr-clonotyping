@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.5.4
+
+### Patch Changes
+
+- 40e5ad1: chore: revert for MSA
+
 ## 2.5.3
 
 ### Patch Changes
