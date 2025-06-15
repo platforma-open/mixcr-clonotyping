@@ -6,7 +6,9 @@ exec := import("@platforma-sdk/workflow-tengo:exec")
 maps := import("@platforma-sdk/workflow-tengo:maps")
 slices := import("@platforma-sdk/workflow-tengo:slices")
 clonotypeLabel := import(":clonotype-label")
+units := import("@platforma-sdk/workflow-tengo:units")
 json := import("json")
+math := import("math")
 pt := import("@platforma-sdk/workflow-tengo:pt")
 
 self.defineOutputs("abundanceTsv", "clonotypeTsv", "propertiesAPrimaryTsv", "propertiesASecondaryTsv", "propertiesBPrimaryTsv", "propertiesBSecondaryTsv")
@@ -37,10 +39,16 @@ self.body(func(inputs) {
 	 * @return the output file
 	 */
 	preprocessByCell := func(byCellTag) {
-		wf := pt.workflow()
+		inputMap := byCellTag.inputs()
+		numberOfSamples := len(inputMap)
+
+		wf := pt.workflow().
+			inMediumQueue().
+			mem(int(math.max(numberOfSamples, 32)) * units.GiB).
+			cpu(int(math.max(numberOfSamples, 16)))
+
 		sampleDataFrames := []
 
-		inputMap := byCellTag.inputs()
 		maps.forEach(inputMap, func(sKey, inputFile) {
 			key := json.decode(sKey)
 			ll.assert(len(key) == 1, "preprocessByCell: byCellTag key should have one element, got %v", key)

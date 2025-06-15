@@ -3,8 +3,10 @@ self := import("@platforma-sdk/workflow-tengo:tpl")
 pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 slices := import("@platforma-sdk/workflow-tengo:slices")
 maps := import("@platforma-sdk/workflow-tengo:maps")
+units := import("@platforma-sdk/workflow-tengo:units")
 clonotypeLabel := import(":clonotype-label")
 pt := import("@platforma-sdk/workflow-tengo:pt")
+math := import("math")
 
 json := import("json")
 
@@ -24,10 +26,15 @@ self.body(func(inputs) {
 	schemaPerClonotypeNoAggregates := params.schemaPerClonotypeNoAggregates
 	schemaPerSample := params.schemaPerSample
 
-	wf := pt.workflow()
-	dataFrames := []
-
 	inputMap := inputData.inputs()
+	numberOfSamples := len(inputMap)
+
+	wf := pt.workflow().
+		inMediumQueue().
+		mem(int(math.max(numberOfSamples, 64)) * 2 * units.GiB).
+		cpu(int(math.max(numberOfSamples, 32)))
+
+	dataFrames := []
 
 	baseSchemaForRead := schemaPerSample + [ { column: "clonotypeKey", type: "String" } ]
 
