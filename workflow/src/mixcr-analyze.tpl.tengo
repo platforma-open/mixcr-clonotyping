@@ -63,6 +63,8 @@ self.body(func(inputs) {
 	mixcrCmdBuilder := exec.builder().
 		printErrStreamToStdout().
 		env("MI_PROGRESS_PREFIX", progressPrefix).
+		ram("64GiB").
+		cpu(32).
 		software(mixcrSw).
 		secret("MI_LICENSE", "MI_LICENSE").
 		arg("analyze")
