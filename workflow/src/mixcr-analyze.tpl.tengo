@@ -64,6 +64,8 @@ self.body(func(inputs) {
 		printErrStreamToStdout().
 		env("MI_PROGRESS_PREFIX", progressPrefix).
 		software(mixcrSw).
+		mem("64GiB").
+		cpu(32).
 		secret("MI_LICENSE", "MI_LICENSE").
 		arg("analyze")
 
