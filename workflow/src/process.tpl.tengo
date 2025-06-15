@@ -340,6 +340,8 @@ self.body(func(inputs) {
 					storageFormat: "Binary",
 					partitionKeyLength: 0
 				},
+				mem: "16GiB",
+				cpu: 2,
 				name: "byCloneKeyBySample",
 				path: ["tsv"]
 			} ]
@@ -423,6 +425,8 @@ self.body(func(inputs) {
 					storageFormat: "Binary",
 					partitionKeyLength: 0
 				},
+				mem: "24GiB",
+				cpu: 2,
 				name: "byCloneKey",
 				path: ["tsv"]
 			} ]
@@ -491,6 +495,8 @@ self.body(func(inputs) {
 					storageFormat: "Binary",
 					partitionKeyLength: 1
 				},
+				mem: "16GiB",
+				cpu: 2,
 				name: "abundanceTable",
 				path: ["abundanceTsv"]
 			}, {
@@ -501,6 +507,8 @@ self.body(func(inputs) {
 					columns: columnsSpecPerClonotypeSc,
 					storageFormat: "Binary"
 				},
+				mem: "12GiB",
+				cpu: 2,
 				name: "aggregates",
 				path: ["clonotypeTsv"]
 			} ]
@@ -569,6 +577,8 @@ self.body(func(inputs) {
 							storageFormat: "Binary",
 							partitionKeyLength: 0
 						},
+						mem: "24GiB",
+						cpu: 2,
 						name: propertiesTableName,
 						path: [ propertiesTsvOutputName ]
 					} ]

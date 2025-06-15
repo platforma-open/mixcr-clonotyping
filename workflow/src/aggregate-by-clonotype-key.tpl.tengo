@@ -31,7 +31,7 @@ self.body(func(inputs) {
 
 	wf := pt.workflow().
 		inMediumQueue().
-		mem(int(math.max(numberOfSamples, 64)) * 2 * units.GiB).
+		mem(int(math.max(numberOfSamples, 64)) * units.GiB).
 		cpu(int(math.max(numberOfSamples, 32)))
 
 	dataFrames := []
