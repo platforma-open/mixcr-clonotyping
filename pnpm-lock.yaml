@@ -19,8 +19,8 @@ catalogs:
       specifier: ^1.10.0
       version: 1.10.0
     '@platforma-open/milaboratories.software-mixcr':
-      specifier: 4.7.0-169-develop
-      version: 4.7.0-169-develop
+      specifier: 4.7.0-175-develop
+      version: 4.7.0-175-develop
     '@platforma-sdk/block-tools':
       specifier: ^2.5.55
       version: 2.5.55
@@ -245,7 +245,7 @@ importers:
     dependencies:
       '@platforma-open/milaboratories.software-mixcr':
         specifier: 'catalog:'
-        version: 4.7.0-169-develop
+        version: 4.7.0-175-develop
       '@platforma-sdk/workflow-tengo':
         specifier: 'catalog:'
         version: 4.7.4
@@ -1242,8 +1242,8 @@ packages:
   '@platforma-open/milaboratories.samples-and-data@1.10.6':
     resolution: {integrity: sha512-3ilH4LASOO9iXnNreJBlBYdt5mSen17rGaHPQiaABBgiTq5KeCK7+gPpgHOc4g7/jFCqm83YBidnaLPj4rvFAw==}
 
-  '@platforma-open/milaboratories.software-mixcr@4.7.0-169-develop':
-    resolution: {integrity: sha512-yqqVbqfAyRGRRUDHmcMwSemOgd0c1Wa7k1QBKh8xeCXIQ8f9n68mHP1/kKTnxvsk047YPWXk2LbW4iKrkIT19w==}
+  '@platforma-open/milaboratories.software-mixcr@4.7.0-175-develop':
+    resolution: {integrity: sha512-imAxN8dQXCY1jgnsfpK3ZUde1URnnszKC+RTAVXVrTb0+5KvAouHyd2R1dpHaLCB8a4dU3C9yCgoTOfu3YAesA==}
 
   '@platforma-open/milaboratories.software-ptabler@1.6.0':
     resolution: {integrity: sha512-pHOMYwDikYB2L8K7XoTHDNJ7lr+mGIXv88iov1UZkSdvdOTb+owD3xZ3u9uxDNwyzyiQ7a4E+MIAdx/eJEYL8g==}
@@ -3417,11 +3417,6 @@ packages:
     peerDependencies:
       acorn: ^6.0.0 || ^7.0.0 || ^8.0.0
 
-  acorn@8.14.0:
-    resolution: {integrity: sha512-cl669nCJTZBsL97OF4kUQm5g5hC2uihk0NxY3WENAC0TYdILVkAyHymAntgxGkl7K+t0cXIrH5siy5S4XkFycA==}
-    engines: {node: '>=0.4.0'}
-    hasBin: true
-
   acorn@8.15.0:
     resolution: {integrity: sha512-NZyJarBfL7nWwIq+FDL6Zp/yHEhePMNnnJ0y3qfieCrmNvYct8uvtiV41UvlSe6apAfk0fY1FbWx+NwfmpvtTg==}
     engines: {node: '>=0.4.0'}
@@ -3999,10 +3994,6 @@ packages:
     resolution: {integrity: sha512-wpc+LXeiyiisxPlEkUzU6svyS1frIO3Mgxj1fdy7Pm8Ygzguax2N3Fa/D/ag1WqbOprdI+uY6wMUl8/a2G+iag==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
 
-  eslint-visitor-keys@4.2.0:
-    resolution: {integrity: sha512-UyLnSehNt62FFhSwjZlHmeokpRK59rcz29j+F1/aDgbkbRTk7wIc9XzdoasMUbRNKDM0qQt/+BJ4BrpFeABemw==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-
   eslint-visitor-keys@4.2.1:
     resolution: {integrity: sha512-Uhdk5sfqcee/9H/rCOJikYz67o0a2Tw2hGRPOG2Y1R2dg7brRe1uG0yaNQDHu+TO/uQPF/5eCapvYSmHUjt7JQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
@@ -4016,10 +4007,6 @@ packages:
     peerDependenciesMeta:
       jiti:
         optional: true
-
-  espree@10.3.0:
-    resolution: {integrity: sha512-0QYC8b24HWY8zjRnDTL6RiHfDbAWn63qb4LMj1Z4b076A4une81+z03Kg7l7mn/48PUTqoLptSXez8oknU8Clg==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
   espree@10.4.0:
     resolution: {integrity: sha512-j6PAQ2uUr79PZhBjP5C5fhl8e39FmRnOjsD5lGnWrFU8i2G776tBK7+nP8KuQUTTyAZUwfQqXAgrVH5MbH9CYQ==}
@@ -6802,7 +6789,7 @@ snapshots:
       '@platforma-open/milaboratories.samples-and-data.workflow': 1.12.2
       '@platforma-sdk/model': 1.34.0
 
-  '@platforma-open/milaboratories.software-mixcr@4.7.0-169-develop': {}
+  '@platforma-open/milaboratories.software-mixcr@4.7.0-175-develop': {}
 
   '@platforma-open/milaboratories.software-ptabler@1.6.0': {}
 
@@ -9542,8 +9529,8 @@ snapshots:
     dependencies:
       '@typescript-eslint/utils': 8.23.0(eslint@9.29.0)(typescript@5.5.4)
       eslint: 9.29.0
-      eslint-visitor-keys: 4.2.0
-      espree: 10.3.0
+      eslint-visitor-keys: 4.2.1
+      espree: 10.4.0
       estraverse: 5.3.0
       picomatch: 4.0.2
     transitivePeerDependencies:
@@ -9649,7 +9636,7 @@ snapshots:
   '@typescript-eslint/visitor-keys@8.23.0':
     dependencies:
       '@typescript-eslint/types': 8.23.0
-      eslint-visitor-keys: 4.2.0
+      eslint-visitor-keys: 4.2.1
 
   '@typescript/vfs@1.6.1(typescript@5.4.5)':
     dependencies:
@@ -9817,15 +9804,9 @@ snapshots:
 
   abbrev@3.0.0: {}
 
-  acorn-jsx@5.3.2(acorn@8.14.0):
-    dependencies:
-      acorn: 8.14.0
-
   acorn-jsx@5.3.2(acorn@8.15.0):
     dependencies:
       acorn: 8.15.0
-
-  acorn@8.14.0: {}
 
   acorn@8.15.0: {}
 
@@ -10497,8 +10478,6 @@ snapshots:
 
   eslint-visitor-keys@3.4.3: {}
 
-  eslint-visitor-keys@4.2.0: {}
-
   eslint-visitor-keys@4.2.1: {}
 
   eslint@9.29.0:
@@ -10541,12 +10520,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  espree@10.3.0:
-    dependencies:
-      acorn: 8.14.0
-      acorn-jsx: 5.3.2(acorn@8.14.0)
-      eslint-visitor-keys: 4.2.0
-
   espree@10.4.0:
     dependencies:
       acorn: 8.15.0
@@ -10555,8 +10528,8 @@ snapshots:
 
   espree@9.6.1:
     dependencies:
-      acorn: 8.14.0
-      acorn-jsx: 5.3.2(acorn@8.14.0)
+      acorn: 8.15.0
+      acorn-jsx: 5.3.2(acorn@8.15.0)
       eslint-visitor-keys: 3.4.3
 
   esprima@4.0.1: {}
