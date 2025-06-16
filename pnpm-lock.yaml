@@ -19,8 +19,8 @@ catalogs:
       specifier: ^1.10.0
       version: 1.10.0
     '@platforma-open/milaboratories.software-mixcr':
-      specifier: 4.7.0-173-develop
-      version: 4.7.0-173-develop
+      specifier: 4.7.0-174-develop
+      version: 4.7.0-174-develop
     '@platforma-sdk/block-tools':
       specifier: ^2.5.55
       version: 2.5.55
@@ -39,9 +39,6 @@ catalogs:
     '@platforma-sdk/ui-vue':
       specifier: ^1.34.0
       version: 1.34.0
-    '@platforma-sdk/workflow-tengo':
-      specifier: ^4.7.4
-      version: 4.7.4
     '@vitejs/plugin-vue':
       specifier: ^5.2.4
       version: 5.2.4
@@ -90,6 +87,9 @@ catalogs:
     zod:
       specifier: ~3.23.8
       version: 3.23.8
+
+overrides:
+  '@platforma-sdk/workflow-tengo': file:/Users/dbolotin/mi/core/platforma/sdk/workflow-tengo/package.tgz
 
 importers:
 
@@ -245,10 +245,10 @@ importers:
     dependencies:
       '@platforma-open/milaboratories.software-mixcr':
         specifier: 'catalog:'
-        version: 4.7.0-173-develop
+        version: 4.7.0-174-develop
       '@platforma-sdk/workflow-tengo':
-        specifier: 'catalog:'
-        version: 4.7.4
+        specifier: file:/Users/dbolotin/mi/core/platforma/sdk/workflow-tengo/package.tgz
+        version: file:../../core/platforma/sdk/workflow-tengo/package.tgz
     devDependencies:
       '@platforma-sdk/tengo-builder':
         specifier: 'catalog:'
@@ -1242,8 +1242,8 @@ packages:
   '@platforma-open/milaboratories.samples-and-data@1.10.6':
     resolution: {integrity: sha512-3ilH4LASOO9iXnNreJBlBYdt5mSen17rGaHPQiaABBgiTq5KeCK7+gPpgHOc4g7/jFCqm83YBidnaLPj4rvFAw==}
 
-  '@platforma-open/milaboratories.software-mixcr@4.7.0-173-develop':
-    resolution: {integrity: sha512-d/yu05/GPBi6Aa1GXPus5hh3/iFSv8jyivwG2zSmDg2kEQDd7QBByZ/r5LzQ2unKi5+QeX0YKfY0XmOckXFBMQ==}
+  '@platforma-open/milaboratories.software-mixcr@4.7.0-174-develop':
+    resolution: {integrity: sha512-Q4PVJfT0tY+2J94zhgW3kOzNAOHAPifEVXPQZ68T0W/DkyF5jHPykTtokf2aoeLDz8FLGtTZ8Z+T3vWZGrC0PA==}
 
   '@platforma-open/milaboratories.software-ptabler@1.6.0':
     resolution: {integrity: sha512-pHOMYwDikYB2L8K7XoTHDNJ7lr+mGIXv88iov1UZkSdvdOTb+owD3xZ3u9uxDNwyzyiQ7a4E+MIAdx/eJEYL8g==}
@@ -1317,11 +1317,9 @@ packages:
   '@platforma-sdk/ui-vue@1.34.0':
     resolution: {integrity: sha512-6lWpsHE5xxTsndeEV7sLD4mTrGcKyUF8hf4vEqD+6qXRnAGuwMetFhvkTpME/h73F3kogSremLfw2Gpr13wnEw==}
 
-  '@platforma-sdk/workflow-tengo@4.7.3':
-    resolution: {integrity: sha512-tAFBnJUhGRpSQzU42LUPS2HvwBnU6zLHNLXLmnrGAYZX8Akqo1Vd/OnOTomSj8geKmwZQ5gbSguxJNiGwTSfHA==}
-
-  '@platforma-sdk/workflow-tengo@4.7.4':
-    resolution: {integrity: sha512-Xs++hjrwdu7jgLeJ8oO0zM/wEtOPk9NRSk8Cocrm7Y6FHrUbpOWnz1vk+fUn1LOfOGW1dQ7GD8wDwt9QU/Yaow==}
+  '@platforma-sdk/workflow-tengo@file:../../core/platforma/sdk/workflow-tengo/package.tgz':
+    resolution: {integrity: sha512-EOIBzu2TaNSTFTQULVuTTBxOGQantum7bqLFfMsBqMkHnDFL66DZx9hgJHRiINrOsJ0+xOo9qJQd+mEUsQf9Bw==, tarball: file:../../core/platforma/sdk/workflow-tengo/package.tgz}
+    version: 4.7.4
 
   '@protobuf-ts/grpc-transport@2.11.0':
     resolution: {integrity: sha512-D/VjzZCaYj1UD29eu+sNnnjZPw6DIIzEymV+dwAJ4kg8LeE5xos86OED2A8lL56wdWafWwufazTlv/M+/eVrOQ==}
@@ -6656,7 +6654,7 @@ snapshots:
       '@milaboratories/ts-helpers': 1.4.0
       '@platforma-sdk/block-tools': 2.5.55
       '@platforma-sdk/model': 1.34.0
-      '@platforma-sdk/workflow-tengo': 4.7.4
+      '@platforma-sdk/workflow-tengo': file:../../core/platforma/sdk/workflow-tengo/package.tgz
       canonicalize: 2.1.0
       denque: 2.1.0
       lru-cache: 11.1.0
@@ -6780,7 +6778,7 @@ snapshots:
 
   '@platforma-open/milaboratories.samples-and-data.workflow@1.12.2':
     dependencies:
-      '@platforma-sdk/workflow-tengo': 4.7.3
+      '@platforma-sdk/workflow-tengo': file:../../core/platforma/sdk/workflow-tengo/package.tgz
 
   '@platforma-open/milaboratories.samples-and-data@1.10.6':
     dependencies:
@@ -6789,7 +6787,7 @@ snapshots:
       '@platforma-open/milaboratories.samples-and-data.workflow': 1.12.2
       '@platforma-sdk/model': 1.34.0
 
-  '@platforma-open/milaboratories.software-mixcr@4.7.0-173-develop': {}
+  '@platforma-open/milaboratories.software-mixcr@4.7.0-174-develop': {}
 
   '@platforma-open/milaboratories.software-ptabler@1.6.0': {}
 
@@ -6930,13 +6928,7 @@ snapshots:
       - supports-color
       - typescript
 
-  '@platforma-sdk/workflow-tengo@4.7.3':
-    dependencies:
-      '@milaboratories/software-pframes-conv': 2.2.2
-      '@platforma-open/milaboratories.software-ptabler': 1.6.0
-      '@platforma-open/milaboratories.software-small-binaries': 1.15.21
-
-  '@platforma-sdk/workflow-tengo@4.7.4':
+  '@platforma-sdk/workflow-tengo@file:../../core/platforma/sdk/workflow-tengo/package.tgz':
     dependencies:
       '@milaboratories/software-pframes-conv': 2.2.2
       '@platforma-open/milaboratories.software-ptabler': 1.6.0
