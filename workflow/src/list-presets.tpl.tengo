@@ -8,11 +8,12 @@ assets := import("@platforma-sdk/workflow-tengo:assets")
 
 self.defineOutputs("presets")
 
-mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:low-memory")
+mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
 
 self.body(func(inputs) {
 	listPresets := exec.builder().
 		inUiQueue().
+		mem("200MiB").
 		software(mixcrSw).
 		secret("MI_LICENSE", "MI_LICENSE").
 		arg("listPresetSpecificationsForUI").

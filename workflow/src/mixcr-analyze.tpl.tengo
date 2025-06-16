@@ -16,7 +16,7 @@ json := import("json")
 
 self.defineOutputs("qc", "reports", "log", "clns")
 
-mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:main")
+mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
 
 progressPrefix := "[==PROGRESS==]"
 
@@ -64,10 +64,16 @@ self.body(func(inputs) {
 		printErrStreamToStdout().
 		env("MI_PROGRESS_PREFIX", progressPrefix).
 		software(mixcrSw).
-		mem("64GiB").
 		cpu(32).
 		secret("MI_LICENSE", "MI_LICENSE").
 		arg("analyze")
+
+	if hasAssembleContigs || hasAssembleCells {
+		// allow to use more memory for single cell analysis
+		mixcrCmdBuilder.mem("128GiB")
+	} else {
+		mixcrCmdBuilder.mem("64GiB")
+	}
 
 	if !is_undefined(limitInput) {
 		mixcrCmdBuilder.arg("--limit-input").arg(string(limitInput))

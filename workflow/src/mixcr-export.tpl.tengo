@@ -11,8 +11,7 @@ json := import("json")
 
 self.defineOutputs("tsv", "tsvForSingleCell")
 
-mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:low-memory")
-ptablerSw := assets.importSoftware("@platforma-open/milaboratories.software-ptabler:main")
+mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
 
 self.body(func(inputs) {
 	clnsFile := inputs[pConstants.VALUE_FIELD_NAME]
@@ -43,7 +42,7 @@ self.body(func(inputs) {
 	createExport := func(additionalAction) {
 		mixcrCmdBuilder := exec.builder().
 			inMediumQueue().
-			ram("6GiB").
+			ram("12GiB").
 		    cpu(2).
 			printErrStreamToStdout().
 			dontSaveStdoutOrStderr().
