@@ -5,7 +5,7 @@ import type { ImportFileHandle, PlRef } from '@platforma-sdk/model';
 import { getFilePathFromHandle } from '@platforma-sdk/model';
 import type { ListOption } from '@platforma-sdk/ui-vue';
 import { PlAccordionSection, PlBtnGroup, PlDropdown, PlDropdownMulti, PlDropdownRef, PlFileInput, PlTextField, ReactiveFileContent } from '@platforma-sdk/ui-vue';
-import { computed, reactive, watch } from 'vue';
+import { computed, reactive, watch, ref } from 'vue';
 import { useApp } from './app';
 import { retentive } from './retentive';
 
@@ -127,12 +127,10 @@ function parseNumber(v: string): number {
 
 type LocalState = {
   tab: 'fromFile' | 'fromBlock' | undefined;
-  hasAutoSelectedChains: boolean;
 };
 
 const state = reactive<LocalState>({
   tab: undefined,
-  hasAutoSelectedChains: false,
 });
 
 const computedTab = computed({
@@ -184,90 +182,99 @@ watch(
   },
 );
 
-// Extract chains from library spec
-const libraryChains = computed(() => {
-  if (computedTab.value !== 'fromBlock' || !app.model.args.inputLibrary) {
-    return undefined;
-  }
+const receptors = [
+  { value: 'IG', label: 'IG' },
+  { value: 'TCRAB', label: 'TCR-αβ' },
+  { value: 'TCRGD', label: 'TCR-ɣδ' },
+];
 
-  const spec = app.model.outputs.datasetSpec;
-  if (!spec) return undefined;
+const chains = [
+  { value: 'IGHeavy', label: 'IG Heavy' },
+  { value: 'IGLight', label: 'IG Light' },
+  { value: 'TCRAlpha', label: 'TCR-α' },
+  { value: 'TCRBeta', label: 'TCR-β' },
+  { value: 'TCRGamma', label: 'TCR-ɣ' },
+  { value: 'TCRDelta', label: 'TCR-δ' },
+];
 
-  const chainString = spec.annotations?.['pl7.app/vdj/chain'];
-  if (!chainString) return undefined;
+// Which library chains unlock each receptor
+const receptorToChains: Record<string, string[]> = {
+  IG: ['IGHeavy', 'IGLight'],
+  TCRAB: ['TCRAlpha', 'TCRBeta'],
+  TCRGD: ['TCRGamma', 'TCRDelta'],
+};
 
-  try {
-    // The chain annotation should be a JSON-encoded array of chains
-    const chains = JSON.parse(chainString) as string[];
-    // Remove duplicates using Set
-    return [...new Set(chains)];
-  } catch {
-    return undefined;
+const allOptions = [...receptors, ...chains];
+const allReceptorValues = receptors.map((r) => r.value);
+
+const userHasOverridden = ref(false);
+
+const availableChains = computed(() => app.model.outputs.availableChains);
+
+// Reset when library is removed
+watch(() => app.model.args.inputLibrary, (newLibrary) => {
+  if (!newLibrary) {
+    // Library was removed - reset state
+    userHasOverridden.value = false;
+    app.model.args.chains = allReceptorValues;
   }
 });
+
+// get the list of raw library-provided values
+function libraryValues() {
+  return availableChains.value?.options?.map((o) => o.value) ?? [];
+}
+
+// filter receptors down to those unlocked by the library
+function libraryReceptors() {
+  const libs = new Set(libraryValues());
+  return receptors.filter((r) =>
+    receptorToChains[r.value].some((chain) => libs.has(chain)),
+  );
+}
 
 const receptorOrChainsOptions = computed(() => {
-  const receptors = [
-    { value: 'IG', label: 'IG' },
-    { value: 'TCRAB', label: 'TCR-αβ' },
-    { value: 'TCRGD', label: 'TCR-ɣδ' },
-  ];
-  const chains = [
-    { value: 'IGHeavy', label: 'IG Heavy' },
-    { value: 'IGLight', label: 'IG Light' },
-    { value: 'TCRAlpha', label: 'TCR-α' },
-    { value: 'TCRBeta', label: 'TCR-β' },
-    { value: 'TCRGamma', label: 'TCR-ɣ' },
-    { value: 'TCRDelta', label: 'TCR-δ' },
-  ];
-
-  // If single cell mode, only return receptors
-  if (isSingleCell.value) return receptors;
-
-  // If library chains are available, filter chains to only those available in the library
-  if (libraryChains.value && libraryChains.value.length > 0) {
-    const filteredChains = chains.filter((chain) => libraryChains.value!.includes(chain.value));
-    return filteredChains;
+  const opts = availableChains.value?.options;
+  if (opts?.length) {
+    return isSingleCell.value
+      ? (libraryReceptors().length ? libraryReceptors() : receptors)
+      : opts;
   }
-
-  // Otherwise return all options
-  return [...receptors, ...chains];
+  // fallback if model has no options
+  return isSingleCell.value
+    ? receptors
+    : allOptions;
 });
 
-const receptorOrChainsModel = computed({
-  get: () => (app.model.args.chains ?? []),
-  set: (value) => {
-    app.model.args.chains = value ?? [];
+const receptorOrChainsModel = computed<string[]>({
+  get() {
+    const current = app.model.args.chains ?? [];
+    const defaults = availableChains.value?.defaults ?? [];
+
+    // 1) library defaults only on first load
+    if (
+      app.model.args.inputLibrary
+      && defaults.length > 0
+      && !userHasOverridden.value
+    ) {
+      return isSingleCell.value
+        ? libraryReceptors().map((r) => r.value)
+        : defaults;
+    }
+
+    // 2) otherwise honor whatever is in `args.chains`, or fall back to "all"
+    if (current.length > 0) {
+      return current;
+    }
+    // Always default to receptors when no library
+    return allReceptorValues;
+  },
+  set(v: string[]) {
+    userHasOverridden.value = true;
+    app.model.args.chains = v ?? [];
   },
 });
 
-// Watch for when library chains become available and auto-select them
-watch(libraryChains, (newChains) => {
-  if (newChains && newChains.length > 0 && !state.hasAutoSelectedChains) {
-    const currentChains = app.model.args.chains || [];
-
-    const isCurrentlyDefaultPlaceholder = currentChains.length === 3
-      && currentChains.includes('IG')
-      && currentChains.includes('TCRAB')
-      && currentChains.includes('TCRGD');
-
-    if (isCurrentlyDefaultPlaceholder) {
-      app.model.args.chains = [...newChains];
-    }
-    state.hasAutoSelectedChains = true;
-  }
-});
-
-// Watch for library removal or changes in app.model.args.inputLibrary
-watch(() => app.model.args.inputLibrary, (newLibrary, oldLibrary) => {
-  if (newLibrary !== oldLibrary) {
-    state.hasAutoSelectedChains = false;
-  }
-
-  if (oldLibrary && !newLibrary && computedTab.value === 'fromBlock') {
-    app.model.args.chains = ['IG', 'TCRAB', 'TCRGD'];
-  }
-});
 </script>
 
 <template>
