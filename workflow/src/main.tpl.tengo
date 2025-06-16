@@ -8,6 +8,7 @@ assets := import("@platforma-sdk/workflow-tengo:assets")
 smart := import("@platforma-sdk/workflow-tengo:smart")
 file := import("@platforma-sdk/workflow-tengo:file")
 pframes := import("@platforma-sdk/workflow-tengo:pframes")
+json := import("json")
 
 calculatePresetInfoTpl := assets.importTemplate(":calculate-preset-info")
 processTpl := assets.importTemplate(":process")
@@ -62,6 +63,11 @@ wf.body(func(args) {
 	libraryId := undefined
 	species := args.species
 	libraryImportHandle := undefined
+	receptorsOrChains := ["IG", "TCRAB", "TCRGD"]
+	if !is_undefined(args.chains) {
+		receptorsOrChains = args.chains
+	}
+
 	if !is_undefined(args.resolvedLibraryInput) {
 		library = args.resolvedLibraryInput.data
 		libraryId = args.resolvedLibraryInput.spec["domain"]["pl7.app/vdj/libraryId"]
@@ -93,10 +99,6 @@ wf.body(func(args) {
 	// calculating chains
 	// chains := ["IGHeavy", "IGLight", "TCRAlpha", "TCRBeta", "TCRGamma", "TCRDelta"]
 	//receptorsOrChains := ["IG", "TCRAB", "TCRGD"]
- 	receptorsOrChains := ["IG", "TCRAB", "TCRGD"]
-	if !is_undefined(args.chains) {
-		receptorsOrChains = args.chains
-	}
 
 	runMixcr := render.createEphemeral(processTpl, {
 		inputSpec: input.getFutureInputField("spec"),
