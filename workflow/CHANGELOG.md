@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.20.0
+
+### Minor Changes
+
+- CPU and Memory requests for all jobs
+
 ## 2.19.4
 
 ### Patch Changes
