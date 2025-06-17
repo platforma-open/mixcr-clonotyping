@@ -39,6 +39,9 @@ catalogs:
     '@platforma-sdk/ui-vue':
       specifier: ^1.34.4
       version: 1.34.4
+    '@platforma-sdk/workflow-tengo':
+      specifier: ^4.8.0
+      version: 4.8.0
     '@vitejs/plugin-vue':
       specifier: ^5.2.4
       version: 5.2.4
@@ -87,9 +90,6 @@ catalogs:
     zod:
       specifier: ~3.23.8
       version: 3.23.8
-
-overrides:
-  '@platforma-sdk/workflow-tengo': file:/Users/dbolotin/mi/core/platforma/sdk/workflow-tengo/package.tgz
 
 importers:
 
@@ -247,8 +247,8 @@ importers:
         specifier: 'catalog:'
         version: 4.7.0-178-develop
       '@platforma-sdk/workflow-tengo':
-        specifier: file:/Users/dbolotin/mi/core/platforma/sdk/workflow-tengo/package.tgz
-        version: file:../../core/platforma/sdk/workflow-tengo/package.tgz
+        specifier: 'catalog:'
+        version: 4.8.0
     devDependencies:
       '@platforma-sdk/tengo-builder':
         specifier: 'catalog:'
@@ -1300,9 +1300,11 @@ packages:
   '@platforma-sdk/ui-vue@1.34.4':
     resolution: {integrity: sha512-XDvriX8D2uceHd/go4YDOeY+RHfC/ukr0BRB9d9JkSehauyAa+WQbdpRhToDeCnpdmictbKBqJyrwpeLDeg2hA==}
 
-  '@platforma-sdk/workflow-tengo@file:../../core/platforma/sdk/workflow-tengo/package.tgz':
-    resolution: {integrity: sha512-LjZlfLY8IsAgceRvNpCchqDwv1Z8VcPbu3uHVUOihmG/W5VIu4SJxi5TVsfCKs70j5u80N3F/gv3+N75JwxYtA==, tarball: file:../../core/platforma/sdk/workflow-tengo/package.tgz}
-    version: 4.7.5
+  '@platforma-sdk/workflow-tengo@4.7.5':
+    resolution: {integrity: sha512-1Lgz0QbsUVCG2CEcPvSTs+PIV3M2LyCIojfJH+84YMkrepzom9F3mZIcVTCzdNAhunvXeIHeOAyXL7Toy4SIpw==}
+
+  '@platforma-sdk/workflow-tengo@4.8.0':
+    resolution: {integrity: sha512-jo3Y2MWLdcoZLn4fk2O5jjxj4YvTkunzMyw7Xi8Ntwu5QAY1mzNOrjRCUOszRUI1EnPd0DkHvwCAUZV/oARoBw==}
 
   '@protobuf-ts/grpc-transport@2.11.0':
     resolution: {integrity: sha512-D/VjzZCaYj1UD29eu+sNnnjZPw6DIIzEymV+dwAJ4kg8LeE5xos86OED2A8lL56wdWafWwufazTlv/M+/eVrOQ==}
@@ -6507,7 +6509,7 @@ snapshots:
       '@milaboratories/ts-helpers': 1.4.0
       '@platforma-sdk/block-tools': 2.5.55
       '@platforma-sdk/model': 1.34.0
-      '@platforma-sdk/workflow-tengo': file:../../core/platforma/sdk/workflow-tengo/package.tgz
+      '@platforma-sdk/workflow-tengo': 4.8.0
       canonicalize: 2.1.0
       denque: 2.1.0
       lru-cache: 11.1.0
@@ -6631,7 +6633,7 @@ snapshots:
 
   '@platforma-open/milaboratories.samples-and-data.workflow@1.12.2':
     dependencies:
-      '@platforma-sdk/workflow-tengo': file:../../core/platforma/sdk/workflow-tengo/package.tgz
+      '@platforma-sdk/workflow-tengo': 4.7.5
 
   '@platforma-open/milaboratories.samples-and-data@1.10.6':
     dependencies:
@@ -6781,7 +6783,13 @@ snapshots:
       - supports-color
       - typescript
 
-  '@platforma-sdk/workflow-tengo@file:../../core/platforma/sdk/workflow-tengo/package.tgz':
+  '@platforma-sdk/workflow-tengo@4.7.5':
+    dependencies:
+      '@milaboratories/software-pframes-conv': 2.2.2
+      '@platforma-open/milaboratories.software-ptabler': 1.6.0
+      '@platforma-open/milaboratories.software-small-binaries': 1.15.21
+
+  '@platforma-sdk/workflow-tengo@4.8.0':
     dependencies:
       '@milaboratories/software-pframes-conv': 2.2.2
       '@platforma-open/milaboratories.software-ptabler': 1.6.0
