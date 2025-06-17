@@ -19,8 +19,8 @@ catalogs:
       specifier: ^1.10.0
       version: 1.10.0
     '@platforma-open/milaboratories.software-mixcr':
-      specifier: 4.7.0-182-develop
-      version: 4.7.0-182-develop
+      specifier: 4.7.0-183-develop
+      version: 4.7.0-183-develop
     '@platforma-sdk/block-tools':
       specifier: ^2.5.55
       version: 2.5.55
@@ -245,7 +245,7 @@ importers:
     dependencies:
       '@platforma-open/milaboratories.software-mixcr':
         specifier: 'catalog:'
-        version: 4.7.0-182-develop
+        version: 4.7.0-183-develop
       '@platforma-sdk/workflow-tengo':
         specifier: 'catalog:'
         version: 4.8.0
@@ -1225,8 +1225,8 @@ packages:
   '@platforma-open/milaboratories.samples-and-data@1.10.6':
     resolution: {integrity: sha512-3ilH4LASOO9iXnNreJBlBYdt5mSen17rGaHPQiaABBgiTq5KeCK7+gPpgHOc4g7/jFCqm83YBidnaLPj4rvFAw==}
 
-  '@platforma-open/milaboratories.software-mixcr@4.7.0-182-develop':
-    resolution: {integrity: sha512-RZ7XgVGLqy09QBwtCDkd5FGFGJZZb/xiI9os0HKNo5T/cAYw62dvfmtByRAG3QnzR7cmeMQOBf1pFqId0/us9Q==}
+  '@platforma-open/milaboratories.software-mixcr@4.7.0-183-develop':
+    resolution: {integrity: sha512-qjrALGm41gTAJsOsNfZkxjyz9qlgrnhMvtTDhyGeLqxzWjxDKQGeDwxzcOZu7P406iYdy/NRfX2EAt1cxIAaIA==}
 
   '@platforma-open/milaboratories.software-ptabler@1.6.0':
     resolution: {integrity: sha512-pHOMYwDikYB2L8K7XoTHDNJ7lr+mGIXv88iov1UZkSdvdOTb+owD3xZ3u9uxDNwyzyiQ7a4E+MIAdx/eJEYL8g==}
@@ -6642,7 +6642,7 @@ snapshots:
       '@platforma-open/milaboratories.samples-and-data.workflow': 1.12.2
       '@platforma-sdk/model': 1.34.0
 
-  '@platforma-open/milaboratories.software-mixcr@4.7.0-182-develop': {}
+  '@platforma-open/milaboratories.software-mixcr@4.7.0-183-develop': {}
 
   '@platforma-open/milaboratories.software-ptabler@1.6.0': {}
 
