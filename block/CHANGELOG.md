@@ -1,5 +1,13 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.6.1
+
+### Patch Changes
+
+- 5b492d7: MiXCR Upgrade Rapid 10x preset
+- Updated dependencies [5b492d7]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@2.20.1
+
 ## 2.6.0
 
 ### Minor Changes
