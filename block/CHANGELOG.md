@@ -1,5 +1,20 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.5.7
+
+### Patch Changes
+
+- da76979: MiXCR Software upgrade, export memory increase
+- Updated dependencies [da76979]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@2.19.4
+
+## 2.5.6
+
+### Patch Changes
+
+- Updated dependencies [865b5f5]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@2.19.3
+
 ## 2.5.5
 
 ### Patch Changes

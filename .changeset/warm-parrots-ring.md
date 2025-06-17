@@ -3,4 +3,4 @@
 '@platforma-open/milaboratories.mixcr-clonotyping-2': minor
 ---
 
-Added cpu and ram requirements
+CPU and Memory requests for all jobs

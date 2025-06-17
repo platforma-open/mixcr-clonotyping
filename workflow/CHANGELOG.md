@@ -1,5 +1,17 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.19.4
+
+### Patch Changes
+
+- da76979: MiXCR Software upgrade, export memory increase
+
+## 2.19.3
+
+### Patch Changes
+
+- 865b5f5: Added cpu and ram requirements
+
 ## 2.19.2
 
 ### Patch Changes
