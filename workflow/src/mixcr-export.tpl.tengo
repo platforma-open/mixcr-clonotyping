@@ -11,8 +11,7 @@ json := import("json")
 
 self.defineOutputs("tsv", "tsvForSingleCell")
 
-mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:low-memory")
-ptablerSw := assets.importSoftware("@platforma-open/milaboratories.software-ptabler:main")
+mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
 
 self.body(func(inputs) {
 	clnsFile := inputs[pConstants.VALUE_FIELD_NAME]
@@ -43,7 +42,7 @@ self.body(func(inputs) {
 	createExport := func(additionalAction) {
 		mixcrCmdBuilder := exec.builder().
 			inMediumQueue().
-			ram("6GiB").
+			ram("12GiB").
 		    cpu(2).
 			printErrStreamToStdout().
 			dontSaveStdoutOrStderr().
@@ -96,7 +95,7 @@ self.body(func(inputs) {
 	// PTabler processing for main TSV output
 	wfMain := pt.workflow().
 		inMediumQueue().
-		mem("4GiB").
+		mem("8GiB").
 		cpu(2)
 
 	frameInputMap := {
@@ -136,7 +135,7 @@ self.body(func(inputs) {
 		// PTabler processing for single-cell TSV output
 		wfSingleCell := pt.workflow().
 			inMediumQueue().
-			mem("2GiB").
+			mem("4GiB").
 			cpu(2)
 
 		dfSingleCell := wfSingleCell.frame(unprocessedTsvForSingleCell, { xsvType: "tsv", inferSchema: false })
