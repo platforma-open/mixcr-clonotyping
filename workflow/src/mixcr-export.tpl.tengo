@@ -95,7 +95,7 @@ self.body(func(inputs) {
 	// PTabler processing for main TSV output
 	wfMain := pt.workflow().
 		inMediumQueue().
-		mem("4GiB").
+		mem("8GiB").
 		cpu(2)
 
 	frameInputMap := {
@@ -135,7 +135,7 @@ self.body(func(inputs) {
 		// PTabler processing for single-cell TSV output
 		wfSingleCell := pt.workflow().
 			inMediumQueue().
-			mem("2GiB").
+			mem("4GiB").
 			cpu(2)
 
 		dfSingleCell := wfSingleCell.frame(unprocessedTsvForSingleCell, { xsvType: "tsv", inferSchema: false })
