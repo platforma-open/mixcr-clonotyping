@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.20.3
+
+### Patch Changes
+
+- c255e13: Better memory formula for memory allocation in mixcr
+
 ## 2.20.2
 
 ### Patch Changes
