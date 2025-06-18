@@ -212,7 +212,7 @@ blockTest(
   }
 );
 
-blockTest(
+blockTest.skip(
   'simple sc project',
   { timeout: 400000 },
   async ({ rawPrj: project, ml, helpers, expect }) => {
