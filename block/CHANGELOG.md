@@ -1,5 +1,13 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.6.4
+
+### Patch Changes
+
+- 983f157: Workfolder will now be used for temp files in mixcr analysis
+- Updated dependencies [983f157]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@2.20.4
+
 ## 2.6.3
 
 ### Patch Changes
