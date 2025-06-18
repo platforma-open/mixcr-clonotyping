@@ -66,7 +66,7 @@ self.body(func(inputs) {
 		software(mixcrSw).
 		cpu(32).
 		secret("MI_LICENSE", "MI_LICENSE").
-		arg("analyze")
+		arg("analyze").arg("--use-local-temp")
 
 	if hasAssembleContigs || hasAssembleCells {
 		// allow to use more memory for single cell analysis
