@@ -1,5 +1,15 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.6.5
+
+### Patch Changes
+
+- 1ca5594: Another memory requesting optimization
+- Updated dependencies [1ca5594]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.11.2
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.ui@1.11.2
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@2.20.5
+
 ## 2.6.4
 
 ### Patch Changes
