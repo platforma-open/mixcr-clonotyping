@@ -1,5 +1,13 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.6.6
+
+### Patch Changes
+
+- 47f13d9: Fix for multiple clonotype label columns in SC analysis
+- Updated dependencies [47f13d9]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@2.20.6
+
 ## 2.6.5
 
 ### Patch Changes
