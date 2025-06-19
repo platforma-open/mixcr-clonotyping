@@ -15,8 +15,8 @@ self.body(func(inputs) {
 	// ll.print("__THE_LOG__ feats.computeLimits " + feats.computeLimits)
 	ll.print("__THE_LOG__ asdhjkajsdjasdjk")
 	listPresets := exec.builder().
-		inMediumQueue().
-		mem("202MiB").
+		inUiQueue().
+		mem("1GiB").
 		software(mixcrSw).
 		secret("MI_LICENSE", "MI_LICENSE").
 		arg("listPresetSpecificationsForUI").
