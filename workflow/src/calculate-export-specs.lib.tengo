@@ -747,7 +747,11 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		[ "-topChains" ]
 	]
 
-	columnsSpecPerClonotypeNoAggregates += [ clonotypeLabelColumn ]
+	if isSingleCell {
+		columnsSpecPerClonotypeAggregates += [ clonotypeLabelColumn ]
+	} else {
+		columnsSpecPerClonotypeNoAggregates += [ clonotypeLabelColumn ]
+	}
 
 	// All columns are added
 
