@@ -77,7 +77,7 @@ self.body(func(inputs) {
 		mixcrCmdBuilder.mem("192GiB")
 	} else if hasAssembleContigs || hasAssembleCells {
 		// allow to use more memory for single cell analysis
-		mixcrCmdBuilder.mem("100GiB")
+		mixcrCmdBuilder.mem("110GiB")
 	} else {
 		mixcrCmdBuilder.mem("64GiB")
 	}
