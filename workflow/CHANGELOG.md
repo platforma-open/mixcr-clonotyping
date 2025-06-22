@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.20.7
+
+### Patch Changes
+
+- da51497: Fix for missing C gene and null clonotype key as a result
+
 ## 2.20.6
 
 ### Patch Changes
