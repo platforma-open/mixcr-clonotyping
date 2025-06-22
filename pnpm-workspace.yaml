@@ -7,14 +7,14 @@ packages:
 
 catalog:
   '@platforma-sdk/workflow-tengo': ^4.8.0
-  '@platforma-sdk/model': ^1.34.0
-  '@platforma-sdk/ui-vue': ^1.34.4
+  '@platforma-sdk/model': ^1.34.10
+  '@platforma-sdk/ui-vue': ^1.34.12
   '@platforma-sdk/tengo-builder': ^2.1.10
   '@platforma-sdk/package-builder': ^2.16.0
-  '@platforma-sdk/block-tools': ^2.5.55
+  '@platforma-sdk/block-tools': ^2.5.57
   '@platforma-sdk/eslint-config': ^1.0.3
 
-  '@platforma-sdk/test': ^1.34.6
+  '@platforma-sdk/test': ^1.34.14
   '@milaboratories/helpers': ^1.6.12
 
   '@platforma-open/milaboratories.software-mixcr': 4.7.0-185-develop
@@ -35,12 +35,12 @@ catalog:
   'rollup-plugin-sourcemaps2': ^0.5.2
   'eslint': ^9.29.0
 
-  '@vueuse/core': ^13.3.0
+  '@vueuse/core': ^13.4.0
 
   'ag-grid-enterprise': &ag-grid ^33.1.1
   'ag-grid-vue3': *ag-grid
 
-  '@changesets/cli': ^2.29.4
+  '@changesets/cli': ^2.29.5
   'js-yaml': ^4.1.0
 
   # other blocks used in tests
