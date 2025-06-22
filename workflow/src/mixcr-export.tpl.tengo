@@ -32,8 +32,8 @@ self.body(func(inputs) {
 
 	hashKeyDerivationExpressionPt := func(sourceColumns) {
 		return pt.concatStr(
-			slices.map(sourceColumns, func(colName) { return pt.col(colName) }),
-			{delimiter: "#"}
+			slices.map(sourceColumns, func(colName) { return pt.col(colName).fillNull("") }),
+			{ delimiter: "#" }
 		).hash("sha256", "base64_alphanumeric", 120)
 	}
 
