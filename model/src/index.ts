@@ -17,6 +17,20 @@ import {
 import { BlockArgs, BlockArgsValid } from './args';
 import { ProgressPrefix } from './progress';
 
+const receptors = [
+  { value: 'IG', label: 'IG' },
+  { value: 'TCRAB', label: 'TCR-αβ' },
+  { value: 'TCRGD', label: 'TCR-ɣδ' },
+];
+const chains = [
+  { value: 'IGHeavy', label: 'IG Heavy' },
+  { value: 'IGLight', label: 'IG Light' },
+  { value: 'TCRAlpha', label: 'TCR-α' },
+  { value: 'TCRBeta', label: 'TCR-β' },
+  { value: 'TCRGamma', label: 'TCR-ɣ' },
+  { value: 'TCRDelta', label: 'TCR-δ' },
+];
+
 export const platforma = BlockModel.create('Heavy')
 
   .withArgs<BlockArgs>({
@@ -35,23 +49,10 @@ export const platforma = BlockModel.create('Heavy')
 
   .output('libraryOptions', (ctx) =>
     ctx.resultPool.getOptions((spec) => spec.annotations?.['pl7.app/vdj/isLibrary'] === 'true',
-      { includeNativeLabel: true, addLabelAsSuffix: true }),
+      { label: { includeNativeLabel: true, addLabelAsSuffix: true } }),
   )
 
   .output('availableChains', (ctx) => {
-    const receptors = [
-      { value: 'IG', label: 'IG' },
-      { value: 'TCRAB', label: 'TCR-αβ' },
-      { value: 'TCRGD', label: 'TCR-ɣδ' },
-    ];
-    const chains = [
-      { value: 'IGHeavy', label: 'IG Heavy' },
-      { value: 'IGLight', label: 'IG Light' },
-      { value: 'TCRAlpha', label: 'TCR-α' },
-      { value: 'TCRBeta', label: 'TCR-β' },
-      { value: 'TCRGamma', label: 'TCR-ɣ' },
-      { value: 'TCRDelta', label: 'TCR-δ' },
-    ];
     const allOptions = [...receptors, ...chains];
 
     if (ctx.args.inputLibrary) {
@@ -75,6 +76,29 @@ export const platforma = BlockModel.create('Heavy')
       options: allOptions,
       defaults: allOptions.map((o) => o.value),
     };
+  })
+
+  .output('chainsForLibraries', (ctx) => {
+    return ctx.resultPool.getOptions((spec) => spec.annotations?.['pl7.app/vdj/isLibrary'] === 'true',
+      { label: { includeNativeLabel: true, addLabelAsSuffix: true } }).map((o) => {
+      const spec = ctx.resultPool.getSpecByRef(o.ref);
+      if (spec) {
+        const chainString = spec.annotations?.['pl7.app/vdj/chain'];
+        if (chainString) {
+          const libraryChains = JSON.parse(chainString) as string[];
+          const filtered = chains.filter((c) => libraryChains.includes(c.value));
+          const options = filtered.length ? filtered : chains;
+          return {
+            ref: o.ref,
+            options,
+            defaults: options.map((o) => o.value),
+          };
+        }
+      }
+      return {
+        ref: o.ref,
+      };
+    });
   })
 
   .output('qc', (ctx) =>
