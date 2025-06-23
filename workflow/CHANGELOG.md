@@ -1,5 +1,13 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.20.8
+
+### Patch Changes
+
+- 26b311c: - MiXCR upgrade
+  - fix for file lock safeguard error
+  - better memory management
+
 ## 2.20.7
 
 ### Patch Changes
