@@ -15,7 +15,7 @@ self.validateInputs({
 	}
 })
 
-mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:low-memory")
+mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
 
 self.defineOutputs("preset", "presetSpecForBack")
 
@@ -25,6 +25,7 @@ self.body(func(inputs) {
 
 	mixcrExportPresetCmdBuilder := exec.builder().
 		inUiQueue().
+		mem("1GiB").
 		software(mixcrSw).
 		secret("MI_LICENSE", "MI_LICENSE").
 		printErrStreamToStdout().
@@ -55,6 +56,7 @@ self.body(func(inputs) {
 
 	mixcrForBackCmd := exec.builder().
 		inUiQueue().
+		mem("1GiB").
 		software(mixcrSw).
 		secret("MI_LICENSE", "MI_LICENSE").
 		printErrStreamToStdout().

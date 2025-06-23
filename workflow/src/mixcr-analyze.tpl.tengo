@@ -10,13 +10,14 @@ exec := import("@platforma-sdk/workflow-tengo:exec")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 pcolumn := import("@platforma-sdk/workflow-tengo:pframes.pcolumn")
 times := import("times")
+text := import("text")
 maps := import("@platforma-sdk/workflow-tengo:maps")
 
 json := import("json")
 
 self.defineOutputs("qc", "reports", "log", "clns")
 
-mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:main")
+mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
 
 progressPrefix := "[==PROGRESS==]"
 
@@ -44,11 +45,14 @@ self.body(func(inputs) {
 
 	hasAssembleContigs := false
 	hasAssembleCells := false
+	hasMiToolSteps := false
 	for stage in presetContent.pipeline {
 		if stage == "assembleContigs" {
 			hasAssembleContigs = true
 		} else if stage == "assembleCells" {
 			hasAssembleCells = true
+		} else if text.has_prefix(stage, "mitool-") {
+			hasMiToolSteps = true
 		}
 	}
 
@@ -64,8 +68,19 @@ self.body(func(inputs) {
 		printErrStreamToStdout().
 		env("MI_PROGRESS_PREFIX", progressPrefix).
 		software(mixcrSw).
+		cpu(16).
 		secret("MI_LICENSE", "MI_LICENSE").
-		arg("analyze")
+		arg("analyze").arg("--use-local-temp")
+
+	if hasMiToolSteps {
+		// allow to use more memory for single cell analysis with mitool pre-
+		mixcrCmdBuilder.mem("192GiB")
+	} else if hasAssembleContigs || hasAssembleCells {
+		// allow to use more memory for single cell analysis
+		mixcrCmdBuilder.mem("110GiB")
+	} else {
+		mixcrCmdBuilder.mem("64GiB")
+	}
 
 	if !is_undefined(limitInput) {
 		mixcrCmdBuilder.arg("--limit-input").arg(string(limitInput))

@@ -1,5 +1,77 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.20.7
+
+### Patch Changes
+
+- da51497: Fix for missing C gene and null clonotype key as a result
+
+## 2.20.6
+
+### Patch Changes
+
+- 47f13d9: Fix for multiple clonotype label columns in SC analysis
+
+## 2.20.5
+
+### Patch Changes
+
+- 1ca5594: Another memory requesting optimization
+
+## 2.20.4
+
+### Patch Changes
+
+- 983f157: Workfolder will now be used for temp files in mixcr analysis
+
+## 2.20.3
+
+### Patch Changes
+
+- c255e13: Better memory formula for memory allocation in mixcr
+
+## 2.20.2
+
+### Patch Changes
+
+- 583db83: MiXCR Upgrade, fixed Gene Feature in Rapid 10x Preset
+
+## 2.20.1
+
+### Patch Changes
+
+- 5b492d7: MiXCR Upgrade Rapid 10x preset
+
+## 2.20.0
+
+### Minor Changes
+
+- CPU and Memory requests for all jobs
+
+## 2.19.4
+
+### Patch Changes
+
+- da76979: MiXCR Software upgrade, export memory increase
+
+## 2.19.3
+
+### Patch Changes
+
+- 865b5f5: Added cpu and ram requirements
+
+## 2.19.2
+
+### Patch Changes
+
+- fc18b70: SDK Upgrade: fixes await logic and prevents unexpected freezes
+
+## 2.19.1
+
+### Patch Changes
+
+- fdf3e57: SDK Upgrade to fixed redundant partitioning of exports
+
 ## 2.19.0
 
 ### Minor Changes

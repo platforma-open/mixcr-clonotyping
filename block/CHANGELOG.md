@@ -1,5 +1,125 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.6.7
+
+### Patch Changes
+
+- da51497: Fix for missing C gene and null clonotype key as a result
+- Updated dependencies [da51497]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@2.20.7
+
+## 2.6.6
+
+### Patch Changes
+
+- 47f13d9: Fix for multiple clonotype label columns in SC analysis
+- Updated dependencies [47f13d9]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@2.20.6
+
+## 2.6.5
+
+### Patch Changes
+
+- 1ca5594: Another memory requesting optimization
+- Updated dependencies [1ca5594]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.11.2
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.ui@1.11.2
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@2.20.5
+
+## 2.6.4
+
+### Patch Changes
+
+- 983f157: Workfolder will now be used for temp files in mixcr analysis
+- Updated dependencies [983f157]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@2.20.4
+
+## 2.6.3
+
+### Patch Changes
+
+- c255e13: Better memory formula for memory allocation in mixcr
+- Updated dependencies [c255e13]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@2.20.3
+
+## 2.6.2
+
+### Patch Changes
+
+- 583db83: MiXCR Upgrade, fixed Gene Feature in Rapid 10x Preset
+- Updated dependencies [583db83]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@2.20.2
+
+## 2.6.1
+
+### Patch Changes
+
+- 5b492d7: MiXCR Upgrade Rapid 10x preset
+- Updated dependencies [5b492d7]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@2.20.1
+
+## 2.6.0
+
+### Minor Changes
+
+- CPU and Memory requests for all jobs
+
+### Patch Changes
+
+- Updated dependencies
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@2.20.0
+
+## 2.5.7
+
+### Patch Changes
+
+- da76979: MiXCR Software upgrade, export memory increase
+- Updated dependencies [da76979]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@2.19.4
+
+## 2.5.6
+
+### Patch Changes
+
+- Updated dependencies [865b5f5]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@2.19.3
+
+## 2.5.5
+
+### Patch Changes
+
+- 66ac06d: chore :fix version
+
+## 2.5.4
+
+### Patch Changes
+
+- 40e5ad1: chore: revert for MSA
+
+## 2.5.3
+
+### Patch Changes
+
+- 99fb0f4: chore: update deps
+
+## 2.5.2
+
+### Patch Changes
+
+- fc18b70: SDK Upgrade: fixes await logic and prevents unexpected freezes
+- Updated dependencies [fc18b70]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@2.19.2
+
+## 2.5.1
+
+### Patch Changes
+
+- fdf3e57: SDK Upgrade to fixed redundant partitioning of exports
+- Updated dependencies [fdf3e57]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.11.1
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.ui@1.11.1
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@2.19.1
+
 ## 2.5.0
 
 ### Minor Changes
