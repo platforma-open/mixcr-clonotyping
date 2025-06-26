@@ -1,5 +1,18 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.7.0
+
+### Minor Changes
+
+- c58e60e: SDK Upgrade
+
+### Patch Changes
+
+- Updated dependencies [c58e60e]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.12.0
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.ui@1.12.0
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@2.21.0
+
 ## 2.6.8
 
 ### Patch Changes
