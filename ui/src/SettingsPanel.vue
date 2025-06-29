@@ -5,7 +5,7 @@ import type { ImportFileHandle, PlRef } from '@platforma-sdk/model';
 import { getFilePathFromHandle } from '@platforma-sdk/model';
 import type { ListOption } from '@platforma-sdk/ui-vue';
 import { PlAccordionSection, PlBtnGroup, PlDropdown, PlDropdownMulti, PlDropdownRef, PlFileInput, PlTextField, ReactiveFileContent } from '@platforma-sdk/ui-vue';
-import { computed, reactive, watch } from 'vue';
+import { computed, reactive, watch, ref } from 'vue';
 import { useApp } from './app';
 import { retentive } from './retentive';
 
@@ -22,11 +22,11 @@ const speciesOptions: ListOption[] = [
   { label: 'Alpaca', value: 'alpaca' },
   { label: 'Macaca fascicularis', value: 'mfas' },
   { label: 'Macaca mulatta', value: 'mmul' },
-  { label: 'Chicken', value: 'gallus'},
+  { label: 'Chicken', value: 'gallus' },
   { label: 'Rabbit', value: 'rabbit' },
   { label: 'Rat', value: 'rat' },
   { label: 'Sheep', value: 'sheep' },
-  { label: 'Spalax', value: 'spalax' }
+  { label: 'Spalax', value: 'spalax' },
 ];
 
 const presetSourceOptions: ListOption<Preset['type']>[] = [
@@ -142,7 +142,7 @@ const computedTab = computed({
   },
 });
 
-watch(computedTab, (newValue, oldValue) => {
+watch(computedTab, (newValue) => {
   if (newValue === 'fromFile') {
     app.model.args.inputLibrary = undefined;
   }
@@ -182,30 +182,99 @@ watch(
   },
 );
 
-const receptorOrChainsOptions = computed(() => {
-  const receptors = [
-    { value: 'IG', label: 'IG' },
-    { value: 'TCRAB', label: 'TCR-αβ' },
-    { value: 'TCRGD', label: 'TCR-ɣδ' },
-  ];
-  const chains = [
-    { value: 'IGHeavy', label: 'IG Heavy' },
-    { value: 'IGLight', label: 'IG Light' },
-    { value: 'TCRAlpha', label: 'TCR-α' },
-    { value: 'TCRBeta', label: 'TCR-β' },
-    { value: 'TCRGamma', label: 'TCR-ɣ' },
-    { value: 'TCRDelta', label: 'TCR-δ' },
-  ];
-  if (isSingleCell.value) return receptors;
-  return [...receptors, ...chains];
+const receptors = [
+  { value: 'IG', label: 'IG' },
+  { value: 'TCRAB', label: 'TCR-αβ' },
+  { value: 'TCRGD', label: 'TCR-ɣδ' },
+];
+
+const chains = [
+  { value: 'IGHeavy', label: 'IG Heavy' },
+  { value: 'IGLight', label: 'IG Light' },
+  { value: 'TCRAlpha', label: 'TCR-α' },
+  { value: 'TCRBeta', label: 'TCR-β' },
+  { value: 'TCRGamma', label: 'TCR-ɣ' },
+  { value: 'TCRDelta', label: 'TCR-δ' },
+];
+
+// Which library chains unlock each receptor
+const receptorToChains: Record<string, string[]> = {
+  IG: ['IGHeavy', 'IGLight'],
+  TCRAB: ['TCRAlpha', 'TCRBeta'],
+  TCRGD: ['TCRGamma', 'TCRDelta'],
+};
+
+const allOptions = [...receptors, ...chains];
+const allReceptorValues = receptors.map((r) => r.value);
+
+const userHasOverridden = ref(false);
+
+const availableChains = computed(() => app.model.outputs.availableChains);
+
+// Reset when library is removed
+watch(() => app.model.args.inputLibrary, (newLibrary) => {
+  if (!newLibrary) {
+    // Library was removed - reset state
+    userHasOverridden.value = false;
+    app.model.args.chains = allReceptorValues;
+  }
 });
 
-const receptorOrChainsModel = computed({
-  get: () => (app.model.args.chains ?? []),
-  set: (value) => {
-    app.model.args.chains = value ?? [];
+// get the list of raw library-provided values
+function libraryValues() {
+  return availableChains.value?.options?.map((o) => o.value) ?? [];
+}
+
+// filter receptors down to those unlocked by the library
+function libraryReceptors() {
+  const libs = new Set(libraryValues());
+  return receptors.filter((r) =>
+    receptorToChains[r.value].some((chain) => libs.has(chain)),
+  );
+}
+
+const receptorOrChainsOptions = computed(() => {
+  const opts = availableChains.value?.options;
+  if (opts?.length) {
+    return isSingleCell.value
+      ? (libraryReceptors().length ? libraryReceptors() : receptors)
+      : opts;
+  }
+  // fallback if model has no options
+  return isSingleCell.value
+    ? receptors
+    : allOptions;
+});
+
+const receptorOrChainsModel = computed<string[]>({
+  get() {
+    const current = app.model.args.chains ?? [];
+    const defaults = availableChains.value?.defaults ?? [];
+
+    // 1) library defaults only on first load
+    if (
+      app.model.args.inputLibrary
+      && defaults.length > 0
+      && !userHasOverridden.value
+    ) {
+      return isSingleCell.value
+        ? libraryReceptors().map((r) => r.value)
+        : defaults;
+    }
+
+    // 2) otherwise honor whatever is in `args.chains`, or fall back to "all"
+    if (current.length > 0) {
+      return current;
+    }
+    // Always default to receptors when no library
+    return allReceptorValues;
+  },
+  set(v: string[]) {
+    userHasOverridden.value = true;
+    app.model.args.chains = v ?? [];
   },
 });
+
 </script>
 
 <template>
