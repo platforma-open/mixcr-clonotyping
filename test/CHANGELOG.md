@@ -1,5 +1,13 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.test
 
+## 1.7.1
+
+### Patch Changes
+
+- c983163: SDK upgrade
+- Updated dependencies [c983163]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.12.1
+
 ## 1.7.0
 
 ### Minor Changes
