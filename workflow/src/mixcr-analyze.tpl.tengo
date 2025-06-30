@@ -31,6 +31,7 @@ self.body(func(inputs) {
 	params := inputs.params
 	species := params.species
 	limitInput := params.limitInput
+	perProcessMemGB := params.perProcessMemGB
 	fileExtension := params.fileExtension
 	reports := params.reports
 	isLibraryFileGzipped := params.isLibraryFileGzipped
@@ -72,7 +73,10 @@ self.body(func(inputs) {
 		secret("MI_LICENSE", "MI_LICENSE").
 		arg("analyze").arg("--use-local-temp")
 
-	if hasMiToolSteps {
+    if perProcessMemGB  != undefined {
+        // memory per process was set in "Advanced Settings" block directly
+		mixcrCmdBuilder.mem(string(perProcessMemGB) + "GiB")
+	} else if hasMiToolSteps {
 		// allow to use more memory for single cell analysis with mitool pre-
 		mixcrCmdBuilder.mem("192GiB")
 	} else if hasAssembleContigs || hasAssembleCells {

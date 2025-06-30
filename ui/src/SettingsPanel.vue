@@ -267,5 +267,10 @@ const receptorOrChainsModel = computed({
         placeholder="Type spicies name"
       />
     </template>
+
+    <PlTextField
+      v-model="app.model.args.perProcessMemGB" :parse="parseNumber" :clearable="() => undefined"
+      label="Set memory per every sample process (GB)"
+    />
   </PlAccordionSection>
 </template>

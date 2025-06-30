@@ -10,3 +10,4 @@ test-dry-run.json
 .turbo
 vite.config.*.timestamp-*
 .DS_Store
+/.idea
