@@ -63,6 +63,7 @@ self.body(func(inputs) {
 	receptorsOrChains := params.receptorsOrChains
 	limitInput := params.limitInput
 	perProcessMemGB := params.perProcessMemGB
+	perProcessCPUs := params.perProcessCPUs
 	blockId := params.blockId
 	libraryId := params.libraryId
 	presetCommonName := params.presetCommonName
@@ -265,7 +266,8 @@ self.body(func(inputs) {
 				presetContent: presetContent
 			},
             metaExtra: {
-                perProcessMemGB: perProcessMemGB
+                perProcessMemGB: perProcessMemGB,
+                perProcessCPUs: perProcessCPUs
             }
 		}
 	)

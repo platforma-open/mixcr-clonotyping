@@ -274,5 +274,12 @@ const receptorOrChainsModel = computed({
       :minValue="1"
       :maxValue="999999"
     />
+
+    <PlNumberField
+      v-model="app.model.args.perProcessCPUs"
+      label="Set CPUs number per every sample process"
+      :minValue="1"
+      :maxValue="999999"
+    />
   </PlAccordionSection>
 </template>

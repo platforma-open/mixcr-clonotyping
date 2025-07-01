@@ -57,6 +57,7 @@ wf.body(func(args) {
 
 	limitInput := args.limitInput
 	perProcessMemGB := args.perProcessMemGB
+	perProcessCPUs := args.perProcessCPUs
 	isLibraryFileGzipped := false
 
 	library := false
@@ -114,6 +115,7 @@ wf.body(func(args) {
 			receptorsOrChains: receptorsOrChains,
 			limitInput: limitInput,
 			perProcessMemGB: perProcessMemGB,
+			perProcessCPUs: perProcessCPUs,
 			blockId: blockId,
 			libraryId: libraryId,
 			presetCommonName: args.presetCommonName,
