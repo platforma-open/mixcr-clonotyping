@@ -41,7 +41,7 @@ export const BlockArgsValid = z.object({
   species: z.string().optional(),
   customSpecies: z.string().optional(),
   limitInput: z.number().int().optional(),
-  perProcessMemGB: z.number().int().optional(),
+  perProcessMemGB: z.number().int().gte(1, '1GB or more required').optional(),
   title: z.string().optional(),
   presetCommonName: z.string().optional(),
   chains: z.array(z.string()).optional(),
