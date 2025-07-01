@@ -264,8 +264,8 @@ self.body(func(inputs) {
 				library: library,
 				presetContent: presetContent
 			},
-            metaExtra: { // FIXME!!!
-				perProcessMemGB: perProcessMemGB
+            metaExtra: {
+                perProcessMemGB: perProcessMemGB
             }
 		}
 	)

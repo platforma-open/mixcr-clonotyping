@@ -31,7 +31,7 @@ self.body(func(inputs) {
 	params := inputs.params
 	species := params.species
 	limitInput := params.limitInput
-	perProcessMemGB := params.perProcessMemGB
+	perProcessMemGB := inputs.perProcessMemGB
 	fileExtension := params.fileExtension
 	reports := params.reports
 	isLibraryFileGzipped := params.isLibraryFileGzipped
