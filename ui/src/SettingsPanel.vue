@@ -4,7 +4,7 @@ import { SupportedPresetList } from '@platforma-open/milaboratories.mixcr-clonot
 import type { ImportFileHandle, PlRef } from '@platforma-sdk/model';
 import { getFilePathFromHandle } from '@platforma-sdk/model';
 import type { ListOption } from '@platforma-sdk/ui-vue';
-import { PlAccordionSection, PlBtnGroup, PlDropdown, PlDropdownMulti, PlDropdownRef, PlFileInput, PlTextField, ReactiveFileContent } from '@platforma-sdk/ui-vue';
+import { PlAccordionSection, PlBtnGroup, PlDropdown, PlDropdownMulti, PlDropdownRef, PlFileInput, PlTextField, PlNumberField, ReactiveFileContent } from '@platforma-sdk/ui-vue';
 import { computed, reactive, watch } from 'vue';
 import { useApp } from './app';
 import { retentive } from './retentive';
@@ -268,9 +268,11 @@ const receptorOrChainsModel = computed({
       />
     </template>
 
-    <PlTextField
-      v-model="app.model.args.perProcessMemGB" :parse="parseNumber" :clearable="() => undefined"
+    <PlNumberField
+      v-model="app.model.args.perProcessMemGB"
       label="Set memory per every sample process (GB)"
+      :minValue="1"
+      :maxValue="999999"
     />
   </PlAccordionSection>
 </template>
