@@ -257,14 +257,16 @@ self.body(func(inputs) {
 				params: {
 					species: species,
 					limitInput: limitInput,
-					perProcessMemGB: perProcessMemGB,
 					fileExtension: fileExtension,
 					reports: reports,
 					isLibraryFileGzipped: isLibraryFileGzipped
 				},
 				library: library,
 				presetContent: presetContent
-			}
+			},
+            metaExtra: { // FIXME!!!
+				perProcessMemGB: perProcessMemGB
+            }
 		}
 	)
 

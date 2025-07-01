@@ -73,7 +73,7 @@ self.body(func(inputs) {
 		secret("MI_LICENSE", "MI_LICENSE").
 		arg("analyze").arg("--use-local-temp")
 
-    if is_undefined(perProcessMemGB) {
+    if !is_undefined(perProcessMemGB) {
         // memory per process was set in "Advanced Settings" block directly
 		mixcrCmdBuilder.mem(string(perProcessMemGB) + "GiB")
 	} else if hasMiToolSteps {
