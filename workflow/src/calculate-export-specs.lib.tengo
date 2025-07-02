@@ -800,6 +800,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 					"pl7.app/table/fontFamily": "monospace",
 					"pl7.app/table/visibility": "default",
 					"pl7.app/table/orderPriority": "110000",
+					"pl7.app/graph/axis/highCardinality": "true",
 					"pl7.app/segmentedBy": string(json.encode(["pl7.app/vdj/clonotypingRunId"]))
 				}
 			}
@@ -825,6 +826,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 						"pl7.app/table/fontFamily": "monospace",
 						"pl7.app/table/visibility": "default",
 						"pl7.app/table/orderPriority": "110000",
+						"pl7.app/graph/axis/highCardinality": "true",
 						"pl7.app/segmentedBy": string(json.encode(["pl7.app/vdj/clonotypingRunId"]))
 					}
 				}
