@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.22.0
+
+### Minor Changes
+
+- a65fef4: Custom settings for memory and CPU count added
+
 ## 2.21.2
 
 ### Patch Changes

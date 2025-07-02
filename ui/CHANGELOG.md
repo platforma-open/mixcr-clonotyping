@@ -1,5 +1,16 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.13.0
+
+### Minor Changes
+
+- a65fef4: Custom settings for memory and CPU count added
+
+### Patch Changes
+
+- Updated dependencies [a65fef4]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.13.0
+
 ## 1.12.1
 
 ### Patch Changes
