@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.23.0
+
+### Minor Changes
+
+- e152a2f: SDK Upgrade: fix for compatibility issues with old platformas and final migration to request-based task scheduling
+
 ## 2.22.0
 
 ### Minor Changes
