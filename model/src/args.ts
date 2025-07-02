@@ -2,21 +2,6 @@ import type { ImportFileHandle } from '@platforma-sdk/model';
 import { PlRef } from '@platforma-sdk/model';
 import { z } from 'zod';
 
-// @TODO (unused)
-const _Species = z.union([
-  z.literal('hsa'),
-  z.literal('mmu'),
-  z.literal('lama'),
-  z.literal('alpaca'),
-  z.literal('mfas'),
-  z.literal('mmul'),
-  z.literal('gallus'),
-  z.literal('rabbit'),
-  z.literal('rat'),
-  z.literal('sheep'),
-  z.literal('spalax'),
-]);
-
 export const PresetName = z.object({
   type: z.literal('name'),
   name: z.string(),
@@ -41,6 +26,8 @@ export const BlockArgsValid = z.object({
   species: z.string().optional(),
   customSpecies: z.string().optional(),
   limitInput: z.number().int().optional(),
+  perProcessMemGB: z.number().int().gte(1, '1GB or more required').optional(),
+  perProcessCPUs: z.number().int().gte(1, '1 or more required').optional(),
   title: z.string().optional(),
   presetCommonName: z.string().optional(),
   chains: z.array(z.string()).optional(),
