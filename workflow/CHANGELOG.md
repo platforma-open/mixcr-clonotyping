@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.23.1
+
+### Patch Changes
+
+- 5fcc5ba: Updated top chains discrete values formatting in export specifications.
+
 ## 2.23.0
 
 ### Minor Changes
