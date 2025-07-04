@@ -31,8 +31,8 @@ chainInfos := {
 	"IGLight": { mixcrFilter: "IGK,IGL", name: "IG Light", shortName: "Light" },
 	"TCRAlpha": { mixcrFilter: "TRA", name: "TCR Alpha", shortName: "Alpha" },
 	"TCRBeta": { mixcrFilter: "TRB", name: "TCR Beta", shortName: "Beta" },
-	"TCRGamma": { mixcrFilter: "TRD", name: "TCR Gamma", shortName: "Gamma" },
-	"TCRDelta": { mixcrFilter: "TRG", name: "TCR Delta", shortName: "Delta" }
+	"TCRGamma": { mixcrFilter: "TRG", name: "TCR Gamma", shortName: "Gamma" },
+	"TCRDelta": { mixcrFilter: "TRD", name: "TCR Delta", shortName: "Delta" }
 }
 
 // Chain with higher diversity go first
