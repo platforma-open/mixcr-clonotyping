@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.23.2
+
+### Patch Changes
+
+- 81ac330: Bugfix TCR Gamma export
+
 ## 2.23.1
 
 ### Patch Changes
