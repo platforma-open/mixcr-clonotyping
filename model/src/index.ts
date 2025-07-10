@@ -31,10 +31,20 @@ const chains = [
   { value: 'TCRDelta', label: 'TCR-δ' },
 ];
 
+export type UiState = {
+  lastLibraryHash: string;
+  lastSingleCellHash: string;
+};
+
 export const platforma = BlockModel.create('Heavy')
 
   .withArgs<BlockArgs>({
     chains: ['IG', 'TCRAB', 'TCRGD'],
+  })
+
+  .withUiState<UiState>({
+    lastLibraryHash: '',
+    lastSingleCellHash: '',
   })
 
   .retentiveOutput('presets', (ctx) =>
@@ -76,29 +86,6 @@ export const platforma = BlockModel.create('Heavy')
       options: allOptions,
       defaults: allOptions.map((o) => o.value),
     };
-  })
-
-  .output('chainsForLibraries', (ctx) => {
-    return ctx.resultPool.getOptions((spec) => spec.annotations?.['pl7.app/vdj/isLibrary'] === 'true',
-      { label: { includeNativeLabel: true, addLabelAsSuffix: true } }).map((o) => {
-      const spec = ctx.resultPool.getSpecByRef(o.ref);
-      if (spec) {
-        const chainString = spec.annotations?.['pl7.app/vdj/chain'];
-        if (chainString) {
-          const libraryChains = JSON.parse(chainString) as string[];
-          const filtered = chains.filter((c) => libraryChains.includes(c.value));
-          const options = filtered.length ? filtered : chains;
-          return {
-            ref: o.ref,
-            options,
-            defaults: options.map((o) => o.value),
-          };
-        }
-      }
-      return {
-        ref: o.ref,
-      };
-    });
   })
 
   .output('qc', (ctx) =>

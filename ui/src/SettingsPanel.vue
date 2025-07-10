@@ -197,7 +197,6 @@ const chains = [
   { value: 'TCRDelta', label: 'TCR-δ' },
 ];
 
-// Which library chains unlock each receptor
 const receptorToChains: Record<string, string[]> = {
   IG: ['IGHeavy', 'IGLight'],
   TCRAB: ['TCRAlpha', 'TCRBeta'],
@@ -207,72 +206,72 @@ const receptorToChains: Record<string, string[]> = {
 const allOptions = [...receptors, ...chains];
 const allReceptorValues = receptors.map((r) => r.value);
 
-const userHasOverridden = ref(false);
+if (!app.model.ui.lastLibraryHash) app.model.ui.lastLibraryHash = '';
+if (!app.model.ui.lastSingleCellHash) app.model.ui.lastSingleCellHash = '';
+
+function hashLibrary(library: any, options: any[] = []): string {
+  if (!library) return '';
+  const values = options.map(o => o.value).sort().join(',');
+  return `${values}`;
+}
+
+function hashSingleCell(isSingleCell: boolean): string {
+  return isSingleCell ? 'singleCell' : 'bulk';
+}
 
 const availableChains = computed(() => app.model.outputs.availableChains);
+const libraryOptions = computed(() => availableChains.value?.options || []);
+const libraryChainSet = computed(() => new Set(libraryOptions.value.map(o => o.value)));
 
-// Reset when library is removed
-watch(() => app.model.args.inputLibrary, (newLibrary) => {
-  if (!newLibrary) {
-    // Library was removed - reset state
-    userHasOverridden.value = false;
-    app.model.args.chains = allReceptorValues;
+const getDefaultSelection = (): string[] => {
+  if (app.model.args.inputLibrary && libraryOptions.value.length) {
+    if (isSingleCell.value) {
+      return receptors
+        .filter(r => receptorToChains[r.value].some(chain => libraryChainSet.value.has(chain)))
+        .map(r => r.value);
+    }
+    return libraryOptions.value.map(o => o.value);
   }
-});
-
-// get the list of raw library-provided values
-function libraryValues() {
-  return availableChains.value?.options?.map((o) => o.value) ?? [];
-}
-
-// filter receptors down to those unlocked by the library
-function libraryReceptors() {
-  const libs = new Set(libraryValues());
-  return receptors.filter((r) =>
-    receptorToChains[r.value].some((chain) => libs.has(chain)),
-  );
-}
+  return allReceptorValues;
+};
 
 const receptorOrChainsOptions = computed(() => {
-  const opts = availableChains.value?.options;
-  if (opts?.length) {
-    return isSingleCell.value
-      ? (libraryReceptors().length ? libraryReceptors() : receptors)
-      : opts;
+  if (libraryOptions.value.length) {
+    if (isSingleCell.value) {
+      const filtered = receptors.filter(r =>
+        receptorToChains[r.value].some(chain => libraryChainSet.value.has(chain))
+      );
+      return filtered.length ? filtered : receptors;
+    }
+    return libraryOptions.value;
   }
-  // fallback if model has no options
-  return isSingleCell.value
-    ? receptors
-    : allOptions;
+  return isSingleCell.value ? receptors : allOptions;
 });
 
 const receptorOrChainsModel = computed<string[]>({
   get() {
-    const current = app.model.args.chains ?? [];
-    const defaults = availableChains.value?.defaults ?? [];
+    const current = app.model.args.chains;
+    const library = app.model.args.inputLibrary;
+    const libHash = hashLibrary(library, libraryOptions.value);
+    const modeHash = hashSingleCell(isSingleCell.value);
 
-    // 1) library defaults only on first load
-    if (
-      app.model.args.inputLibrary
-      && defaults.length > 0
-      && !userHasOverridden.value
-    ) {
-      return isSingleCell.value
-        ? libraryReceptors().map((r) => r.value)
-        : defaults;
+    const libraryChanged = app.model.ui.lastLibraryHash !== libHash;
+    const modeChanged = app.model.ui.lastSingleCellHash !== modeHash;
+
+    if (libraryChanged || modeChanged) {
+      app.model.ui.lastLibraryHash = libHash;
+      app.model.ui.lastSingleCellHash = modeHash;
+      const updated = getDefaultSelection();
+      app.model.args.chains = updated;
+      return updated;
     }
 
-    // 2) otherwise honor whatever is in `args.chains`, or fall back to "all"
-    if (current.length > 0) {
-      return current;
-    }
-    // Always default to receptors when no library
-    return allReceptorValues;
+    // Allow empty selection - don't force defaults when user clears selection
+    return current ?? [];
   },
-  set(v: string[]) {
-    userHasOverridden.value = true;
-    app.model.args.chains = v ?? [];
-  },
+  set(selection: string[]) {
+    app.model.args.chains = selection ?? [];
+  }
 });
 
 </script>
