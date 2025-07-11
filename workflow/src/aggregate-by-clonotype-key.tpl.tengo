@@ -70,7 +70,7 @@ self.body(func(inputs) {
 	aggExpressions := []
 
 	for colDef in schemaPerClonotypeNoAggregates {
-		if colDef.column == "clonotypeLabel" {
+		if colDef.column == "clonotypeLabel" || colDef.column == "nLengthTotalAdded" {
 			continue
 		}
 		aggExpressions = append(aggExpressions,
@@ -85,6 +85,14 @@ self.body(func(inputs) {
 	)
 
 	aggregatedDf := currentDf.groupBy("clonotypeKey").agg(aggExpressions...)
+
+	// Calculate total added nucleotides: VDJunction + DJJunction for chains with D genes, VJJunction for chains without D genes
+	aggregatedDf = aggregatedDf.withColumns(
+		pt.when(pt.col("nLengthVDJunction").isNotNull().and(pt.col("nLengthVDJunction").neq("no_d_gene"))).
+			then(pt.col("nLengthVDJunction").cast("Int").plus(pt.col("nLengthDJJunction").cast("Int"))).
+			otherwise(pt.col("nLengthVJJunction").cast("Int")).
+			alias("nLengthTotalAdded")
+	)
 
 	aggregatedDf = clonotypeLabel.addClonotypeLabelColumnsPt(aggregatedDf, "clonotypeKey", "clonotypeLabel", pt)
 

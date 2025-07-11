@@ -540,6 +540,52 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		}
 	}
 
+	// Include junction lengths for calculation of total added nucleotides
+	junctionTypes := [ "VJ", "VD", "DJ" ]
+	for junctionType in junctionTypes {
+		feature := junctionType + "Junction"
+		naRegex := junctionType == "VJ" ? "region_not_covered" : "no_d_gene"
+		
+		columnsSpecPerClonotypeNoAggregates += [ {
+			column: "nLength" + feature,
+			id: "n-length-" + text.to_lower(junctionType) + "-junction",
+			naRegex: naRegex,
+			allowNA: true,
+			spec: {
+				name: "pl7.app/vdj/sequenceLength",
+				valueType: "Int",
+				domain: {
+					"pl7.app/vdj/feature": feature,
+					"pl7.app/alphabet": "nucleotide"
+				},
+				annotations: a(orderP, false, {
+					"pl7.app/label": "Length of " + junctionType + " Junction nt"
+				})
+			}
+		} ]
+		exportArgs += [ [ "-nLength", feature ] ]
+		orderP -= 100
+	}
+	
+	// Spec for total added length (calculated by pt in aggregate-by-clonotype-key, no flag)
+	columnsSpecPerClonotypeNoAggregates += [ {
+		column: "nLengthTotalAdded",
+		id: "n-length-total-added",
+		naRegex: "region_not_covered|no_d_gene",
+		allowNA: true,
+		spec: {
+			name: "pl7.app/vdj/sequenceLength",
+			valueType: "Int",
+			domain: {
+				"pl7.app/alphabet": "nucleotide"
+			},
+			annotations: a(orderP, false, {
+				"pl7.app/label": "Total number of added nt"
+			})
+		}
+	} ]
+	orderP -= 100
+
 	// VDJC Hits
 
 	geneHitColumnVariants := [ {
