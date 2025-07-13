@@ -167,7 +167,10 @@ wf.body(func(args) {
 		clonotypes: pframes.exportFrame(runMixcr.output("clonotypes")),
 		fileImports: smart.createMapResource(maps.mapValues(fileImports, func(im) {
 			return im.handle
-		}))
+		})),
+
+		// will be attached as output, to keep this intermediate results as long as block is not deleted
+		resultsToCache: runMixcr.output("resultsToCache")
 	}
 
 	if !is_undefined(libraryImportHandle) {

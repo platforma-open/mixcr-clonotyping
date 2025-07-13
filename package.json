@@ -33,7 +33,9 @@
     }
   },
   "pnpm": {
-    "overrides": {}
+    "overrides": {
+      "@platforma-sdk/workflow-tengo": "file:/Users/dbolotin/mi/core/platforma/sdk/workflow-tengo/package.tgz"
+    }
   },
   "///": {
     "pnpm": {
