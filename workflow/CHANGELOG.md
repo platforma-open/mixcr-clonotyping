@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.24.0
+
+### Minor Changes
+
+- 35856bb: Fix for caching and deduplication & SDK Upgrade
+
 ## 2.23.3
 
 ### Patch Changes
