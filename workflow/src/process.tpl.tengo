@@ -627,16 +627,12 @@ self.body(func(inputs) {
 			// Since we aggregate by sample, this is just a single pass through the data.
 
 			// manual data anonymization
-			anonymizationResult := anonymize.anonimizePKeys({
+			anonymizationResult := anonymize.anonymizePKeys({
 				byCellTagAData: perChainResults[chainA].tsvForSingleCell.data,
-				byCellTagBData: perChainResults[chainB].tsvForSingleCell.data,
-				propertiesAData: perChainResults[chainA].clonotypeProperties.data,
-				propertiesBData: perChainResults[chainB].clonotypeProperties.data
+				byCellTagBData: perChainResults[chainB].tsvForSingleCell.data
 			}, [0])
-			byCellTagAData := anonymizationResult.byCellTagAData
-			byCellTagBData := anonymizationResult.byCellTagBData
-			propertiesAData := anonymizationResult.propertiesAData
-			propertiesBData := anonymizationResult.propertiesBData
+			byCellTagAData := anonymizationResult.result.byCellTagAData
+			byCellTagBData := anonymizationResult.result.byCellTagBData
 
 			singleCellResult := pframes.processColumn(
 				{ spec: perChainResults[chainA].tsvForSingleCell.spec, data: byCellTagAData },
@@ -646,8 +642,8 @@ self.body(func(inputs) {
 					aggregate: ["pl7.app/sampleId"],
 					extra: {
 						byCellTagB: byCellTagBData,
-						propertiesA: propertiesAData,
-						propertiesB: propertiesBData,
+						propertiesA: perChainResults[chainA].clonotypeProperties.data,
+						propertiesB: perChainResults[chainB].clonotypeProperties.data,
 						params: {
 							mainAbundanceColumn: mainAbundanceColumnUnnormalized,
 							mainIsProductiveColumn: mainIsProductiveColumn,
@@ -657,7 +653,16 @@ self.body(func(inputs) {
 				}
 			)
 
-			singleCellResult.addXsvOutputToBuilder(clonotypes, "abundanceTable", "clonotypeProperties/abundance/" + receptor + "/")
+			// singleCellResult.addXsvOutputToBuilder(clonotypes, "abundanceTable", "clonotypeProperties/abundance/" + receptor + "/")
+			for columnName in singleCellResult.listXsvColumns("abundanceTable") {
+				anonymizedData := singleCellResult.outputData("abundanceTable", columnName)
+				clonotypes.add(
+					"clonotypeProperties/abundance/" + receptor + "/" + columnName,
+					singleCellResult.outputSpec("abundanceTable", columnName),
+					anonymize.deanonymizePKeys(anonymizedData, 0, [0], anonymizationResult.mapping)
+				)
+				resultsToCache["clonotypeProperties/abundance/" + receptor + "/" + columnName] = anonymizedData
+			}
 			singleCellResult.addXsvOutputToBuilder(clonotypes, "aggregates", "clonotypeProperties/aggregates/" + receptor + "/")
 
 			singleCellResult.addXsvOutputToBuilder(clonotypes, "propertiesAPrimary", "clonotypeProperties/" + receptor + "/aPrimary/")

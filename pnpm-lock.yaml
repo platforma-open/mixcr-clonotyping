@@ -1308,7 +1308,7 @@ packages:
     resolution: {integrity: sha512-FT/wFjkQVxzvaDZTBu80ukd1DkKrbsiu4Aml0fb5Xo0fcV4axXeOH4Q7WSqWby8FQeB/jK6UjR0fO4XaqqwPUQ==}
 
   '@platforma-sdk/workflow-tengo@file:../../core/platforma/sdk/workflow-tengo/package.tgz':
-    resolution: {integrity: sha512-DcNm8i2rt7kJrwr8Gcpx8PlLvMU5Y/tT5MhiWlanT1644Qzcd4y+NggZdiJzkRYawpWRNbMquXnC31zcm4a4sw==, tarball: file:../../core/platforma/sdk/workflow-tengo/package.tgz}
+    resolution: {integrity: sha512-V6TF3mgTFZ8y4Emw4R4Ve987pUccpqIsmDJleHNmuXshMCpf6ofYKtP+4wqGS/+yVppGNz94w1La7TfK/Bq6wQ==, tarball: file:../../core/platforma/sdk/workflow-tengo/package.tgz}
     version: 4.9.3
 
   '@protobuf-ts/grpc-transport@2.11.0':
