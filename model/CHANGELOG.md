@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.13.1
+
+### Patch Changes
+
+- 63a2a9d: Update sdk: fix slide panel closing when modal dialog window is clicked (MILAB-3495 [blocks/mixcr-clonotyping] can’t upload custom preset by choosing file)
+
 ## 1.13.0
 
 ### Minor Changes
