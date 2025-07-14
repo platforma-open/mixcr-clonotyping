@@ -1,13 +1,16 @@
+//tengo:hash_override 8B1CFC68-2542-4C81-8CD4-F927B75F3975
+
 ll := import("@platforma-sdk/workflow-tengo:ll")
 self := import("@platforma-sdk/workflow-tengo:tpl")
 pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 slices := import("@platforma-sdk/workflow-tengo:slices")
 maps := import("@platforma-sdk/workflow-tengo:maps")
 units := import("@platforma-sdk/workflow-tengo:units")
-clonotypeLabel := import(":clonotype-label")
 pt := import("@platforma-sdk/workflow-tengo:pt")
-math := import("math")
 
+clonotypeLabel := import(":clonotype-label")
+
+math := import("math")
 json := import("json")
 
 self.defineOutputs("tsv")
@@ -37,6 +40,8 @@ self.body(func(inputs) {
 	dataFrames := []
 
 	baseSchemaForRead := schemaPerSample + [ { column: "clonotypeKey", type: "String" } ]
+
+	ll.print("__THE_LOG__ AGGREGATE BY CLONOTYPE KEY: " + json.encode(maps.getKeys(inputMap)))
 
 	for sKey in maps.getKeys(inputMap) {
 		inputFile := inputMap[sKey]

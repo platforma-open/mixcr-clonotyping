@@ -6,15 +6,15 @@ packages:
   - test
 
 catalog:
-  '@platforma-sdk/workflow-tengo': ^4.9.3
-  '@platforma-sdk/model': ^1.39.8
-  '@platforma-sdk/ui-vue': ^1.39.17
+  '@platforma-sdk/workflow-tengo': ^4.10.0
+  '@platforma-sdk/model': ^1.39.18
+  '@platforma-sdk/ui-vue': ^1.39.20
   '@platforma-sdk/tengo-builder': ^2.1.12
-  '@platforma-sdk/package-builder': ^2.16.2
-  '@platforma-sdk/block-tools': ^2.5.68
+  '@platforma-sdk/package-builder': ^2.16.0
+  '@platforma-sdk/block-tools': ^2.5.69
   '@platforma-sdk/eslint-config': ^1.0.3
 
-  '@platforma-sdk/test': ^1.39.15
+  '@platforma-sdk/test': ^1.39.21
   '@milaboratories/helpers': ^1.6.17
 
   '@platforma-open/milaboratories.software-mixcr': 4.7.0-190-develop
@@ -32,8 +32,8 @@ catalog:
   'vite': ^6.3.5
   'vitest': ~2.1.9
   '@vitejs/plugin-vue': ^5.2.4
-  'rollup-plugin-sourcemaps2': ^0.5.2
-  'eslint': ^9.30.1
+  'rollup-plugin-sourcemaps2': ^0.5.3
+  'eslint': ^9.31.0
 
   '@vueuse/core': ^13.5.0
 
@@ -45,5 +45,5 @@ catalog:
 
   # other blocks used in tests
 
-  '@platforma-open/milaboratories.samples-and-data': ^1.10.6
-  '@platforma-open/milaboratories.samples-and-data.model': ^1.10.0
+  '@platforma-open/milaboratories.samples-and-data': ^1.10.8
+  '@platforma-open/milaboratories.samples-and-data.model': ^1.10.1

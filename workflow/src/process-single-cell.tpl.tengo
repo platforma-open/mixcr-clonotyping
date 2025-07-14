@@ -1,3 +1,5 @@
+//tengo:hash_override 8E4B6062-534D-4322-9CED-EC75E499A10A
+
 ll := import("@platforma-sdk/workflow-tengo:ll")
 self := import("@platforma-sdk/workflow-tengo:tpl.light")
 pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
@@ -5,17 +7,21 @@ assets := import("@platforma-sdk/workflow-tengo:assets")
 exec := import("@platforma-sdk/workflow-tengo:exec")
 maps := import("@platforma-sdk/workflow-tengo:maps")
 slices := import("@platforma-sdk/workflow-tengo:slices")
-clonotypeLabel := import(":clonotype-label")
 units := import("@platforma-sdk/workflow-tengo:units")
+pt := import("@platforma-sdk/workflow-tengo:pt")
+
+clonotypeLabel := import(":clonotype-label")
+
 json := import("json")
 math := import("math")
-pt := import("@platforma-sdk/workflow-tengo:pt")
 
 self.defineOutputs("abundanceTsv", "clonotypeTsv", "propertiesAPrimaryTsv", "propertiesASecondaryTsv", "propertiesBPrimaryTsv", "propertiesBSecondaryTsv")
 
 ptablerSw := assets.importSoftware("@platforma-open/milaboratories.software-ptabler:main")
 
 self.body(func(inputs) {
+	ll.print("__THE_LOG__ PROCESS SINGLE CELL")
+
 	byCellTagA := inputs[pConstants.VALUE_FIELD_NAME]
 	inputDataMeta := byCellTagA.getDataAsJson()
 	ll.assert(inputDataMeta.keyLength == 1, "unexpected number of aggregation axes")

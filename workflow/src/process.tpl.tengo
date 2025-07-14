@@ -8,11 +8,13 @@ pframes := import("@platforma-sdk/workflow-tengo:pframes")
 slices := import("@platforma-sdk/workflow-tengo:slices")
 maps := import("@platforma-sdk/workflow-tengo:maps")
 sets := import("@platforma-sdk/workflow-tengo:sets")
+anonymize := import("@platforma-sdk/workflow-tengo:anonymize")
 
 calculateExportSpecs := import(":calculate-export-specs")
 
 json := import("json")
 text := import("text")
+times := import("times")
 
 mixcrAnalyzeTpl := assets.importTemplate(":mixcr-analyze")
 mixcrExportTpl := assets.importTemplate(":mixcr-export")
@@ -250,6 +252,10 @@ self.body(func(inputs) {
 			// in the body template
 			passAggregationAxesNames: true,
 
+			// this will cache each individual step result for 30 minutes, even if execution of some of the steps
+			// failed or whole execution was interrupted
+			stepCache: 30 * times.minute,
+
 			// will be automatically propagated to all output specs
 			traceSteps: [{type: "milaboratories.mixcr-clonotyping", id: blockId, importance: 20, label: "MiXCR " + presetCommonName}],
 
@@ -265,6 +271,9 @@ self.body(func(inputs) {
 				library: library,
 				presetContent: presetContent
 			},
+
+			// by passing those parameters as meta fields we allow for recovery and deduplication mechanisms
+			// to pick up the results from executions with different values for CPU and Memory overrides
             metaExtra: {
                 perProcessMemGB: perProcessMemGB,
                 perProcessCPUs: perProcessCPUs
@@ -308,6 +317,8 @@ self.body(func(inputs) {
 		}
 		return schema
 	}
+
+	resultsToCache := {}
 
 	for chain in chains {
 		chainInfo := chainInfos[chain]
@@ -378,6 +389,10 @@ self.body(func(inputs) {
 				// will be automatically propagated to all output specs
 				traceSteps: [{type: "milaboratories.mixcr-clonotyping.export", id: blockId + "." + chain, importance: 80, label: chainInfo.name}],
 
+				// this will cache each individual step result for 30 minutes, even if execution of some of the steps
+				// failed or whole execution was interrupted
+				stepCache: 30 * times.minute,
+
 				extra: {
 					params: {
 						chains: chainInfo.mixcrFilter,
@@ -438,12 +453,22 @@ self.body(func(inputs) {
 			} ]
 		}
 
+		resultsToCache["clonotypeTable/" + chain] = exportResults.outputData("clonotypeTable")
+
 		aggregateByCloneKey := pframes.processColumn(
 			exportResults.output("clonotypeTable"),
 			aggregateByClonotypeKeyTpl,
 			aggregationOutputs,
 			{
-				aggregate: ["pl7.app/sampleId"],
+				aggregate: [ {
+					name: "pl7.app/sampleId",
+					anonymize: true
+				} ],
+
+				// this will cache each individual step result for 30 minutes, even if execution of some of the steps
+				// failed or whole execution was interrupted
+				stepCache: 30 * times.minute,
+
 				extra: {
 					params: {
 						mainAbundanceColumnNormalized: mainAbundanceColumnNormalized,
@@ -457,11 +482,15 @@ self.body(func(inputs) {
 		)
 
 		if isSingleCell {
-			// collecting results for possible future single cell processing
+			// collecting results for future single cell processing
 			perChainResults[chain] = {
 				tsvForSingleCell: exportResults.output("clonotypeTableForSingleCell"),
 				clonotypeProperties: aggregateByCloneKey.output("clonotypeProperties")
 			}
+
+			// caching intermediate results until the block is removed
+			resultsToCache["clonotypeTableForSingleCell/" + chain] = exportResults.outputData("clonotypeTableForSingleCell")
+			resultsToCache["clonotypeProperties/" + chain] = aggregateByCloneKey.outputData("clonotypeProperties")
 		} else {
 			// only adding data outputs if we are in bulk mode
 			exportResults.addXsvOutputToBuilder(clonotypes, "byCloneKeyBySample", "byCloneKeyBySample/" + chain + "/")
@@ -597,14 +626,22 @@ self.body(func(inputs) {
 			// Using A chain files as main PColumn for xsv conversion through pframes.processColumn.
 			// Since we aggregate by sample, this is just a single pass through the data.
 
+			// manual data anonymization
+			anonymizationResult := anonymize.anonymizePKeys({
+				byCellTagAData: perChainResults[chainA].tsvForSingleCell.data,
+				byCellTagBData: perChainResults[chainB].tsvForSingleCell.data
+			}, [0])
+			byCellTagAData := anonymizationResult.result.byCellTagAData
+			byCellTagBData := anonymizationResult.result.byCellTagBData
+
 			singleCellResult := pframes.processColumn(
-				perChainResults[chainA].tsvForSingleCell,
+				{ spec: perChainResults[chainA].tsvForSingleCell.spec, data: byCellTagAData },
 				processSingleCellTpl,
 				singleCellOutputs,
 				{
 					aggregate: ["pl7.app/sampleId"],
 					extra: {
-						byCellTagB: perChainResults[chainB].tsvForSingleCell.data,
+						byCellTagB: byCellTagBData,
 						propertiesA: perChainResults[chainA].clonotypeProperties.data,
 						propertiesB: perChainResults[chainB].clonotypeProperties.data,
 						params: {
@@ -616,7 +653,16 @@ self.body(func(inputs) {
 				}
 			)
 
-			singleCellResult.addXsvOutputToBuilder(clonotypes, "abundanceTable", "clonotypeProperties/abundance/" + receptor + "/")
+			// singleCellResult.addXsvOutputToBuilder(clonotypes, "abundanceTable", "clonotypeProperties/abundance/" + receptor + "/")
+			for columnName in singleCellResult.listXsvColumns("abundanceTable") {
+				anonymizedData := singleCellResult.outputData("abundanceTable", columnName)
+				clonotypes.add(
+					"clonotypeProperties/abundance/" + receptor + "/" + columnName,
+					singleCellResult.outputSpec("abundanceTable", columnName),
+					anonymize.deanonymizePKeys(anonymizedData, 0, [0], anonymizationResult.mapping)
+				)
+				resultsToCache["clonotypeProperties/abundance/" + receptor + "/" + columnName] = anonymizedData
+			}
 			singleCellResult.addXsvOutputToBuilder(clonotypes, "aggregates", "clonotypeProperties/aggregates/" + receptor + "/")
 
 			singleCellResult.addXsvOutputToBuilder(clonotypes, "propertiesAPrimary", "clonotypeProperties/" + receptor + "/aPrimary/")
@@ -638,6 +684,8 @@ self.body(func(inputs) {
 
 		"clns.spec": mixcrResults.outputSpec("clns"),
 		"clns.data": mixcrResults.outputData("clns"),
+
+		"resultsToCache": resultsToCache,
 
 		clonotypes: clonotypes.build()
 	}
