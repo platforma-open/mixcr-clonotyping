@@ -212,7 +212,11 @@ if (!app.model.ui.lastSingleCellHash) app.model.ui.lastSingleCellHash = '';
 function hashLibrary(library: any, options: any[] = []): string {
   if (!library) return '';
   const values = options.map(o => o.value).sort().join(',');
-  return `${values}`;
+  // Hash based on library identity + options length, not the options themselves
+  const libraryId = typeof library === 'object' && library?.blockId && library?.name 
+    ? `${library.blockId}:${library.name}` 
+    : String(library);
+  return `${libraryId}:${values}`;
 }
 
 function hashSingleCell(isSingleCell: boolean): string {
@@ -250,29 +254,40 @@ const receptorOrChainsOptions = computed(() => {
 
 const receptorOrChainsModel = computed<string[]>({
   get() {
-    const current = app.model.args.chains;
-    const library = app.model.args.inputLibrary;
-    const libHash = hashLibrary(library, libraryOptions.value);
-    const modeHash = hashSingleCell(isSingleCell.value);
-
-    const libraryChanged = app.model.ui.lastLibraryHash !== libHash;
-    const modeChanged = app.model.ui.lastSingleCellHash !== modeHash;
-
-    if (libraryChanged || modeChanged) {
-      app.model.ui.lastLibraryHash = libHash;
-      app.model.ui.lastSingleCellHash = modeHash;
-      const updated = getDefaultSelection();
-      app.model.args.chains = updated;
-      return updated;
-    }
-
-    // Allow empty selection - don't force defaults when user clears selection
-    return current ?? [];
+    // Pure getter - no side effects, only return current value
+    return app.model.args.chains ?? [];
   },
   set(selection: string[]) {
     app.model.args.chains = selection ?? [];
   }
 });
+
+// Watcher to handle all state modifications
+watch(
+  () => ({
+    library: app.model.args.inputLibrary,
+    libHash: hashLibrary(app.model.args.inputLibrary, libraryOptions.value),
+    modeHash: hashSingleCell(isSingleCell.value),
+  }),
+  ({ library, libHash, modeHash }) => {
+    const libraryChanged = app.model.ui.lastLibraryHash !== libHash;
+    const modeChanged = app.model.ui.lastSingleCellHash !== modeHash;
+
+    if (libraryChanged || modeChanged) {
+      // All state modifications happen here, not in computed getter
+      app.model.ui.lastLibraryHash = libHash;
+      app.model.ui.lastSingleCellHash = modeHash;
+      const updated = getDefaultSelection();
+      
+      // Only update if selection actually changed to prevent unnecessary updates
+      const current = app.model.args.chains ?? [];
+      if (JSON.stringify(updated.sort()) !== JSON.stringify(current.sort())) {
+        app.model.args.chains = updated;
+      }
+    }
+  },
+  { immediate: true }
+);
 
 </script>
 
