@@ -125,6 +125,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 	splitByC := ops.splitByC
 
 	isSingleCell := !is_undefined(cellTags) && len(cellTags) > 0
+	hashCellKey := isSingleCell && len(cellTags) == 1
 
 	assemblingFeatureInfo := assemblingFeatureInfo(assemblingFeature)
 	productiveFeature := assemblingFeatureInfo.productiveFeature
@@ -870,7 +871,9 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		mainIsProductiveColumn: mainIsProductiveColumn,
 		mainIsProductiveArgs: mainIsProductiveArgs,
 
-		exportArgs: exportArgs
+		exportArgs: exportArgs,
+
+		hashCellKey: hashCellKey
 	}
 }
 

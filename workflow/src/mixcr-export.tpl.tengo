@@ -28,6 +28,11 @@ self.body(func(inputs) {
 	clonotypeKeyArgs := params.clonotypeKeyArgs
 
 	cellTagColumns := params.cellTagColumns
+	// if false cell key will not be hashed
+	hashCellKey := params.hashCellKey
+	if !hashCellKey {
+		ll.assert(len(cellTagColumns) == 1, "cellTagColumns must be a single column when hashCellKey is false")
+	}
 
 	mainAbundanceColumnUnnormalizedArgs := params.mainAbundanceColumnUnnormalizedArgs
 	mainIsProductiveArgs := params.mainIsProductiveArgs
@@ -144,7 +149,7 @@ self.body(func(inputs) {
 
 		dfSingleCell.addColumns(
 			hashKeyDerivationExpressionPt(clonotypeKeyColumns).alias("clonotypeKey"),
-			hashKeyDerivationExpressionPt(cellTagColumns).alias("cellKey")
+			hashCellKey ? hashKeyDerivationExpressionPt(cellTagColumns).alias("cellKey") : pt.col(cellTagColumns[0]).alias("cellKey")
 		)
 
 		dfSingleCell.save("output.tsv")
