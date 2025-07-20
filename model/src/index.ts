@@ -17,10 +17,34 @@ import {
 import { BlockArgs, BlockArgsValid } from './args';
 import { ProgressPrefix } from './progress';
 
+const receptors = [
+  { value: 'IG', label: 'IG' },
+  { value: 'TCRAB', label: 'TCR-αβ' },
+  { value: 'TCRGD', label: 'TCR-ɣδ' },
+];
+const chains = [
+  { value: 'IGHeavy', label: 'IG Heavy' },
+  { value: 'IGLight', label: 'IG Light' },
+  { value: 'TCRAlpha', label: 'TCR-α' },
+  { value: 'TCRBeta', label: 'TCR-β' },
+  { value: 'TCRGamma', label: 'TCR-ɣ' },
+  { value: 'TCRDelta', label: 'TCR-δ' },
+];
+
+export type UiState = {
+  lastLibraryHash: string;
+  lastSingleCellHash: string;
+};
+
 export const platforma = BlockModel.create('Heavy')
 
   .withArgs<BlockArgs>({
     chains: ['IG', 'TCRAB', 'TCRGD'],
+  })
+
+  .withUiState<UiState>({
+    lastLibraryHash: '',
+    lastSingleCellHash: '',
   })
 
   .retentiveOutput('presets', (ctx) =>
@@ -35,12 +59,33 @@ export const platforma = BlockModel.create('Heavy')
 
   .output('libraryOptions', (ctx) =>
     ctx.resultPool.getOptions((spec) => spec.annotations?.['pl7.app/vdj/isLibrary'] === 'true',
-      { includeNativeLabel: true, addLabelAsSuffix: true }),
+      { label: { includeNativeLabel: true, addLabelAsSuffix: true } }),
   )
 
-  .output('datasetSpec', (ctx) => {
-    if (ctx.args.inputLibrary) return ctx.resultPool.getSpecByRef(ctx.args.inputLibrary);
-    else return undefined;
+  .output('availableChains', (ctx) => {
+    const allOptions = [...receptors, ...chains];
+
+    if (ctx.args.inputLibrary) {
+      const spec = ctx.resultPool.getSpecByRef(ctx.args.inputLibrary);
+      if (spec) {
+        const chainString = spec.annotations?.['pl7.app/vdj/chain'];
+        if (chainString) {
+          const libraryChains = JSON.parse(chainString) as string[];
+          const filtered = chains.filter((c) => libraryChains.includes(c.value));
+          const options = filtered.length ? filtered : chains;
+          return {
+            options,
+            defaults: options.map((o) => o.value),
+          };
+        }
+      }
+    }
+
+    // **No library** → everything is both available *and* selected by default
+    return {
+      options: allOptions,
+      defaults: allOptions.map((o) => o.value),
+    };
   })
 
   .output('qc', (ctx) =>
@@ -184,4 +229,3 @@ export * from './progress';
 export * from './qc';
 export * from './reports';
 export { BlockArgs };
-
