@@ -71,6 +71,7 @@ self.body(func(inputs) {
 	presetCommonName := params.presetCommonName
 	isLibraryFileGzipped := params.isLibraryFileGzipped
 
+	sampleIdAxisSpec := inputSpec.axesSpec[0]
 
 	if is_undefined(presetSpecForBack) {
 		ll.panic("no presetSpecForBack")
@@ -201,7 +202,7 @@ self.body(func(inputs) {
 		}
 	} ]
 
-	exportSpecs := calculateExportSpecs(presetSpecForBack, blockId)
+	exportSpecs := calculateExportSpecs(presetSpecForBack, sampleIdAxisSpec, blockId)
 
 	columnsSpecPerSample := exportSpecs.columnsSpecPerSample
 	columnsSpecPerSampleSc := exportSpecs.columnsSpecPerSampleSc
@@ -214,8 +215,11 @@ self.body(func(inputs) {
 	cellTagColumns := exportSpecs.cellTagColumns
 
 	// axesByClonotypeId := exportSpecs.axesByClonotypeId
-	axesByClonotypeKey := exportSpecs.axesByClonotypeKey
-	axesByScClonotypeKey := exportSpecs.axesByScClonotypeKey
+
+	// function with chain argument
+	axisByClonotypeKeyGen := exportSpecs.axisByClonotypeKeyGen
+	// function with receptor argument
+	axisByScClonotypeKeyGen := exportSpecs.axisByScClonotypeKeyGen
 
 	exportArgs := exportSpecs.exportArgs
 
@@ -227,13 +231,9 @@ self.body(func(inputs) {
 	mainAbundanceColumnNormalizedArgs := exportSpecs.mainAbundanceColumnNormalizedArgs
 	mainAbundanceColumnUnnormalizedArgs := exportSpecs.mainAbundanceColumnUnnormalizedArgs
 
-	if is_undefined(axesByClonotypeKey) {
-		ll.panic("Absent clonotype key not supported")
-	}
-
-	if len(axesByClonotypeKey) != 1 || (!is_undefined(axesByScClonotypeKey) && len(axesByScClonotypeKey) != 1) {
-		ll.panic("Assertion error: expected exactly one clonotype key axis")
-	}
+	hashCellKey := exportSpecs.hashCellKey
+	// function with receptor argument
+	cellLinkerColumnSettingsGen := exportSpecs.cellLinkerColumnSettingsGen
 
 	mixcrResults := pframes.processColumn(
 		{ spec: inputSpec, data: inputs.inputData },
@@ -324,10 +324,6 @@ self.body(func(inputs) {
 		chainInfo := chainInfos[chain]
 		ll.assert(!is_undefined(chainInfo), "chainInfo not found for chain %v", chain)
 
-		axesByClonotypeKeyWithChain := [ maps.deepTransform(axesByClonotypeKey[0], {
-			spec: { domain: { "pl7.app/vdj/chain": chain } }
-		}) ]
-
 		//
 		// Exporting CLNS -> TSV
 		//
@@ -352,7 +348,7 @@ self.body(func(inputs) {
 				type: "Xsv",
 				xsvType: "tsv",
 				settings: {
-					axes: axesByClonotypeKeyWithChain,
+					axes: [ axisByClonotypeKeyGen(chain) ],
 					columns: columnsSpecPerSample,
 					storageFormat: "Binary",
 					partitionKeyLength: 0
@@ -407,6 +403,8 @@ self.body(func(inputs) {
 						mainAbundanceColumnUnnormalizedArgs: mainAbundanceColumnUnnormalizedArgs,
 
 						cellTagColumns: cellTagColumns,
+						hashCellKey: hashCellKey,
+
 						exportArgs: exportArgs,
 						isLibraryFileGzipped: isLibraryFileGzipped
 					},
@@ -441,7 +439,7 @@ self.body(func(inputs) {
 				type: "Xsv",
 				xsvType: "tsv",
 				settings: {
-					axes: axesByClonotypeKeyWithChain,
+					axes: [ axisByClonotypeKeyGen(chain) ],
 					columns: columnsSpecPerClonotypeNoAggregates + columnsSpecPerClonotypeAggregates,
 					storageFormat: "Binary",
 					partitionKeyLength: 0
@@ -502,10 +500,6 @@ self.body(func(inputs) {
 		for receptor in receptors {
 			receptorInfo := receptorInfos[receptor]
 
-			axesByScClonotypeKeyWithReceptor := [ maps.deepTransform(axesByScClonotypeKey[0], {
-				spec: { domain: { "pl7.app/vdj/receptor": receptor } }
-			}) ]
-
 			singleCellOutputs := [ {
 				type: "Resource",
 				spec: {
@@ -524,8 +518,8 @@ self.body(func(inputs) {
 				settings: {
 					axes: [ {
 						column: "sampleId",
-						spec: inputSpec.axesSpec[0]
-					} ] + axesByScClonotypeKeyWithReceptor,
+						spec: sampleIdAxisSpec
+					}, axisByScClonotypeKeyGen(receptor) ],
 					columns: columnsSpecPerSampleSc,
 					storageFormat: "Binary",
 					partitionKeyLength: 1
@@ -538,7 +532,7 @@ self.body(func(inputs) {
 				type: "Xsv",
 				xsvType: "tsv",
 				settings: {
-					axes: axesByScClonotypeKeyWithReceptor,
+					axes: [ axisByScClonotypeKeyGen(receptor) ],
 					columns: columnsSpecPerClonotypeSc,
 					storageFormat: "Binary"
 				},
@@ -599,7 +593,7 @@ self.body(func(inputs) {
 						type: "Xsv",
 						xsvType: "tsv",
 						settings: {
-							axes: axesByScClonotypeKeyWithReceptor,
+							axes: [ axisByScClonotypeKeyGen(receptor) ],
 							columns: transformSpecs(isPrimary ? columnsSpecPerClonotypeNoAggregates : columnsSpecPerClonotypeSecondary, {
 								spec: {
 									domain: {
@@ -619,6 +613,16 @@ self.body(func(inputs) {
 					} ]
 				}
 			}
+
+			singleCellOutputs += [ {
+				type: "Xsv",
+				xsvType: "tsv",
+				settings: cellLinkerColumnSettingsGen(receptor),
+				mem: "16GiB",
+				cpu: 2,
+				name: "cellsLinkerTable",
+				path: ["cellsTsv"]
+			} ]
 
 			chainA := receptorInfo.chains[0]
 			chainB := receptorInfo.chains[1]
@@ -669,6 +673,8 @@ self.body(func(inputs) {
 			singleCellResult.addXsvOutputToBuilder(clonotypes, "propertiesASecondary", "clonotypeProperties/" + receptor + "/aSecondary/")
 			singleCellResult.addXsvOutputToBuilder(clonotypes, "propertiesBPrimary", "clonotypeProperties/" + receptor + "/bPrimary/")
 			singleCellResult.addXsvOutputToBuilder(clonotypes, "propertiesBSecondary", "clonotypeProperties/" + receptor + "/bSecondary/")
+
+			singleCellResult.addXsvOutputToBuilder(clonotypes, "cellsLinkerTable", "clonotypeProperties/" + receptor + "/cellsLinkerTable/")
 		}
 	}
 
