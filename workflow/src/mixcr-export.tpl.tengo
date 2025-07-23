@@ -30,7 +30,7 @@ self.body(func(inputs) {
 	cellTagColumns := params.cellTagColumns
 	// if false cell key will not be hashed
 	hashCellKey := params.hashCellKey
-	if !hashCellKey {
+	if !hashCellKey && !is_undefined(cellTagColumns) {
 		ll.assert(len(cellTagColumns) == 1, "cellTagColumns must be a single column when hashCellKey is false")
 	}
 
