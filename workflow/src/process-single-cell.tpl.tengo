@@ -1,4 +1,4 @@
-//tengo:hash_override 8E4B6062-534D-4322-9CED-EC75E499A10A
+//tengo:hash_override AB9AC8BA-5FFC-40C5-B2F7-AC42181524F5
 
 ll := import("@platforma-sdk/workflow-tengo:ll")
 self := import("@platforma-sdk/workflow-tengo:tpl.light")
@@ -15,7 +15,9 @@ clonotypeLabel := import(":clonotype-label")
 json := import("json")
 math := import("math")
 
-self.defineOutputs("abundanceTsv", "clonotypeTsv", "propertiesAPrimaryTsv", "propertiesASecondaryTsv", "propertiesBPrimaryTsv", "propertiesBSecondaryTsv")
+self.defineOutputs("abundanceTsv", "clonotypeTsv",
+	"propertiesAPrimaryTsv", "propertiesASecondaryTsv", "propertiesBPrimaryTsv", "propertiesBSecondaryTsv",
+	"cellsTsv")
 
 ptablerSw := assets.importSoftware("@platforma-open/milaboratories.software-ptabler:main")
 
@@ -184,6 +186,10 @@ self.body(func(inputs) {
 	)
 	allChainsFilteredDf := allChainsMergedWithScKeyDf.filter(filterCondition)
 
+	allChainsFilteredDf.
+		withColumns(pt.lit(1).alias("1")).
+		save("cells.tsv", {columns: ["sampleId", "cellKey", "scClonotypeKey", "1"]})
+
 	clonotypeTableDf := allChainsFilteredDf.groupBy(
 		"scClonotypeKey", "clonotypeKeyA1", "clonotypeKeyA2", "clonotypeKeyB1", "clonotypeKeyB2"
 	).agg(
@@ -210,6 +216,7 @@ self.body(func(inputs) {
 
 	clonotypeTsv := cellGroupingRunResult.getFile("clonotype.tsv")
 	abundanceTsv := cellGroupingRunResult.getFile("abundance.tsv")
+	cellsTsv := cellGroupingRunResult.getFile("cells.tsv")
 
 	//
 	// Output processing - Reimplemented with PTabler pt API
@@ -302,6 +309,9 @@ self.body(func(inputs) {
 
 		// used for aggregates (i.e. sampleCount and clonotypeLabel)
 		clonotypeTsv: clonotypeTsv,
+
+		// used to build cell <-> clonotype linker column
+		cellsTsv: cellsTsv,
 
 		// must have scClonotypeKey columns
 		propertiesAPrimaryTsv: outputProcessingRunResult.getFile(chainMappings[0].finalOutFile),

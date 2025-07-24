@@ -116,7 +116,7 @@ addSpec := func(columns, additionalSpec) {
 // Ordering rules
 //   AA Sequences
 
-calculateExportSpecs := func(presetSpecForBack, blockId) {
+calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId) {
 	ops := exportSpecOpsFromPreset(presetSpecForBack)
 
 	assemblingFeature := ops.assemblingFeature
@@ -125,6 +125,7 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 	splitByC := ops.splitByC
 
 	isSingleCell := !is_undefined(cellTags) && len(cellTags) > 0
+	hashCellKey := isSingleCell && len(cellTags) == 1
 
 	assemblingFeatureInfo := assemblingFeatureInfo(assemblingFeature)
 	productiveFeature := assemblingFeatureInfo.productiveFeature
@@ -811,9 +812,10 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 
 	// Axes
 
-	axesByClonotypeKey := undefined
-	axesByScClonotypeKey := undefined
+	axisByClonotypeKeyGen := undefined
+	axisByScClonotypeKeyGen := undefined
 	cellTagColumns := undefined
+	cellLinkerColumnSettingsGen := undefined
 
 	if !is_undefined(clonotypeKeyColumns) {
 		// checking that corresponding columns exist in export
@@ -831,39 +833,16 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		//   Its absence indicates that merging would be semantically meaningless (e.g., abundance
 		//   measurements specific to each analysis)
 
-		axesByClonotypeKey = [ {
-			column: "clonotypeKey",
-			naRegex: "",
-			spec: {
-				name: "pl7.app/vdj/clonotypeKey",
-				type: "String",
-				domain: {
-					"pl7.app/vdj/clonotypeKey/structure": string(json.encode(keyStrincture)),
-					"pl7.app/vdj/clonotypingRunId": blockId
-				},
-				annotations: {
-					"pl7.app/label": "Clonotype ID",
-					"pl7.app/table/fontFamily": "monospace",
-					"pl7.app/table/visibility": "default",
-					"pl7.app/table/orderPriority": "110000",
-					"pl7.app/segmentedBy": string(json.encode(["pl7.app/vdj/clonotypingRunId"]))
-				}
-			}
-		} ]
-
-		if isSingleCell {
-			cellTagColumns = slices.map(cellTags, func(cellTag) {
-				return "tagValue" + cellTag
-			})
-
-			axesByScClonotypeKey = [ {
-				column: "scClonotypeKey",
+		axisByClonotypeKeyGen = func(chain) {
+			return {
+				column: "clonotypeKey",
 				naRegex: "",
 				spec: {
-					name: "pl7.app/vdj/scClonotypeKey",
+					name: "pl7.app/vdj/clonotypeKey",
 					type: "String",
 					domain: {
-						"pl7.app/vdj/scClonotypeKey/structure": string(json.encode(keyStrincture)),
+						"pl7.app/vdj/chain": chain,
+						"pl7.app/vdj/clonotypeKey/structure": string(json.encode(keyStrincture)),
 						"pl7.app/vdj/clonotypingRunId": blockId
 					},
 					annotations: {
@@ -874,7 +853,69 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 						"pl7.app/segmentedBy": string(json.encode(["pl7.app/vdj/clonotypingRunId"]))
 					}
 				}
-			} ]
+			}
+		}
+
+		if isSingleCell {
+			cellTagColumns = slices.map(cellTags, func(cellTag) {
+				return "tagValue" + cellTag
+			})
+
+			axisByScClonotypeKeyGen = func(receptor) {
+				return {
+					column: "scClonotypeKey",
+					naRegex: "",
+					spec: {
+						name: "pl7.app/vdj/scClonotypeKey",
+						type: "String",
+						domain: {
+							"pl7.app/vdj/receptor": receptor,
+							"pl7.app/vdj/scClonotypeKey/structure": string(json.encode(keyStrincture)),
+							"pl7.app/vdj/clonotypingRunId": blockId
+						},
+						annotations: {
+							"pl7.app/label": "Clonotype ID",
+							"pl7.app/table/fontFamily": "monospace",
+							"pl7.app/table/visibility": "default",
+							"pl7.app/table/orderPriority": "110000",
+							"pl7.app/segmentedBy": string(json.encode(["pl7.app/vdj/clonotypingRunId"]))
+						}
+					}
+				}
+			}
+
+			cellLinkerColumnSettingsGen = func(receptor) {
+				return {
+					axes: [ {
+						column: "sampleId",
+						spec: sampleIdAxisSpec
+					}, {
+						column: "cellKey",
+						spec: {
+							name: "pl7.app/sc/cellId",
+							type: "String",
+							annotations: a(110000, true, {
+								"pl7.app/label": "Cell ID",
+								"pl7.app/table/fontFamily": "monospace",
+								"pl7.app/parents": string(json.encode([sampleIdAxisSpec.name]))
+							})
+						}
+					}, axisByScClonotypeKeyGen(receptor) ],
+					columns: [ {
+						column: "1",
+						spec: {
+							name: "pl7.app/sc/cellLinker",
+							valueType: "Int",
+							annotations: a(0, undefined, {
+								"pl7.app/label": "Cell Linker",
+								"pl7.app/isLinkerColumn": "true"
+							})
+						}
+					} ],
+					storageFormat: "Binary",
+					partitionKeyLength: 1
+				}
+			}
 
 			//	exportArgs += [ [ "-tags", "Cell" ] ]
 			// 	axesByClonotypeKeyAndCellTag = axesByClonotypeKey + [ {
@@ -897,8 +938,8 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 
 		cellTagColumns: cellTagColumns,
 
-		axesByClonotypeKey: axesByClonotypeKey,
-		axesByScClonotypeKey: axesByScClonotypeKey,
+		axisByClonotypeKeyGen: axisByClonotypeKeyGen,
+		axisByScClonotypeKeyGen: axisByScClonotypeKeyGen,
 
 		columnsSpecPerSample: columnsSpecPerSample,
 		columnsSpecPerSampleSc: columnsSpecPerSampleSc,
@@ -916,7 +957,10 @@ calculateExportSpecs := func(presetSpecForBack, blockId) {
 		mainIsProductiveColumn: mainIsProductiveColumn,
 		mainIsProductiveArgs: mainIsProductiveArgs,
 
-		exportArgs: exportArgs
+		exportArgs: exportArgs,
+
+		hashCellKey: hashCellKey,
+		cellLinkerColumnSettingsGen: cellLinkerColumnSettingsGen
 	}
 }
 

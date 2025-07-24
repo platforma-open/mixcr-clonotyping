@@ -1,5 +1,6 @@
 self := import("@platforma-sdk/workflow-tengo:tpl.light")
 ll := import("@platforma-sdk/workflow-tengo:ll")
+maps := import("@platforma-sdk/workflow-tengo:maps")
 
 calculateExportSpecs := import(":calculate-export-specs")
 
@@ -8,7 +9,12 @@ self.defineOutputs("exportSpecs")
 self.body(func(inputs) {
 	presetSpecForBack := inputs.presetSpecForBack.getDataAsJson()
 
-	exportSpecs := calculateExportSpecs(presetSpecForBack, "test")
+	exportSpecs := calculateExportSpecs(presetSpecForBack, {}, "test")
+	exportSpecs = maps.deepMerge(exportSpecs, {
+    	axisByClonotypeKeyGen: undefined,
+		axisByScClonotypeKeyGen: undefined,
+		cellLinkerColumnSettingsGen: undefined
+	})
 
 	return {
 		exportSpecs: exportSpecs

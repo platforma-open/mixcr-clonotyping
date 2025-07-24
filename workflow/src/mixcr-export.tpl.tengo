@@ -1,4 +1,4 @@
-//tengo:hash_override 553D3080-FB87-44BC-BEEB-DB9EB5F773D8
+//tengo:hash_override E5C1AD4C-B44D-4DE1-BBF1-4CB42ED7579A
 
 ll := import("@platforma-sdk/workflow-tengo:ll")
 self := import("@platforma-sdk/workflow-tengo:tpl.light")
@@ -28,6 +28,11 @@ self.body(func(inputs) {
 	clonotypeKeyArgs := params.clonotypeKeyArgs
 
 	cellTagColumns := params.cellTagColumns
+	// if false cell key will not be hashed
+	hashCellKey := params.hashCellKey
+	if !hashCellKey && !is_undefined(cellTagColumns) {
+		ll.assert(len(cellTagColumns) == 1, "cellTagColumns must be a single column when hashCellKey is false")
+	}
 
 	mainAbundanceColumnUnnormalizedArgs := params.mainAbundanceColumnUnnormalizedArgs
 	mainIsProductiveArgs := params.mainIsProductiveArgs
@@ -144,7 +149,7 @@ self.body(func(inputs) {
 
 		dfSingleCell.addColumns(
 			hashKeyDerivationExpressionPt(clonotypeKeyColumns).alias("clonotypeKey"),
-			hashKeyDerivationExpressionPt(cellTagColumns).alias("cellKey")
+			hashCellKey ? hashKeyDerivationExpressionPt(cellTagColumns).alias("cellKey") : pt.col(cellTagColumns[0]).alias("cellKey")
 		)
 
 		dfSingleCell.save("output.tsv")
