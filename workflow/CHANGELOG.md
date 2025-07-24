@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.0.0
+
+### Major Changes
+
+- 5cd5710: Updated MiXCR
+
 ## 2.26.0
 
 ### Minor Changes
