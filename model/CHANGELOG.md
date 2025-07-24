@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.14.0
+
+### Minor Changes
+
+- 4d7746d: Cell Linker Column & SDK Upgrade
+
 ## 1.13.1
 
 ### Patch Changes
