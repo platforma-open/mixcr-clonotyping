@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 2.25.0
+
+### Minor Changes
+
+- 427ffa6: Include junction lengths and total number of added nt
+
 ## 2.24.0
 
 ### Minor Changes
