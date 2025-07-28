@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.14.1
+
+### Patch Changes
+
+- 8d013c1: Update sdk (use api v2)
+
 ## 1.14.0
 
 ### Minor Changes

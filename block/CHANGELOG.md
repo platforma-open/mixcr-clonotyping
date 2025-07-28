@@ -1,5 +1,15 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.10.2
+
+### Patch Changes
+
+- 8d013c1: Update sdk (use api v2)
+- Updated dependencies [8d013c1]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.14.1
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.ui@1.14.1
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@3.0.1
+
 ## 2.10.1
 
 ### Patch Changes

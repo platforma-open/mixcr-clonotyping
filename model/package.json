@@ -1,6 +1,6 @@
 {
   "name": "@platforma-open/milaboratories.mixcr-clonotyping-2.model",
-  "version": "1.14.0",
+  "version": "1.14.1",
   "description": "Block model",
   "type": "module",
   "main": "dist/index.cjs",
