@@ -173,7 +173,7 @@ export const platforma = BlockModel.create('Heavy')
 
   .title((ctx) => (ctx.args.title ? `MiXCR Clonotyping - ${ctx.args.title}` : 'MiXCR Clonotyping'))
 
-  .done();
+  .done(2);
 
 export type BlockOutputs = InferOutputsType<typeof platforma>;
 export type Href = InferHrefType<typeof platforma>;
