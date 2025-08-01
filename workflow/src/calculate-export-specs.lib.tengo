@@ -125,7 +125,7 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId) {
 	splitByC := ops.splitByC
 
 	isSingleCell := !is_undefined(cellTags) && len(cellTags) > 0
-	hashCellKey := isSingleCell && len(cellTags) == 1
+	hashCellKey := isSingleCell && len(cellTags) > 1
 
 	assemblingFeatureInfo := assemblingFeatureInfo(assemblingFeature)
 	productiveFeature := assemblingFeatureInfo.productiveFeature
@@ -546,7 +546,7 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId) {
 	for junctionType in junctionTypes {
 		feature := junctionType + "Junction"
 		naRegex := junctionType == "VJ" ? "region_not_covered" : "no_d_gene"
-		
+
 		columnsSpecPerClonotypeNoAggregates += [ {
 			column: "nLength" + feature,
 			id: "n-length-" + text.to_lower(junctionType) + "-junction",
@@ -567,7 +567,7 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId) {
 		exportArgs += [ [ "-nLength", feature ] ]
 		orderP -= 100
 	}
-	
+
 	// Spec for total added length (calculated by pt in aggregate-by-clonotype-key, no flag)
 	columnsSpecPerClonotypeNoAggregates += [ {
 		column: "nLengthTotalAdded",
