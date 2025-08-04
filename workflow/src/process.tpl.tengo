@@ -1,7 +1,7 @@
 // process
 
 self := import("@platforma-sdk/workflow-tengo:tpl")
-
+render := import("@platforma-sdk/workflow-tengo:render")
 ll := import("@platforma-sdk/workflow-tengo:ll")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 pframes := import("@platforma-sdk/workflow-tengo:pframes")
@@ -19,7 +19,7 @@ times := import("times")
 mixcrAnalyzeTpl := assets.importTemplate(":mixcr-analyze")
 mixcrExportTpl := assets.importTemplate(":mixcr-export")
 aggregateByClonotypeKeyTpl := assets.importTemplate(":aggregate-by-clonotype-key")
-
+exportReportTpl := assets.importTemplate(":export-report")
 processSingleCellTpl := assets.importTemplate(":process-single-cell")
 
 self.awaitState("InputsLocked")
@@ -99,6 +99,7 @@ self.body(func(inputs) {
 		}
 	}
 	isSingleCell := len(presetSpecForBack.cellTags) > 0
+	hasUmi := !is_undefined(presetSpecForBack.umiTags) && len(presetSpecForBack.umiTags) > 0
 
 	// calculating clns annotations
 
@@ -678,6 +679,13 @@ self.body(func(inputs) {
 		}
 	}
 
+	qcReportTable := render.create(exportReportTpl, {
+		clnsData: mixcrResults.outputData("clns"),
+		isSingleCell: isSingleCell,
+		hasUmi: hasUmi,
+		sampleIdAxisSpec: sampleIdAxisSpec
+	})
+
 	return {
 		"qc.spec": mixcrResults.outputSpec("qc"),
 		"qc.data": mixcrResults.outputData("qc"),
@@ -693,6 +701,7 @@ self.body(func(inputs) {
 
 		"resultsToCache": resultsToCache,
 
-		clonotypes: clonotypes.build()
+		clonotypes: clonotypes.build(),
+		qcReportTable: qcReportTable.output("qcReportTable")
 	}
 })
