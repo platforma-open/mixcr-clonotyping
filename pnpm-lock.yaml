@@ -13,11 +13,11 @@ catalogs:
       specifier: ^1.6.20
       version: 1.6.20
     '@platforma-open/milaboratories.samples-and-data':
-      specifier: ^1.10.8
-      version: 1.10.8
+      specifier: ^1.10.10
+      version: 1.10.10
     '@platforma-open/milaboratories.samples-and-data.model':
-      specifier: ^1.10.1
-      version: 1.10.1
+      specifier: ^1.11.1
+      version: 1.11.1
     '@platforma-open/milaboratories.software-mixcr':
       specifier: 4.7.0-223-develop
       version: 4.7.0-223-develop
@@ -162,10 +162,10 @@ importers:
         version: link:../model
       '@platforma-open/milaboratories.samples-and-data':
         specifier: 'catalog:'
-        version: 1.10.8
+        version: 1.10.10
       '@platforma-open/milaboratories.samples-and-data.model':
         specifier: 'catalog:'
-        version: 1.10.1
+        version: 1.11.1
       '@platforma-sdk/model':
         specifier: 'catalog:'
         version: 1.42.20
@@ -1220,17 +1220,17 @@ packages:
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
 
-  '@platforma-open/milaboratories.samples-and-data.model@1.10.1':
-    resolution: {integrity: sha512-InVfx+6RO+54Ammxvc8pzXlhYqFMFZbvkQ0gMIuU7uLiLJU5WywS4oV88QtugiPrGRvk4loO13Bzg3ZhzgMzUQ==}
+  '@platforma-open/milaboratories.samples-and-data.model@1.11.1':
+    resolution: {integrity: sha512-DWu+JlIeK/qcRepXzm+y6s6jOjs2DIRWgZLQAhodxNKp/16+DoZ3dgw7C7VVzNOiMPa7OpvWXFqbbmvDdtqhPQ==}
 
-  '@platforma-open/milaboratories.samples-and-data.ui@1.17.4':
-    resolution: {integrity: sha512-ixyD9NGazylHBIEdl4IdBf1JYIwviAwyurFTXyVnxLSH0e64Hxaj3RkrdfNNedVjjBcw0uid2N4NxaO7Kd1Blw==}
+  '@platforma-open/milaboratories.samples-and-data.ui@1.18.1':
+    resolution: {integrity: sha512-2D0ouDSqvSyO8VObYx67pTQUtJLh1nG2F0tegar5Gj6d1eihRNTblu7CBJr6ihqyYzCX/oEtaOn7RbFx4KFbFw==}
 
-  '@platforma-open/milaboratories.samples-and-data.workflow@1.12.4':
-    resolution: {integrity: sha512-4VKHxUL+XrICIiF/dt/j6TrNJ4jZSFbX9Iq7Lt3acVMjXVrrEpAsIAyyqygbbG/RiwWBbZoPRw/vN0cZnhJEsw==}
+  '@platforma-open/milaboratories.samples-and-data.workflow@1.13.1':
+    resolution: {integrity: sha512-9ibFPy0yIgHfyexXMzBvozaVa0gFpAFUF0pbWgIZgMsYg4rS8euPG0Qp0+hMyvzjsMylteDO+U4O73wlNtRtpQ==}
 
-  '@platforma-open/milaboratories.samples-and-data@1.10.8':
-    resolution: {integrity: sha512-wnt9gNFoGc+HO8T0GxO/mLvtqG06Jk0UKNPsOZbqdDmIrmCq5SrV3gS9ICwnf9EhWt/lc2cFxk3qvBNDfmk3VA==}
+  '@platforma-open/milaboratories.samples-and-data@1.10.10':
+    resolution: {integrity: sha512-uWjPUO0ZDNzGgdSY3KsYaWS0cwtTt9RT+E6Tywhs6tJcmzd9TcKGfMS1s1B6dyGDBHCLcKtIYCmWaUmJLnkAXw==}
 
   '@platforma-open/milaboratories.software-mixcr@4.7.0-223-develop':
     resolution: {integrity: sha512-oWeH3R5tEYuHMQiomg5elVG0gNaaoGZdXoM4X98gRLhg2yvtJCbjC+s3N6bY6z/Hs3Vspo0dFDgj3w21axosrg==}
@@ -6863,22 +6863,22 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@platforma-open/milaboratories.samples-and-data.model@1.10.1':
+  '@platforma-open/milaboratories.samples-and-data.model@1.11.1':
     dependencies:
       '@platforma-sdk/model': 1.42.20
       zod: 3.23.8
 
-  '@platforma-open/milaboratories.samples-and-data.ui@1.17.4': {}
+  '@platforma-open/milaboratories.samples-and-data.ui@1.18.1': {}
 
-  '@platforma-open/milaboratories.samples-and-data.workflow@1.12.4':
+  '@platforma-open/milaboratories.samples-and-data.workflow@1.13.1':
     dependencies:
       '@platforma-sdk/workflow-tengo': 4.14.1
 
-  '@platforma-open/milaboratories.samples-and-data@1.10.8':
+  '@platforma-open/milaboratories.samples-and-data@1.10.10':
     dependencies:
-      '@platforma-open/milaboratories.samples-and-data.model': 1.10.1
-      '@platforma-open/milaboratories.samples-and-data.ui': 1.17.4
-      '@platforma-open/milaboratories.samples-and-data.workflow': 1.12.4
+      '@platforma-open/milaboratories.samples-and-data.model': 1.11.1
+      '@platforma-open/milaboratories.samples-and-data.ui': 1.18.1
+      '@platforma-open/milaboratories.samples-and-data.workflow': 1.13.1
       '@platforma-sdk/model': 1.42.20
 
   '@platforma-open/milaboratories.software-mixcr@4.7.0-223-develop': {}

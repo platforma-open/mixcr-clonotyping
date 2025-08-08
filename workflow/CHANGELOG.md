@@ -1,5 +1,17 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.0.3
+
+### Patch Changes
+
+- 37f37ee: Updated SDK
+
+## 3.0.2
+
+### Patch Changes
+
+- 59ead64: Fix for multi-barcode single cell presets
+
 ## 3.0.1
 
 ### Patch Changes
