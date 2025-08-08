@@ -27,6 +27,22 @@ self.body(func(inputs) {
     isSingleCell := inputs.isSingleCell
     hasUmi := inputs.hasUmi
     sampleIdAxisSpec := inputs.sampleIdAxisSpec
+    chains := inputs.chains
+
+    chainInfos := {
+	"IGHeavy": { mixcrFilter: "IGH", name: "IG Heavy", shortName: "Heavy" },
+	"IGLight": { mixcrFilter: "IGK,IGL", name: "IG Light", shortName: "Light" },
+	"TCRAlpha": { mixcrFilter: "TRA", name: "TCR Alpha", shortName: "Alpha" },
+	"TCRBeta": { mixcrFilter: "TRB", name: "TCR Beta", shortName: "Beta" },
+	"TCRGamma": { mixcrFilter: "TRG", name: "TCR Gamma", shortName: "Gamma" },
+	"TCRDelta": { mixcrFilter: "TRD", name: "TCR Delta", shortName: "Delta" }
+    }
+
+    chainsForMixcr := []
+
+    for chain in chains {
+        chainsForMixcr += text.split(chainInfos[chain].mixcrFilter, ",")
+    }
     
     // Get all clns files from the input data
     clnsFiles := clnsData.inputs()
@@ -82,7 +98,7 @@ self.body(func(inputs) {
     
     tsvFile := wfResult.getFile("qc-report-processed.tsv")
 
-    qcReportColumns := qcReportColumns(hasUmi, isSingleCell, sampleIdAxisSpec)
+    qcReportColumns := qcReportColumns(hasUmi, isSingleCell, sampleIdAxisSpec, chainsForMixcr)
     reportColumnsSpec := qcReportColumns.reportColumnsSpec
 
     qcReportTable := xsv.importFile(

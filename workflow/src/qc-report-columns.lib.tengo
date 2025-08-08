@@ -5,7 +5,7 @@ ll := import("@platforma-sdk/workflow-tengo:ll")
 pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 
 // QC Report column specifications function
-getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec) {
+getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec, chains) {
     // Bulk sequencing columns
     baseColumns := [
     {
@@ -836,22 +836,6 @@ getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec) {
         }
     },
     {
-        column: "align.readsWithChain.TRA",
-        id: "align-reads-with-chain-tra",
-        allowNA: true,
-        naRegex: "",
-        spec: {
-            name: "mixcr.com/reports/align/readsWithChain/TRA",
-            valueType: "Long",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/table/orderPriority": "96600",
-                "pl7.app/table/visibility": "optional",
-                "pl7.app/label": "Reads with Chain TRA"
-            }
-        }
-    },
-    {
         column: "align.readsWithChain.TRAD",
         id: "align-reads-with-chain-trad",
         allowNA: true,
@@ -881,23 +865,6 @@ getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec) {
                 "pl7.app/table/orderPriority": "96800",
                 "pl7.app/table/visibility": "default",
                 "pl7.app/label": "Reads with Chain TRAD (%)"
-            }
-        }
-    },
-    {
-        column: "align.readsWithChain.TRAPercents",
-        id: "align-reads-with-chain-tra-percents",
-        allowNA: true,
-        naRegex: "",
-        spec: {
-            name: "mixcr.com/reports/align/readsWithChain/TRAPercents",
-            valueType: "Double",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/max": "100",
-                "pl7.app/table/orderPriority": "96900",
-                "pl7.app/table/visibility": "default",
-                "pl7.app/label": "Reads with Chain TRA (%)"
             }
         }
     },
@@ -964,171 +931,6 @@ getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec) {
                 "pl7.app/table/orderPriority": "97300",
                 "pl7.app/table/visibility": "default",
                 "pl7.app/label": "Reads with Chain TRG (%)"
-            }
-        }
-    },
-    {
-        column: "clonesWithChain.IGH",
-        id: "clones-with-chain-igh",
-        allowNA: true,
-        naRegex: "",
-        spec: {
-            name: "mixcr.com/reports/clonesWithChain/IGH",
-            valueType: "Long",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/table/orderPriority": "97400",
-                "pl7.app/table/visibility": "optional",
-                "pl7.app/label": "Clones with Chain IGH"
-            }
-        }
-    },
-    {
-        column: "clonesWithChain.IGHPercents",
-        id: "clones-with-chain-igh-percents",
-        allowNA: true,
-        naRegex: "",
-        spec: {
-            name: "mixcr.com/reports/clonesWithChain/IGHPercents",
-            valueType: "Double",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/max": "100",
-                "pl7.app/table/orderPriority": "97500",
-                "pl7.app/table/visibility": "default",
-                "pl7.app/label": "Clones with Chain IGH (%)"
-            }
-        }
-    },
-    {
-        column: "clonesWithChain.IGK",
-        id: "clones-with-chain-igk",
-        allowNA: true,
-        naRegex: "",
-        spec: {
-            name: "mixcr.com/reports/clonesWithChain/IGK",
-            valueType: "Long",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/table/orderPriority": "97600",
-                "pl7.app/table/visibility": "optional",
-                "pl7.app/label": "Clones with Chain IGK"
-            }
-        }
-    },
-    {
-        column: "clonesWithChain.IGKPercents",
-        id: "clones-with-chain-igk-percents",
-        allowNA: true,
-        naRegex: "",
-        spec: {
-            name: "mixcr.com/reports/clonesWithChain/IGKPercents",
-            valueType: "Double",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/max": "100",
-                "pl7.app/table/orderPriority": "97700",
-                "pl7.app/table/visibility": "default",
-                "pl7.app/label": "Clones with Chain IGK (%)"
-            }
-        }
-    },
-    {
-        column: "clonesWithChain.IGL",
-        id: "clones-with-chain-igl",
-        allowNA: true,
-        naRegex: "",
-        spec: {
-            name: "mixcr.com/reports/clonesWithChain/IGL",
-            valueType: "Long",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/table/orderPriority": "97800",
-                "pl7.app/table/visibility": "optional",
-                "pl7.app/label": "Clones with Chain IGL"
-            }
-        }
-    },
-    {
-        column: "clonesWithChain.IGLPercents",
-        id: "clones-with-chain-igl-percents",
-        allowNA: true,
-        naRegex: "",
-        spec: {
-            name: "mixcr.com/reports/clonesWithChain/IGLPercents",
-            valueType: "Double",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/max": "100",
-                "pl7.app/table/orderPriority": "97900",
-                "pl7.app/table/visibility": "default",
-                "pl7.app/label": "Clones with Chain IGL (%)"
-            }
-        }
-    },
-    {
-        column: "clonesWithChain.TRA",
-        id: "clones-with-chain-tra",
-        allowNA: true,
-        naRegex: "",
-        spec: {
-            name: "mixcr.com/reports/clonesWithChain/TRA",
-            valueType: "Long",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/table/orderPriority": "98000",
-                "pl7.app/table/visibility": "optional",
-                "pl7.app/label": "Clones with Chain TRA"
-            }
-        }
-    },
-    {
-        column: "clonesWithChain.TRAPercents",
-        id: "clones-with-chain-tra-percents",
-        allowNA: true,
-        naRegex: "",
-        spec: {
-            name: "mixcr.com/reports/clonesWithChain/TRAPercents",
-            valueType: "Double",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/max": "100",
-                "pl7.app/table/orderPriority": "98100",
-                "pl7.app/table/visibility": "default",
-                "pl7.app/label": "Clones with Chain TRA (%)"
-            }
-        }
-    },
-    {
-        column: "clonesWithChain.TRB",
-        id: "clones-with-chain-trb",
-        allowNA: true,
-        naRegex: "",
-        spec: {
-            name: "mixcr.com/reports/clonesWithChain/TRB",
-            valueType: "Long",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/table/orderPriority": "98200",
-                "pl7.app/table/visibility": "optional",
-                "pl7.app/label": "Clones with Chain TRB"
-            }
-        }
-    },
-    {
-        column: "clonesWithChain.TRBPercents",
-        id: "clones-with-chain-trb-percents",
-        allowNA: true,
-        naRegex: "",
-        spec: {
-            name: "mixcr.com/reports/clonesWithChain/TRBPercents",
-            valueType: "Double",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/max": "100",
-                "pl7.app/table/orderPriority": "98300",
-                "pl7.app/table/visibility": "default",
-                "pl7.app/label": "Clones with Chain TRB (%)"
             }
         }
     },
@@ -1444,8 +1246,26 @@ getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec) {
                 "pl7.app/label": "Refine Tags CELL - Output Diversity (%)"
             }
         }
+    }]
+
+    for chain in chains {
+        singleCellColumns += [{
+            column: "clonesWithChain." + chain,
+            id: "clones-with-chain-" + chain,
+            allowNA: true,
+            naRegex: "",
+            spec: {
+                name: "mixcr.com/reports/clonesWithChain/" + chain,
+                valueType: "Long",
+                annotations: {
+                    "pl7.app/min": "0",
+                    "pl7.app/table/orderPriority": "97400",
+                    "pl7.app/table/visibility": "optional",
+                    "pl7.app/label": "Clones with Chain " + chain
+                }
+            }
+        }]
     }
-    ]
 
     columns := baseColumns
     if hasUmi {

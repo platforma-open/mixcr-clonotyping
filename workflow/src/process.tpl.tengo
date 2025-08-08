@@ -683,7 +683,8 @@ self.body(func(inputs) {
 		clnsData: mixcrResults.outputData("clns"),
 		isSingleCell: isSingleCell,
 		hasUmi: hasUmi,
-		sampleIdAxisSpec: sampleIdAxisSpec
+		sampleIdAxisSpec: sampleIdAxisSpec,
+		chains: chains
 	})
 
 	return {
