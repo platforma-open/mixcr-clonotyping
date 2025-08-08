@@ -489,7 +489,7 @@ getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec) {
         column: "assemble.preCloneAssembler.unassignedAlignments",
         id: "assemble-pre-clone-assembler-unassigned-alignments",
         allowNA: true,
-        naRegex: "NaN",
+        naRegex: "",
         spec: {
             name: "mixcr.com/reports/assemble/preCloneAssembler/unassignedAlignments",
             valueType: "Long",
@@ -505,7 +505,7 @@ getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec) {
         column: "assemble.preCloneAssembler.unassignedAlignmentsPercents",
         id: "assemble-pre-clone-assembler-unassigned-alignments-percents",
         allowNA: true,
-        naRegex: "NaN",
+        naRegex: "",
         spec: {
             name: "mixcr.com/reports/assemble/preCloneAssembler/unassignedAlignmentsPercents",
             valueType: "Double",
