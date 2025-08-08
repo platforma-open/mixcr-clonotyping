@@ -1,11 +1,14 @@
 import type {
   InferHrefType,
+  PlDataTableStateV2,
 } from '@platforma-sdk/model';
 import {
   BlockModel,
   It,
   MainOutputs,
   StagingOutputs,
+  createPlDataTableV2,
+  createPlDataTableStateV2,
   getImportProgress,
   getResourceField,
   isPColumn,
@@ -17,10 +20,18 @@ import {
 import { BlockArgs, BlockArgsValid } from './args';
 import { ProgressPrefix } from './progress';
 
+export type UiState = {
+  tableState: PlDataTableStateV2;
+};
+
 export const platforma = BlockModel.create('Heavy')
 
   .withArgs<BlockArgs>({
     chains: ['IG', 'TCRAB', 'TCRGD'],
+  })
+
+  .withUiState<UiState>({
+    tableState: createPlDataTableStateV2(),
   })
 
   .retentiveOutput('presets', (ctx) =>
@@ -151,6 +162,18 @@ export const platforma = BlockModel.create('Heavy')
     ) as Record<string, string>;
   })
 
+  .output('pt', (ctx) => {
+    const pCols = ctx.outputs?.resolve('qcReportTable')?.getPColumns();
+    if (pCols === undefined) {
+      return undefined;
+    }
+    return createPlDataTableV2(
+      ctx,
+      pCols,
+      ctx.uiState.tableState,
+    );
+  })
+
   // @TODO migrate to lambdas and merge with prerunFileImports
   .output(
     'mainFileImports',
@@ -166,7 +189,10 @@ export const platforma = BlockModel.create('Heavy')
     'libraryUploadProgress', (ctx) => ctx.outputs?.resolve({ field: 'libraryImportHandle', allowPermanentAbsence: true })?.getImportProgress(), { isActive: true })
 
   .sections((_ctx) => {
-    return [{ type: 'link', href: '/', label: 'Main' }];
+    return [
+      { type: 'link', href: '/', label: 'Main' },
+      { type: 'link', href: '/qc-report-table', label: 'QC Report Table' },
+    ];
   })
 
   .argsValid((ctx) => BlockArgsValid.safeParse(ctx.args).success)
@@ -184,4 +210,3 @@ export * from './progress';
 export * from './qc';
 export * from './reports';
 export { BlockArgs };
-

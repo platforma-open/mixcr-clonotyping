@@ -1,6 +1,7 @@
 import { platforma } from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
 import { defineApp } from '@platforma-sdk/ui-vue';
 import MainPageWrapper from './MainPageWrapper.vue';
+import QcReportTablePage from './QcReportTablePage.vue';
 
 export const sdkPlugin = defineApp(platforma, (app) => {
   return {
@@ -12,6 +13,7 @@ export const sdkPlugin = defineApp(platforma, (app) => {
     },
     routes: {
       '/': () => MainPageWrapper,
+      '/qc-report-table': () => QcReportTablePage,
     },
   };
 });

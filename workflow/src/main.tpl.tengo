@@ -11,6 +11,7 @@ pframes := import("@platforma-sdk/workflow-tengo:pframes")
 
 calculatePresetInfoTpl := assets.importTemplate(":calculate-preset-info")
 processTpl := assets.importTemplate(":process")
+exportReportTpl := assets.importTemplate(":export-report")
 
 wf.setPreRun(assets.importTemplate(":prerun"))
 
@@ -176,6 +177,10 @@ wf.body(func(args) {
 	if !is_undefined(libraryImportHandle) {
 		outputs.libraryImportHandle = libraryImportHandle
 	}
+	
+	qcReportTable := runMixcr.output("qcReportTable")
+
+	outputs.qcReportTable = pframes.exportFrame(qcReportTable)
 
 	return {
 		outputs: outputs,
