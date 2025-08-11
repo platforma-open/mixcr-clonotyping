@@ -22,11 +22,11 @@ const speciesOptions: ListOption[] = [
   { label: 'Alpaca', value: 'alpaca' },
   { label: 'Macaca fascicularis', value: 'mfas' },
   { label: 'Macaca mulatta', value: 'mmul' },
-  { label: 'Chicken', value: 'gallus'},
+  { label: 'Chicken', value: 'gallus' },
   { label: 'Rabbit', value: 'rabbit' },
   { label: 'Rat', value: 'rat' },
   { label: 'Sheep', value: 'sheep' },
-  { label: 'Spalax', value: 'spalax' }
+  { label: 'Spalax', value: 'spalax' },
 ];
 
 const presetSourceOptions: ListOption<Preset['type']>[] = [
@@ -142,7 +142,7 @@ const computedTab = computed({
   },
 });
 
-watch(computedTab, (newValue, oldValue) => {
+watch(computedTab, (newValue) => {
   if (newValue === 'fromFile') {
     app.model.args.inputLibrary = undefined;
   }
@@ -182,30 +182,113 @@ watch(
   },
 );
 
+const receptors = [
+  { value: 'IG', label: 'IG' },
+  { value: 'TCRAB', label: 'TCR-αβ' },
+  { value: 'TCRGD', label: 'TCR-ɣδ' },
+];
+
+const chains = [
+  { value: 'IGHeavy', label: 'IG Heavy' },
+  { value: 'IGLight', label: 'IG Light' },
+  { value: 'TCRAlpha', label: 'TCR-α' },
+  { value: 'TCRBeta', label: 'TCR-β' },
+  { value: 'TCRGamma', label: 'TCR-ɣ' },
+  { value: 'TCRDelta', label: 'TCR-δ' },
+];
+
+const receptorToChains: Record<string, string[]> = {
+  IG: ['IGHeavy', 'IGLight'],
+  TCRAB: ['TCRAlpha', 'TCRBeta'],
+  TCRGD: ['TCRGamma', 'TCRDelta'],
+};
+
+const allOptions = [...receptors, ...chains];
+const allReceptorValues = receptors.map((r) => r.value);
+
+if (!app.model.ui.lastLibraryHash) app.model.ui.lastLibraryHash = '';
+if (!app.model.ui.lastSingleCellHash) app.model.ui.lastSingleCellHash = '';
+
+function hashLibrary(library: any, options: any[] = []): string {
+  if (!library) return '';
+  const values = options.map(o => o.value).sort().join(',');
+  // Hash based on library identity + options length, not the options themselves
+  const libraryId = typeof library === 'object' && library?.blockId && library?.name 
+    ? `${library.blockId}:${library.name}` 
+    : String(library);
+  return `${libraryId}:${values}`;
+}
+
+function hashSingleCell(isSingleCell: boolean): string {
+  return isSingleCell ? 'singleCell' : 'bulk';
+}
+
+const availableChains = computed(() => app.model.outputs.availableChains);
+const libraryOptions = computed(() => availableChains.value?.options || []);
+const libraryChainSet = computed(() => new Set(libraryOptions.value.map(o => o.value)));
+
+const getDefaultSelection = (): string[] => {
+  if (app.model.args.inputLibrary && libraryOptions.value.length) {
+    if (isSingleCell.value) {
+      return receptors
+        .filter(r => receptorToChains[r.value].some(chain => libraryChainSet.value.has(chain)))
+        .map(r => r.value);
+    }
+    return libraryOptions.value.map(o => o.value);
+  }
+  return allReceptorValues;
+};
+
 const receptorOrChainsOptions = computed(() => {
-  const receptors = [
-    { value: 'IG', label: 'IG' },
-    { value: 'TCRAB', label: 'TCR-αβ' },
-    { value: 'TCRGD', label: 'TCR-ɣδ' },
-  ];
-  const chains = [
-    { value: 'IGHeavy', label: 'IG Heavy' },
-    { value: 'IGLight', label: 'IG Light' },
-    { value: 'TCRAlpha', label: 'TCR-α' },
-    { value: 'TCRBeta', label: 'TCR-β' },
-    { value: 'TCRGamma', label: 'TCR-ɣ' },
-    { value: 'TCRDelta', label: 'TCR-δ' },
-  ];
-  if (isSingleCell.value) return receptors;
-  return [...receptors, ...chains];
+  if (libraryOptions.value.length) {
+    if (isSingleCell.value) {
+      const filtered = receptors.filter(r =>
+        receptorToChains[r.value].some(chain => libraryChainSet.value.has(chain))
+      );
+      return filtered.length ? filtered : receptors;
+    }
+    return libraryOptions.value;
+  }
+  return isSingleCell.value ? receptors : allOptions;
 });
 
-const receptorOrChainsModel = computed({
-  get: () => (app.model.args.chains ?? []),
-  set: (value) => {
-    app.model.args.chains = value ?? [];
+const receptorOrChainsModel = computed<string[]>({
+  get() {
+    // Pure getter - no side effects, only return current value
+    return app.model.args.chains ?? [];
   },
+  set(selection: string[]) {
+    app.model.args.chains = selection ?? [];
+  }
 });
+
+// Watcher to handle all state modifications
+watch(
+  () => ({
+    library: app.model.args.inputLibrary,
+    libHash: hashLibrary(app.model.args.inputLibrary, libraryOptions.value),
+    modeHash: hashSingleCell(isSingleCell.value),
+  }),
+  ({ library, libHash, modeHash }) => {
+    const libraryChanged = app.model.ui.lastLibraryHash !== libHash;
+    const modeChanged = app.model.ui.lastSingleCellHash !== modeHash;
+
+    if (libraryChanged || modeChanged) {
+      // All state modifications happen here, not in computed getter
+      app.model.ui.lastLibraryHash = libHash;
+      app.model.ui.lastSingleCellHash = modeHash;
+      const updated = getDefaultSelection();
+      
+      // Only update if selection actually changed to prevent unnecessary updates
+      const current = app.model.args.chains ?? [];
+      if (JSON.stringify(updated.sort()) !== JSON.stringify(current.sort())) {
+        app.model.args.chains = updated;
+      }
+    }
+  },
+  { immediate: true }
+);
+
 </script>
 
 <template>

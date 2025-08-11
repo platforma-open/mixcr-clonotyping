@@ -31,6 +31,8 @@ export const BlockArgsValid = z.object({
   title: z.string().optional(),
   presetCommonName: z.string().optional(),
   chains: z.array(z.string()).optional(),
+  lastLibraryHash: z.string().optional(),
+  lastSingleCellHash: z.string().optional(),
 });
 export type BlockArgsValid = z.infer<typeof BlockArgsValid>;
 
