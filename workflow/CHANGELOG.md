@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.0.4
+
+### Patch Changes
+
+- 97fc3cf: Update sdk to fix issue with broken python venv
+
 ## 3.0.3
 
 ### Patch Changes
