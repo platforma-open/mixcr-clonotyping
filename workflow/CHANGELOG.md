@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.1.0
+
+### Minor Changes
+
+- 78e7e7b: New section with QC report table
+
 ## 3.0.4
 
 ### Patch Changes

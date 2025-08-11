@@ -1,5 +1,16 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.15.0
+
+### Minor Changes
+
+- 78e7e7b: New section with QC report table
+
+### Patch Changes
+
+- Updated dependencies [78e7e7b]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.15.0
+
 ## 1.14.2
 
 ### Patch Changes
