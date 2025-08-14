@@ -163,10 +163,7 @@ export const platforma = BlockModel.create('Heavy')
   })
 
   .output('pt', (ctx) => {
-    const pCols = ctx.outputs?.resolve({
-      field: 'qcReportTable',
-      allowPermanentAbsence: true,
-    })?.getPColumns();
+    const pCols = ctx.outputs?.resolve({ field: 'qcReportTable', assertFieldType: 'Input', allowPermanentAbsence: true })?.getPColumns();
     if (pCols === undefined) {
       return undefined;
     }
