@@ -675,7 +675,15 @@ self.body(func(inputs) {
 			singleCellResult.addXsvOutputToBuilder(clonotypes, "propertiesBPrimary", "clonotypeProperties/" + receptor + "/bPrimary/")
 			singleCellResult.addXsvOutputToBuilder(clonotypes, "propertiesBSecondary", "clonotypeProperties/" + receptor + "/bSecondary/")
 
-			singleCellResult.addXsvOutputToBuilder(clonotypes, "cellsLinkerTable", "clonotypeProperties/" + receptor + "/cellsLinkerTable/")
+			for columnName in singleCellResult.listXsvColumns("cellsLinkerTable") {
+				anonymizedData := singleCellResult.outputData("cellsLinkerTable", columnName)
+				clonotypes.add(
+					"clonotypeProperties/" + receptor + "/cellsLinkerTable/" + columnName,
+					singleCellResult.outputSpec("cellsLinkerTable", columnName),
+					anonymize.deanonymizePKeys(anonymizedData, 0, [0], anonymizationResult.mapping)
+				)
+				resultsToCache["clonotypeProperties/" + receptor + "/cellsLinkerTable/" + columnName] = anonymizedData
+			}		
 		}
 	}
 
