@@ -545,12 +545,11 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId) {
 	junctionTypes := [ "VJ", "VD", "DJ" ]
 	for junctionType in junctionTypes {
 		feature := junctionType + "Junction"
-		naRegex := junctionType == "VJ" ? "region_not_covered" : "no_d_gene"
 
 		columnsSpecPerClonotypeNoAggregates += [ {
 			column: "nLength" + feature,
 			id: "n-length-" + text.to_lower(junctionType) + "-junction",
-			naRegex: naRegex,
+			naRegex: "^[a-z_]*$",
 			allowNA: true,
 			spec: {
 				name: "pl7.app/vdj/sequenceLength",
