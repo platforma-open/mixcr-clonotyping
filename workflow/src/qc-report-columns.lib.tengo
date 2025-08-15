@@ -1248,24 +1248,24 @@ getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec, chains) {
         }
     }]
 
-    for chain in chains {
-        singleCellColumns += [{
-            column: "clonesWithChain." + chain,
-            id: "clones-with-chain-" + chain,
-            allowNA: true,
-            naRegex: "",
-            spec: {
-                name: "mixcr.com/reports/clonesWithChain/" + chain,
-                valueType: "Long",
-                annotations: {
-                    "pl7.app/min": "0",
-                    "pl7.app/table/orderPriority": "97400",
-                    "pl7.app/table/visibility": "optional",
-                    "pl7.app/label": "Clones with Chain " + chain
-                }
-            }
-        }]
-    }
+    // for chain in chains {
+    //     singleCellColumns += [{
+    //         column: "clonesWithChain." + chain,
+    //         id: "clones-with-chain-" + chain,
+    //         allowNA: true,
+    //         naRegex: "",
+    //         spec: {
+    //             name: "mixcr.com/reports/clonesWithChain/" + chain,
+    //             valueType: "Long",
+    //             annotations: {
+    //                 "pl7.app/min": "0",
+    //                 "pl7.app/table/orderPriority": "97400",
+    //                 "pl7.app/table/visibility": "optional",
+    //                 "pl7.app/label": "Clones with Chain " + chain
+    //             }
+    //         }
+    //     }]
+    // }
 
     columns := baseColumns
     if hasUmi {
