@@ -736,204 +736,204 @@ getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec, chains) {
     
     // Single Cell columns
     singleCellColumns := [
-    {
-        column: "align.readsWithChain.IGH",
-        id: "align-reads-with-chain-igh",
-        allowNA: true,
-        naRegex: "",
-        spec: {
-            name: "mixcr.com/reports/align/readsWithChain/IGH",
-            valueType: "Long",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/table/orderPriority": "96000",
-                "pl7.app/table/visibility": "optional",
-                "pl7.app/label": "Reads with Chain IGH"
-            }
-        }
-    },
-    {
-        column: "align.readsWithChain.IGHPercents",
-        id: "align-reads-with-chain-igh-percents",
-        allowNA: true,
-        naRegex: "",
-        spec: {
-            name: "mixcr.com/reports/align/readsWithChain/IGHPercents",
-            valueType: "Double",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/max": "100",
-                "pl7.app/table/orderPriority": "96100",
-                "pl7.app/table/visibility": "default",
-                "pl7.app/label": "Reads with Chain IGH (%)"
-            }
-        }
-    },
-    {
-        column: "align.readsWithChain.IGK",
-        id: "align-reads-with-chain-igk",
-        allowNA: true,
-        naRegex: "",
-        spec: {
-            name: "mixcr.com/reports/align/readsWithChain/IGK",
-            valueType: "Long",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/table/orderPriority": "96200",
-                "pl7.app/table/visibility": "optional",
-                "pl7.app/label": "Reads with Chain IGK"
-            }
-        }
-    },
-    {
-        column: "align.readsWithChain.IGKPercents",
-        id: "align-reads-with-chain-igk-percents",
-        allowNA: true,
-        naRegex: "",
-        spec: {
-            name: "mixcr.com/reports/align/readsWithChain/IGKPercents",
-            valueType: "Double",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/max": "100",
-                "pl7.app/table/orderPriority": "96300",
-                "pl7.app/table/visibility": "default",
-                "pl7.app/label": "Reads with Chain IGK (%)"
-            }
-        }
-    },
-    {
-        column: "align.readsWithChain.IGL",
-        id: "align-reads-with-chain-igl",
-        allowNA: true,
-        naRegex: "",
-        spec: {
-            name: "mixcr.com/reports/align/readsWithChain/IGL",
-            valueType: "Long",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/table/orderPriority": "96400",
-                "pl7.app/table/visibility": "optional",
-                "pl7.app/label": "Reads with Chain IGL"
-            }
-        }
-    },
-    {
-        column: "align.readsWithChain.IGLPercents",
-        id: "align-reads-with-chain-igl-percents",
-        allowNA: true,
-        naRegex: "",
-        spec: {
-            name: "mixcr.com/reports/align/readsWithChain/IGLPercents",
-            valueType: "Double",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/max": "100",
-                "pl7.app/table/orderPriority": "96500",
-                "pl7.app/table/visibility": "default",
-                "pl7.app/label": "Reads with Chain IGL (%)"
-            }
-        }
-    },
-    {
-        column: "align.readsWithChain.TRAD",
-        id: "align-reads-with-chain-trad",
-        allowNA: true,
-        naRegex: "",
-        spec: {
-            name: "mixcr.com/reports/align/readsWithChain/TRAD",
-            valueType: "Long",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/table/orderPriority": "96700",
-                "pl7.app/table/visibility": "optional",
-                "pl7.app/label": "Reads with Chain TRAD"
-            }
-        }
-    },
-    {
-        column: "align.readsWithChain.TRADPercents",
-        id: "align-reads-with-chain-trad-percents",
-        allowNA: true,
-        naRegex: "",
-        spec: {
-            name: "mixcr.com/reports/align/readsWithChain/TRADPercents",
-            valueType: "Double",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/max": "100",
-                "pl7.app/table/orderPriority": "96800",
-                "pl7.app/table/visibility": "default",
-                "pl7.app/label": "Reads with Chain TRAD (%)"
-            }
-        }
-    },
-    {
-        column: "align.readsWithChain.TRB",
-        id: "align-reads-with-chain-trb",
-        allowNA: true,
-        naRegex: "",
-        spec: {
-            name: "mixcr.com/reports/align/readsWithChain/TRB",
-            valueType: "Long",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/table/orderPriority": "97000",
-                "pl7.app/table/visibility": "optional",
-                "pl7.app/label": "Reads with Chain TRB"
-            }
-        }
-    },
-    {
-        column: "align.readsWithChain.TRBPercents",
-        id: "align-reads-with-chain-trb-percents",
-        allowNA: true,
-        naRegex: "",
-        spec: {
-            name: "mixcr.com/reports/align/readsWithChain/TRBPercents",
-            valueType: "Double",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/max": "100",
-                "pl7.app/table/orderPriority": "97100",
-                "pl7.app/table/visibility": "default",
-                "pl7.app/label": "Reads with Chain TRB (%)"
-            }
-        }
-    },
-    {
-        column: "align.readsWithChain.TRG",
-        id: "align-reads-with-chain-trg",
-        allowNA: true,
-        naRegex: "",
-        spec: {
-            name: "mixcr.com/reports/align/readsWithChain/TRG",
-            valueType: "Long",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/table/orderPriority": "97200",
-                "pl7.app/table/visibility": "optional",
-                "pl7.app/label": "Reads with Chain TRG"
-            }
-        }
-    },
-    {
-        column: "align.readsWithChain.TRGPercents",
-        id: "align-reads-with-chain-trg-percents",
-        allowNA: true,
-        naRegex: "",
-        spec: {
-            name: "mixcr.com/reports/align/readsWithChain/TRGPercents",
-            valueType: "Double",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/max": "100",
-                "pl7.app/table/orderPriority": "97300",
-                "pl7.app/table/visibility": "default",
-                "pl7.app/label": "Reads with Chain TRG (%)"
-            }
-        }
-    },
+    // {
+    //     column: "align.readsWithChain.IGH",
+    //     id: "align-reads-with-chain-igh",
+    //     allowNA: true,
+    //     naRegex: "",
+    //     spec: {
+    //         name: "mixcr.com/reports/align/readsWithChain/IGH",
+    //         valueType: "Long",
+    //         annotations: {
+    //             "pl7.app/min": "0",
+    //             "pl7.app/table/orderPriority": "96000",
+    //             "pl7.app/table/visibility": "optional",
+    //             "pl7.app/label": "Reads with Chain IGH"
+    //         }
+    //     }
+    // },
+    // {
+    //     column: "align.readsWithChain.IGHPercents",
+    //     id: "align-reads-with-chain-igh-percents",
+    //     allowNA: true,
+    //     naRegex: "",
+    //     spec: {
+    //         name: "mixcr.com/reports/align/readsWithChain/IGHPercents",
+    //         valueType: "Double",
+    //         annotations: {
+    //             "pl7.app/min": "0",
+    //             "pl7.app/max": "100",
+    //             "pl7.app/table/orderPriority": "96100",
+    //             "pl7.app/table/visibility": "default",
+    //             "pl7.app/label": "Reads with Chain IGH (%)"
+    //         }
+    //     }
+    // },
+    // {
+    //     column: "align.readsWithChain.IGK",
+    //     id: "align-reads-with-chain-igk",
+    //     allowNA: true,
+    //     naRegex: "",
+    //     spec: {
+    //         name: "mixcr.com/reports/align/readsWithChain/IGK",
+    //         valueType: "Long",
+    //         annotations: {
+    //             "pl7.app/min": "0",
+    //             "pl7.app/table/orderPriority": "96200",
+    //             "pl7.app/table/visibility": "optional",
+    //             "pl7.app/label": "Reads with Chain IGK"
+    //         }
+    //     }
+    // },
+    // {
+    //     column: "align.readsWithChain.IGKPercents",
+    //     id: "align-reads-with-chain-igk-percents",
+    //     allowNA: true,
+    //     naRegex: "",
+    //     spec: {
+    //         name: "mixcr.com/reports/align/readsWithChain/IGKPercents",
+    //         valueType: "Double",
+    //         annotations: {
+    //             "pl7.app/min": "0",
+    //             "pl7.app/max": "100",
+    //             "pl7.app/table/orderPriority": "96300",
+    //             "pl7.app/table/visibility": "default",
+    //             "pl7.app/label": "Reads with Chain IGK (%)"
+    //         }
+    //     }
+    // },
+    // {
+    //     column: "align.readsWithChain.IGL",
+    //     id: "align-reads-with-chain-igl",
+    //     allowNA: true,
+    //     naRegex: "",
+    //     spec: {
+    //         name: "mixcr.com/reports/align/readsWithChain/IGL",
+    //         valueType: "Long",
+    //         annotations: {
+    //             "pl7.app/min": "0",
+    //             "pl7.app/table/orderPriority": "96400",
+    //             "pl7.app/table/visibility": "optional",
+    //             "pl7.app/label": "Reads with Chain IGL"
+    //         }
+    //     }
+    // },
+    // {
+    //     column: "align.readsWithChain.IGLPercents",
+    //     id: "align-reads-with-chain-igl-percents",
+    //     allowNA: true,
+    //     naRegex: "",
+    //     spec: {
+    //         name: "mixcr.com/reports/align/readsWithChain/IGLPercents",
+    //         valueType: "Double",
+    //         annotations: {
+    //             "pl7.app/min": "0",
+    //             "pl7.app/max": "100",
+    //             "pl7.app/table/orderPriority": "96500",
+    //             "pl7.app/table/visibility": "default",
+    //             "pl7.app/label": "Reads with Chain IGL (%)"
+    //         }
+    //     }
+    // },
+    // {
+    //     column: "align.readsWithChain.TRAD",
+    //     id: "align-reads-with-chain-trad",
+    //     allowNA: true,
+    //     naRegex: "",
+    //     spec: {
+    //         name: "mixcr.com/reports/align/readsWithChain/TRAD",
+    //         valueType: "Long",
+    //         annotations: {
+    //             "pl7.app/min": "0",
+    //             "pl7.app/table/orderPriority": "96700",
+    //             "pl7.app/table/visibility": "optional",
+    //             "pl7.app/label": "Reads with Chain TRAD"
+    //         }
+    //     }
+    // },
+    // {
+    //     column: "align.readsWithChain.TRADPercents",
+    //     id: "align-reads-with-chain-trad-percents",
+    //     allowNA: true,
+    //     naRegex: "",
+    //     spec: {
+    //         name: "mixcr.com/reports/align/readsWithChain/TRADPercents",
+    //         valueType: "Double",
+    //         annotations: {
+    //             "pl7.app/min": "0",
+    //             "pl7.app/max": "100",
+    //             "pl7.app/table/orderPriority": "96800",
+    //             "pl7.app/table/visibility": "default",
+    //             "pl7.app/label": "Reads with Chain TRAD (%)"
+    //         }
+    //     }
+    // },
+    // {
+    //     column: "align.readsWithChain.TRB",
+    //     id: "align-reads-with-chain-trb",
+    //     allowNA: true,
+    //     naRegex: "",
+    //     spec: {
+    //         name: "mixcr.com/reports/align/readsWithChain/TRB",
+    //         valueType: "Long",
+    //         annotations: {
+    //             "pl7.app/min": "0",
+    //             "pl7.app/table/orderPriority": "97000",
+    //             "pl7.app/table/visibility": "optional",
+    //             "pl7.app/label": "Reads with Chain TRB"
+    //         }
+    //     }
+    // },
+    // {
+    //     column: "align.readsWithChain.TRBPercents",
+    //     id: "align-reads-with-chain-trb-percents",
+    //     allowNA: true,
+    //     naRegex: "",
+    //     spec: {
+    //         name: "mixcr.com/reports/align/readsWithChain/TRBPercents",
+    //         valueType: "Double",
+    //         annotations: {
+    //             "pl7.app/min": "0",
+    //             "pl7.app/max": "100",
+    //             "pl7.app/table/orderPriority": "97100",
+    //             "pl7.app/table/visibility": "default",
+    //             "pl7.app/label": "Reads with Chain TRB (%)"
+    //         }
+    //     }
+    // },
+    // {
+    //     column: "align.readsWithChain.TRG",
+    //     id: "align-reads-with-chain-trg",
+    //     allowNA: true,
+    //     naRegex: "",
+    //     spec: {
+    //         name: "mixcr.com/reports/align/readsWithChain/TRG",
+    //         valueType: "Long",
+    //         annotations: {
+    //             "pl7.app/min": "0",
+    //             "pl7.app/table/orderPriority": "97200",
+    //             "pl7.app/table/visibility": "optional",
+    //             "pl7.app/label": "Reads with Chain TRG"
+    //         }
+    //     }
+    // },
+    // {
+    //     column: "align.readsWithChain.TRGPercents",
+    //     id: "align-reads-with-chain-trg-percents",
+    //     allowNA: true,
+    //     naRegex: "",
+    //     spec: {
+    //         name: "mixcr.com/reports/align/readsWithChain/TRGPercents",
+    //         valueType: "Double",
+    //         annotations: {
+    //             "pl7.app/min": "0",
+    //             "pl7.app/max": "100",
+    //             "pl7.app/table/orderPriority": "97300",
+    //             "pl7.app/table/visibility": "default",
+    //             "pl7.app/label": "Reads with Chain TRG (%)"
+    //         }
+    //     }
+    // },
     {
         column: "assembleCells.cellBarcodesWithFoundGroups",
         id: "assemble-cells-cell-barcodes-with-found-groups",
