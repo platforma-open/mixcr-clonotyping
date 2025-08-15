@@ -1,5 +1,18 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.11.0
+
+### Minor Changes
+
+- 9c3eda0: - Fix for block upgrade error, not able to show absent report table from previous results
+  - Fix for region_not_covered error in junction length
+
+### Patch Changes
+
+- Updated dependencies [9c3eda0]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.16.0
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.ui@1.15.1
+
 ## 2.10.7
 
 ### Patch Changes
