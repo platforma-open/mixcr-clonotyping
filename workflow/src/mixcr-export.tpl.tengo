@@ -35,6 +35,7 @@ self.body(func(inputs) {
 	}
 
 	mainAbundanceColumnUnnormalizedArgs := params.mainAbundanceColumnUnnormalizedArgs
+	mainAbundanceColumnIsReadCount := params.mainAbundanceColumnIsReadCount == true
 	mainIsProductiveArgs := params.mainIsProductiveArgs
 
 	hashKeyDerivationExpressionPt := func(sourceColumns) {
@@ -145,7 +146,22 @@ self.body(func(inputs) {
 			mem("4GiB").
 			cpu(2)
 
-		dfSingleCell := wfSingleCell.frame(unprocessedTsvForSingleCell, { xsvType: "tsv", inferSchema: false })
+		frameLoadOps := {
+			xsvType: "tsv",
+			inferSchema: false
+		}
+
+		if mainAbundanceColumnIsReadCount {
+			frameLoadOps.schema = [ { column: "readCount", type: "Double" } ]
+		}
+
+		dfSingleCell := wfSingleCell.frame(unprocessedTsvForSingleCell, frameLoadOps)
+
+		if mainAbundanceColumnIsReadCount {
+			dfSingleCell.addColumns(
+				pt.col("readCount").round().cast("Long").alias("readCount")
+			)
+		}
 
 		dfSingleCell.addColumns(
 			hashKeyDerivationExpressionPt(clonotypeKeyColumns).alias("clonotypeKey"),
