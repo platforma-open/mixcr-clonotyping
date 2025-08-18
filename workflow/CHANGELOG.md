@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.2.0
+
+### Minor Changes
+
+- 73af94c: nLengthTotalAdded column NA regex fix
+
 ## 3.1.1
 
 ### Patch Changes
