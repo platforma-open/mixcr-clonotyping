@@ -1,5 +1,13 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.11.2
+
+### Patch Changes
+
+- ebad6c6: Fixes export error on SC presets without UMI
+- Updated dependencies [ebad6c6]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@3.2.1
+
 ## 2.11.1
 
 ### Patch Changes
