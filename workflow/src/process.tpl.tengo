@@ -406,7 +406,7 @@ self.body(func(inputs) {
 						cellTagColumns: cellTagColumns,
 						hashCellKey: hashCellKey,
 
-						mainAbundanceColumnIsReadCount: len(cellTagColumns) > 0 && mainAbundanceColumnUnnormalized == "readCount" ? true : undefined,
+						mainAbundanceColumnIsReadCount: (!is_undefined(cellTagColumns) && len(cellTagColumns) > 0 && mainAbundanceColumnUnnormalized == "readCount") ? true : undefined,
 
 						exportArgs: exportArgs,
 						isLibraryFileGzipped: isLibraryFileGzipped
