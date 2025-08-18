@@ -571,7 +571,7 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId) {
 	columnsSpecPerClonotypeNoAggregates += [ {
 		column: "nLengthTotalAdded",
 		id: "n-length-total-added",
-		naRegex: "region_not_covered|no_d_gene",
+		naRegex: "^[a-z_]*$",
 		allowNA: true,
 		spec: {
 			name: "pl7.app/vdj/sequenceLength",
