@@ -5,7 +5,7 @@ ll := import("@platforma-sdk/workflow-tengo:ll")
 pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 
 // QC Report column specifications function
-getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec, chains) {
+getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellTags) {
     // Bulk sequencing columns
     baseColumns := [
     {
@@ -489,7 +489,7 @@ getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec, chains) {
         column: "assemble.preCloneAssembler.unassignedAlignments",
         id: "assemble-pre-clone-assembler-unassigned-alignments",
         allowNA: true,
-        naRegex: "",
+        naRegex: "^[a-zA-Z_]*$",
         spec: {
             name: "mixcr.com/reports/assemble/preCloneAssembler/unassignedAlignments",
             valueType: "Long",
@@ -505,7 +505,7 @@ getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec, chains) {
         column: "assemble.preCloneAssembler.unassignedAlignmentsPercents",
         id: "assemble-pre-clone-assembler-unassigned-alignments-percents",
         allowNA: true,
-        naRegex: "",
+        naRegex: "^[a-zA-Z_]*$",
         spec: {
             name: "mixcr.com/reports/assemble/preCloneAssembler/unassignedAlignmentsPercents",
             valueType: "Double",
@@ -1180,73 +1180,76 @@ getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec, chains) {
                 "pl7.app/label": "Unassigned Clonotypes (%)"
             }
         }
-    },
-    {
-        column: "refineTags.CELL.outputCount",
-        id: "refine-tags-cell-output-count",
-        allowNA: true,
-        naRegex: "NaN",
-        spec: {
-            name: "mixcr.com/reports/refineTags/CELL/outputCount",
-            valueType: "Long",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/table/orderPriority": "85800",
-                "pl7.app/table/visibility": "optional",
-                "pl7.app/label": "Refine Tags CELL - Output Count"
-            }
-        }
-    },
-    {
-        column: "refineTags.CELL.outputCountPercents",
-        id: "refine-tags-cell-output-count-percents",
-        allowNA: true,
-        naRegex: "NaN",
-        spec: {
-            name: "mixcr.com/reports/refineTags/CELL/outputCountPercents",
-            valueType: "Double",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/max": "100",
-                "pl7.app/table/orderPriority": "85900",
-                "pl7.app/table/visibility": "default",
-                "pl7.app/label": "Refine Tags CELL - Output Count (%)"
-            }
-        }
-    },
-    {
-        column: "refineTags.CELL.outputDiversity",
-        id: "refine-tags-cell-output-diversity",
-        allowNA: true,
-        naRegex: "NaN",
-        spec: {
-            name: "mixcr.com/reports/refineTags/CELL/outputDiversity",
-            valueType: "Long",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/table/orderPriority": "86000",
-                "pl7.app/table/visibility": "optional",
-                "pl7.app/label": "Refine Tags CELL - Output Diversity"
-            }
-        }
-    },
-    {
-        column: "refineTags.CELL.outputDiversityPercents",
-        id: "refine-tags-cell-output-diversity-percents",
-        allowNA: true,
-        naRegex: "NaN",
-        spec: {
-            name: "mixcr.com/reports/refineTags/CELL/outputDiversityPercents",
-            valueType: "Double",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/max": "100",
-                "pl7.app/table/orderPriority": "86100",
-                "pl7.app/table/visibility": "default",
-                "pl7.app/label": "Refine Tags CELL - Output Diversity (%)"
-            }
-        }
     }]
+
+    for cellTag in cellTags {
+        singleCellColumns += [{
+            column: "refineTags." + cellTag + ".outputCount",
+            id: "refine-tags-" + cellTag + "-output-count",
+            allowNA: true,
+            naRegex: "NaN",
+            spec: {
+                name: "mixcr.com/reports/refineTags/CELL/outputCount",
+                valueType: "Long",
+                annotations: {
+                    "pl7.app/min": "0",
+                    "pl7.app/table/orderPriority": "85800",
+                    "pl7.app/table/visibility": "optional",
+                    "pl7.app/label": "Refine Tags " + cellTag + " - Output Count"
+                }
+            }
+        },
+        {
+            column: "refineTags." + cellTag + ".outputCountPercents",
+            id: "refine-tags-" + cellTag + "-output-count-percents",
+            allowNA: true,
+            naRegex: "NaN",
+            spec: {
+                name: "mixcr.com/reports/refineTags/CELL/outputCountPercents",
+                valueType: "Double",
+                annotations: {
+                    "pl7.app/min": "0",
+                    "pl7.app/max": "100",
+                    "pl7.app/table/orderPriority": "85900",
+                    "pl7.app/table/visibility": "default",
+                    "pl7.app/label": "Refine Tags " + cellTag + " - Output Count (%)"
+                }
+            }
+        },
+        {
+            column: "refineTags." + cellTag + ".outputDiversity",
+            id: "refine-tags-" + cellTag + "-output-diversity",
+            allowNA: true,
+            naRegex: "NaN",
+            spec: {
+                name: "mixcr.com/reports/refineTags/CELL/outputDiversity",
+                valueType: "Long",
+                annotations: {
+                    "pl7.app/min": "0",
+                    "pl7.app/table/orderPriority": "86000",
+                    "pl7.app/table/visibility": "optional",
+                    "pl7.app/label": "Refine Tags " + cellTag + " - Output Diversity"
+                }
+            }
+        },
+        {
+            column: "refineTags." + cellTag + ".outputDiversityPercents",
+            id: "refine-tags-" + cellTag + "-output-diversity-percents",
+            allowNA: true,
+            naRegex: "NaN",
+            spec: {
+                name: "mixcr.com/reports/refineTags/CELL/outputDiversityPercents",
+                valueType: "Double",
+                annotations: {
+                    "pl7.app/min": "0",
+                    "pl7.app/max": "100",
+                    "pl7.app/table/orderPriority": "86100",
+                    "pl7.app/table/visibility": "default",
+                    "pl7.app/label": "Refine Tags " + cellTag + " - Output Diversity (%)"
+                }
+            }
+        }]
+    }
 
     // for chain in chains {
     //     singleCellColumns += [{

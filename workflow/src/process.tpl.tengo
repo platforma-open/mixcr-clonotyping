@@ -691,8 +691,7 @@ self.body(func(inputs) {
 
 	qcReportTable := render.create(exportReportTpl, {
 		clnsData: mixcrResults.outputData("clns"),
-		isSingleCell: isSingleCell,
-		hasUmi: hasUmi,
+		presetSpecForBack: presetSpecForBack,
 		sampleIdAxisSpec: sampleIdAxisSpec,
 		chains: chains
 	})
