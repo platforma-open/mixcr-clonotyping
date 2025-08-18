@@ -391,7 +391,7 @@ self.body(func(inputs) {
 				stepCache: 30 * times.minute,
 
 				extra: {
-					params: {
+					params: maps.clone({
 						chains: chainInfo.mixcrFilter,
 						clonotypeKeyColumns: clonotypeKeyColumns,
 						clonotypeKeyArgs: clonotypeKeyArgs,
@@ -406,9 +406,11 @@ self.body(func(inputs) {
 						cellTagColumns: cellTagColumns,
 						hashCellKey: hashCellKey,
 
+						mainAbundanceColumnIsReadCount: (!is_undefined(cellTagColumns) && len(cellTagColumns) > 0 && mainAbundanceColumnUnnormalized == "readCount") ? true : undefined,
+
 						exportArgs: exportArgs,
 						isLibraryFileGzipped: isLibraryFileGzipped
-					},
+					}, { removeUndefs: true }),
 					library: library
 				}
 			}
@@ -683,14 +685,13 @@ self.body(func(inputs) {
 					anonymize.deanonymizePKeys(anonymizedData, 0, [0], anonymizationResult.mapping)
 				)
 				resultsToCache["clonotypeProperties/" + receptor + "/cellsLinkerTable/" + columnName] = anonymizedData
-			}		
+			}
 		}
 	}
 
 	qcReportTable := render.create(exportReportTpl, {
 		clnsData: mixcrResults.outputData("clns"),
-		isSingleCell: isSingleCell,
-		hasUmi: hasUmi,
+		presetSpecForBack: presetSpecForBack,
 		sampleIdAxisSpec: sampleIdAxisSpec,
 		chains: chains
 	})

@@ -24,10 +24,13 @@ ptablerSw := assets.importSoftware("@platforma-open/milaboratories.software-ptab
 
 self.body(func(inputs) {
     clnsData := inputs.clnsData
-    isSingleCell := inputs.isSingleCell
-    hasUmi := inputs.hasUmi
+    presetSpecForBack := inputs.presetSpecForBack
     sampleIdAxisSpec := inputs.sampleIdAxisSpec
     chains := inputs.chains
+
+    isSingleCell := len(presetSpecForBack.cellTags) > 0
+	hasUmi := !is_undefined(presetSpecForBack.umiTags) && len(presetSpecForBack.umiTags) > 0
+    cellTags := presetSpecForBack.cellTags
 
     chainInfos := {
 	"IGHeavy": { mixcrFilter: "IGH", name: "IG Heavy", shortName: "Heavy" },
@@ -98,7 +101,7 @@ self.body(func(inputs) {
     
     tsvFile := wfResult.getFile("qc-report-processed.tsv")
 
-    qcReportColumns := qcReportColumns(hasUmi, isSingleCell, sampleIdAxisSpec, chainsForMixcr)
+    qcReportColumns := qcReportColumns(hasUmi, isSingleCell, sampleIdAxisSpec, chainsForMixcr, cellTags)
     reportColumnsSpec := qcReportColumns.reportColumnsSpec
 
     qcReportTable := xsv.importFile(

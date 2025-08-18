@@ -22,7 +22,7 @@ self.defineOutputs("abundanceTsv", "clonotypeTsv",
 ptablerSw := assets.importSoftware("@platforma-open/milaboratories.software-ptabler:main")
 
 self.body(func(inputs) {
-	ll.print("__THE_LOG__ PROCESS SINGLE CELL")
+	// ll.print("__THE_LOG__ PROCESS SINGLE CELL")
 
 	byCellTagA := inputs[pConstants.VALUE_FIELD_NAME]
 	inputDataMeta := byCellTagA.getDataAsJson()

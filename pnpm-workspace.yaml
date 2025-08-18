@@ -8,7 +8,7 @@ packages:
 catalog:
   '@platforma-sdk/workflow-tengo': ^5.0.3
   '@platforma-sdk/model': ^1.42.25
-  '@platforma-sdk/ui-vue': ^1.42.24
+  '@platforma-sdk/ui-vue': ^1.42.26
   '@platforma-sdk/tengo-builder': ^2.1.16
   '@platforma-sdk/package-builder': ^2.17.2
   '@platforma-sdk/block-tools': ^2.5.83
@@ -27,20 +27,20 @@ catalog:
 
   'typescript': ~5.6.3
   'tsup': ~8.1.2
-  'turbo': ^2.5.5
+  'turbo': ^2.5.6
 
   'vite': ^6.3.5
   'vitest': ~2.1.9
   '@vitejs/plugin-vue': ^5.2.4
   'rollup-plugin-sourcemaps2': ^0.5.3
-  'eslint': ^9.31.0
+  'eslint': ^9.33.0
 
-  '@vueuse/core': ^13.5.0
+  '@vueuse/core': ^13.6.0
 
   'ag-grid-enterprise': &ag-grid ^34.0.2
   'ag-grid-vue3': *ag-grid
 
-  '@changesets/cli': ^2.29.5
+  '@changesets/cli': ^2.29.6
   'js-yaml': ^4.1.0
 
   # other blocks used in tests

@@ -41,7 +41,7 @@ self.body(func(inputs) {
 
 	baseSchemaForRead := schemaPerSample + [ { column: "clonotypeKey", type: "String" } ]
 
-	ll.print("__THE_LOG__ AGGREGATE BY CLONOTYPE KEY: " + json.encode(maps.getKeys(inputMap)))
+	// ll.print("__THE_LOG__ AGGREGATE BY CLONOTYPE KEY: " + json.encode(maps.getKeys(inputMap)))
 
 	for sKey in maps.getKeys(inputMap) {
 		inputFile := inputMap[sKey]
