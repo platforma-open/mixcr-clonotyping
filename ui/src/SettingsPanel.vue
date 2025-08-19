@@ -8,6 +8,7 @@ import { PlAccordionSection, PlBtnGroup, PlDropdown, PlDropdownMulti, PlDropdown
 import { computed, reactive, watch } from 'vue';
 import { useApp } from './app';
 import { retentive } from './retentive';
+import { extractSpeciesFromPreset, readPresetFromHandle, type PresetFileContent } from './util';
 
 const app = useApp();
 
@@ -22,11 +23,31 @@ const speciesOptions: ListOption[] = [
   { label: 'Alpaca', value: 'alpaca' },
   { label: 'Macaca fascicularis', value: 'mfas' },
   { label: 'Macaca mulatta', value: 'mmul' },
-  { label: 'Chicken', value: 'gallus'},
+  { label: 'Chicken', value: 'gallus' },
   { label: 'Rabbit', value: 'rabbit' },
   { label: 'Rat', value: 'rat' },
   { label: 'Sheep', value: 'sheep' },
-  { label: 'Spalax', value: 'spalax' }
+  { label: 'Spalax', value: 'spalax' },
+];
+
+const chainsBySpecies = [
+  { species: 'alpaca', chains: ['IGHeavy'] },
+  { species: 'gallus', chains: ['IGHeavy'] },
+  { species: 'hsa', chains: ['IGHeavy', 'IGLight', 'TCRAlpha', 'TCRBeta', 'TCRGamma', 'TCRDelta'] },
+  { species: 'lama', chains: ['IGHeavy', 'IGLight'] },
+  { species: 'mfas', chains: ['IGHeavy', 'TCRAlpha', 'TCRBeta'] },
+  { species: 'mmul', chains: ['IGHeavy', 'TCRAlpha', 'TCRBeta'] },
+  { species: 'mmu', chains: ['IGHeavy', 'IGLight', 'TCRAlpha', 'TCRBeta', 'TCRGamma', 'TCRDelta'] },
+  { species: 'rabbit', chains: ['IGHeavy', 'IGLight'] },
+  { species: 'rat', chains: ['TCRAlpha', 'TCRBeta'] },
+  { species: 'sheep', chains: ['IGHeavy', 'IGLight'] },
+  { species: 'spalax', chains: ['IGHeavy', 'TCRAlpha', 'TCRBeta'] },
+];
+
+const receptorsToChains = [
+  { receptor: 'IG', chains: ['IGHeavy', 'IGLight'] },
+  { receptor: 'TCRAB', chains: ['TCRAlpha', 'TCRBeta'] },
+  { receptor: 'TCRGD', chains: ['TCRGamma', 'TCRDelta'] },
 ];
 
 const presetSourceOptions: ListOption<Preset['type']>[] = [
@@ -57,6 +78,25 @@ const preset = computed(() => {
     ? presets.value?.find((p) => p.presetName === preset.name)
     : undefined;
 });
+
+const presetFromFile = reactive<{ content: PresetFileContent | undefined }>({ content: undefined });
+
+watch(
+  () => ({ preset: app.model.args.preset }),
+  async (state) => {
+    const p = state.preset;
+    if (!p || p.type !== 'file') {
+      presetFromFile.content = undefined;
+      return;
+    }
+
+    presetFromFile.content = await readPresetFromHandle(p.file);
+    const species = extractSpeciesFromPreset(presetFromFile.content);
+    if (species) app.model.args.species = species;
+  },
+  { immediate: true, deep: true },
+);
+
 const needSpecies = computed(() => preset.value === undefined
   ? undefined
   : (preset.value.requiredFlags.findIndex((f) => f === 'species') >= 0));
@@ -76,6 +116,16 @@ watch(needSpecies, (ns) => {
     && app.model.args.species === undefined)
     app.model.args.species = 'hsa';
 });
+
+// Reset species when switching to built-in preset source
+watch(
+  () => data.presetType,
+  (newType) => {
+    if (newType === 'name') {
+      app.model.args.species = undefined;
+    }
+  },
+);
 
 function setPresetName(name?: string) {
   if (name === undefined) {
@@ -142,7 +192,7 @@ const computedTab = computed({
   },
 });
 
-watch(computedTab, (newValue, oldValue) => {
+watch(computedTab, (newValue, _oldValue) => {
   if (newValue === 'fromFile') {
     app.model.args.inputLibrary = undefined;
   }
@@ -183,12 +233,12 @@ watch(
 );
 
 const receptorOrChainsOptions = computed(() => {
-  const receptors = [
+  const allReceptors = [
     { value: 'IG', label: 'IG' },
     { value: 'TCRAB', label: 'TCR-αβ' },
     { value: 'TCRGD', label: 'TCR-ɣδ' },
   ];
-  const chains = [
+  const allChains = [
     { value: 'IGHeavy', label: 'IG Heavy' },
     { value: 'IGLight', label: 'IG Light' },
     { value: 'TCRAlpha', label: 'TCR-α' },
@@ -196,8 +246,25 @@ const receptorOrChainsOptions = computed(() => {
     { value: 'TCRGamma', label: 'TCR-ɣ' },
     { value: 'TCRDelta', label: 'TCR-δ' },
   ];
-  if (isSingleCell.value) return receptors;
-  return [...receptors, ...chains];
+
+  // Get available chains for the selected species
+  // Priority: dropdown selection > preset file species > no filtering
+  const selectedSpecies = app.model.args.species;
+  const availableChains = selectedSpecies
+    ? chainsBySpecies.find((s) => s.species === selectedSpecies)?.chains ?? []
+    : allChains.map((c) => c.value);
+
+  // Filter chains based on available chains for the species
+  const filteredChains = allChains.filter((chain) => availableChains.includes(chain.value));
+
+  // Filter receptors based on whether all their component chains are available
+  const filteredReceptors = allReceptors.filter((receptor) => {
+    const receptorChains = receptorsToChains.find((r) => r.receptor === receptor.value)?.chains ?? [];
+    return receptorChains.every((chain) => availableChains.includes(chain));
+  });
+
+  if (isSingleCell.value) return filteredReceptors;
+  return [...filteredReceptors, ...filteredChains];
 });
 
 const receptorOrChainsModel = computed({
@@ -230,6 +297,8 @@ const receptorOrChainsModel = computed({
     :model-value="app.model.args.preset?.type === 'file' ? app.model.args.preset.file : undefined"
     clearable @update:model-value="setPresetFile"
   />
+
+  {{ app.model.args.species }}
 
   <PlDropdown v-if="needSpecies" v-model="app.model.args.species" :options="speciesOptions" label="Select species" />
 
