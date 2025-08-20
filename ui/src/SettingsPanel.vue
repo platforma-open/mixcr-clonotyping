@@ -273,6 +273,21 @@ const receptorOrChainsModel = computed({
     app.model.args.chains = value ?? [];
   },
 });
+
+// Keep args.chains in sync with available filtered options
+watch(
+  () => receptorOrChainsOptions.value,
+  (opts) => {
+    const allowed = new Set((opts ?? []).map((o) => o.value));
+    const current = app.model.args.chains ?? [];
+    const filtered = current.filter((v) => allowed.has(v));
+    // Update only if changed to avoid unnecessary reactivity loops
+    if (filtered.length !== current.length || filtered.some((v, i) => v !== current[i])) {
+      app.model.args.chains = filtered;
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <template>

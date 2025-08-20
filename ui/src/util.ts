@@ -13,142 +13,118 @@ export interface PresetFileContent {
   [key: string]: unknown;
 }
 
-/**
- * Reads and parses a preset file to extract species information
- * @param file - The LocalImportFileHandle to read
- * @returns Promise<PresetFileContent | undefined>
+/** ———————————————————————————————————————— */
+/** Small utilities */
+
+const td = new TextDecoder('utf-8');
+
+function readYamlScalar(raw: string): string {
+  // grab everything after the first ":", trim, and strip simple quotes
+  const val = raw.split(':', 2)[1]?.trim() ?? '';
+  return val.replace(/^['"]|['"]$/g, '');
+}
+
+function splitLines(s: string): string[] {
+  return s.replace(/\r\n?/g, '\n').split('\n');
+}
+
+/** Minimal YAML reader: only understands
+ *  mixins:
+ *    - type: ...
+ *      species: ...
  */
-export async function readPresetFile(file: LocalImportFileHandle): Promise<PresetFileContent | undefined> {
+function parsePresetYaml(yaml: string): PresetFileContent {
+  const out: PresetFileContent = {};
+  const lines = splitLines(yaml);
+
+  // Find start of `mixins:` block.
+  const start = lines.findIndex((l) => l.trim() === 'mixins:');
+  if (start === -1) return out;
+
+  const mixins: Array<{ type: string; species?: string }> = [];
+
+  // Consume following indented list items beginning with "-".
+  for (let i = start + 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (!line.trim()) continue; // skip empties
+
+    // Stop if we left the `mixins:` indentation (new top-level key)
+    if (!/^\s/.test(line)) break;
+
+    if (/^\s*-\s*/.test(line)) {
+      // Start a new mixin; it might be " - type: X" on the same line
+      const sameLine = line.replace(/^\s*-\s*/, '');
+      const current: { type: string; species?: string } = { type: '' };
+
+      if (/^\s*type\s*:/.test(sameLine)) current.type = readYamlScalar(sameLine);
+
+      // Read subsequent indented property lines (type/species)
+      for (i = i + 1; i < lines.length; i++) {
+        const next = lines[i];
+        if (!/^\s{2,}\S/.test(next)) { // out of this list item's body
+          i -= 1; // step back so outer loop processes this line
+          break;
+        }
+        const t = next.trim();
+        if (t.startsWith('type:')) current.type = readYamlScalar(t);
+        else if (t.startsWith('species:')) current.species = readYamlScalar(t);
+      }
+
+      if (current.type) mixins.push(current);
+      continue;
+    }
+  }
+
+  if (mixins.length) out.mixins = mixins;
+  return out;
+}
+
+/** ———————————————————————————————————————— */
+/** File readers / extractors */
+
+async function getFileText(file: LocalImportFileHandle): Promise<string | undefined> {
   try {
-    // Read file content using Platforma SDK
     const data = await getRawPlatformaInstance().lsDriver.getLocalFileContent(file);
-
-    // Convert ArrayBuffer to string
-    const content = new TextDecoder('utf-8').decode(data);
-
-    // Simple YAML parsing for mixins section
-    return parsePresetYaml(content);
-  } catch (error) {
-    console.warn('Failed to read preset file:', error);
+    return td.decode(data);
+  } catch (err) {
+    console.warn('Failed to read local file content:', err);
     return undefined;
   }
 }
 
 /**
- * Reads preset content from a generic ImportFileHandle
- * Only local (index://) handles are supported in UI
+ * Reads and parses a preset file to extract content (focused on mixins)
+ */
+export async function readPresetFile(
+  file: LocalImportFileHandle,
+): Promise<PresetFileContent | undefined> {
+  const text = await getFileText(file);
+  return text ? parsePresetYaml(text) : undefined;
+}
+
+/**
+ * Reads preset content from a generic ImportFileHandle.
+ * Supports only upload:// handles (UI-local).
  */
 export async function readPresetFromHandle(
   fileHandle: ImportFileHandle,
 ): Promise<PresetFileContent | undefined> {
-  try {
-    if (typeof fileHandle === 'string' && fileHandle.startsWith('upload://')) {
-      return await readPresetFile(fileHandle as LocalImportFileHandle);
-    }
-    return undefined;
-  } catch (error) {
-    console.warn('Failed to read preset from handle:', error);
-    return undefined;
-  }
+  if (typeof fileHandle !== 'string') return undefined;
+  if (!fileHandle.startsWith('upload://')) return undefined;
+  return readPresetFile(fileHandle as LocalImportFileHandle);
 }
 
-/**
- * Extracts species from preset file content
- * @param presetContent - Parsed preset content
- * @returns Species string or undefined
- */
-export function extractSpeciesFromPreset(presetContent: PresetFileContent | undefined): string | undefined {
-  if (!presetContent?.mixins) return undefined;
-
-  const setSpeciesMixin = presetContent.mixins.find(
-    (mixin) => mixin.type === 'SetSpecies',
-  );
-
-  return setSpeciesMixin?.species;
+/** Extract species from already-parsed content */
+export function extractSpeciesFromPreset(
+  preset: PresetFileContent | undefined,
+): string | undefined {
+  return preset?.mixins?.find((m) => m.type === 'SetSpecies')?.species;
 }
 
-/**
- * Extracts species from preset file handle (async)
- * @param fileHandle - ImportFileHandle to read
- * @returns Promise<string | undefined>
- */
-export async function extractSpeciesFromPresetFile(fileHandle: ImportFileHandle): Promise<string | undefined> {
-  try {
-    const content = await readPresetFromHandle(fileHandle);
-    return extractSpeciesFromPreset(content);
-  } catch {
-    return undefined;
-  }
-}
-
-/**
- * Simple YAML parser for preset files (focused on mixins section)
- * @param yamlContent - YAML content as string
- * @returns Parsed preset content
- */
-function parsePresetYaml(yamlContent: string): PresetFileContent {
-  const result: PresetFileContent = {};
-  const lines = yamlContent.split('\n');
-
-  let currentSection: string | null = null;
-  const mixins: Array<{ type: string; species?: string }> = [];
-  let currentMixin: { type: string; species?: string } | null = null;
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const trimmed = line.trim();
-
-    // Skip empty lines and comments
-    if (!trimmed || trimmed.startsWith('#')) continue;
-
-    // Check for top-level sections
-    if (trimmed === 'mixins:') {
-      currentSection = 'mixins';
-      continue;
-    }
-
-    // Handle mixins section
-    if (currentSection === 'mixins') {
-      // Check for list item (starts with -)
-      if (trimmed.startsWith('- ')) {
-        // Save previous mixin if exists
-        if (currentMixin) {
-          mixins.push(currentMixin);
-        }
-
-        // Start new mixin
-        const content = trimmed.substring(2).trim();
-        if (content.startsWith('type:')) {
-          const type = content.split(':')[1]?.trim();
-          currentMixin = { type: type || '' };
-        }
-      } else if (currentMixin && trimmed.includes(':')) {
-        // Handle mixin properties
-        const [key, value] = trimmed.split(':').map((s) => s.trim());
-        if (key === 'type') {
-          currentMixin.type = value;
-        } else if (key === 'species') {
-          currentMixin.species = value;
-        }
-      } else if (!trimmed.startsWith(' ') && !trimmed.startsWith('-')) {
-        // End of mixins section
-        if (currentMixin) {
-          mixins.push(currentMixin);
-          currentMixin = null;
-        }
-        currentSection = null;
-      }
-    }
-  }
-
-  // Add final mixin if exists
-  if (currentMixin) {
-    mixins.push(currentMixin);
-  }
-
-  if (mixins.length > 0) {
-    result.mixins = mixins;
-  }
-
-  return result;
+/** Extract species directly from a file handle */
+export async function extractSpeciesFromPresetFile(
+  fileHandle: ImportFileHandle,
+): Promise<string | undefined> {
+  const content = await readPresetFromHandle(fileHandle);
+  return extractSpeciesFromPreset(content);
 }
