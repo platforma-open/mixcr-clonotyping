@@ -79,7 +79,7 @@ self.body(func(inputs) {
     // Load the raw TSV file as a DataFrame
     df := wf.frame(rawTsvFile, {
         xsvType: "tsv",
-        inferSchema: true
+        inferSchema: false
     })
     
         // Add the sampleId column and remove ".clns" from fileName using pTabler string methods
