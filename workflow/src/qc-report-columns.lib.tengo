@@ -1278,6 +1278,19 @@ getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellT
         columns = columns + singleCellColumns
     }
 
+    // Ensure description annotation is present for all columns
+    i := 0
+    for i < len(columns) {
+        ann := columns[i].spec.annotations
+        if ann["pl7.app/description"] == undefined {
+            lbl := ann["pl7.app/label"]
+            if lbl != undefined {
+                ann["pl7.app/description"] = lbl
+            }
+        }
+        i += 1
+    }
+
     axes := [{
 		column: "sampleId",
 		spec: sampleIdAxisSpec
