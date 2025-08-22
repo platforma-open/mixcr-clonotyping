@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.11.3
+
+### Patch Changes
+
+- 69b3f0d: Update description
+
 ## 2.11.2
 
 ### Patch Changes
