@@ -11,12 +11,13 @@
     "watch": "turbo watch build",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "update-sdk": "node scripts/update-sdk-packages.js"
+    "deps-up": "pl-blocks-deps-updater"
   },
   "devDependencies": {
     "turbo": "catalog:",
     "@changesets/cli": "catalog:",
-    "js-yaml": "catalog:"
+    "js-yaml": "catalog:",
+    "@platforma-sdk/blocks-deps-updater": "catalog:"
   },
   "packageManager": "pnpm@9.12.0",
   "//": {
@@ -33,7 +34,8 @@
     }
   },
   "pnpm": {
-    "overrides": { }
+    "overrides": {
+    }
   },
   "///": {
     "pnpm": {
