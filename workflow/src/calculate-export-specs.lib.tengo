@@ -467,6 +467,27 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId) {
 						}
 					} ]
 				exportArgs += [ [ "-" + alphabetShortMixcr + "Feature" + imputedU, featureInFrameU ] ]
+				if !isImputed && !isAminoAcid {
+					columnsSpecPerClonotypeNoAggregates += [ {
+							column: "minQual" + featureU,
+							id: "min-qual-" + featureL,
+							naRegex: "region_not_covered",
+							spec: {
+								name: "pl7.app/vdj/sequenceQuality",
+								valueType: "Int",
+								domain: {
+									"pl7.app/vdj/quality": "minQuality",
+									"pl7.app/vdj/feature": featureU
+								},
+								annotations: a(orderP - 10, false, {
+									"pl7.app/min": "0",
+									"pl7.app/max": "60",
+									"pl7.app/label": "Min quality " + featureU
+								})
+							}
+						} ]
+					exportArgs += [ [ "-minFeatureQuality", featureU ] ]
+				}
 				orderP -= 100
 
 				// Adding sequence annotation columns for assembling feature
