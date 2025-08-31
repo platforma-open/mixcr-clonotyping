@@ -384,7 +384,7 @@ self.body(func(inputs) {
 			exportOutputs,
 			{
 				// will be automatically propagated to all output specs
-				traceSteps: [{type: "milaboratories.mixcr-clonotyping.export", id: blockId + "." + chain, importance: 80, label: chainInfo.name}],
+				traceSteps: isSingleCell ? [] : [{type: "milaboratories.mixcr-clonotyping.export", id: blockId + "." + chain, importance: 80, label: chainInfo.name}],
 
 				// this will cache each individual step result for 30 minutes, even if execution of some of the steps
 				// failed or whole execution was interrupted
@@ -647,6 +647,7 @@ self.body(func(inputs) {
 				singleCellOutputs,
 				{
 					aggregate: ["pl7.app/sampleId"],
+					traceSteps: [{type: "milaboratories.mixcr-clonotyping.processSingleCell", id: blockId + "." + receptor, importance: 80, label: receptorInfo.name}],
 					extra: {
 						byCellTagB: byCellTagBData,
 						propertiesA: perChainResults[chainA].clonotypeProperties.data,
