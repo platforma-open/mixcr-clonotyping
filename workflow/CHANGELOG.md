@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.4.0
+
+### Minor Changes
+
+- fdd3f2f: fix tracing for single cell
+
 ## 3.3.0
 
 ### Minor Changes
