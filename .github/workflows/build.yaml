@@ -20,7 +20,7 @@ jobs:
   run:
     needs:
       - init
-    uses: milaboratory/github-ci/.github/workflows/node-simple-pnpm.yaml@v4
+    uses: milaboratory/github-ci/.github/workflows/node-simple-pnpm.yaml@v4-beta
     with:
       app-name: 'Block: MiXCR Clonotyping 2'
       app-name-slug: 'block-mixcr-clonotyping-2'
