@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.3.0
+
+### Minor Changes
+
+- 8cee126: min quality columns added
+
 ## 3.2.1
 
 ### Patch Changes
