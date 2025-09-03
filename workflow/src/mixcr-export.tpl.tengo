@@ -50,7 +50,7 @@ self.body(func(inputs) {
 	createExport := func(additionalAction) {
 		mixcrCmdBuilder := exec.builder().
 			inMediumQueue().
-			ram("12GiB").
+			mem("12GiB").
 		    cpu(2).
 			printErrStreamToStdout().
 			dontSaveStdoutOrStderr().
