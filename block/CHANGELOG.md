@@ -1,5 +1,12 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.12.0
+
+### Minor Changes
+
+- cde33c9: bump software build depndencies
+- cde33c9: update software depnedencies
+
 ## 2.11.6
 
 ### Patch Changes
