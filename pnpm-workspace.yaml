@@ -6,15 +6,16 @@ packages:
   - test
 
 catalog:
-  '@platforma-sdk/workflow-tengo': ^5.1.2
-  '@platforma-sdk/model': ^1.42.47
-  '@platforma-sdk/ui-vue': ^1.42.47
+  '@platforma-sdk/workflow-tengo': ^5.1.4
+  '@platforma-sdk/model': ^1.42.51
+  '@platforma-sdk/ui-vue': ^1.42.51
   '@platforma-sdk/tengo-builder': ^2.1.18
-  '@platforma-sdk/package-builder': ^2.17.2
-  '@platforma-sdk/block-tools': ^2.6.1
-  '@platforma-sdk/eslint-config': ^1.0.3
+  '@platforma-sdk/package-builder': ^3.2.4
+  '@platforma-sdk/block-tools': ^2.6.2
+  '@platforma-sdk/eslint-config': ^1.1.0
+  '@platforma-sdk/blocks-deps-updater': ^2.0.0
 
-  '@platforma-sdk/test': ^1.42.47
+  '@platforma-sdk/test': ^1.42.52
   '@milaboratories/helpers': ^1.7.0
 
   '@platforma-open/milaboratories.software-mixcr': 4.7.0-223-develop
@@ -41,7 +42,6 @@ catalog:
   'ag-grid-vue3': *ag-grid
 
   '@changesets/cli': ^2.29.6
-  'js-yaml': ^4.1.0
 
   # other blocks used in tests
 
