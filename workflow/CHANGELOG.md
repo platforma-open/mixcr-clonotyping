@@ -1,5 +1,27 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.5.0
+
+### Minor Changes
+
+- 2154ea5: in export-report template infer_scema changed to false
+
+### Patch Changes
+
+- 093974b: updating dependencies
+
+## 3.4.0
+
+### Minor Changes
+
+- fdd3f2f: fix tracing for single cell
+
+## 3.3.0
+
+### Minor Changes
+
+- 8cee126: min quality columns added
+
 ## 3.2.1
 
 ### Patch Changes
