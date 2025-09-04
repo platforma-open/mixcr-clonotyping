@@ -19,21 +19,11 @@
     "js-yaml": "catalog:"
   },
   "packageManager": "pnpm@9.12.0",
-  "//": {
-    "pnpm": {
-      "overrides": {
-        "@platforma-sdk/model": "file:/Users/dbolotin/milab/core/platforma/sdk/model/package.tgz",
-        "@platforma-sdk/ui-vue": "file:/Users/dbolotin/milab/core/platforma/sdk/ui-vue/package.tgz",
-        "@milaboratories/uikit": "file:/Users/dbolotin/milab/core/platforma/lib/ui/uikit/package.tgz",
-        "@platforma-sdk/workflow-tengo": "file:/Users/dbolotin/mi/core/platforma/sdk/workflow-tengo/package.tgz",
-        "@platforma-sdk/tengo-builder": "file:/Users/dbolotin/mi/core/platforma/tools/tengo-builder/package.tgz",
-        "@milaboratories/pl-middle-layer": "file:/Users/dbolotin/mi/core/platforma/lib/node/pl-middle-layer/package.tgz",
-        "@platforma-open/software-ptabler": "file:/Users/dbolotin/mi/core/ptabler/software/package.tgz"
-      }
+  "--": {
+    "overrides": {
+      "@platforma-sdk/package-builder": "file:/Users/popoffvg/Documents/git/mil/platforma/tools/package-builder/package.tgz",
+      "@platforma-sdk/workflow-tengo": "file:/Users/popoffvg/Documents/git/mil/platforma/sdk/workflow-tengo/package.tgz"
     }
-  },
-  "pnpm": {
-    "overrides": { }
   },
   "///": {
     "pnpm": {
