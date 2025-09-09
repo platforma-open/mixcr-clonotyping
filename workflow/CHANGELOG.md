@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.5.2
+
+### Patch Changes
+
+- 98a1801: Use MiXCR version with fixed locale settings that have '.' in floats
+
 ## 3.5.1
 
 ### Patch Changes

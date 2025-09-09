@@ -1,6 +1,6 @@
 {
   "name": "@platforma-open/milaboratories.mixcr-clonotyping-2.workflow",
-  "version": "3.5.1",
+  "version": "3.5.2",
   "description": "Tengo-based template",
   "scripts": {
     "build": "rm -rf dist && pl-tengo check && pl-tengo build",
