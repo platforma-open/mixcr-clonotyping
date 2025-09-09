@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.5.1
+
+### Patch Changes
+
+- c87ddf9: Update workflow-tengo dependency: new python run environment with pip issue fix for windows
+
 ## 3.5.0
 
 ### Minor Changes
