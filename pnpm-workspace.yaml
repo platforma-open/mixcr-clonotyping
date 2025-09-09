@@ -18,7 +18,7 @@ catalog:
   '@platforma-sdk/test': ^1.42.47
   '@milaboratories/helpers': ^1.7.0
 
-  '@platforma-open/milaboratories.software-mixcr': 4.7.0-229-develop
+  '@platforma-open/milaboratories.software-mixcr': 4.7.0-233-develop
 
   'vue': ^3.5.15
   'vue-tsc': ^2.2.10
