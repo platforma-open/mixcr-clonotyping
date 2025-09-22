@@ -229,7 +229,7 @@ const exportRawTsvs = async () => {
     <template #title>MiXCR Clonotyping</template>
     <template #append>
       <PlBtnGhost icon="download" @click.stop="exportRawTsvs">
-        Export Raw TSVs
+        Export Raw Results
       </PlBtnGhost>
       <PlBtnGhost @click.stop="() => (data.settingsOpen = true)">
         Settings
