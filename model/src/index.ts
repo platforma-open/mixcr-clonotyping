@@ -71,10 +71,10 @@ export const platforma = BlockModel.create('Heavy')
   .output('progress', (ctx) => {
     return ctx.outputs !== undefined
       ? parseResourceMap(
-          ctx.outputs?.resolve('logs'),
-          (acc) => acc.getProgressLog(ProgressPrefix),
-          false,
-        )
+        ctx.outputs?.resolve('logs'),
+        (acc) => acc.getProgressLog(ProgressPrefix),
+        false,
+      )
       : undefined;
   })
 
@@ -83,8 +83,8 @@ export const platforma = BlockModel.create('Heavy')
   .output('done', (ctx) => {
     return ctx.outputs !== undefined
       ? parseResourceMap(ctx.outputs?.resolve('clns'), (_acc) => true, false).data.map(
-          (e) => e.key[0] as string,
-        )
+        (e) => e.key[0] as string,
+      )
       : undefined;
   })
 
@@ -156,8 +156,8 @@ export const platforma = BlockModel.create('Heavy')
     return Object.fromEntries(
       Object.entries(
         sampleLabelsObj.obj.data.getDataAsJson<{ data: Record<string, string> }>().data,
-      // @TODO zod
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        // @TODO zod
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       ).map((e) => [JSON.parse(e[0])[0], e[1]]),
     ) as Record<string, string>;
   })
@@ -172,6 +172,27 @@ export const platforma = BlockModel.create('Heavy')
       pCols,
       ctx.uiState.tableState,
     );
+  })
+
+  .output('rawTsvs', (ctx) => {
+    if (ctx.outputs === undefined)
+      return undefined;
+    const pCols = ctx.outputs?.resolve('clonotypeTables')?.getPColumns();
+    if (pCols === undefined) {
+      return undefined;
+    }
+    return pCols.map((pCol) => {
+      return {
+        ...pCol,
+        id: (JSON.parse(pCol.id) as { name: string }).name,
+        data: parseResourceMap(pCol.data, (acc) => acc.getRemoteFileHandle(), false),
+      };
+    }).filter((pCol) => pCol.data.isComplete).map((pCol) => {
+      return {
+        ...pCol,
+        data: pCol.data.data,
+      };
+    });
   })
 
   // @TODO migrate to lambdas and merge with prerunFileImports

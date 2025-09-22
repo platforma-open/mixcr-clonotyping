@@ -166,6 +166,7 @@ wf.body(func(args) {
 		logs: runMixcr.output("logs.data"),
 		clns: runMixcr.output("clns.data"),
 		clonotypes: pframes.exportFrame(runMixcr.output("clonotypes")),
+		clonotypeTables: pframes.exportFrame(runMixcr.output("clonotypeTables")),
 		fileImports: smart.createMapResource(maps.mapValues(fileImports, func(im) {
 			return im.handle
 		})),
@@ -177,7 +178,7 @@ wf.body(func(args) {
 	if !is_undefined(libraryImportHandle) {
 		outputs.libraryImportHandle = libraryImportHandle
 	}
-	
+
 	qcReportTable := runMixcr.output("qcReportTable")
 
 	outputs.qcReportTable = pframes.exportFrame(qcReportTable)

@@ -23,6 +23,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@zip.js/zip.js": "catalog:",
     "@vitejs/plugin-vue": "catalog:",
     "@platforma-sdk/eslint-config": "catalog:",
     "typescript": "catalog:",
@@ -30,6 +31,7 @@
     "vitest": "catalog:",
     "vue-tsc": "catalog:",
     "eslint": "catalog:",
-    "rollup-plugin-sourcemaps2": "catalog:"
+    "rollup-plugin-sourcemaps2": "catalog:",
+    "@types/wicg-file-system-access": "catalog:"
   }
 }

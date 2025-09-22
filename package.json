@@ -14,6 +14,7 @@
     "update-sdk": "node scripts/update-sdk-packages.js"
   },
   "devDependencies": {
+    "typescript": "catalog:",
     "turbo": "catalog:",
     "@changesets/cli": "catalog:",
     "js-yaml": "catalog:"

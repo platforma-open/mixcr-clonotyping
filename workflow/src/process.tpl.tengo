@@ -319,6 +319,7 @@ self.body(func(inputs) {
 		return schema
 	}
 
+	clonotypeTables := pframes.pFrameBuilder()
 	resultsToCache := {}
 
 	for chain in chains {
@@ -335,7 +336,8 @@ self.body(func(inputs) {
 				kind: "PColumn",
 				name: "mixcr.com/clonotypeTable",
 				domain: {
-					"pl7.app/vdj/clonotypingRunId": blockId
+					"pl7.app/vdj/clonotypingRunId": blockId,
+					"pl7.app/vdj/chain": chain
 				},
 				valueType: "File"
 			},
@@ -455,6 +457,7 @@ self.body(func(inputs) {
 		}
 
 		resultsToCache["clonotypeTable/" + chain] = exportResults.outputData("clonotypeTable")
+		clonotypeTables.add(chain, exportResults.outputSpec("clonotypeTable"), exportResults.outputData("clonotypeTable"))
 
 		aggregateByCloneKey := pframes.processColumn(
 			exportResults.output("clonotypeTable"),
@@ -711,6 +714,8 @@ self.body(func(inputs) {
 		"clns.data": mixcrResults.outputData("clns"),
 
 		"resultsToCache": resultsToCache,
+
+		clonotypeTables: clonotypeTables.build(),
 
 		clonotypes: clonotypes.build(),
 		qcReportTable: qcReportTable.output("qcReportTable")

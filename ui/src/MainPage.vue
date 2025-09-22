@@ -30,6 +30,8 @@ import type { MiXCRResult } from './results';
 import { MiXCRResultsFull } from './results';
 import SampleReportPanel from './SampleReportPanel.vue';
 import SettingsPanel from './SettingsPanel.vue';
+import { ZipWriter } from '@zip.js/zip.js';
+import { ChunkedStreamReader } from './ChunkedStreamReader';
 
 const app = useApp();
 
@@ -184,12 +186,51 @@ const gridOptions: GridOptions<MiXCRResult> = {
     PlAgTextAndButtonCell,
   },
 };
+
+const exportRawTsvs = async () => {
+  const pCols = app.model.outputs.rawTsvs;
+  if (pCols === undefined) {
+    return;
+  }
+
+  const sampleLabels = app.model.outputs.sampleLabels;
+  if (sampleLabels === undefined) return undefined;
+
+  const newHandle = await window.showSaveFilePicker({
+    types: [{
+      description: 'ZIP files',
+      accept: {
+        'application/zip': ['.zip'],
+      },
+    }],
+    suggestedName: 'raw-tsvs.zip',
+  });
+  const writableStream = await newHandle.createWritable();
+  const zip = new ZipWriter(writableStream);
+
+  for (const pCol of pCols) {
+    for (const { key, value } of pCol.data) {
+      const fileName = `${sampleLabels[key[0]]}_${pCol.id}.tsv`;
+      console.log(pCol.id, key, value!.size, fileName);
+
+      // Create a chunked stream reader for efficient streaming
+      const streamReader = new ChunkedStreamReader(value!.handle, value!.size, 10);
+      const readableStream = streamReader.createStream();
+      await zip.add(`${sampleLabels[key[0]]}_${pCol.id}.tsv`, readableStream);
+    }
+  }
+
+  zip.close();
+};
 </script>
 
 <template>
   <PlBlockPage>
     <template #title>MiXCR Clonotyping</template>
     <template #append>
+      <PlBtnGhost icon="download" @click.stop="exportRawTsvs">
+        Export Raw TSVs
+      </PlBtnGhost>
       <PlBtnGhost @click.stop="() => (data.settingsOpen = true)">
         Settings
         <template #append>
@@ -198,38 +239,22 @@ const gridOptions: GridOptions<MiXCRResult> = {
       </PlBtnGhost>
     </template>
     <div :style="{ flex: 1 }">
-      <AgGridVue
-        :theme="AgGridTheme"
-        :style="{ height: '100%' }"
-        :rowData="result"
-        :defaultColDef="defaultColumnDef"
-        :columnDefs="columnDefs"
-        :grid-options="gridOptions"
-        :loadingOverlayComponentParams="{ notReady: true }"
-        :loadingOverlayComponent="PlAgOverlayLoading"
-        :noRowsOverlayComponent="PlAgOverlayNoRows"
-        @grid-ready="onGridReady"
-      />
+      <AgGridVue :theme="AgGridTheme" :style="{ height: '100%' }" :rowData="result" :defaultColDef="defaultColumnDef"
+        :columnDefs="columnDefs" :grid-options="gridOptions" :loadingOverlayComponentParams="{ notReady: true }"
+        :loadingOverlayComponent="PlAgOverlayLoading" :noRowsOverlayComponent="PlAgOverlayNoRows"
+        @grid-ready="onGridReady" />
     </div>
   </PlBlockPage>
-  <PlSlideModal
-    v-model="data.settingsOpen"
-    :shadow="true"
-    :close-on-outside-click="app.model.outputs.started"
-  >
+  <PlSlideModal v-model="data.settingsOpen" :shadow="true" :close-on-outside-click="app.model.outputs.started">
     <template #title>Settings</template>
     <SettingsPanel />
   </PlSlideModal>
-  <PlSlideModal
-    v-model="data.sampleReportOpen"
-    :close-on-outside-click="app.model.outputs.started"
-    width="80%"
-  >
+  <PlSlideModal v-model="data.sampleReportOpen" :close-on-outside-click="app.model.outputs.started" width="80%">
     <template #title>
       Results for
       {{
         (data.selectedSample ? app.model.outputs.sampleLabels?.[data.selectedSample] : undefined) ??
-          '...'
+        '...'
       }}
     </template>
     <SampleReportPanel v-model="data.selectedSample" />

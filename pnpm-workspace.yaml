@@ -6,17 +6,17 @@ packages:
   - test
 
 catalog:
-  '@platforma-sdk/workflow-tengo': ^5.2.0
-  '@platforma-sdk/model': ^1.42.47
-  '@platforma-sdk/ui-vue': ^1.42.47
-  '@platforma-sdk/tengo-builder': ^2.1.18
+  '@platforma-sdk/workflow-tengo': ^5.3.0
+  '@platforma-sdk/model': ^1.43.14
+  '@platforma-sdk/ui-vue': ^1.43.14
+  '@platforma-sdk/tengo-builder': ^2.2.0
   '@platforma-sdk/package-builder': ^3.2.4
-  '@platforma-sdk/block-tools': ^2.6.3
+  '@platforma-sdk/block-tools': ^2.6.7
   '@platforma-sdk/eslint-config': ^1.0.3
   '@platforma-sdk/blocks-deps-updater': ^2.0.0
 
-  '@platforma-sdk/test': ^1.42.47
-  '@milaboratories/helpers': ^1.7.0
+  '@platforma-sdk/test': ^1.43.17
+  '@milaboratories/helpers': ^1.9.0
 
   '@platforma-open/milaboratories.software-mixcr': 4.7.0-233-develop
 
@@ -33,7 +33,7 @@ catalog:
   'vite': ^6.3.5
   'vitest': ~2.1.9
   '@vitejs/plugin-vue': ^5.2.4
-  'rollup-plugin-sourcemaps2': ^0.5.3
+  'rollup-plugin-sourcemaps2': ^0.5.4
   'eslint': ^9.33.0
 
   '@vueuse/core': ^13.6.0
@@ -41,10 +41,12 @@ catalog:
   'ag-grid-enterprise': &ag-grid ^34.0.2
   'ag-grid-vue3': *ag-grid
 
-  '@changesets/cli': ^2.29.6
+  '@changesets/cli': ^2.29.7
   'js-yaml': ^4.1.0
+  '@zip.js/zip.js': ^2.8.2
+  '@types/wicg-file-system-access': ^2023.10.6
 
   # other blocks used in tests
 
-  '@platforma-open/milaboratories.samples-and-data': ^1.10.10
-  '@platforma-open/milaboratories.samples-and-data.model': ^1.11.1
+  '@platforma-open/milaboratories.samples-and-data': ^1.10.14
+  '@platforma-open/milaboratories.samples-and-data.model': ^1.11.2
