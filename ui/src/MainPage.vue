@@ -30,7 +30,7 @@ import type { MiXCRResult } from './results';
 import { MiXCRResultsFull } from './results';
 import SampleReportPanel from './SampleReportPanel.vue';
 import SettingsPanel from './SettingsPanel.vue';
-import ExportRawBtn from './ExportRawBtn.vue';
+import { ExportRawBtn } from './ExportRawBtn';
 
 const app = useApp();
 
