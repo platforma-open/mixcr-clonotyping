@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.6.0
+
+### Minor Changes
+
+- 9965185: add library files to qc report command
+
 ## 3.5.2
 
 ### Patch Changes
