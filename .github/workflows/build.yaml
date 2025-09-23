@@ -32,7 +32,7 @@ jobs:
       test-script-name: 'test'
       pnpm-recursive-tests: false
       team-id: 'ciplopen-mixcr-clonotyping'
-      pl-docker-tag: '1.41.9'
+      pl-docker-tag: '1.41.8'
 
       publish-to-public: 'true'
       package-path: 'block'
