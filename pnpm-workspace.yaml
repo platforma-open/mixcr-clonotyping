@@ -23,19 +23,14 @@ catalog:
   '@platforma-open/milaboratories.software-mixcr': 4.7.0-233-develop
 
   'vue': ^3.5.15
-  'vue-tsc': ^2.2.10
 
   'zod': ~3.23.8
   'utility-types': ^3.11.0
 
   'typescript': ~5.6.3
-  'tsup': ~8.1.2
   'turbo': ^2.5.6
 
-  'vite': ^6.3.5
   'vitest': ~2.1.9
-  '@vitejs/plugin-vue': ^5.2.4
-  'rollup-plugin-sourcemaps2': ^0.5.3
   'eslint': ^9.33.0
 
   '@vueuse/core': ^13.6.0
