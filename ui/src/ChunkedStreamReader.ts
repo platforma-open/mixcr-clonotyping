@@ -1,5 +1,6 @@
 import type { RemoteBlobHandle } from '@platforma-sdk/model';
 import { getRawPlatformaInstance } from '@platforma-sdk/model';
+import { simpleRetry } from './simpleRetry';
 
 /**
  * ChunkedStreamReader creates a ReadableStream that reads data from a blob driver
@@ -56,10 +57,13 @@ export class ChunkedStreamReader {
           const endPosition = Math.min(this.currentPosition + this.chunkSize, this.totalSize);
 
           // Fetch the chunk from the blob driver
-          const data = await getRawPlatformaInstance().blobDriver.getContent(
+          const data = await simpleRetry(async () => getRawPlatformaInstance().blobDriver.getContent(
             this.handle,
             { from: this.currentPosition, to: endPosition },
-          );
+          ), {
+            maxAttempts: 3,
+            delay: 1000,
+          });
 
           // Enqueue the data into the stream
           controller.enqueue(data);

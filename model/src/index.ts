@@ -71,10 +71,10 @@ export const platforma = BlockModel.create('Heavy')
   .output('progress', (ctx) => {
     return ctx.outputs !== undefined
       ? parseResourceMap(
-        ctx.outputs?.resolve('logs'),
-        (acc) => acc.getProgressLog(ProgressPrefix),
-        false,
-      )
+          ctx.outputs?.resolve('logs'),
+          (acc) => acc.getProgressLog(ProgressPrefix),
+          false,
+        )
       : undefined;
   })
 
@@ -83,8 +83,8 @@ export const platforma = BlockModel.create('Heavy')
   .output('done', (ctx) => {
     return ctx.outputs !== undefined
       ? parseResourceMap(ctx.outputs?.resolve('clns'), (_acc) => true, false).data.map(
-        (e) => e.key[0] as string,
-      )
+          (e) => e.key[0] as string,
+        )
       : undefined;
   })
 
