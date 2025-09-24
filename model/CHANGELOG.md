@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.16.2
+
+### Patch Changes
+
+- 0f20633: migrate to ts-builder
+
 ## 1.16.1
 
 ### Patch Changes
