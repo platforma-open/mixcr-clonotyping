@@ -3,11 +3,10 @@
   "version": "1.16.1",
   "description": "Block model",
   "type": "module",
-  "main": "dist/index.cjs",
-  "module": "dist/index.js",
+  "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsup && vite build && block-tools build-model",
+    "build": "ts-builder build --target block-model && block-tools build-model",
     "test": "vitest",
     "lint": "eslint .",
     "do-pack": "rm -f *.tgz && pnpm pack && mv *.tgz package.tgz"
@@ -17,27 +16,12 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@milaboratories/ts-builder": "catalog:",
+    "@milaboratories/ts-configs": "catalog:",
     "@platforma-sdk/block-tools": "catalog:",
     "@platforma-sdk/eslint-config": "catalog:",
     "eslint": "catalog:",
     "vitest": "catalog:",
-    "typescript": "catalog:",
-    "vite": "catalog:",
-    "tsup": "catalog:"
-  },
-  "tsup": {
-    "entry": [
-      "src/index.ts"
-    ],
-    "splitting": false,
-    "treeshake": true,
-    "clean": true,
-    "format": [
-      "cjs",
-      "esm"
-    ],
-    "dts": true,
-    "minify": false,
-    "sourcemap": true
+    "typescript": "catalog:"
   }
 }

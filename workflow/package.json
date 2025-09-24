@@ -13,6 +13,7 @@
     "@platforma-open/milaboratories.software-mixcr": "catalog:"
   },
   "devDependencies": {
+    "@milaboratories/ts-configs": "catalog:",
     "@platforma-sdk/tengo-builder": "catalog:",
     "@platforma-sdk/test": "catalog:",
     "vitest": "catalog:",

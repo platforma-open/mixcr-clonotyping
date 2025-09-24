@@ -3,10 +3,10 @@
   "version": "1.15.2",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "watch": "vue-tsc && vite build --watch",
-    "build": "vue-tsc -b && vite build",
-    "preview": "vite preview",
+    "dev": "ts-builder serve --target browser",
+    "watch": "ts-builder build --target browser --watch",
+    "build": "ts-builder build --target browser",
+    "type-check": "ts-builder types --target browser",
     "lint": "eslint .",
     "do-pack": "rm -f *.tgz && pnpm pack && mv *.tgz package.tgz"
   },
@@ -23,13 +23,11 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "catalog:",
+    "@milaboratories/ts-builder": "catalog:",
+    "@milaboratories/ts-configs": "catalog:",
     "@platforma-sdk/eslint-config": "catalog:",
     "typescript": "catalog:",
-    "vite": "catalog:",
     "vitest": "catalog:",
-    "vue-tsc": "catalog:",
-    "eslint": "catalog:",
-    "rollup-plugin-sourcemaps2": "catalog:"
+    "eslint": "catalog:"
   }
 }
