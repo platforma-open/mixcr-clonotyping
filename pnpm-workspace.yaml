@@ -9,15 +9,15 @@ catalog:
   '@milaboratories/ts-builder': ^1.0.5
   '@milaboratories/ts-configs': ^1.0.6
   '@platforma-sdk/workflow-tengo': ^5.3.0
-  '@platforma-sdk/model': ^1.43.14
-  '@platforma-sdk/ui-vue': ^1.43.14
+  '@platforma-sdk/model': ^1.43.18
+  '@platforma-sdk/ui-vue': ^1.43.18
   '@platforma-sdk/tengo-builder': ^2.2.0
   '@platforma-sdk/package-builder': ^3.2.4
   '@platforma-sdk/block-tools': ^2.6.7
   '@platforma-sdk/eslint-config': ^1.0.3
   '@platforma-sdk/blocks-deps-updater': ^2.0.0
 
-  '@platforma-sdk/test': ^1.43.17
+  '@platforma-sdk/test': ^1.43.20
   '@milaboratories/helpers': ^1.9.0
 
   '@platforma-open/milaboratories.software-mixcr': 4.7.0-233-develop
@@ -28,10 +28,10 @@ catalog:
   'utility-types': ^3.11.0
 
   'typescript': ~5.6.3
-  'turbo': ^2.5.6
+  'turbo': ^2.5.8
 
   'vitest': ~2.1.9
-  'eslint': ^9.33.0
+  'eslint': ^9.36.0
 
   '@vueuse/core': ^13.6.0
 
