@@ -20,7 +20,7 @@ export class ChunkedStreamReader {
    * @param totalSize - Total size of the blob in bytes
    * @param chunkSize - Size of each chunk to read in bytes (default: 10)
    */
-  constructor(handle: RemoteBlobHandle, totalSize: number, chunkSize: number = 10) {
+  constructor(handle: RemoteBlobHandle, totalSize: number, chunkSize: number = 16 * 1024 * 1024) {
     if (totalSize < 0) {
       throw new Error('Total size must be non-negative');
     }
@@ -62,7 +62,7 @@ export class ChunkedStreamReader {
             { from: this.currentPosition, to: endPosition },
           ), {
             maxAttempts: 3,
-            delay: 1000,
+            delay: 500,
           });
 
           // Enqueue the data into the stream

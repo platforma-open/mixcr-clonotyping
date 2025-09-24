@@ -39,6 +39,13 @@ const archive = computed<ExportItem>(() => {
   };
 });
 
+type ZipRequest = {
+  id: string;
+  fileName: string;
+  size: number;
+  stream: ChunkedStreamReader;
+}
+
 const exportRawTsvs = async () => {
   if (data.loading) {
     data.showExports = true;
@@ -74,10 +81,10 @@ const exportRawTsvs = async () => {
 
   try {
     const writableStream = await newHandle.createWritable();
-    const zip = new ZipWriter(writableStream);
+    const zip = new ZipWriter(writableStream, { keepOrder: true, zip64: true, bufferedWrite: false });
 
     try {
-      const promises: Promise<unknown>[] = [];
+      const requests = [] as ZipRequest[];
 
       for (const pCol of pCols) {
         for (const { key, value } of pCol.data) {
@@ -88,33 +95,34 @@ const exportRawTsvs = async () => {
           data.exports?.set(id, { fileName, current: 0, size, status: 'pending' });
 
           // Create a chunked stream reader for efficient streaming
-          const streamReader = new ChunkedStreamReader(handle, size, 8 * 1024 * 1024);
-          const readableStream = streamReader.createStream();
-          const update = (partial: Partial<ExportItem>) => {
-            const it = data.exports?.get(id);
-            if (it) {
-              data.exports?.set(id, { ...it, ...partial });
-            }
-          };
-
-          promises.push(zip.add(fileName, readableStream, {
-            onstart: () => {
-              update({ status: 'in-progress' });
-              return undefined;
-            },
-            onprogress: (current) => {
-              update({ current });
-              return undefined;
-            },
-            onend() {
-              update({ current: size, status: 'completed' });
-              return undefined;
-            },
-          }));
+          requests.push({ id, fileName, size, stream: new ChunkedStreamReader(handle, size) });
         }
       }
 
-      await Promise.all(promises);
+      for (const request of requests) {
+        const { id, fileName, size, stream } = request;
+        const update = (partial: Partial<ExportItem>) => {
+          const it = data.exports?.get(id);
+          if (it) {
+            data.exports?.set(id, { ...it, ...partial });
+          }
+        };
+        await zip.add(fileName, stream.createStream(), {
+          bufferedWrite: false,
+          onstart: () => {
+            update({ status: 'in-progress' });
+            return undefined;
+          },
+          onprogress: (current) => {
+            update({ current });
+            return undefined;
+          },
+          onend() {
+            update({ current: size, status: 'completed' });
+            return undefined;
+          },
+        });
+      }
     } finally {
       await zip.close();
     }
@@ -131,12 +139,8 @@ useClickOutside([progressesRef], () => {
 </script>
 
 <template>
-  <PlBtnGhost
-    :disabled="!isReadyToExport"
-    :loading="data.loading"
-    :class="{[$style['has-exports']] : data.exports}"
-    @click.stop="exportRawTsvs"
-  >
+  <PlBtnGhost :disabled="!isReadyToExport" :loading="data.loading" :class="{ [$style['has-exports']]: data.exports }"
+    @click.stop="exportRawTsvs">
     Export Raw Results
     <template #append>
       <PlIcon24 :class="$style.icon" name="download" />
@@ -147,11 +151,7 @@ useClickOutside([progressesRef], () => {
       <PlIcon16 :class="$style.close" name="close" @click.stop="data.showExports = false" />
       <Item :item="archive" :class="$style.archive" />
       <div :class="$style.items" class="pl-scrollable-y">
-        <Item
-          v-for="item in data.exports?.values()"
-          :key="item.fileName"
-          :item="item"
-        />
+        <Item v-for="item in data.exports?.values()" :key="item.fileName" :item="item" />
       </div>
     </div>
   </Teleport>
@@ -172,20 +172,22 @@ useClickOutside([progressesRef], () => {
   position: fixed;
   top: 8px;
   right: 8px;
-  width: 200px;
+  width: 350px;
   height: auto;
   max-height: 400px;
   overflow: auto;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.85);
   border-radius: 8px;
   padding: 20px 8px 8px 20px;
   color: white;
   font-size: 12px;
   font-weight: 600;
   z-index: 1000;
+
   .items {
     max-height: 300px;
   }
+
   .close {
     position: absolute;
     top: 8px;
