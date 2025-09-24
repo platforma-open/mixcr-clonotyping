@@ -71,7 +71,7 @@ const exportRawTsvs = async () => {
         'application/zip': ['.zip'],
       },
     }],
-    suggestedName: 'raw-tsvs.zip',
+    suggestedName: `${new Date().toISOString().split('T')[0]}_ClonotypingResultsRaw_${app.model.args.title ?? 'Untitled'}.zip`,
   });
 
   data.loading = true;
