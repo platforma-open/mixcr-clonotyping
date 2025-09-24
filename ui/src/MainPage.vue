@@ -30,6 +30,7 @@ import type { MiXCRResult } from './results';
 import { MiXCRResultsFull } from './results';
 import SampleReportPanel from './SampleReportPanel.vue';
 import SettingsPanel from './SettingsPanel.vue';
+import { ExportRawBtn } from './ExportRawBtn';
 
 const app = useApp();
 
@@ -190,6 +191,7 @@ const gridOptions: GridOptions<MiXCRResult> = {
   <PlBlockPage>
     <template #title>MiXCR Clonotyping</template>
     <template #append>
+      <ExportRawBtn />
       <PlBtnGhost @click.stop="() => (data.settingsOpen = true)">
         Settings
         <template #append>
@@ -199,32 +201,18 @@ const gridOptions: GridOptions<MiXCRResult> = {
     </template>
     <div :style="{ flex: 1 }">
       <AgGridVue
-        :theme="AgGridTheme"
-        :style="{ height: '100%' }"
-        :rowData="result"
-        :defaultColDef="defaultColumnDef"
-        :columnDefs="columnDefs"
-        :grid-options="gridOptions"
-        :loadingOverlayComponentParams="{ notReady: true }"
-        :loadingOverlayComponent="PlAgOverlayLoading"
-        :noRowsOverlayComponent="PlAgOverlayNoRows"
+        :theme="AgGridTheme" :style="{ height: '100%' }" :rowData="result" :defaultColDef="defaultColumnDef"
+        :columnDefs="columnDefs" :grid-options="gridOptions" :loadingOverlayComponentParams="{ notReady: true }"
+        :loadingOverlayComponent="PlAgOverlayLoading" :noRowsOverlayComponent="PlAgOverlayNoRows"
         @grid-ready="onGridReady"
       />
     </div>
   </PlBlockPage>
-  <PlSlideModal
-    v-model="data.settingsOpen"
-    :shadow="true"
-    :close-on-outside-click="app.model.outputs.started"
-  >
+  <PlSlideModal v-model="data.settingsOpen" :shadow="true" :close-on-outside-click="app.model.outputs.started">
     <template #title>Settings</template>
     <SettingsPanel />
   </PlSlideModal>
-  <PlSlideModal
-    v-model="data.sampleReportOpen"
-    :close-on-outside-click="app.model.outputs.started"
-    width="80%"
-  >
+  <PlSlideModal v-model="data.sampleReportOpen" :close-on-outside-click="app.model.outputs.started" width="80%">
     <template #title>
       Results for
       {{

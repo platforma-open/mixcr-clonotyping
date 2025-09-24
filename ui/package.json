@@ -23,11 +23,13 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@zip.js/zip.js": "catalog:",
     "@milaboratories/ts-builder": "catalog:",
     "@milaboratories/ts-configs": "catalog:",
     "@platforma-sdk/eslint-config": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:",
-    "eslint": "catalog:"
+    "eslint": "catalog:",
+    "@types/wicg-file-system-access": "catalog:"
   }
 }
