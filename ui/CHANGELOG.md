@@ -1,5 +1,16 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.16.0
+
+### Minor Changes
+
+- dde56a2: Raw results export
+
+### Patch Changes
+
+- Updated dependencies [dde56a2]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.17.0
+
 ## 1.15.3
 
 ### Patch Changes

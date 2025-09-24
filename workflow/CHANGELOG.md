@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.7.0
+
+### Minor Changes
+
+- dde56a2: Raw results export
+
 ## 3.6.1
 
 ### Patch Changes
