@@ -1,5 +1,22 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.12.4
+
+### Patch Changes
+
+- 0f20633: migrate to ts-builder
+- Updated dependencies [0f20633]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@3.6.1
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.16.2
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.ui@1.15.3
+
+## 2.12.3
+
+### Patch Changes
+
+- Updated dependencies [9965185]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@3.6.0
+
 ## 2.12.2
 
 ### Patch Changes

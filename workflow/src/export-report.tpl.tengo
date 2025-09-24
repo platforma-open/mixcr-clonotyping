@@ -27,6 +27,8 @@ self.body(func(inputs) {
     presetSpecForBack := inputs.presetSpecForBack
     sampleIdAxisSpec := inputs.sampleIdAxisSpec
     chains := inputs.chains
+    library := inputs.library
+    isLibraryFileGzipped := inputs.isLibraryFileGzipped
 
     isSingleCell := len(presetSpecForBack.cellTags) > 0
 	hasUmi := !is_undefined(presetSpecForBack.umiTags) && len(presetSpecForBack.umiTags) > 0
@@ -64,6 +66,13 @@ self.body(func(inputs) {
     }
 
     exportReportCmd.arg("qc-report.tsv").saveFile("qc-report.tsv")
+    if library {
+        if isLibraryFileGzipped {
+			exportReportCmd.addFile("library.json.gz", library)
+		} else {
+			exportReportCmd.addFile("library.json", library)
+		}
+	}
     
     // Run the command
     result := exportReportCmd.run()

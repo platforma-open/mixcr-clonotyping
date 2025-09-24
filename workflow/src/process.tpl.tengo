@@ -697,7 +697,9 @@ self.body(func(inputs) {
 		clnsData: mixcrResults.outputData("clns"),
 		presetSpecForBack: presetSpecForBack,
 		sampleIdAxisSpec: sampleIdAxisSpec,
-		chains: chains
+		chains: chains,
+		library: library,
+		isLibraryFileGzipped: isLibraryFileGzipped
 	})
 
 	return {
