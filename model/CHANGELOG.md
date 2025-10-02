@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.17.1
+
+### Patch Changes
+
+- c337aa2: Fix [sdk/ui] Broken error propagation: block errors are not showing anymore
+
 ## 1.17.0
 
 ### Minor Changes
