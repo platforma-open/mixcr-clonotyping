@@ -11,6 +11,8 @@ import { ReactiveFileContent } from '@platforma-sdk/ui-vue';
 import { computed } from 'vue';
 import { useApp } from './app';
 
+const reactiveFileContent = ReactiveFileContent.useGlobal();
+
 export type MiXCRResult = {
   label: string;
   sampleId: PlId;
@@ -36,7 +38,7 @@ export const MiXCRResultsMap = computed(() => {
   const resultMap = new Map<string, MiXCRResult>();
 
   // result map remembers the original insertion order, by sorting qc records,
-  // we make all arrays derived from this map stabily ordered
+  // we make all arrays derived from this map stably ordered
   const sortedQcData = [...qc.data];
   sortedQcData.sort((r1, r2) => (r1.key[0] as string).localeCompare(r2.key[0] as string));
   for (const qcData of sortedQcData) {
@@ -49,7 +51,7 @@ export const MiXCRResultsMap = computed(() => {
     resultMap.set(sampleId, result);
     if (qcData.value === undefined) continue;
     // globally cached
-    result.qc = ReactiveFileContent.getContentJson(qcData.value.handle, Qc).value;
+    result.qc = reactiveFileContent.getContentJson(qcData.value.handle, Qc).value;
   }
 
   const logs = app.model.outputs.logs;
@@ -70,14 +72,14 @@ export const MiXCRResultsMap = computed(() => {
         switch (reportId) {
           case 'align':
             // globally cached
-            resultMap.get(sampleId)!.alignReport = ReactiveFileContent.getContentJson(
+            resultMap.get(sampleId)!.alignReport = reactiveFileContent.getContentJson(
               report.value.handle,
               AlignReport,
             )?.value;
             break;
           case 'assemble':
             // globally cached
-            resultMap.get(sampleId)!.assembleReport = ReactiveFileContent.getContentJson(
+            resultMap.get(sampleId)!.assembleReport = reactiveFileContent.getContentJson(
               report.value.handle,
               AssembleReport,
             )?.value;
@@ -102,7 +104,7 @@ export const MiXCRResultsFull = computed<MiXCRResult[] | undefined>(() => {
   const rawMap = MiXCRResultsMap.value;
   if (rawMap === undefined) return undefined;
 
-  // shellow cloning the map and it's values
+  // shallow cloning the map and it's values
   const resultMap = new Map([...rawMap].map((v) => [v[0], { ...v[1] }]));
 
   // adding progress information

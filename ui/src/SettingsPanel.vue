@@ -11,6 +11,8 @@ import { retentive } from './retentive';
 
 const app = useApp();
 
+const reactiveFileContent = ReactiveFileContent.useGlobal();
+
 const data = reactive<{ presetType: Preset['type'] }>({
   presetType: app.model.args.preset?.type ?? 'name',
 });
@@ -36,7 +38,7 @@ const presetSourceOptions: ListOption<Preset['type']>[] = [
 
 const inputOptions = retentive(computed(() => app.model.outputs.inputOptions));
 const presets = retentive(computed(() => {
-  const rawContent = ReactiveFileContent.getContentJson(app.model.outputs.presets?.handle)?.value;
+  const rawContent = reactiveFileContent.getContentJson(app.model.outputs.presets?.handle)?.value;
   if (rawContent === undefined)
     return undefined;
   return SupportedPresetList.parse(rawContent);
@@ -68,7 +70,7 @@ const allFileImports = computed(() => {
 });
 
 watch(needSpecies, (ns) => {
-  if (ns === false // everething is loaded and we know that species is not specified as flag
+  if (ns === false // everything is loaded and we know that species is not specified as flag
     && app.model.args.species !== undefined)
     app.model.args.species = undefined;
 
