@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.7.2
+
+### Patch Changes
+
+- 4c42a7a: Fix [blocks/mixcr-clonotyping] in the end of calculations results table starts to blink
+
 ## 3.7.1
 
 ### Patch Changes
