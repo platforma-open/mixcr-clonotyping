@@ -9,16 +9,16 @@ catalog:
   '@milaboratories/ts-builder': ^1.0.5
   '@milaboratories/ts-configs': ^1.0.6
   '@platforma-sdk/workflow-tengo': ^5.3.2
-  '@platforma-sdk/model': ^1.43.21
-  '@platforma-sdk/ui-vue': ^1.43.28
-  '@platforma-sdk/tengo-builder': ^2.2.3
+  '@platforma-sdk/model': ^1.43.29
+  '@platforma-sdk/ui-vue': ^1.44.0
+  '@platforma-sdk/tengo-builder': ^2.2.4
   '@platforma-sdk/package-builder': ^3.7.0
-  '@platforma-sdk/block-tools': ^2.6.9
+  '@platforma-sdk/block-tools': ^2.6.11
   '@platforma-sdk/eslint-config': ^1.1.0
   '@platforma-sdk/blocks-deps-updater': ^2.0.0
 
-  '@platforma-sdk/test': ^1.43.27
-  '@milaboratories/helpers': ^1.9.0
+  '@platforma-sdk/test': ^1.44.0
+  '@milaboratories/helpers': ^1.10.0
 
   '@platforma-open/milaboratories.software-mixcr': 4.7.0-233-develop
 

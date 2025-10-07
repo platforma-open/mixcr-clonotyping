@@ -33,8 +33,10 @@ const reportHandle = computed(() => {
       && d.key[2] === 'txt')?.value?.handle;
 });
 
+const reactiveFileContent = ReactiveFileContent.useGlobal();
+
 const reportContent = computed(
-  () => ReactiveFileContent.getContentString(reportHandle.value)?.value,
+  () => reactiveFileContent.getContentString(reportHandle.value)?.value,
 );
 
 const tabOptions: SimpleOption<ReportId>[] = [
