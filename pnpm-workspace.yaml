@@ -45,5 +45,5 @@ catalog:
 
   # other blocks used in tests
 
-  '@platforma-open/milaboratories.samples-and-data': ^1.10.10
+  '@platforma-open/milaboratories.samples-and-data': ^1.10.14
   '@platforma-open/milaboratories.samples-and-data.model': ^1.11.2
