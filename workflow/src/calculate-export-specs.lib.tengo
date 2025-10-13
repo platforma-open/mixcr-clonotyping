@@ -64,13 +64,23 @@ assemblingFeatureInfo := func(assemblingFeature) {
 				productiveFeature = splittedFeature1[0] + "_TO_FR4(0,-1)"
 				coreVFeature = "{"+splittedFeature1[0]+"Begin:FR3End}"
 				coreJFeature = "FR4"
+			} else if splittedFeature1[0] == "CDR3" {
+				productiveFeature = assemblingFeature
 			} else {
 				productiveFeature = assemblingFeature
 				coreVFeature = "{"+splittedFeature1[0]+"Begin:FR3End}"
 			}
 		} else if len(splittedFeature2) == 2 {
-			productiveFeature = assemblingFeature
-			coreVFeature = splittedFeature2[0]+":FR3End}"
+			if splittedFeature2[0] == "{CDR3Begin" {
+				productiveFeature = assemblingFeature
+			} else {
+				productiveFeature = assemblingFeature
+				coreVFeature = "{"+splittedFeature2[0]+":FR3End}"
+			}
+			if splittedFeature2[1] == "FR4End}" {
+				coreJFeature = "FR4"
+				productiveFeature = splittedFeature2[0] + ":" + text.split(splittedFeature2[1], "}")[0] + "(-1)}"
+			}
 		}
 	} else {
 		productiveFeature = "CDR3"
