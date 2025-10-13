@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.8.0
+
+### Minor Changes
+
+- 48c8ea4: core features fixes
+
 ## 3.7.2
 
 ### Patch Changes
