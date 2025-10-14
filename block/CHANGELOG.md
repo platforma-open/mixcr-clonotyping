@@ -1,5 +1,13 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.12.10
+
+### Patch Changes
+
+- 4b0cf15: Technical release: 0 CVEs
+- Updated dependencies [4b0cf15]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@3.8.2
+
 ## 2.12.9
 
 ### Patch Changes

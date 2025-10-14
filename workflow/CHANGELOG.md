@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.8.2
+
+### Patch Changes
+
+- 4b0cf15: Technical release: 0 CVEs
+
 ## 3.8.1
 
 ### Patch Changes
