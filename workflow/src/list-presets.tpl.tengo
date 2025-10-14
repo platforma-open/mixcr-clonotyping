@@ -13,7 +13,7 @@ mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:
 
 self.body(func(inputs) {
 	listPresets := exec.builder().
-		inUiQueue().
+		inLightQueue().
 		cpu(1).
 		mem("512MiB").
 		software(mixcrSw).
