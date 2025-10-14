@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.8.1
+
+### Patch Changes
+
+- 6991800: No UI queue usage
+
 ## 3.8.0
 
 ### Minor Changes
