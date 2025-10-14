@@ -37,8 +37,8 @@ catalogs:
       specifier: ^1.43.29
       version: 1.43.29
     '@platforma-sdk/tengo-builder':
-      specifier: ^2.2.4
-      version: 2.2.4
+      specifier: ^2.3.0
+      version: 2.3.0
     '@platforma-sdk/test':
       specifier: ^1.44.0
       version: 1.44.0
@@ -255,7 +255,7 @@ importers:
         version: 1.0.6
       '@platforma-sdk/tengo-builder':
         specifier: 'catalog:'
-        version: 2.2.4
+        version: 2.3.0
       '@platforma-sdk/test':
         specifier: 'catalog:'
         version: 1.44.0(@types/node@24.5.2)
@@ -1183,6 +1183,10 @@ packages:
     resolution: {integrity: sha512-9px/GpFfWgAjEa4IrLUI6j0rqRn8DxODrZvJxwYnpLmQAKGhT3lFS9rSxmo9MAom9ttRpdNU3VrnviVzzVljUg==}
     engines: {node: '>=22.19.0'}
 
+  '@milaboratories/pl-client@2.15.0':
+    resolution: {integrity: sha512-RWlAX1qHz+qN9cJlGnImuAN9kv214WGPfwD49+paNiDOrFlLx/xq/2CsVniQz/aKp9LmjCxeBbYhG33BkVeYsw==}
+    engines: {node: '>=22.19.0'}
+
   '@milaboratories/pl-config@1.7.6':
     resolution: {integrity: sha512-D3dSyCCW+9lVW6LTVpjcUU9pyr7qILo+mYDrv3YTYLLQuqreCmID+CSl1t9xj/fBZlxGvnY19f1yAnherMJJQw==}
 
@@ -1210,11 +1214,17 @@ packages:
   '@milaboratories/pl-model-backend@1.1.14':
     resolution: {integrity: sha512-tZiT0FMGErDRM4iKDSEuGYoH/pG9JS5qMAeu3sEJh4sCukW99qjH5vRwyeHKorT5qsQXovZJaOaZI5v/GSV6vA==}
 
+  '@milaboratories/pl-model-backend@1.1.15':
+    resolution: {integrity: sha512-beEhNalTdBNEIPqBvJ96BmsDIfck1ZyEtH2wN4yn3EmmRREtGUlXsJrrHfU6hv82j6/lh9K/kdxkob0oVwYGTA==}
+
   '@milaboratories/pl-model-common@1.19.19':
     resolution: {integrity: sha512-3j0IUc/zqGoHALY8/vP/V1iUflMsllkeDOjORwI+b7d/LkIxR4oKm+NEQqUJh7RmQjSA0b4n0FiEyKYEcgEVFA==}
 
   '@milaboratories/pl-model-common@1.20.1':
     resolution: {integrity: sha512-VyIQjVyo6hdtisa/Y34RPg0eKlRz0nDGQHOccMbWo/tlfveTaqL/k2gEo4oAvsk0ANwO/0BajL+dF1SpQtm4RQ==}
+
+  '@milaboratories/pl-model-common@1.21.2':
+    resolution: {integrity: sha512-m2VB7vny/myR3K0ZMjQ9eJvOeBVBsOl4JauTuxqm82tK4lQ/kxgoVjVizPCEI7TFJJV1opkPWVTVy0U6WHxPwQ==}
 
   '@milaboratories/pl-model-middle-layer@1.8.28':
     resolution: {integrity: sha512-aLtlw7O1/kPetJI3noQyM82aVMuakb6bv+/CYAEp3PWXVyVEteOlv83ASYdMGuWBYWmznIZ5JlGl6SEOvECQWg==}
@@ -1360,8 +1370,8 @@ packages:
   '@platforma-sdk/model@1.43.29':
     resolution: {integrity: sha512-YxRfaNLi+tFu6Q2ygOOJeqGkQQmOJmumCWd4++3bMqCQ/uUxAM0p1IZmQppnr+bc7LR1XqKiU36I1W/1yluS8w==}
 
-  '@platforma-sdk/tengo-builder@2.2.4':
-    resolution: {integrity: sha512-yZs4hjoYAbvGEOxj/ssjj6Xonf66w8JYbYBahMU/ddMZ8a1Gb8yjOxVYyKI93tifPhIz7dCTqmuWt71D+J65BA==}
+  '@platforma-sdk/tengo-builder@2.3.0':
+    resolution: {integrity: sha512-asjeZ2mdbEVhXk5OqWDS5xPeVRIK5oPh3tN7YVTx9ZoRAtY4/d41Bcep35zLaS/MNBqzZ+WAmUy1/aqDTSFA2Q==}
     engines: {node: '>=22'}
     hasBin: true
 
@@ -7025,7 +7035,7 @@ snapshots:
       '@rollup/plugin-node-resolve': 16.0.1(rollup@4.50.0)
       '@rollup/plugin-typescript': 12.1.4(rollup@4.50.0)(tslib@2.8.1)(typescript@5.6.3)
       '@types/node': 20.16.15
-      '@vitejs/plugin-vue': 5.2.4(vite@6.3.5(@types/node@24.5.2)(yaml@2.8.1))(vue@3.5.21(typescript@5.6.3))
+      '@vitejs/plugin-vue': 5.2.4(vite@6.3.5(@types/node@20.16.15)(yaml@2.8.1))(vue@3.5.21(typescript@5.6.3))
       rollup: 4.50.0
       rollup-plugin-cleandir: 3.0.0(rollup@4.50.0)
       rollup-plugin-node-externals: 8.1.1(rollup@4.50.0)
@@ -7033,9 +7043,9 @@ snapshots:
       tsup: 8.3.6(@microsoft/api-extractor@7.52.13(@types/node@24.5.2))(postcss@8.5.6)(typescript@5.6.3)(yaml@2.8.1)
       typescript: 5.6.3
       vite: 6.3.5(@types/node@20.16.15)(yaml@2.8.1)
-      vite-plugin-css-injected-by-js: 3.5.2(vite@6.3.5(@types/node@24.5.2)(yaml@2.8.1))
-      vite-plugin-dts: 4.5.4(@types/node@20.16.15)(rollup@4.50.0)(typescript@5.6.3)(vite@6.3.5(@types/node@24.5.2)(yaml@2.8.1))
-      vite-plugin-externalize-deps: 0.9.0(vite@6.3.5(@types/node@24.5.2)(yaml@2.8.1))
+      vite-plugin-css-injected-by-js: 3.5.2(vite@6.3.5(@types/node@20.16.15)(yaml@2.8.1))
+      vite-plugin-dts: 4.5.4(@types/node@20.16.15)(rollup@4.50.0)(typescript@5.6.3)(vite@6.3.5(@types/node@20.16.15)(yaml@2.8.1))
+      vite-plugin-externalize-deps: 0.9.0(vite@6.3.5(@types/node@20.16.15)(yaml@2.8.1))
     transitivePeerDependencies:
       - '@microsoft/api-extractor'
       - '@swc/core'
@@ -7143,6 +7153,26 @@ snapshots:
     dependencies:
       '@grpc/grpc-js': 1.13.4
       '@milaboratories/pl-http': 1.2.0
+      '@milaboratories/ts-helpers': 1.5.1
+      '@protobuf-ts/grpc-transport': 2.11.1(@grpc/grpc-js@1.13.4)
+      '@protobuf-ts/runtime': 2.11.1
+      '@protobuf-ts/runtime-rpc': 2.11.1
+      canonicalize: 2.1.0
+      denque: 2.1.0
+      https-proxy-agent: 7.0.6
+      long: 5.3.2
+      lru-cache: 11.2.2
+      undici: 7.16.0
+      utility-types: 3.11.0
+      yaml: 2.8.1
+    transitivePeerDependencies:
+      - supports-color
+
+  '@milaboratories/pl-client@2.15.0':
+    dependencies:
+      '@grpc/grpc-js': 1.13.4
+      '@milaboratories/pl-http': 1.2.0
+      '@milaboratories/pl-model-common': 1.21.2
       '@milaboratories/ts-helpers': 1.5.1
       '@protobuf-ts/grpc-transport': 2.11.1(@grpc/grpc-js@1.13.4)
       '@protobuf-ts/runtime': 2.11.1
@@ -7269,6 +7299,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@milaboratories/pl-model-backend@1.1.15':
+    dependencies:
+      '@milaboratories/pl-client': 2.15.0
+      canonicalize: 2.1.0
+      zod: 3.23.8
+    transitivePeerDependencies:
+      - supports-color
+
   '@milaboratories/pl-model-common@1.19.19':
     dependencies:
       '@milaboratories/pl-error-like': 1.12.5
@@ -7276,6 +7314,12 @@ snapshots:
       zod: 3.23.8
 
   '@milaboratories/pl-model-common@1.20.1':
+    dependencies:
+      '@milaboratories/pl-error-like': 1.12.5
+      canonicalize: 2.1.0
+      zod: 3.23.8
+
+  '@milaboratories/pl-model-common@1.21.2':
     dependencies:
       '@milaboratories/pl-error-like': 1.12.5
       canonicalize: 2.1.0
@@ -7562,9 +7606,9 @@ snapshots:
       utility-types: 3.11.0
       zod: 3.23.8
 
-  '@platforma-sdk/tengo-builder@2.2.4':
+  '@platforma-sdk/tengo-builder@2.3.0':
     dependencies:
-      '@milaboratories/pl-model-backend': 1.1.14
+      '@milaboratories/pl-model-backend': 1.1.15
       '@milaboratories/resolve-helper': 1.1.1
       '@milaboratories/tengo-tester': 1.6.4
       '@milaboratories/ts-helpers': 1.5.1
@@ -10513,11 +10557,6 @@ snapshots:
       vite: 6.3.5(@types/node@20.16.15)(yaml@2.8.1)
       vue: 3.5.21(typescript@5.6.3)
 
-  '@vitejs/plugin-vue@5.2.4(vite@6.3.5(@types/node@24.5.2)(yaml@2.8.1))(vue@3.5.21(typescript@5.6.3))':
-    dependencies:
-      vite: 6.3.5(@types/node@24.5.2)(yaml@2.8.1)
-      vue: 3.5.21(typescript@5.6.3)
-
   '@vitest/expect@2.1.9':
     dependencies:
       '@vitest/spy': 2.1.9
@@ -12736,10 +12775,6 @@ snapshots:
     dependencies:
       vite: 6.3.5(@types/node@20.16.15)(yaml@2.8.1)
 
-  vite-plugin-css-injected-by-js@3.5.2(vite@6.3.5(@types/node@24.5.2)(yaml@2.8.1)):
-    dependencies:
-      vite: 6.3.5(@types/node@24.5.2)(yaml@2.8.1)
-
   vite-plugin-dts@4.5.4(@types/node@20.16.15)(rollup@4.50.0)(typescript@5.6.3)(vite@6.3.5(@types/node@20.16.15)(yaml@2.8.1)):
     dependencies:
       '@microsoft/api-extractor': 7.52.13(@types/node@20.16.15)
@@ -12759,32 +12794,9 @@ snapshots:
       - rollup
       - supports-color
 
-  vite-plugin-dts@4.5.4(@types/node@20.16.15)(rollup@4.50.0)(typescript@5.6.3)(vite@6.3.5(@types/node@24.5.2)(yaml@2.8.1)):
-    dependencies:
-      '@microsoft/api-extractor': 7.52.13(@types/node@20.16.15)
-      '@rollup/pluginutils': 5.2.0(rollup@4.50.0)
-      '@volar/typescript': 2.4.15
-      '@vue/language-core': 2.2.0(typescript@5.6.3)
-      compare-versions: 6.1.1
-      debug: 4.4.1(supports-color@8.1.1)
-      kolorist: 1.8.0
-      local-pkg: 1.1.2
-      magic-string: 0.30.18
-      typescript: 5.6.3
-    optionalDependencies:
-      vite: 6.3.5(@types/node@24.5.2)(yaml@2.8.1)
-    transitivePeerDependencies:
-      - '@types/node'
-      - rollup
-      - supports-color
-
   vite-plugin-externalize-deps@0.9.0(vite@6.3.5(@types/node@20.16.15)(yaml@2.8.1)):
     dependencies:
       vite: 6.3.5(@types/node@20.16.15)(yaml@2.8.1)
-
-  vite-plugin-externalize-deps@0.9.0(vite@6.3.5(@types/node@24.5.2)(yaml@2.8.1)):
-    dependencies:
-      vite: 6.3.5(@types/node@24.5.2)(yaml@2.8.1)
 
   vite@5.4.19(@types/node@20.16.15):
     dependencies:
