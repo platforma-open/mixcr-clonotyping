@@ -353,7 +353,7 @@ self.body(func(inputs) {
 				settings: {
 					axes: [ axisByClonotypeKeyGen(chain) ],
 					columns: columnsSpecPerSample,
-					storageFormat: "Binary",
+					storageFormat: "Parquet",
 					partitionKeyLength: 0
 				},
 				mem: "16GiB",
@@ -446,7 +446,7 @@ self.body(func(inputs) {
 				settings: {
 					axes: [ axisByClonotypeKeyGen(chain) ],
 					columns: columnsSpecPerClonotypeNoAggregates + columnsSpecPerClonotypeAggregates,
-					storageFormat: "Binary",
+					storageFormat: "Parquet",
 					partitionKeyLength: 0
 				},
 				mem: "24GiB",
@@ -527,7 +527,7 @@ self.body(func(inputs) {
 						spec: sampleIdAxisSpec
 					}, axisByScClonotypeKeyGen(receptor) ],
 					columns: columnsSpecPerSampleSc,
-					storageFormat: "Binary",
+					storageFormat: "Parquet",
 					partitionKeyLength: 1
 				},
 				mem: "16GiB",
@@ -540,7 +540,7 @@ self.body(func(inputs) {
 				settings: {
 					axes: [ axisByScClonotypeKeyGen(receptor) ],
 					columns: columnsSpecPerClonotypeSc,
-					storageFormat: "Binary"
+					storageFormat: "Parquet"
 				},
 				mem: "12GiB",
 				cpu: 2,
@@ -609,7 +609,7 @@ self.body(func(inputs) {
 									annotations: annotationsTransformation
 								}
 							}),
-							storageFormat: "Binary",
+							storageFormat: "Parquet",
 							partitionKeyLength: 0
 						},
 						mem: "24GiB",
