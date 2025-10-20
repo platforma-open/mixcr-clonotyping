@@ -11,6 +11,18 @@ import { retentive } from './retentive';
 
 const app = useApp();
 
+// Temporary local extension until model package exposes these args
+const args = app.model.args as unknown as (
+  & typeof app.model.args
+  & {
+    leftAlignmentMode?: 'floating-left-alignment-boundary' | 'rigid-left-alignment-boundary';
+    rightAlignmentMode?: 'floating-right-alignment-boundary' | 'rigid-right-alignment-boundary';
+    materialType?: 'RNA' | 'DNA';
+    tagPattern?: string;
+    assembleClonesBy?: 'CDR3' | 'VDJRegion';
+  }
+);
+
 const reactiveFileContent = ReactiveFileContent.useGlobal();
 
 const data = reactive<{ presetType: Preset['type'] }>({
@@ -63,6 +75,22 @@ const needSpecies = computed(() => preset.value === undefined
   ? undefined
   : (preset.value.requiredFlags.findIndex((f) => f === 'species') >= 0));
 
+const needLeftAlignmentMode = computed(() => preset.value === undefined
+  ? undefined
+  : (preset.value.requiredFlags.findIndex((f) => f === 'leftAlignmentMode') >= 0));
+const needRightAlignmentMode = computed(() => preset.value === undefined
+  ? undefined
+  : (preset.value.requiredFlags.findIndex((f) => f === 'rightAlignmentMode') >= 0));
+const needMaterialType = computed(() => preset.value === undefined
+  ? undefined
+  : (preset.value.requiredFlags.findIndex((f) => f === 'materialType') >= 0));
+const needTagPattern = computed(() => preset.value === undefined
+  ? undefined
+  : (preset.value.requiredFlags.findIndex((f) => f === 'tagPattern') >= 0));
+const needAssembleClonesBy = computed(() => preset.value === undefined
+  ? undefined
+  : (preset.value.requiredFlags.findIndex((f) => f === 'assembleClonesBy') >= 0));
+
 const isSingleCell = computed(() => preset.value?.analysisStages.includes('assembleCells') === true);
 
 const allFileImports = computed(() => {
@@ -77,6 +105,54 @@ watch(needSpecies, (ns) => {
   if (ns === true // the opposite of the above
     && app.model.args.species === undefined)
     app.model.args.species = 'hsa';
+});
+
+const leftAlignmentModeOptions: ListOption[] = [
+  { label: 'Floating left alignment boundary', value: 'floating-left-alignment-boundary' },
+  { label: 'Rigid left alignment boundary', value: 'rigid-left-alignment-boundary' },
+];
+const rightAlignmentModeOptions: ListOption[] = [
+  { label: 'Floating right alignment boundary', value: 'floating-right-alignment-boundary' },
+  { label: 'Rigid right alignment boundary', value: 'rigid-right-alignment-boundary' },
+];
+const materialTypeOptions: ListOption[] = [
+  { label: 'RNA', value: 'RNA' },
+  { label: 'DNA', value: 'DNA' },
+];
+const assembleClonesByOptions: ListOption[] = [
+  { label: 'CDR3', value: 'CDR3' },
+  { label: 'VDJ region', value: 'VDJRegion' },
+];
+
+watch(needLeftAlignmentMode, (v) => {
+  if (v === false && args.leftAlignmentMode !== undefined)
+    args.leftAlignmentMode = undefined;
+  if (v === true && args.leftAlignmentMode === undefined)
+    args.leftAlignmentMode = 'floating-left-alignment-boundary';
+});
+watch(needRightAlignmentMode, (v) => {
+  if (v === false && args.rightAlignmentMode !== undefined)
+    args.rightAlignmentMode = undefined;
+  if (v === true && args.rightAlignmentMode === undefined)
+    args.rightAlignmentMode = 'floating-right-alignment-boundary';
+});
+watch(needMaterialType, (v) => {
+  if (v === false && args.materialType !== undefined)
+    args.materialType = undefined;
+  if (v === true && args.materialType === undefined)
+    args.materialType = 'RNA';
+});
+watch(needTagPattern, (v) => {
+  if (v === false && args.tagPattern !== undefined)
+    args.tagPattern = undefined;
+  if (v === true && args.tagPattern === undefined)
+    args.tagPattern = '';
+});
+watch(needAssembleClonesBy, (v) => {
+  if (v === false && args.assembleClonesBy !== undefined)
+    args.assembleClonesBy = undefined;
+  if (v === true && args.assembleClonesBy === undefined)
+    args.assembleClonesBy = 'CDR3';
 });
 
 function setPresetName(name?: string) {
@@ -240,6 +316,41 @@ const receptorOrChainsModel = computed({
       Restrict the analysis to certain receptor types.
     </template>
   </PlDropdownMulti>
+
+  <PlDropdown
+    v-if="needLeftAlignmentMode"
+    v-model="args.leftAlignmentMode"
+    :options="leftAlignmentModeOptions"
+    label="Left alignment mode"
+  />
+
+  <PlDropdown
+    v-if="needRightAlignmentMode"
+    v-model="args.rightAlignmentMode"
+    :options="rightAlignmentModeOptions"
+    label="Right alignment mode"
+  />
+
+  <PlDropdown
+    v-if="needMaterialType"
+    v-model="args.materialType"
+    :options="materialTypeOptions"
+    label="Material type"
+  />
+
+  <PlTextField
+    v-if="needTagPattern"
+    v-model="args.tagPattern"
+    :clearable="() => undefined"
+    label="Tag pattern"
+  />
+
+  <PlDropdown
+    v-if="needAssembleClonesBy"
+    v-model="args.assembleClonesBy"
+    :options="assembleClonesByOptions"
+    label="Assemble clones by"
+  />
 
   <PlAccordionSection label="Advanced Settings">
     <PlTextField
