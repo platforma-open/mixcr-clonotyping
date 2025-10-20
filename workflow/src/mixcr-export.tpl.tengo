@@ -54,6 +54,7 @@ self.body(func(inputs) {
 		    cpu(2).
 			printErrStreamToStdout().
 			dontSaveStdoutOrStderr().
+			env("MI_USE_SYSTEM_CA", "true").
 			software(mixcrSw).
 			secret("MI_LICENSE", "MI_LICENSE").
 			arg("exportClones").

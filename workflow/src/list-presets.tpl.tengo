@@ -17,6 +17,7 @@ self.body(func(inputs) {
 		cpu(1).
 		mem("512MiB").
 		software(mixcrSw).
+		env("MI_USE_SYSTEM_CA", "true").
 		secret("MI_LICENSE", "MI_LICENSE").
 		arg("listPresetSpecificationsForUI").
 		arg("presets.json").
