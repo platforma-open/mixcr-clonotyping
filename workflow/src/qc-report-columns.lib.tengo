@@ -600,6 +600,30 @@ getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellT
         }
     }]
 
+    // Add per-chain clonotype counts for bulk datasets (avoid duplicates in single-cell)
+    if !isSingleCell {
+        bulkOrder := 107800
+        for chain in chains {
+            baseColumns = baseColumns + [{
+                column: "clonotypesByChain." + chain,
+                id: "clonotypes-by-chain-" + chain,
+                allowNA: true,
+                naRegex: "NaN",
+                spec: {
+                    name: "mixcr.com/reports/bulk/clonotypesByChain/" + chain,
+                    valueType: "Long",
+                    annotations: {
+                        "pl7.app/min": "0",
+                        "pl7.app/table/orderPriority": string(bulkOrder),
+                        "pl7.app/table/visibility": "default",
+                        "pl7.app/label": "Clonotypes by Chain " + chain
+                    }
+                }
+            }]
+            bulkOrder -= 100
+        }
+    }
+
     dataWithUmiColumns := [    {
         column: "refineTags.UMI.outputCount",
         id: "refine-tags-umi-output-count",
@@ -733,9 +757,51 @@ getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellT
         }
     }
     ]
+
+    singleCellColumns := []
     
+    // Paired cells total (single-cell): number of cells with distinct chains per sample
+    singleCellColumns += [{
+        column: "scCellsTotal",
+        id: "sc-cells-total",
+        allowNA: true,
+        naRegex: "NaN",
+        spec: {
+            name: "mixcr.com/reports/singleCell/pairedCellsTotal",
+            valueType: "Long",
+            annotations: {
+                "pl7.app/min": "0",
+                "pl7.app/table/orderPriority": "107900",
+                "pl7.app/table/visibility": "default",
+                "pl7.app/label": "Total number of cells (with paired chains)"
+            }
+        }
+    }]
+
+    // Per-chain clonotype counts (paired-only in single-cell), one column per available chain
+    n := 107800
+    for chain in chains {
+        singleCellColumns += [{
+            column: "clonotypesByChain." + chain,
+            id: "clonotypes-by-chain-" + chain,
+            allowNA: true,
+            naRegex: "NaN",
+            spec: {
+                name: "mixcr.com/reports/singleCell/clonotypesByChain/" + chain,
+                valueType: "Long",
+                annotations: {
+                    "pl7.app/min": "0",
+                    "pl7.app/table/orderPriority": string(n),
+                    "pl7.app/table/visibility": "default",
+                    "pl7.app/label": "Clonotypes by Chain " + chain
+                }
+            }
+        }]
+        n -= 100
+    }
+
     // Single Cell columns
-    singleCellColumns := [
+    singleCellColumns += [
     // {
     //     column: "align.readsWithChain.IGH",
     //     id: "align-reads-with-chain-igh",
