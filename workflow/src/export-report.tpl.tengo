@@ -55,6 +55,7 @@ self.body(func(inputs) {
     // Build the exportReportsTable command
     exportReportCmd := exec.builder().
         software(mixcrSw).
+        env("MI_USE_SYSTEM_CA", "true").
         secret("MI_LICENSE", "MI_LICENSE").
         arg("exportReportsTable")
     

@@ -27,6 +27,7 @@ self.body(func(inputs) {
 		inLightQueue().
 		mem("512MiB").
 		software(mixcrSw).
+		env("MI_USE_SYSTEM_CA", "true").
 		secret("MI_LICENSE", "MI_LICENSE").
 		printErrStreamToStdout().
 		arg("exportPreset")
@@ -58,6 +59,7 @@ self.body(func(inputs) {
 		inLightQueue().
 		mem("512MiB").
 		software(mixcrSw).
+		env("MI_USE_SYSTEM_CA", "true").
 		secret("MI_LICENSE", "MI_LICENSE").
 		printErrStreamToStdout().
 		arg("presetSpecificationsForBack").
