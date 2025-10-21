@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.10.0
+
+### Minor Changes
+
+- d2b6d24: fix number of reads, clonotypes, cells in report table
+
 ## 3.9.0
 
 ### Minor Changes
