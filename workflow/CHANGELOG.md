@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.9.0
+
+### Minor Changes
+
+- 913c474: MILAB-2682: MI_USE_SYSTEM_CA forces MiXCR to trust system installed certificates
+
 ## 3.8.2
 
 ### Patch Changes
