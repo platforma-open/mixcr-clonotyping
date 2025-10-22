@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.10.1
+
+### Patch Changes
+
+- fed5c72: Support parquet format (update SDK)
+
 ## 3.10.0
 
 ### Minor Changes
