@@ -29,10 +29,12 @@ self.body(func(inputs) {
     chains := inputs.chains
     library := inputs.library
     isLibraryFileGzipped := inputs.isLibraryFileGzipped
+    clonotypeTablesData := inputs.clonotypeTablesData
 
     isSingleCell := len(presetSpecForBack.cellTags) > 0
 	hasUmi := !is_undefined(presetSpecForBack.umiTags) && len(presetSpecForBack.umiTags) > 0
     cellTags := presetSpecForBack.cellTags
+    singleCellChainTsvsData := inputs.singleCellChainTsvsData
 
     chainInfos := {
 	"IGHeavy": { mixcrFilter: "IGH", name: "IG Heavy", shortName: "Heavy" },
@@ -55,6 +57,7 @@ self.body(func(inputs) {
     // Build the exportReportsTable command
     exportReportCmd := exec.builder().
         software(mixcrSw).
+        env("MI_USE_SYSTEM_CA", "true").
         secret("MI_LICENSE", "MI_LICENSE").
         arg("exportReportsTable")
     
@@ -96,9 +99,174 @@ self.body(func(inputs) {
         pt.col("fileName").strSlice(0, pt.col("fileName").strLenChars().minus(5)).alias("sampleId")
     )
 
-    // For now, let's just use the processed DataFrame without zero column filtering
-    // since the columns() method is not available in this pTabler version
-    finalDf := processedDf
+    // Calculate real number of exported (productive) clonotypes per sample
+    // Use existing clonotype tables produced earlier; per-sample counts and read sums across chains
+    countDfs := []
+    for chain in chains {
+        chainData := clonotypeTablesData[chain]
+        if is_undefined(chainData) { continue }
+        for key, clonesFile in chainData.inputs() {
+            sampleId := json.decode(key)[0]
+            dfCountSource := wf.frame(clonesFile, { xsvType: "tsv", inferSchema: false, schema: [ { column: "readCount", type: "Double" } ] })
+            dfCount := dfCountSource.select(
+                pt.lit(sampleId).alias("sampleId"),
+                pt.col("clonotypeKey").count().alias("exportedClonotypes"),
+                pt.col("readCount").round().cast("Long").sum().alias("readsUsedInClonotypes")
+            )
+            countDfs = append(countDfs, dfCount)
+        }
+    }
+
+    countsDf := undefined
+    if len(countDfs) > 1 { countsDf = pt.concat(countDfs) } else { countsDf = countDfs[0] }
+    aggregatedCounts := countsDf.groupBy("sampleId").agg(
+        pt.col("exportedClonotypes").sum().alias("exportedClonotypes"),
+        pt.col("readsUsedInClonotypes").sum().alias("readsUsedInClonotypesNew")
+    )
+
+    // Join counts and overwrite totalClonotypes to reflect exported (productive) clones
+    joinedDf := processedDf.join(aggregatedCounts, { how: "left", on: ["sampleId"] })
+
+    // Per-chain clonotype counts
+    perChainJoined := joinedDf
+    for chain in chains {
+        chainData := clonotypeTablesData[chain]
+        chainCol := "clonotypesByChain." + chain
+        if is_undefined(chainData) {
+            perChainJoined = perChainJoined.withColumns(pt.lit(0).alias(chainCol))
+            continue
+        }
+        perChainDfs := []
+        for key, clonesFile in chainData.inputs() {
+            sampleId := json.decode(key)[0]
+            dfSrc := wf.frame(clonesFile, { xsvType: "tsv", inferSchema: false })
+            dfCnt := dfSrc.select(
+                pt.lit(sampleId).alias("sampleId"),
+                pt.col("clonotypeKey").count().alias("__chainCount")
+            )
+            perChainDfs = append(perChainDfs, dfCnt)
+        }
+        if len(perChainDfs) == 0 {
+            perChainJoined = perChainJoined.withColumns(pt.lit(0).alias(chainCol))
+            continue
+        }
+        chainCountsDf := len(perChainDfs) > 1 ? pt.concat(perChainDfs) : perChainDfs[0]
+        chainAgg := chainCountsDf.groupBy("sampleId").agg(
+            pt.col("__chainCount").sum().alias(chainCol)
+        )
+        perChainJoined = perChainJoined.join(chainAgg, { how: "left", on: ["sampleId"] })
+    }
+    // Single-cell: compute per-sample cell pairing stats (both chains vs one chain)
+    if isSingleCell && !is_undefined(singleCellChainTsvsData) {
+        // Expect two chains for receptor; if more, we count any cell having A1 and B1 as both
+        // Build a map of per-sample cellKey presence per chain
+        scDfs := []
+        maps.forEach(singleCellChainTsvsData, func(chainName, chainFiles) {
+            maps.forEach(chainFiles.inputs(), func(key, f) {
+                sampleId := json.decode(key)[0]
+                df := wf.frame(f, { xsvType: "tsv", inferSchema: false, schema: [ { column: "cellKey", type: "String" } ] })
+                df2 := df.select(
+                    pt.lit(sampleId).alias("sampleId"),
+                    pt.col("cellKey").alias("cellKey"),
+                    pt.lit(chainName).alias("chain")
+                )
+                scDfs = append(scDfs, df2)
+            })
+        })
+        if len(scDfs) > 0 {
+            scAll := len(scDfs) > 1 ? pt.concat(scDfs) : scDfs[0]
+            // Count cells per sample across all chains (unique cellKey)
+            cellsPerSample := scAll.groupBy("sampleId").agg(pt.col("cellKey").nUnique().alias("scCellsTotal"))
+
+            // Cells paired across different chains: require the same cellKey to appear in >1 distinct chains per sample
+            cellsPerSampleChainCounts := scAll.groupBy("sampleId", "cellKey").agg(pt.col("chain").nUnique().alias("_numChains"))
+            bothChainCells := cellsPerSampleChainCounts.filter(pt.col("_numChains").gt(1)).groupBy("sampleId").agg(pt.col("cellKey").count().alias("scCellsBothChains"))
+            pairedKeys := cellsPerSampleChainCounts.filter(pt.col("_numChains").gt(1)).select(pt.col("sampleId"), pt.col("cellKey"))
+
+            perChainJoined = perChainJoined.join(cellsPerSample, { how: "left", on: ["sampleId"] })
+            perChainJoined = perChainJoined.join(bothChainCells, { how: "left", on: ["sampleId"] })
+
+            // Recompute per-chain clonotype counts using only paired cells
+            perChainPairedJoined := perChainJoined
+            totalPairedParts := []
+            for chain in chains {
+                chainFiles := singleCellChainTsvsData[chain]
+                chainColPaired := "clonotypesByChain." + chain + ".paired"
+                if is_undefined(chainFiles) {
+                    perChainPairedJoined = perChainPairedJoined.withColumns(pt.lit(0).alias(chainColPaired))
+                    continue
+                }
+                parts := []
+                maps.forEach(chainFiles.inputs(), func(key, f) {
+                    sampleId := json.decode(key)[0]
+                    dfc := wf.frame(f, { xsvType: "tsv", inferSchema: false, schema: [ { column: "cellKey", type: "String" }, { column: "clonotypeKey", type: "String" } ] })
+                    dfc2 := dfc.select(pt.lit(sampleId).alias("sampleId"), pt.col("cellKey"), pt.col("clonotypeKey"))
+                    // join with paired keys for this sample
+                    dfcJoined := dfc2.join(pairedKeys, { how: "inner", on: ["sampleId", "cellKey"] })
+                    parts = append(parts, dfcJoined.select(pt.col("sampleId"), pt.col("clonotypeKey")))
+                })
+                if len(parts) == 0 {
+                    perChainPairedJoined = perChainPairedJoined.withColumns(pt.lit(0).alias(chainColPaired))
+                    continue
+                }
+                partsDf := len(parts) > 1 ? pt.concat(parts) : parts[0]
+                chainAggPaired := partsDf.groupBy("sampleId").agg(pt.col("clonotypeKey").nUnique().alias(chainColPaired))
+                perChainPairedJoined = perChainPairedJoined.join(chainAggPaired, { how: "left", on: ["sampleId"] })
+                totalPairedParts = append(totalPairedParts, chainAggPaired.select(pt.col("sampleId"), pt.col(chainColPaired).alias("__pairedPart")))
+            }
+
+            if len(totalPairedParts) > 0 {
+                totalPairedDf := len(totalPairedParts) > 1 ? pt.concat(totalPairedParts) : totalPairedParts[0]
+                totalPairedAgg := totalPairedDf.groupBy("sampleId").agg(pt.col("__pairedPart").sum().alias("exportedClonotypesPaired"))
+                perChainJoined = perChainPairedJoined.join(totalPairedAgg, { how: "left", on: ["sampleId"] })
+            } else {
+                perChainJoined = perChainPairedJoined.withColumns(pt.lit(0).alias("exportedClonotypesPaired"))
+            }
+        } else {
+            perChainJoined = perChainJoined.withColumns(pt.lit(0).alias("scCellsTotal"), pt.lit(0).alias("scCellsBothChains"))
+        }
+    }
+
+    // Finalize: cast/fill totals and per-chain counts
+    finalDf := perChainJoined
+    if isSingleCell {
+        // Use paired-only totals and per-chain counts
+        // Replace per-chain columns from ".paired" variants and set total from exportedClonotypesPaired
+        for chain in chains {
+            colPaired := "clonotypesByChain." + chain + ".paired"
+            col := "clonotypesByChain." + chain
+            finalDf = finalDf.withColumns(pt.col(colPaired).fillNull(0).cast("Long").alias(col))
+        }
+        finalDf = finalDf.withColumns(
+            pt.col("exportedClonotypesPaired").fillNull(0).cast("Long").alias("totalClonotypes"),
+            pt.col("readsUsedInClonotypesNew").fillNull(0).cast("Long").alias("readsUsedInClonotypes")
+        )
+    } else {
+        finalDf = finalDf.withColumns(
+            pt.col("exportedClonotypes").fillNull(0).cast("Long").alias("totalClonotypes"),
+            pt.col("readsUsedInClonotypesNew").fillNull(0).cast("Long").alias("readsUsedInClonotypes")
+        )
+        for chain in chains {
+            col := "clonotypesByChain." + chain
+            finalDf = finalDf.withColumns(
+                pt.col(col).fillNull(0).cast("Long").alias(col)
+            )
+        }
+    }
+
+    for chain in chains {
+        col := "clonotypesByChain." + chain
+        finalDf = finalDf.withColumns(
+            pt.col(col).fillNull(0).cast("Long").alias(col)
+        )
+    }
+
+    if isSingleCell {
+        // Keep only paired cells count and name it scCellsTotal
+        finalDf = finalDf.withColumns(
+            pt.col("scCellsBothChains").fillNull(0).cast("Long").alias("scCellsTotal")
+        )
+    }
     
     // Save the final DataFrame back to TSV
     finalDf.save("qc-report-processed.tsv", {
@@ -110,7 +278,7 @@ self.body(func(inputs) {
     
     tsvFile := wfResult.getFile("qc-report-processed.tsv")
 
-    qcReportColumns := qcReportColumns(hasUmi, isSingleCell, sampleIdAxisSpec, chainsForMixcr, cellTags)
+    qcReportColumns := qcReportColumns(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellTags)
     reportColumnsSpec := qcReportColumns.reportColumnsSpec
 
     qcReportTable := xsv.importFile(

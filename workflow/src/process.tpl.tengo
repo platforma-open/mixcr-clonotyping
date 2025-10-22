@@ -319,7 +319,9 @@ self.body(func(inputs) {
 		return schema
 	}
 
-	clonotypeTables := pframes.pFrameBuilder()
+    clonotypeTables := pframes.pFrameBuilder()
+    singleCellChainTsvs := {}
+    clonotypeTablesData := {}
 	resultsToCache := {}
 
 	for chain in chains {
@@ -456,8 +458,9 @@ self.body(func(inputs) {
 			} ]
 		}
 
-		resultsToCache["clonotypeTable/" + chain] = exportResults.outputData("clonotypeTable")
-		clonotypeTables.add(chain, exportResults.outputSpec("clonotypeTable"), exportResults.outputData("clonotypeTable"))
+        resultsToCache["clonotypeTable/" + chain] = exportResults.outputData("clonotypeTable")
+        clonotypeTablesData[chain] = exportResults.outputData("clonotypeTable")
+        clonotypeTables.add(chain, exportResults.outputSpec("clonotypeTable"), exportResults.outputData("clonotypeTable"))
 
 		aggregateByCloneKey := pframes.processColumn(
 			exportResults.output("clonotypeTable"),
@@ -485,7 +488,7 @@ self.body(func(inputs) {
 			}
 		)
 
-		if isSingleCell {
+        if isSingleCell {
 			// collecting results for future single cell processing
 			perChainResults[chain] = {
 				tsvForSingleCell: exportResults.output("clonotypeTableForSingleCell"),
@@ -495,6 +498,9 @@ self.body(func(inputs) {
 			// caching intermediate results until the block is removed
 			resultsToCache["clonotypeTableForSingleCell/" + chain] = exportResults.outputData("clonotypeTableForSingleCell")
 			resultsToCache["clonotypeProperties/" + chain] = aggregateByCloneKey.outputData("clonotypeProperties")
+
+            // collect per-chain single-cell TSVs for QC report stats
+            singleCellChainTsvs[chain] = exportResults.outputData("clonotypeTableForSingleCell")
 		} else {
 			// only adding data outputs if we are in bulk mode
 			exportResults.addXsvOutputToBuilder(clonotypes, "byCloneKeyBySample", "byCloneKeyBySample/" + chain + "/")
@@ -693,13 +699,15 @@ self.body(func(inputs) {
 		}
 	}
 
-	qcReportTable := render.create(exportReportTpl, {
+    qcReportTable := render.create(exportReportTpl, {
 		clnsData: mixcrResults.outputData("clns"),
 		presetSpecForBack: presetSpecForBack,
 		sampleIdAxisSpec: sampleIdAxisSpec,
-		chains: chains,
+        chains: chains,
 		library: library,
-		isLibraryFileGzipped: isLibraryFileGzipped
+		isLibraryFileGzipped: isLibraryFileGzipped,
+        clonotypeTablesData: clonotypeTablesData,
+		singleCellChainTsvsData: singleCellChainTsvs
 	})
 
 	return {

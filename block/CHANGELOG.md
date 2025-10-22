@@ -1,5 +1,19 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.12.12
+
+### Patch Changes
+
+- Updated dependencies [d2b6d24]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@3.10.0
+
+## 2.12.11
+
+### Patch Changes
+
+- Updated dependencies [913c474]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@3.9.0
+
 ## 2.12.10
 
 ### Patch Changes
