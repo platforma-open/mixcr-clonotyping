@@ -942,7 +942,7 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId) {
 							})
 						}
 					} ],
-					storageFormat: "Binary",
+					storageFormat: "Parquet",
 					partitionKeyLength: 1
 				}
 			}

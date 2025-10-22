@@ -1353,7 +1353,7 @@ getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellT
         reportColumnsSpec: {
             axes: axes,
             columns: columns,
-            storageFormat: "Binary",
+            storageFormat: "Parquet",
             partitionKeyLength: 0
         }
     }   
