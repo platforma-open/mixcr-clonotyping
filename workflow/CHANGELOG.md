@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.11.0
+
+### Minor Changes
+
+- 58a43db: Better memory management in export
+
 ## 3.10.1
 
 ### Patch Changes
