@@ -23,7 +23,7 @@ self.body(func(inputs) {
 	isLibraryFileGzipped := params.isLibraryFileGzipped
 	chains := params.chains
 	exportArgs := params.exportArgs
-
+	
 	clonotypeKeyColumns := params.clonotypeKeyColumns
 	clonotypeKeyArgs := params.clonotypeKeyArgs
 
@@ -38,6 +38,18 @@ self.body(func(inputs) {
 	mainAbundanceColumnIsReadCount := params.mainAbundanceColumnIsReadCount == true
 	mainIsProductiveArgs := params.mainIsProductiveArgs
 
+	exportMemGB := undefined 
+	if !is_undefined(inputs.perProcessMemGB) {
+		exportMemGB = int(1.0*inputs.perProcessMemGB/4.0)
+		if exportMemGB < 12 {
+			exportMemGB = 12
+		}
+	} else {
+		exportMemGB = 12
+	}
+	ptMemGB := int(2.0*exportMemGB/3.0)
+	
+	
 	hashKeyDerivationExpressionPt := func(sourceColumns) {
 		return pt.concatStr(
 			slices.map(sourceColumns, func(colName) { return pt.col(colName).fillNull("") }),
@@ -50,7 +62,7 @@ self.body(func(inputs) {
 	createExport := func(additionalAction) {
 		mixcrCmdBuilder := exec.builder().
 			inMediumQueue().
-			ram("12GiB").
+			mem(string(exportMemGB) + "GiB").
 		    cpu(2).
 			printErrStreamToStdout().
 			dontSaveStdoutOrStderr().
@@ -104,7 +116,7 @@ self.body(func(inputs) {
 	// PTabler processing for main TSV output
 	wfMain := pt.workflow().
 		inMediumQueue().
-		mem("8GiB").
+		mem(ptMemGB).
 		cpu(2)
 
 	frameInputMap := {
@@ -144,7 +156,7 @@ self.body(func(inputs) {
 		// PTabler processing for single-cell TSV output
 		wfSingleCell := pt.workflow().
 			inMediumQueue().
-			mem("4GiB").
+			mem(ptMemGB).
 			cpu(2)
 
 		frameLoadOps := {
