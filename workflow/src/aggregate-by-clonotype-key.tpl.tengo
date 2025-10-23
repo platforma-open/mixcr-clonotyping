@@ -32,9 +32,14 @@ self.body(func(inputs) {
 	inputMap := inputData.inputs()
 	numberOfSamples := len(inputMap)
 
+	memGB := int(math.max(numberOfSamples, 64))
+	if !is_undefined(inputs.perProcessMemGB) && inputs.perProcessMemGB > memGB {
+		memGB = inputs.perProcessMemGB
+	}
+
 	wf := pt.workflow().
 		inMediumQueue().
-		mem(int(math.max(numberOfSamples, 64)) * units.GiB).
+		mem(memGB * units.GiB).
 		cpu(int(math.max(numberOfSamples, 32)))
 
 	dataFrames := []

@@ -416,6 +416,15 @@ self.body(func(inputs) {
 						isLibraryFileGzipped: isLibraryFileGzipped
 					}, { removeUndefs: true }),
 					library: library
+				},
+				// by passing those parameters as meta fields we allow for recovery and deduplication mechanisms
+				// to pick up the results from executions with different values for CPU and Memory overrides
+				//
+				// Note: here we are passing the same parameters as in the main process step and will apply formula
+				// inside the export template to calculate memory requirements.
+				//
+				metaExtra: {
+					perProcessMemGB: perProcessMemGB
 				}
 			}
 		)
@@ -484,6 +493,15 @@ self.body(func(inputs) {
 						schemaPerClonotypeAggregates: columnsToSchema(columnsSpecPerClonotypeAggregates),
 						schemaPerSample: columnsToSchema(columnsSpecPerSample)
 					}
+				},
+				// by passing those parameters as meta fields we allow for recovery and deduplication mechanisms
+				// to pick up the results from executions with different values for CPU and Memory overrides
+				//
+				// Note: here we are passing the same parameters as in the main process step and will apply formula
+				// inside the agg template to calculate memory requirements.
+				//
+				metaExtra: {
+					perProcessMemGB: perProcessMemGB
 				}
 			}
 		)
