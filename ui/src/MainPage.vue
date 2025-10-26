@@ -228,7 +228,7 @@ const gridOptions: GridOptions<MiXCRResult> = {
 
 <template>
   <PlBlockPage>
-    <template #title>MiXCR Clonotyping 1</template>
+    <template #title>MiXCR Clonotyping</template>
     <template #append>
       <PlBtnExportArchive
         :file-exports="fileExports"
