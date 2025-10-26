@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.16.3
+
+### Patch Changes
+
+- 9e5b1c7: Fixed: Data is not downloaded in download manager
+
 ## 1.16.2
 
 ### Patch Changes
