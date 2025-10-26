@@ -2,6 +2,7 @@
 import { AgGridVue } from 'ag-grid-vue3';
 
 import type { PlId, Qc } from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
+import type { ImportFileHandle } from '@platforma-sdk/model';
 import type { PlAgHeaderComponentParams } from '@platforma-sdk/ui-vue';
 import {
   AgGridTheme,
@@ -17,11 +18,13 @@ import {
   autoSizeRowNumberColumn,
   createAgGridColDef,
   makeRowNumberColDef,
+  PlBtnExportArchive,
+  type FileExportEntry,
 } from '@platforma-sdk/ui-vue';
 import { refDebounced, whenever } from '@vueuse/core';
 import type { ColDef, GridApi, GridOptions, GridReadyEvent } from 'ag-grid-enterprise';
 import { ClientSideRowModelModule, ModuleRegistry } from 'ag-grid-enterprise';
-import { reactive, shallowRef, watch } from 'vue';
+import { computed, reactive, shallowRef, watch } from 'vue';
 import { useApp } from './app';
 import { getAlignmentChartSettings } from './charts/alignmentChartSettings';
 import { getChainsChartSettings } from './charts/chainsChartSettings';
@@ -30,13 +33,49 @@ import type { MiXCRResult } from './results';
 import { MiXCRResultsFull } from './results';
 import SampleReportPanel from './SampleReportPanel.vue';
 import SettingsPanel from './SettingsPanel.vue';
-import { ExportRawBtn } from './ExportRawBtn';
 
 const app = useApp();
 
 // @TODO
 const result = refDebounced(MiXCRResultsFull, 100, {
   maxWait: 200,
+});
+
+// Export archive configuration
+const fileExports = computed(() => {
+  const rawTsvs = app.model.outputs.rawTsvs;
+  const sampleLabels = app.model.outputs.sampleLabels;
+
+  if (!rawTsvs || !sampleLabels) {
+    return undefined;
+  }
+
+  const exports: FileExportEntry[] = [];
+
+  for (const pCol of rawTsvs) {
+    for (const { key, value } of pCol.data) {
+      if (value) {
+        const fileName = `${sampleLabels[key[0]]}_${pCol.id}.tsv`;
+        exports.push({
+          importHandle: `${key[0]}_${pCol.id}` as ImportFileHandle,
+          blobHandle: value,
+          fileName,
+        });
+      }
+    }
+  }
+
+  return exports;
+});
+
+const exportSuggestedFileName = computed(() => {
+  const date = new Date().toISOString().split('T')[0];
+  const title = app.model.args.title ?? 'Untitled';
+  return `${date}_ClonotypingResultsRaw_${title}.zip`;
+});
+
+const exportDisabled = computed(() => {
+  return !app.model.outputs.rawTsvs || !app.model.outputs.sampleLabels;
 });
 
 const data = reactive<{
@@ -189,9 +228,19 @@ const gridOptions: GridOptions<MiXCRResult> = {
 
 <template>
   <PlBlockPage>
-    <template #title>MiXCR Clonotyping</template>
+    <template #title>MiXCR Clonotyping 1</template>
     <template #append>
-      <ExportRawBtn />
+      <PlBtnExportArchive
+        :file-exports="fileExports"
+        :suggested-file-name="exportSuggestedFileName"
+        :disabled="exportDisabled"
+        :file-picker-types="[{
+          description: 'ZIP files',
+          accept: { 'application/zip': ['.zip'] }
+        }]"
+      >
+        Export raw results
+      </PlBtnExportArchive>
       <PlBtnGhost @click.stop="() => (data.settingsOpen = true)">
         Settings
         <template #append>
