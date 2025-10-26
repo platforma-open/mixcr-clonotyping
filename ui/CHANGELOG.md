@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.16.4
+
+### Patch Changes
+
+- ab1d715: Fix ui bug
+
 ## 1.16.3
 
 ### Patch Changes
