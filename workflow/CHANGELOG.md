@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.12.0
+
+### Minor Changes
+
+- fa19090: clonotypeLabel in export raw data
+
 ## 3.11.0
 
 ### Minor Changes
