@@ -8,6 +8,7 @@ slices := import("@platforma-sdk/workflow-tengo:slices")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 exec := import("@platforma-sdk/workflow-tengo:exec")
 pt := import("@platforma-sdk/workflow-tengo:pt")
+clonotypeLabel := import(":clonotype-label")
 
 json := import("json")
 
@@ -132,6 +133,9 @@ self.body(func(inputs) {
 	dfMain.addColumns(
 		hashKeyDerivationExpressionPt(clonotypeKeyColumns).alias("clonotypeKey")
 	)
+
+	// Generate clonotypeLabel (C-XXXXX or C-XXXXX-RANK) from clonotypeKey for bulk data
+	dfMain = clonotypeLabel.addClonotypeLabelColumnsPt(dfMain, "clonotypeKey", "clonotypeLabel", pt)
 
 	dfMain.save("output.tsv")
 	ptablerResultMain := wfMain.run()
