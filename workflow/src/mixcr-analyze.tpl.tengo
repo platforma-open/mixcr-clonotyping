@@ -29,6 +29,11 @@ self.body(func(inputs) {
 	params := inputs.params
 	species := params.species
 	limitInput := params.limitInput
+	leftAlignmentMode := params.leftAlignmentMode
+	rightAlignmentMode := params.rightAlignmentMode
+	materialType := params.materialType
+	tagPattern := params.tagPattern
+	assembleClonesBy := params.assembleClonesBy
 	perProcessMemGB := inputs.perProcessMemGB
 	perProcessCPUs := inputs.perProcessCPUs
 	fileExtension := params.fileExtension
@@ -118,6 +123,23 @@ self.body(func(inputs) {
 		ll.assert(!is_undefined(preset.name), "undefined preset name")
 		mixcrCmdBuilder.
 			arg(preset.name)
+	}
+
+	// Optional preset-specific parameters (order matters if preset requires positional values)
+	if !is_undefined(leftAlignmentMode) {
+		mixcrCmdBuilder.arg(leftAlignmentMode)
+	}
+	if !is_undefined(rightAlignmentMode) {
+		mixcrCmdBuilder.arg(rightAlignmentMode)
+	}
+	if !is_undefined(materialType) {
+		mixcrCmdBuilder.arg(materialType)
+	}
+	if !is_undefined(tagPattern) {
+		mixcrCmdBuilder.arg("--tag-pattern").arg(tagPattern)
+	}
+	if !is_undefined(assembleClonesBy) {
+		mixcrCmdBuilder.arg("--assemble-clonotypes-by").arg(assembleClonesBy)
 	}
 
 	inputMap := inputData.inputs()

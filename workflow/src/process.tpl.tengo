@@ -267,7 +267,12 @@ self.body(func(inputs) {
 					limitInput: limitInput,
 					fileExtension: fileExtension,
 					reports: reports,
-					isLibraryFileGzipped: isLibraryFileGzipped
+					isLibraryFileGzipped: isLibraryFileGzipped,
+					leftAlignmentMode: params.leftAlignmentMode,
+					rightAlignmentMode: params.rightAlignmentMode,
+					materialType: params.materialType,
+					tagPattern: params.tagPattern,
+					assembleClonesBy: params.assembleClonesBy
 				},
 				library: library,
 				presetContent: presetContent

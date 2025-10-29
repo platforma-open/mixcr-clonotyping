@@ -49,10 +49,16 @@ wf.body(func(args) {
 			ll.assert(preset.type == "name", "unexpected preset type")
 			// whole json, including type
 			presetResource = smart.createJsonResource(preset)
+			isGenericPreset := args.isGenericPreset
 			presetInfoResult := render.create(calculatePresetInfoTpl, {
 				preset: presetResource,
 				params: {
-					species: args.species
+					species: args.species,
+					leftAlignmentMode: args.leftAlignmentMode,
+					rightAlignmentMode: args.rightAlignmentMode,
+					materialType: args.materialType,
+					tagPattern: isGenericPreset ? "\\^\\(R1:\\*\\)\\\\\\^\\(R2:\\*\\)" : undefined,
+					assembleClonesBy: isGenericPreset ? "CDR3" : undefined
 				}
 			})
 			outputs.preset = presetInfoResult.output("presetSpecForBack", 24 * 60 * 60 * 1000)
