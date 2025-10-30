@@ -754,10 +754,10 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId) {
 				spec: {
 					valueType: "String",
 					name: variant.specName,
-					annotations: a(orderP, variant.visibility, {
-						"pl7.app/label": variant.label,
-						"pl7.app/isDiscreteFilter": "true",
-						"pl7.app/discreteValues": string(json.encode(["True", "False"])) } )
+                    annotations: a(orderP, variant.visibility, {
+                        "pl7.app/label": variant.label,
+                        "pl7.app/isDiscreteFilter": "true",
+                        "pl7.app/discreteValues": string(json.encode(["true", "false"])) } )
 				}
 			} ]
 		exportArgs += [ [ variant.arg, productiveFeature ] ]

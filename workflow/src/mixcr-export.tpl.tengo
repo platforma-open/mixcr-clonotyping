@@ -35,9 +35,10 @@ self.body(func(inputs) {
 		ll.assert(len(cellTagColumns) == 1, "cellTagColumns must be a single column when hashCellKey is false")
 	}
 
-	mainAbundanceColumnUnnormalizedArgs := params.mainAbundanceColumnUnnormalizedArgs
-	mainAbundanceColumnIsReadCount := params.mainAbundanceColumnIsReadCount == true
-	mainIsProductiveArgs := params.mainIsProductiveArgs
+    mainAbundanceColumnUnnormalizedArgs := params.mainAbundanceColumnUnnormalizedArgs
+    mainAbundanceColumnIsReadCount := params.mainAbundanceColumnIsReadCount == true
+    mainIsProductiveArgs := params.mainIsProductiveArgs
+    mainIsProductiveColumn := params.mainIsProductiveColumn
 
 	exportMemGB := undefined 
 	if !is_undefined(inputs.perProcessMemGB) {
@@ -127,9 +128,18 @@ self.body(func(inputs) {
 	}
 	dfMain := wfMain.frame(frameInputMap, { inferSchema: false, id: "input_table" })
 
-	dfMain.addColumns(
-		pt.col("readCount").round().cast("Long").alias("readCount")
-	)
+    dfMain.addColumns(
+        pt.col("readCount").round().cast("Long").alias("readCount")
+    )
+    // Normalize isProductive column casing to strictly "true"/"false"
+    if !is_undefined(mainIsProductiveColumn) {
+        dfMain.addColumns(
+            pt.when(pt.col(mainIsProductiveColumn).strToUpper().eq("TRUE")).
+                then(pt.lit("true")).
+                otherwise(pt.lit("false")).
+                alias(mainIsProductiveColumn)
+        )
+    }
 	dfMain.addColumns(
 		hashKeyDerivationExpressionPt(clonotypeKeyColumns).alias("clonotypeKey")
 	)
@@ -174,11 +184,20 @@ self.body(func(inputs) {
 
 		dfSingleCell := wfSingleCell.frame(unprocessedTsvForSingleCell, frameLoadOps)
 
-		if mainAbundanceColumnIsReadCount {
-			dfSingleCell.addColumns(
-				pt.col("readCount").round().cast("Long").alias("readCount")
-			)
-		}
+        if mainAbundanceColumnIsReadCount {
+            dfSingleCell.addColumns(
+                pt.col("readCount").round().cast("Long").alias("readCount")
+            )
+        }
+        // Normalize isProductive column casing to strictly "true"/"false"
+        if !is_undefined(mainIsProductiveColumn) {
+            dfSingleCell.addColumns(
+                pt.when(pt.col(mainIsProductiveColumn).strToUpper().eq("TRUE")).
+                    then(pt.lit("true")).
+                    otherwise(pt.lit("false")).
+                    alias(mainIsProductiveColumn)
+            )
+        }
 
 		dfSingleCell.addColumns(
 			hashKeyDerivationExpressionPt(clonotypeKeyColumns).alias("clonotypeKey"),

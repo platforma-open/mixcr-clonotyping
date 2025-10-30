@@ -100,8 +100,8 @@ self.body(func(inputs) {
 		)
 
 		// Prepare expressions for chainRank ordering
-		// 1. isProductiveNumeric: "True" -> 0, "False" -> 1 (for ascending sort)
-		isProductiveNumericExpr := pt.when(pt.col(mainIsProductiveColumn).eq("True")).
+        // 1. isProductiveNumeric: true -> 0, false -> 1 (case-insensitive)
+        isProductiveNumericExpr := pt.when(pt.col(mainIsProductiveColumn).strToUpper().eq("TRUE")).
 			then(pt.lit(0)).
 			otherwise(pt.lit(1))
 
