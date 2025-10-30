@@ -4,7 +4,7 @@ import { SupportedPresetList } from '@platforma-open/milaboratories.mixcr-clonot
 import type { ImportFileHandle, PlRef } from '@platforma-sdk/model';
 import { getFilePathFromHandle } from '@platforma-sdk/model';
 import type { ListOption } from '@platforma-sdk/ui-vue';
-import { PlAccordionSection, PlBtnGroup, PlDropdown, PlDropdownMulti, PlDropdownRef, PlFileInput, PlTextField, PlNumberField, ReactiveFileContent } from '@platforma-sdk/ui-vue';
+import { PlAccordionSection, PlSectionSeparator, PlBtnGroup, PlDropdown, PlDropdownMulti, PlDropdownRef, PlFileInput, PlTextField, PlNumberField, ReactiveFileContent } from '@platforma-sdk/ui-vue';
 import { computed, reactive, watch } from 'vue';
 import { useApp } from './app';
 import { retentive } from './retentive';
@@ -86,10 +86,9 @@ const isGenericPresetComputed = computed(() => {
   const rf = preset.value?.requiredFlags as unknown as readonly string[] | undefined;
   if (rf === undefined) return undefined;
   const includes = (x: string) => rf.findIndex((f) => f === x) >= 0;
-  return includes('leftAlignmentMode')
+  return (includes('leftAlignmentMode')
     && includes('rightAlignmentMode')
-    && includes('materialType')
-    && includes('assembleClonesBy');
+    && includes('assembleClonesBy')) || includes('tagPattern');
 });
 
 watch(isGenericPresetComputed, (v) => {
@@ -143,19 +142,19 @@ watch(needLeftAlignmentMode, (v) => {
   if (v === false && app.model.args.leftAlignmentMode !== undefined)
     app.model.args.leftAlignmentMode = undefined;
   if (v === true && app.model.args.leftAlignmentMode === undefined)
-    app.model.args.leftAlignmentMode = 'primers';
+    app.model.args.leftAlignmentMode = '--rigid-left-alignment-boundary';
 });
 watch(needRightAlignmentMode, (v) => {
   if (v === false && app.model.args.rightAlignmentMode !== undefined)
     app.model.args.rightAlignmentMode = undefined;
   if (v === true && app.model.args.rightAlignmentMode === undefined)
-    app.model.args.rightAlignmentMode = 'c-primers';
+    app.model.args.rightAlignmentMode = '--floating-right-alignment-boundary C';
 });
 watch(needMaterialType, (v) => {
   if (v === false && app.model.args.materialType !== undefined)
     app.model.args.materialType = undefined;
   if (v === true && app.model.args.materialType === undefined)
-    app.model.args.materialType = 'RNA';
+    app.model.args.materialType = '--dna';
 });
 watch(needTagPattern, (v) => {
   if (v === false && app.model.args.tagPattern !== undefined)
@@ -302,7 +301,6 @@ const receptorOrChainsModel = computed({
 </script>
 
 <template>
-  {{ app.model.args.isGenericPreset }}
   <PlDropdownRef
     :options="inputOptions" :model-value="app.model.args.input" label="Select dataset"
     clearable
@@ -332,41 +330,78 @@ const receptorOrChainsModel = computed({
       Restrict the analysis to certain receptor types.
     </template>
   </PlDropdownMulti>
-
   <PlDropdown
     v-if="needLeftAlignmentMode"
     v-model="app.model.args.leftAlignmentMode"
     :options="leftAlignmentModeOptions"
     label="5'-end"
-  />
+    :required="true"
+  >
+    <template #tooltip>
+      <p>Alignment mode at 5'-end of the library:</p>
+      <ul>
+        <li><b>Primers</b>: primers or adapters at 5'-end present; typical for V-gene single-primer/multiplex protocols. Uses semi‑local alignment on the left side.</li>
+        <li><b>No primers</b>: no primers/adapters at 5'-end; typical for 5' RACE with template-switch oligo. Uses global alignment on the left side.</li>
+      </ul>
+    </template>
+  </PlDropdown>
 
   <PlDropdown
     v-if="needRightAlignmentMode"
     v-model="app.model.args.rightAlignmentMode"
     :options="rightAlignmentModeOptions"
     label="3'-end"
-  />
+    :required="true"
+  >
+    <template #tooltip>
+      <p>Alignment algorithm at 3'-end of the library:</p>
+      <ul>
+        <li><b>C gene primers</b>: typically used with C gene single primer / multiplex protocols. Instructs C gene aligner to use semi-local alignment on the right side.</li>
+        <li><b>J gene primers</b>: typically used with J gene single primer / multiplex protocols. Instructs J gene aligner to use semi-local alignment on the right side and skips C gene alignment.</li>
+        <li><b>No primers / primers removed</b>: typically used when primers are trimmed using tag pattern or with some preprocessing.</li>
+      </ul>
+    </template>
+  </PlDropdown>
 
   <PlDropdown
     v-if="needMaterialType"
     v-model="app.model.args.materialType"
     :options="materialTypeOptions"
     label="Material type"
-  />
+    :required="true"
+  >
+    <template #tooltip>
+      <p>Use RNA (exons) or DNA (introns) reference:</p>
+      <ul>
+        <li><b>RNA</b>: VTranscriptWithP will be used for V alignment.</li>
+        <li><b>DNA</b>: VGeneWithP will be used for V alignment; C gene alignment will be skipped since it is too far from CDR3 in DNA data.</li>
+      </ul>
+    </template>
+  </PlDropdown>
 
   <PlTextField
     v-if="needTagPattern"
     v-model="app.model.args.tagPattern"
     :clearable="() => undefined"
     label="Tag pattern"
-  />
+    :required="true"
+  >
+    <template #tooltip>
+      Specify tag pattern using MiXCR syntax
+    </template>
+  </PlTextField>
 
   <PlDropdown
     v-if="needAssembleClonesBy"
     v-model="app.model.args.assembleClonesBy"
     :options="assembleClonesByOptions"
     label="Assemble clones by"
-  />
+    :required="true"
+  >
+    <template #tooltip>
+      Feature span used to group reads into clonotypes
+    </template>
+  </PlDropdown>
 
   <PlAccordionSection label="Advanced Settings">
     <PlTextField

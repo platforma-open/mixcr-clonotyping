@@ -57,7 +57,7 @@ wf.body(func(args) {
 					leftAlignmentMode: args.leftAlignmentMode,
 					rightAlignmentMode: args.rightAlignmentMode,
 					materialType: args.materialType,
-					tagPattern: isGenericPreset ? "\\^\\(R1:\\*\\)\\\\\\^\\(R2:\\*\\)" : undefined,
+					tagPattern: isGenericPreset ? "^(R1:*)\\^(R2:*)" : undefined,
 					assembleClonesBy: isGenericPreset ? "CDR3" : undefined
 				}
 			})
