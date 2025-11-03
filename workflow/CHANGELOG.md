@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.13.0
+
+### Minor Changes
+
+- 27f25bc: isProductive values changed to true or false
+
 ## 3.12.1
 
 ### Patch Changes

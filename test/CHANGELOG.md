@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.test
 
+## 1.9.0
+
+### Minor Changes
+
+- 27f25bc: isProductive values changed to true or false
+
 ## 1.8.10
 
 ### Patch Changes
