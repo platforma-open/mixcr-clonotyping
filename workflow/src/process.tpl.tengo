@@ -267,7 +267,8 @@ self.body(func(inputs) {
 					limitInput: limitInput,
 					fileExtension: fileExtension,
 					reports: reports,
-					isLibraryFileGzipped: isLibraryFileGzipped
+					isLibraryFileGzipped: isLibraryFileGzipped,
+					highDiversityLibrary: params.highDiversityLibrary
 				},
 				library: library,
 				presetContent: presetContent

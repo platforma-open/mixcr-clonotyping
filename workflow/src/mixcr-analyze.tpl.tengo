@@ -121,6 +121,16 @@ self.body(func(inputs) {
 			arg(preset.name)
 	}
 
+	// High diversity library tuning
+	highDiversityLibrary := params.highDiversityLibrary
+	if !is_undefined(highDiversityLibrary) && highDiversityLibrary {
+		mixcrCmdBuilder.
+			arg("-Massemble.cloneAssemblerParameters.minimalQuality=20").
+			arg("-Massemble.cloneAssemblerParameters.badQualityThreshold=10").
+			arg("-Massemble.cloneAssemblerParameters.cloneClusteringParameters.searchParameters=oneMismatchOrIndel").
+			arg("-Massemble.cloneAssemblerParameters.cloneClusteringParameters.searchDepth=1")
+	}
+
 	inputMap := inputData.inputs()
 	if inputDataMeta.keyLength == 0 {
 		ll.assert(aggregationAxesNames == [], "unexpected aggregation axes names")

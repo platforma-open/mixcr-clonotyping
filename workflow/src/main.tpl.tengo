@@ -117,6 +117,7 @@ wf.body(func(args) {
 			limitInput: limitInput,
 			perProcessMemGB: perProcessMemGB,
 			perProcessCPUs: perProcessCPUs,
+				highDiversityLibrary: args.highDiversityLibrary,
 			blockId: blockId,
 			libraryId: libraryId,
 			presetCommonName: args.presetCommonName,
