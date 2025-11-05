@@ -23,7 +23,14 @@ const MiXCRStage = z.union([
 ]);
 type MiXCRStage = z.infer<typeof MiXCRStage>;
 
-const SupportedMiXCRFlags = z.literal('species');
+const SupportedMiXCRFlags = z.union([
+  z.literal('species'),
+  z.literal('materialType'),
+  z.literal('leftAlignmentMode'),
+  z.literal('rightAlignmentMode'),
+  z.literal('tagPattern'),
+  z.literal('assembleClonesBy'),
+]);
 type SupportedMiXCRFlags = z.infer<typeof SupportedMiXCRFlags>;
 
 const SupportedPresetOverview = z.object({

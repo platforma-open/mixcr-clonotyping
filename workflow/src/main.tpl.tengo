@@ -86,7 +86,12 @@ wf.body(func(args) {
 	presetInfoResult := render.create(calculatePresetInfoTpl, {
 		preset: presetResource,
 		params: {
-			species: species
+			species: species,
+			leftAlignmentMode: args.leftAlignmentMode,
+			rightAlignmentMode: args.rightAlignmentMode,
+			materialType: args.materialType,
+			tagPattern: args.tagPattern,
+			assembleClonesBy: args.assembleClonesBy
 		}
 	})
 
@@ -111,7 +116,7 @@ wf.body(func(args) {
 
 		library: library,
 
-		params: smart.createJsonResource({
+			params: smart.createJsonResource({
 			species: species,
 			receptorsOrChains: receptorsOrChains,
 			limitInput: limitInput,
@@ -120,7 +125,12 @@ wf.body(func(args) {
 			blockId: blockId,
 			libraryId: libraryId,
 			presetCommonName: args.presetCommonName,
-			isLibraryFileGzipped: isLibraryFileGzipped
+				isLibraryFileGzipped: isLibraryFileGzipped,
+				leftAlignmentMode: args.leftAlignmentMode,
+				rightAlignmentMode: args.rightAlignmentMode,
+				materialType: args.materialType,
+				tagPattern: args.tagPattern,
+				assembleClonesBy: args.assembleClonesBy
 		})
 	})
 
