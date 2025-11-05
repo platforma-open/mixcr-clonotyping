@@ -1,5 +1,16 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.17.0
+
+### Minor Changes
+
+- 4fcd94b: relaxed mixcr assemble parameters for high diversity datasets
+
+### Patch Changes
+
+- Updated dependencies [4fcd94b]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.18.0
+
 ## 1.16.5
 
 ### Patch Changes

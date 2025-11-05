@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.14.0
+
+### Minor Changes
+
+- 4fcd94b: relaxed mixcr assemble parameters for high diversity datasets
+
 ## 3.13.0
 
 ### Minor Changes
