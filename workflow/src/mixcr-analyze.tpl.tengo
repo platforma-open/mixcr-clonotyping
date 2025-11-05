@@ -66,6 +66,7 @@ self.body(func(inputs) {
 
 	mixcrCmdBuilder := exec.builder().
 		printErrStreamToStdout().
+		saveStdoutStream().
 		env("MI_USE_SYSTEM_CA", "true").
 		env("MI_PROGRESS_PREFIX", progressPrefix).
 		software(mixcrSw).
