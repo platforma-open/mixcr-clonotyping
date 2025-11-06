@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.15.0
+
+### Minor Changes
+
+- 224eef5: clonotypeKey now includes cHit instead of cGene in splitByC case
+
 ## 3.14.0
 
 ### Minor Changes
