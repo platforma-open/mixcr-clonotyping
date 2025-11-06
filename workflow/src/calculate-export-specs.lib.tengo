@@ -174,8 +174,8 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId) {
 			[ "-jGene" ]
 		]
 		if splitByC {
-			clonotypeKeyColumns += ["bestCGene"]
-			clonotypeKeyArgs += [ [ "-cGene" ] ]
+			clonotypeKeyColumns += ["bestCHit"]
+			clonotypeKeyArgs += [ [ "-cHit" ] ]
 		}
 	}
 

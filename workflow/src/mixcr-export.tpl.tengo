@@ -66,8 +66,6 @@ self.body(func(inputs) {
 			inMediumQueue().
 			mem(string(exportMemGB) + "GiB").
 		    cpu(2).
-			printErrStreamToStdout().
-			dontSaveStdoutOrStderr().
 			env("MI_USE_SYSTEM_CA", "true").
 			software(mixcrSw).
 			secret("MI_LICENSE", "MI_LICENSE").
