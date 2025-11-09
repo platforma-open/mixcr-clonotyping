@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.17.1
+
+### Patch Changes
+
+- c52857c: [block/mixcr] Wrong row paddings
+
 ## 1.17.0
 
 ### Minor Changes
