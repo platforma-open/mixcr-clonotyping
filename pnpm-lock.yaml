@@ -7241,7 +7241,7 @@ snapshots:
       '@milaboratories/ts-helpers': 1.5.1
       '@platforma-sdk/block-tools': 2.6.16
       '@platforma-sdk/model': 1.45.17
-      '@platforma-sdk/workflow-tengo': ^5.6.3
+      '@platforma-sdk/workflow-tengo': 5.5.15
       canonicalize: 2.1.0
       denque: 2.1.0
       es-toolkit: 1.39.10
@@ -7455,7 +7455,7 @@ snapshots:
 
   '@platforma-open/milaboratories.samples-and-data.workflow@1.13.2':
     dependencies:
-      '@platforma-sdk/workflow-tengo': ^5.6.3
+      '@platforma-sdk/workflow-tengo': 5.5.14
 
   '@platforma-open/milaboratories.samples-and-data@1.10.14':
     dependencies:
