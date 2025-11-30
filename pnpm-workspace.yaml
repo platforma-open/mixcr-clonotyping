@@ -35,7 +35,7 @@ catalog:
 
   '@vueuse/core': ^13.6.0
 
-  'ag-grid-enterprise': &ag-grid ^34.0.2
+  'ag-grid-enterprise': &ag-grid ~34.1.2
   'ag-grid-vue3': *ag-grid
 
   '@changesets/cli': ^2.29.7
