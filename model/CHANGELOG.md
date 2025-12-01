@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.18.1
+
+### Patch Changes
+
+- 4809b76: technical release
+
 ## 1.18.0
 
 ### Minor Changes
