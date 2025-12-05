@@ -66,6 +66,7 @@ self.body(func(inputs) {
 	limitInput := params.limitInput
 	perProcessMemGB := params.perProcessMemGB
 	perProcessCPUs := params.perProcessCPUs
+	additionalArgs := params.additionalArgs
 	blockId := params.blockId
 	libraryId := params.libraryId
 	presetCommonName := params.presetCommonName
@@ -278,7 +279,8 @@ self.body(func(inputs) {
 			// to pick up the results from executions with different values for CPU and Memory overrides
             metaExtra: {
                 perProcessMemGB: perProcessMemGB,
-                perProcessCPUs: perProcessCPUs
+                perProcessCPUs: perProcessCPUs,
+				additionalArgs: additionalArgs
             }
 		}
 	)

@@ -28,6 +28,7 @@ export const BlockArgsValid = z.object({
   limitInput: z.number().int().optional(),
   perProcessMemGB: z.number().int().gte(1, '1GB or more required').optional(),
   perProcessCPUs: z.number().int().gte(1, '1 or more required').optional(),
+  additionalArgs: z.string().optional(),
   highDiversityLibrary: z.boolean().optional(),
   title: z.string().optional(),
   presetCommonName: z.string().optional(),
