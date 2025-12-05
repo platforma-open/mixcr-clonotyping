@@ -31,6 +31,7 @@ self.body(func(inputs) {
 	limitInput := params.limitInput
 	perProcessMemGB := inputs.perProcessMemGB
 	perProcessCPUs := inputs.perProcessCPUs
+	additionalArgs := inputs.additionalArgs
 	fileExtension := params.fileExtension
 	reports := params.reports
 	isLibraryFileGzipped := params.isLibraryFileGzipped
@@ -130,6 +131,13 @@ self.body(func(inputs) {
 			arg("-Massemble.cloneAssemblerParameters.badQualityThreshold=10").
 			arg("-Massemble.cloneAssemblerParameters.cloneClusteringParameters.searchParameters=oneMismatchOrIndel").
 			arg("-Massemble.cloneAssemblerParameters.cloneClusteringParameters.searchDepth=1")
+	}
+
+	if !is_undefined(additionalArgs) && additionalArgs != "" {
+		argsArray := text.split(additionalArgs, " ")
+		for arg in argsArray {	
+			mixcrCmdBuilder.arg(arg)
+		}
 	}
 
 	inputMap := inputData.inputs()
