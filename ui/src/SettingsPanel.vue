@@ -5,6 +5,7 @@ import type { ImportFileHandle, PlRef } from '@platforma-sdk/model';
 import { getFilePathFromHandle } from '@platforma-sdk/model';
 import type { ListOption } from '@platforma-sdk/ui-vue';
 import { PlAccordionSection, PlSectionSeparator, PlBtnGroup, PlDropdown, PlDropdownMulti, PlDropdownRef, PlFileInput, PlTextField, PlNumberField, ReactiveFileContent } from '@platforma-sdk/ui-vue';
+import { PlAccordionSection, PlBtnGroup, PlDropdown, PlDropdownMulti, PlDropdownRef, PlFileInput, PlTextField, PlNumberField, PlCheckbox, ReactiveFileContent, PlTooltip } from '@platforma-sdk/ui-vue';
 import { computed, reactive, watch } from 'vue';
 import { useApp } from './app';
 import { retentive } from './retentive';
@@ -404,6 +405,15 @@ const receptorOrChainsModel = computed({
   </PlDropdown>
 
   <PlAccordionSection label="Advanced Settings">
+    <PlCheckbox
+      v-model="app.model.args.highDiversityLibrary"
+    >
+      High diversity dataset
+      <PlTooltip class="info" position="top">
+        <template #tooltip>Use for high diversity datasets. Relaxed error correction, faster assembly.</template>
+      </PlTooltip>
+    </PlCheckbox>
+
     <PlTextField
       v-model="app.model.args.limitInput" :parse="parseNumber" :clearable="() => undefined"
       label="Take only this number of reads into analysis"

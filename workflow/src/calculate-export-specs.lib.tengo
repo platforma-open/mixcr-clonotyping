@@ -78,7 +78,7 @@ assemblingFeatureInfo := func(assemblingFeature) {
 				coreVFeature = "FR3"
 			} else {
 				productiveFeature = assemblingFeature
-				coreVFeature = splittedFeature2[0] + ":FR3End}"
+				coreVFeature = splittedFeature2[0]+":FR3End}"
 			}
 			if splittedFeature2[1] == "FR4End}" {
 				coreJFeature = "FR4"
@@ -177,8 +177,8 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId) {
 			[ "-jGene" ]
 		]
 		if splitByC {
-			clonotypeKeyColumns += ["bestCGene"]
-			clonotypeKeyArgs += [ [ "-cGene" ] ]
+			clonotypeKeyColumns += ["bestCHit"]
+			clonotypeKeyArgs += [ [ "-cHit" ] ]
 		}
 	}
 
@@ -757,10 +757,10 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId) {
 				spec: {
 					valueType: "String",
 					name: variant.specName,
-					annotations: a(orderP, variant.visibility, {
-						"pl7.app/label": variant.label,
-						"pl7.app/isDiscreteFilter": "true",
-						"pl7.app/discreteValues": string(json.encode(["True", "False"])) } )
+                    annotations: a(orderP, variant.visibility, {
+                        "pl7.app/label": variant.label,
+                        "pl7.app/isDiscreteFilter": "true",
+                        "pl7.app/discreteValues": string(json.encode(["true", "false"])) } )
 				}
 			} ]
 		exportArgs += [ [ variant.arg, productiveFeature ] ]
@@ -945,7 +945,7 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId) {
 							})
 						}
 					} ],
-					storageFormat: "Binary",
+					storageFormat: "Parquet",
 					partitionKeyLength: 1
 				}
 			}

@@ -1,5 +1,29 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.18.2
+
+### Patch Changes
+
+- 40d9788: Update dependencies including MiXCR
+
+## 1.18.1
+
+### Patch Changes
+
+- 4809b76: technical release
+
+## 1.18.0
+
+### Minor Changes
+
+- 4fcd94b: relaxed mixcr assemble parameters for high diversity datasets
+
+## 1.17.3
+
+### Patch Changes
+
+- a5e2509: sdk update
+
 ## 1.17.2
 
 ### Patch Changes

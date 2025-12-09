@@ -37,8 +37,8 @@ self.body(func(inputs) {
 		inLightQueue().
 		mem("512MiB").
 		software(mixcrSw).
+		env("MI_USE_SYSTEM_CA", "true").
 		secret("MI_LICENSE", "MI_LICENSE").
-		printErrStreamToStdout().
 		arg("exportPreset")
 
 	if smart.isResource(preset) /* file */ {
@@ -84,8 +84,8 @@ self.body(func(inputs) {
 		inLightQueue().
 		mem("512MiB").
 		software(mixcrSw).
+		env("MI_USE_SYSTEM_CA", "true").
 		secret("MI_LICENSE", "MI_LICENSE").
-		printErrStreamToStdout().
 		arg("presetSpecificationsForBack").
 		addFile("preset.yaml", mixcrExportPresetCmd.getFile("preset.json")).
 		arg("preset.yaml").

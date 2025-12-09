@@ -8,6 +8,7 @@ slices := import("@platforma-sdk/workflow-tengo:slices")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 exec := import("@platforma-sdk/workflow-tengo:exec")
 pt := import("@platforma-sdk/workflow-tengo:pt")
+clonotypeLabel := import(":clonotype-label")
 
 json := import("json")
 
@@ -23,7 +24,7 @@ self.body(func(inputs) {
 	isLibraryFileGzipped := params.isLibraryFileGzipped
 	chains := params.chains
 	exportArgs := params.exportArgs
-
+	
 	clonotypeKeyColumns := params.clonotypeKeyColumns
 	clonotypeKeyArgs := params.clonotypeKeyArgs
 
@@ -34,10 +35,23 @@ self.body(func(inputs) {
 		ll.assert(len(cellTagColumns) == 1, "cellTagColumns must be a single column when hashCellKey is false")
 	}
 
-	mainAbundanceColumnUnnormalizedArgs := params.mainAbundanceColumnUnnormalizedArgs
-	mainAbundanceColumnIsReadCount := params.mainAbundanceColumnIsReadCount == true
-	mainIsProductiveArgs := params.mainIsProductiveArgs
+    mainAbundanceColumnUnnormalizedArgs := params.mainAbundanceColumnUnnormalizedArgs
+    mainAbundanceColumnIsReadCount := params.mainAbundanceColumnIsReadCount == true
+    mainIsProductiveArgs := params.mainIsProductiveArgs
+    mainIsProductiveColumn := params.mainIsProductiveColumn
 
+	exportMemGB := undefined 
+	if !is_undefined(inputs.perProcessMemGB) {
+		exportMemGB = int(1.0*inputs.perProcessMemGB/4.0)
+		if exportMemGB < 12 {
+			exportMemGB = 12
+		}
+	} else {
+		exportMemGB = 12
+	}
+	ptMemGB := int(2.0*exportMemGB/3.0)
+	
+	
 	hashKeyDerivationExpressionPt := func(sourceColumns) {
 		return pt.concatStr(
 			slices.map(sourceColumns, func(colName) { return pt.col(colName).fillNull("") }),
@@ -50,10 +64,9 @@ self.body(func(inputs) {
 	createExport := func(additionalAction) {
 		mixcrCmdBuilder := exec.builder().
 			inMediumQueue().
-			ram("12GiB").
+			mem(string(exportMemGB) + "GiB").
 		    cpu(2).
-			printErrStreamToStdout().
-			dontSaveStdoutOrStderr().
+			env("MI_USE_SYSTEM_CA", "true").
 			software(mixcrSw).
 			secret("MI_LICENSE", "MI_LICENSE").
 			arg("exportClones").
@@ -103,7 +116,7 @@ self.body(func(inputs) {
 	// PTabler processing for main TSV output
 	wfMain := pt.workflow().
 		inMediumQueue().
-		mem("8GiB").
+		mem(ptMemGB).
 		cpu(2)
 
 	frameInputMap := {
@@ -113,12 +126,24 @@ self.body(func(inputs) {
 	}
 	dfMain := wfMain.frame(frameInputMap, { inferSchema: false, id: "input_table" })
 
-	dfMain.addColumns(
-		pt.col("readCount").round().cast("Long").alias("readCount")
-	)
+    dfMain.addColumns(
+        pt.col("readCount").round().cast("Long").alias("readCount")
+    )
+    // Normalize isProductive column casing to strictly "true"/"false"
+    if !is_undefined(mainIsProductiveColumn) {
+        dfMain.addColumns(
+            pt.when(pt.col(mainIsProductiveColumn).strToUpper().eq("TRUE")).
+                then(pt.lit("true")).
+                otherwise(pt.lit("false")).
+                alias(mainIsProductiveColumn)
+        )
+    }
 	dfMain.addColumns(
 		hashKeyDerivationExpressionPt(clonotypeKeyColumns).alias("clonotypeKey")
 	)
+
+	// Generate clonotypeLabel (C-XXXXX or C-XXXXX-RANK) from clonotypeKey for bulk data
+	dfMain = clonotypeLabel.addClonotypeLabelColumnsPt(dfMain, "clonotypeKey", "clonotypeLabel", pt)
 
 	dfMain.save("output.tsv")
 	ptablerResultMain := wfMain.run()
@@ -143,7 +168,7 @@ self.body(func(inputs) {
 		// PTabler processing for single-cell TSV output
 		wfSingleCell := pt.workflow().
 			inMediumQueue().
-			mem("4GiB").
+			mem(ptMemGB).
 			cpu(2)
 
 		frameLoadOps := {
@@ -157,11 +182,20 @@ self.body(func(inputs) {
 
 		dfSingleCell := wfSingleCell.frame(unprocessedTsvForSingleCell, frameLoadOps)
 
-		if mainAbundanceColumnIsReadCount {
-			dfSingleCell.addColumns(
-				pt.col("readCount").round().cast("Long").alias("readCount")
-			)
-		}
+        if mainAbundanceColumnIsReadCount {
+            dfSingleCell.addColumns(
+                pt.col("readCount").round().cast("Long").alias("readCount")
+            )
+        }
+        // Normalize isProductive column casing to strictly "true"/"false"
+        if !is_undefined(mainIsProductiveColumn) {
+            dfSingleCell.addColumns(
+                pt.when(pt.col(mainIsProductiveColumn).strToUpper().eq("TRUE")).
+                    then(pt.lit("true")).
+                    otherwise(pt.lit("false")).
+                    alias(mainIsProductiveColumn)
+            )
+        }
 
 		dfSingleCell.addColumns(
 			hashKeyDerivationExpressionPt(clonotypeKeyColumns).alias("clonotypeKey"),

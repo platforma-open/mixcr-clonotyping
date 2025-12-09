@@ -1,5 +1,115 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.12.24
+
+### Patch Changes
+
+- 40d9788: Update dependencies including MiXCR
+- Updated dependencies [d6683f6]
+- Updated dependencies [40d9788]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@3.16.0
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.18.2
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.ui@1.17.3
+
+## 2.12.23
+
+### Patch Changes
+
+- 4809b76: technical release
+- Updated dependencies [4809b76]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.18.1
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.ui@1.17.2
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@3.15.1
+
+## 2.12.22
+
+### Patch Changes
+
+- Updated dependencies [c52857c]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.ui@1.17.1
+
+## 2.12.21
+
+### Patch Changes
+
+- Updated dependencies [224eef5]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@3.15.0
+
+## 2.12.20
+
+### Patch Changes
+
+- Updated dependencies [4fcd94b]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@3.14.0
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.18.0
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.ui@1.17.0
+
+## 2.12.19
+
+### Patch Changes
+
+- Updated dependencies [27f25bc]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@3.13.0
+
+## 2.12.18
+
+### Patch Changes
+
+- a5e2509: sdk update
+- Updated dependencies [a5e2509]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.17.3
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.ui@1.16.5
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@3.12.1
+
+## 2.12.17
+
+### Patch Changes
+
+- Updated dependencies [fa19090]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@3.12.0
+
+## 2.12.16
+
+### Patch Changes
+
+- Updated dependencies [ab1d715]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.ui@1.16.4
+
+## 2.12.15
+
+### Patch Changes
+
+- Updated dependencies [9e5b1c7]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.ui@1.16.3
+
+## 2.12.14
+
+### Patch Changes
+
+- Updated dependencies [58a43db]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@3.11.0
+
+## 2.12.13
+
+### Patch Changes
+
+- Updated dependencies [fed5c72]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@3.10.1
+
+## 2.12.12
+
+### Patch Changes
+
+- Updated dependencies [d2b6d24]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@3.10.0
+
+## 2.12.11
+
+### Patch Changes
+
+- Updated dependencies [913c474]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@3.9.0
+
 ## 2.12.10
 
 ### Patch Changes

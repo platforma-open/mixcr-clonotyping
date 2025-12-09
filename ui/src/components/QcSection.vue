@@ -43,7 +43,7 @@ const description = computed(() => {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  padding: 8px 24px 16px 8px;
+  padding: 8px 24px 8px 8px;
   gap: 12px;
 
   border-width: 1px 0;

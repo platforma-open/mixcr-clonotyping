@@ -1,5 +1,75 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.16.0
+
+### Minor Changes
+
+- d6683f6: assemblingFeature fix
+
+### Patch Changes
+
+- 40d9788: Update dependencies including MiXCR
+
+## 3.15.1
+
+### Patch Changes
+
+- 4809b76: technical release
+
+## 3.15.0
+
+### Minor Changes
+
+- 224eef5: clonotypeKey now includes cHit instead of cGene in splitByC case
+
+## 3.14.0
+
+### Minor Changes
+
+- 4fcd94b: relaxed mixcr assemble parameters for high diversity datasets
+
+## 3.13.0
+
+### Minor Changes
+
+- 27f25bc: isProductive values changed to true or false
+
+## 3.12.1
+
+### Patch Changes
+
+- a5e2509: sdk update
+
+## 3.12.0
+
+### Minor Changes
+
+- fa19090: clonotypeLabel in export raw data
+
+## 3.11.0
+
+### Minor Changes
+
+- 58a43db: Better memory management in export
+
+## 3.10.1
+
+### Patch Changes
+
+- fed5c72: Support parquet format (update SDK)
+
+## 3.10.0
+
+### Minor Changes
+
+- d2b6d24: fix number of reads, clonotypes, cells in report table
+
+## 3.9.0
+
+### Minor Changes
+
+- 913c474: MILAB-2682: MI_USE_SYSTEM_CA forces MiXCR to trust system installed certificates
+
 ## 3.8.2
 
 ### Patch Changes

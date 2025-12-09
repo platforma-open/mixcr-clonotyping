@@ -1,5 +1,41 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.test
 
+## 1.9.3
+
+### Patch Changes
+
+- 40d9788: Update dependencies including MiXCR
+- Updated dependencies [40d9788]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.18.2
+
+## 1.9.2
+
+### Patch Changes
+
+- 4809b76: technical release
+- Updated dependencies [4809b76]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.18.1
+
+## 1.9.1
+
+### Patch Changes
+
+- Updated dependencies [4fcd94b]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.18.0
+
+## 1.9.0
+
+### Minor Changes
+
+- 27f25bc: isProductive values changed to true or false
+
+## 1.8.10
+
+### Patch Changes
+
+- Updated dependencies [a5e2509]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.17.3
+
 ## 1.8.9
 
 ### Patch Changes

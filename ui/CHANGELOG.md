@@ -1,5 +1,58 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.17.3
+
+### Patch Changes
+
+- 40d9788: Update dependencies including MiXCR
+- Updated dependencies [40d9788]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.18.2
+
+## 1.17.2
+
+### Patch Changes
+
+- 4809b76: technical release
+- Updated dependencies [4809b76]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.18.1
+
+## 1.17.1
+
+### Patch Changes
+
+- c52857c: [block/mixcr] Wrong row paddings
+
+## 1.17.0
+
+### Minor Changes
+
+- 4fcd94b: relaxed mixcr assemble parameters for high diversity datasets
+
+### Patch Changes
+
+- Updated dependencies [4fcd94b]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.18.0
+
+## 1.16.5
+
+### Patch Changes
+
+- a5e2509: sdk update
+- Updated dependencies [a5e2509]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.17.3
+
+## 1.16.4
+
+### Patch Changes
+
+- ab1d715: Fix ui bug
+
+## 1.16.3
+
+### Patch Changes
+
+- 9e5b1c7: Fixed: Data is not downloaded in download manager
+
 ## 1.16.2
 
 ### Patch Changes
