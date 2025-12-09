@@ -17,7 +17,7 @@ export type PresetFile = z.infer<typeof PresetFile>;
 export const Preset = z.discriminatedUnion('type', [PresetName, PresetFile]);
 export type Preset = z.infer<typeof Preset>;
 
-export const BlockArgsValid = z.object({
+const BlockArgsValidBase = z.object({
   input: PlRef,
   inputLibrary: PlRef.optional(),
   libraryFile: z.string().transform((v) => v as ImportFileHandle).optional(),
@@ -39,7 +39,22 @@ export const BlockArgsValid = z.object({
   isGenericPreset: z.boolean().optional(),
   chains: z.array(z.string()).optional(),
 });
+
+export const BlockArgsValid = BlockArgsValidBase.superRefine(
+  (data, ctx) => {
+    // If preset is a file (custom preset), chains must be provided and non-empty
+    if (data.preset.type === 'file') {
+      if (data.chains === undefined || data.chains.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Chains selection is required when using a custom preset file',
+          path: ['chains'],
+        });
+      }
+    }
+  },
+);
 export type BlockArgsValid = z.infer<typeof BlockArgsValid>;
 
-export const BlockArgs = BlockArgsValid.partial({ input: true, preset: true });
+export const BlockArgs = BlockArgsValidBase.partial({ input: true, preset: true });
 export type BlockArgs = z.infer<typeof BlockArgs>;
