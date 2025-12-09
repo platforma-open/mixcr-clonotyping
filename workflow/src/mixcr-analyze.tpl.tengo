@@ -142,6 +142,7 @@ self.body(func(inputs) {
 	}
 	if !is_undefined(assembleClonesBy) {
 		mixcrCmdBuilder.arg("--assemble-clonotypes-by").arg(assembleClonesBy)
+	}
 	// High diversity library tuning
 	highDiversityLibrary := params.highDiversityLibrary
 	if !is_undefined(highDiversityLibrary) && highDiversityLibrary {

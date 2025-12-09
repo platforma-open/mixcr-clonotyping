@@ -272,7 +272,7 @@ self.body(func(inputs) {
 					rightAlignmentMode: params.rightAlignmentMode,
 					materialType: params.materialType,
 					tagPattern: params.tagPattern,
-					assembleClonesBy: params.assembleClonesBy
+					assembleClonesBy: params.assembleClonesBy,
 					highDiversityLibrary: params.highDiversityLibrary
 				},
 				library: library,

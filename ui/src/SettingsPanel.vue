@@ -4,7 +4,6 @@ import { SupportedPresetList } from '@platforma-open/milaboratories.mixcr-clonot
 import type { ImportFileHandle, PlRef } from '@platforma-sdk/model';
 import { getFilePathFromHandle } from '@platforma-sdk/model';
 import type { ListOption } from '@platforma-sdk/ui-vue';
-import { PlAccordionSection, PlSectionSeparator, PlBtnGroup, PlDropdown, PlDropdownMulti, PlDropdownRef, PlFileInput, PlTextField, PlNumberField, ReactiveFileContent } from '@platforma-sdk/ui-vue';
 import { PlAccordionSection, PlBtnGroup, PlDropdown, PlDropdownMulti, PlDropdownRef, PlFileInput, PlTextField, PlNumberField, PlCheckbox, ReactiveFileContent, PlTooltip } from '@platforma-sdk/ui-vue';
 import { computed, reactive, watch } from 'vue';
 import { useApp } from './app';
@@ -299,6 +298,13 @@ const receptorOrChainsModel = computed({
     app.model.args.chains = value ?? [];
   },
 });
+
+const highDiversityLibrary = computed({
+  get: () => app.model.args.highDiversityLibrary ?? false,
+  set: (value: boolean) => {
+    app.model.args.highDiversityLibrary = value;
+  },
+});
 </script>
 
 <template>
@@ -406,7 +412,7 @@ const receptorOrChainsModel = computed({
 
   <PlAccordionSection label="Advanced Settings">
     <PlCheckbox
-      v-model="app.model.args.highDiversityLibrary"
+      v-model="highDiversityLibrary"
     >
       High diversity dataset
       <PlTooltip class="info" position="top">
