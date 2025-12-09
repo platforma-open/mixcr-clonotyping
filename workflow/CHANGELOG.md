@@ -1,5 +1,15 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.16.0
+
+### Minor Changes
+
+- d6683f6: assemblingFeature fix
+
+### Patch Changes
+
+- 40d9788: Update dependencies including MiXCR
+
 ## 3.15.1
 
 ### Patch Changes
