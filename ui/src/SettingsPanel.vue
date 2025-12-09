@@ -332,7 +332,12 @@ const highDiversityLibrary = computed({
 
   <PlDropdown v-if="needSpecies" v-model="app.model.args.species" :options="speciesOptions" label="Select species" />
 
-  <PlDropdownMulti v-model="receptorOrChainsModel" label="Receptors" :options="receptorOrChainsOptions" >
+  <PlDropdownMulti
+    v-model="receptorOrChainsModel"
+    label="Receptors"
+    :options="receptorOrChainsOptions"
+    :required="true"
+  >
     <template #tooltip>
       Restrict the analysis to certain receptor types.
     </template>
