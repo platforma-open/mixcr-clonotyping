@@ -1,5 +1,16 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.18.0
+
+### Minor Changes
+
+- 480dfc5: generic presets added
+
+### Patch Changes
+
+- Updated dependencies [480dfc5]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.19.0
+
 ## 1.17.3
 
 ### Patch Changes

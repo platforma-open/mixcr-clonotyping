@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.17.0
+
+### Minor Changes
+
+- 480dfc5: generic presets added
+
 ## 3.16.0
 
 ### Minor Changes

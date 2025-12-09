@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.19.0
+
+### Minor Changes
+
+- 480dfc5: generic presets added
+
 ## 1.18.2
 
 ### Patch Changes

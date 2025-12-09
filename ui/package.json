@@ -1,6 +1,6 @@
 {
   "name": "@platforma-open/milaboratories.mixcr-clonotyping-2.ui",
-  "version": "1.17.3",
+  "version": "1.18.0",
   "type": "module",
   "scripts": {
     "dev": "ts-builder serve --target browser",
