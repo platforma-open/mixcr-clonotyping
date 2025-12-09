@@ -1,5 +1,16 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.19.0
+
+### Minor Changes
+
+- d9fe76f: Make receptors required from custom preset
+
+### Patch Changes
+
+- Updated dependencies [d9fe76f]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.20.0
+
 ## 1.18.0
 
 ### Minor Changes

@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.20.0
+
+### Minor Changes
+
+- d9fe76f: Make receptors required from custom preset
+
 ## 1.19.0
 
 ### Minor Changes
