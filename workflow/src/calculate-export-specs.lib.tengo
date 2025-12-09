@@ -75,7 +75,7 @@ assemblingFeatureInfo := func(assemblingFeature) {
 				productiveFeature = assemblingFeature
 			} else {
 				productiveFeature = assemblingFeature
-				coreVFeature = "{"+splittedFeature2[0]+":FR3End}"
+				coreVFeature = splittedFeature2[0]+":FR3End}"
 			}
 			if splittedFeature2[1] == "FR4End}" {
 				coreJFeature = "FR4"
