@@ -25,12 +25,18 @@ export const BlockArgsValid = z.object({
   preset: Preset,
   species: z.string().optional(),
   customSpecies: z.string().optional(),
+  materialType: z.string().optional(),
+  leftAlignmentMode: z.string().optional(),
+  rightAlignmentMode: z.string().optional(),
+  tagPattern: z.string().optional(),
+  assembleClonesBy: z.string().optional(),
   limitInput: z.number().int().optional(),
   perProcessMemGB: z.number().int().gte(1, '1GB or more required').optional(),
   perProcessCPUs: z.number().int().gte(1, '1 or more required').optional(),
   highDiversityLibrary: z.boolean().optional(),
   title: z.string().optional(),
   presetCommonName: z.string().optional(),
+  isGenericPreset: z.boolean().optional(),
   chains: z.array(z.string()).optional(),
 });
 export type BlockArgsValid = z.infer<typeof BlockArgsValid>;

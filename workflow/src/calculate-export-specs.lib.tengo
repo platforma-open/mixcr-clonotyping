@@ -73,6 +73,9 @@ assemblingFeatureInfo := func(assemblingFeature) {
 		} else if len(splittedFeature2) == 2 {
 			if splittedFeature2[0] == "{CDR3Begin" {
 				productiveFeature = assemblingFeature
+			} else if splittedFeature2[0] == "{FR3Begin" {
+				productiveFeature = assemblingFeature
+				coreVFeature = "FR3"
 			} else {
 				productiveFeature = assemblingFeature
 				coreVFeature = splittedFeature2[0]+":FR3End}"

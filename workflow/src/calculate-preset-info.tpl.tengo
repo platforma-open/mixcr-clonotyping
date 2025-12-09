@@ -11,7 +11,12 @@ self.validateInputs({
 	preset: "any",
 	params: {
 		"__options__,closed": "",
-		"species,omitempty": "string"
+		"species,omitempty": "string",
+		"leftAlignmentMode,omitempty": "string",
+		"rightAlignmentMode,omitempty": "string",
+		"materialType,omitempty": "string",
+		"tagPattern,omitempty": "string",
+		"assembleClonesBy,omitempty": "string"
 	}
 })
 
@@ -22,6 +27,11 @@ self.defineOutputs("preset", "presetSpecForBack")
 self.body(func(inputs) {
 	preset := inputs.preset
 	species := inputs.params.species
+	leftAlignmentMode := inputs.params.leftAlignmentMode
+	rightAlignmentMode := inputs.params.rightAlignmentMode
+	materialType := inputs.params.materialType
+	tagPattern := inputs.params.tagPattern
+	assembleClonesBy := inputs.params.assembleClonesBy
 
 	mixcrExportPresetCmdBuilder := exec.builder().
 		inLightQueue().
@@ -45,6 +55,22 @@ self.body(func(inputs) {
 
 	if !is_undefined(species) {
 		mixcrExportPresetCmdBuilder.arg("--species").arg(species)
+	}
+
+	if !is_undefined(leftAlignmentMode) {
+		mixcrExportPresetCmdBuilder.arg(leftAlignmentMode)
+	}
+	if !is_undefined(rightAlignmentMode) {
+		mixcrExportPresetCmdBuilder.arg(rightAlignmentMode)
+	}
+	if !is_undefined(materialType) {
+		mixcrExportPresetCmdBuilder.arg(materialType)
+	}
+	if !is_undefined(tagPattern) {
+		mixcrExportPresetCmdBuilder.arg("--tag-pattern").arg(tagPattern)
+	}
+	if !is_undefined(assembleClonesBy) {
+		mixcrExportPresetCmdBuilder.arg("--assemble-clonotypes-by").arg(assembleClonesBy)
 	}
 
 	mixcrExportPresetCmd := mixcrExportPresetCmdBuilder.arg("preset.json").

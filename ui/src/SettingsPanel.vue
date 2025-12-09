@@ -63,7 +63,38 @@ const needSpecies = computed(() => preset.value === undefined
   ? undefined
   : (preset.value.requiredFlags.findIndex((f) => f === 'species') >= 0));
 
+const needLeftAlignmentMode = computed(() => preset.value === undefined
+  ? undefined
+  : ((preset.value.requiredFlags as unknown as readonly string[]).findIndex((f) => f === 'leftAlignmentMode') >= 0));
+const needRightAlignmentMode = computed(() => preset.value === undefined
+  ? undefined
+  : ((preset.value.requiredFlags as unknown as readonly string[]).findIndex((f) => f === 'rightAlignmentMode') >= 0));
+const needMaterialType = computed(() => preset.value === undefined
+  ? undefined
+  : ((preset.value.requiredFlags as unknown as readonly string[]).findIndex((f) => f === 'materialType') >= 0));
+const needTagPattern = computed(() => preset.value === undefined
+  ? undefined
+  : ((preset.value.requiredFlags as unknown as readonly string[]).findIndex((f) => f === 'tagPattern') >= 0));
+const needAssembleClonesBy = computed(() => preset.value === undefined
+  ? undefined
+  : ((preset.value.requiredFlags as unknown as readonly string[]).findIndex((f) => f === 'assembleClonesBy') >= 0));
+
 const isSingleCell = computed(() => preset.value?.analysisStages.includes('assembleCells') === true);
+
+// Compute and sync generic preset flag: requires all except tagPattern
+const isGenericPresetComputed = computed(() => {
+  const rf = preset.value?.requiredFlags as unknown as readonly string[] | undefined;
+  if (rf === undefined) return undefined;
+  const includes = (x: string) => rf.findIndex((f) => f === x) >= 0;
+  return (includes('leftAlignmentMode')
+    && includes('rightAlignmentMode')
+    && includes('assembleClonesBy')) || includes('tagPattern');
+});
+
+watch(isGenericPresetComputed, (v) => {
+  // propagate to model args as optional boolean
+  (app.model.args as unknown as { isGenericPreset?: boolean }).isGenericPreset = v === undefined ? undefined : v;
+});
 
 const allFileImports = computed(() => {
   return { ...(app.model.outputs.prerunFileImports ?? {}), ...(app.model.outputs.mainFileImports ?? {}) };
@@ -77,6 +108,65 @@ watch(needSpecies, (ns) => {
   if (ns === true // the opposite of the above
     && app.model.args.species === undefined)
     app.model.args.species = 'hsa';
+});
+
+const leftAlignmentModeOptions: ListOption[] = [
+  { label: 'Primers', value: '--floating-left-alignment-boundary' },
+  { label: 'No primers', value: '--rigid-left-alignment-boundary' },
+];
+const rightAlignmentModeOptions: ListOption[] = [
+  { label: 'C primers', value: '--floating-right-alignment-boundary C' },
+  { label: 'J primers', value: '--floating-right-alignment-boundary J' },
+  { label: 'No primers', value: '--rigid-right-alignment-boundary C' },
+];
+const materialTypeOptions: ListOption[] = [
+  { label: 'RNA', value: '--rna' },
+  { label: 'DNA', value: '--dna' },
+];
+const assembleClonesByOptions: ListOption[] = [
+  { label: 'CDR3', value: 'CDR3' },
+  { label: 'FR1 – FR4', value: 'VDJRegion' },
+  { label: 'CDR1 – FR4', value: 'CDR1_TO_FR4' },
+  { label: 'FR2 – FR4', value: 'FR2_TO_FR4' },
+  { label: 'CDR2 – FR4', value: 'CDR2_TO_FR4' },
+  { label: 'FR3 – FR4', value: 'FR3_TO_FR4' },
+  { label: 'CDR3 – FR4', value: 'CDR3_TO_FR4' },
+  { label: 'FR1 – CDR3', value: '{FR1Begin:CDR3End}' },
+  { label: 'CDR1 – CDR3', value: '{CDR1Begin:CDR3End}' },
+  { label: 'FR2 – CDR3', value: '{FR2Begin:CDR3End}' },
+  { label: 'CDR2 – CDR3', value: '{CDR2Begin:CDR3End}' },
+  { label: 'FR3 – CDR3', value: '{FR3Begin:CDR3End}' },
+];
+
+watch(needLeftAlignmentMode, (v) => {
+  if (v === false && app.model.args.leftAlignmentMode !== undefined)
+    app.model.args.leftAlignmentMode = undefined;
+  if (v === true && app.model.args.leftAlignmentMode === undefined)
+    app.model.args.leftAlignmentMode = '--rigid-left-alignment-boundary';
+});
+watch(needRightAlignmentMode, (v) => {
+  if (v === false && app.model.args.rightAlignmentMode !== undefined)
+    app.model.args.rightAlignmentMode = undefined;
+  if (v === true && app.model.args.rightAlignmentMode === undefined)
+    app.model.args.rightAlignmentMode = '--floating-right-alignment-boundary C';
+});
+watch(needMaterialType, (v) => {
+  if (v === false && app.model.args.materialType !== undefined)
+    app.model.args.materialType = undefined;
+  if (v === true && app.model.args.materialType === undefined)
+    app.model.args.materialType = '--dna';
+});
+watch(needTagPattern, (v) => {
+  if (v === false && app.model.args.tagPattern !== undefined)
+    app.model.args.tagPattern = undefined;
+  if (v === true && app.model.args.tagPattern === undefined)
+    app.model.args.tagPattern = '';
+});
+watch(needAssembleClonesBy, (v) => {
+  if (v === false && app.model.args.assembleClonesBy !== undefined)
+    app.model.args.assembleClonesBy = undefined;
+  if (v === true && app.model.args.assembleClonesBy === undefined)
+    app.model.args.assembleClonesBy = 'CDR3';
 });
 
 function setPresetName(name?: string) {
@@ -208,6 +298,13 @@ const receptorOrChainsModel = computed({
     app.model.args.chains = value ?? [];
   },
 });
+
+const highDiversityLibrary = computed({
+  get: () => app.model.args.highDiversityLibrary ?? false,
+  set: (value: boolean) => {
+    app.model.args.highDiversityLibrary = value;
+  },
+});
 </script>
 
 <template>
@@ -240,10 +337,82 @@ const receptorOrChainsModel = computed({
       Restrict the analysis to certain receptor types.
     </template>
   </PlDropdownMulti>
+  <PlDropdown
+    v-if="needLeftAlignmentMode"
+    v-model="app.model.args.leftAlignmentMode"
+    :options="leftAlignmentModeOptions"
+    label="5'-end"
+    :required="true"
+  >
+    <template #tooltip>
+      <p>Alignment mode at 5'-end of the library:</p>
+      <ul>
+        <li><b>Primers</b>: primers or adapters at 5'-end present; typical for V-gene single-primer/multiplex protocols. Uses semi‑local alignment on the left side.</li>
+        <li><b>No primers</b>: no primers/adapters at 5'-end; typical for 5' RACE with template-switch oligo. Uses global alignment on the left side.</li>
+      </ul>
+    </template>
+  </PlDropdown>
+
+  <PlDropdown
+    v-if="needRightAlignmentMode"
+    v-model="app.model.args.rightAlignmentMode"
+    :options="rightAlignmentModeOptions"
+    label="3'-end"
+    :required="true"
+  >
+    <template #tooltip>
+      <p>Alignment algorithm at 3'-end of the library:</p>
+      <ul>
+        <li><b>C gene primers</b>: typically used with C gene single primer / multiplex protocols. Instructs C gene aligner to use semi-local alignment on the right side.</li>
+        <li><b>J gene primers</b>: typically used with J gene single primer / multiplex protocols. Instructs J gene aligner to use semi-local alignment on the right side and skips C gene alignment.</li>
+        <li><b>No primers / primers removed</b>: typically used when primers are trimmed using tag pattern or with some preprocessing.</li>
+      </ul>
+    </template>
+  </PlDropdown>
+
+  <PlDropdown
+    v-if="needMaterialType"
+    v-model="app.model.args.materialType"
+    :options="materialTypeOptions"
+    label="Material type"
+    :required="true"
+  >
+    <template #tooltip>
+      <p>Use RNA (exons) or DNA (introns) reference:</p>
+      <ul>
+        <li><b>RNA</b>: VTranscriptWithP will be used for V alignment.</li>
+        <li><b>DNA</b>: VGeneWithP will be used for V alignment; C gene alignment will be skipped since it is too far from CDR3 in DNA data.</li>
+      </ul>
+    </template>
+  </PlDropdown>
+
+  <PlTextField
+    v-if="needTagPattern"
+    v-model="app.model.args.tagPattern"
+    :clearable="() => undefined"
+    label="Tag pattern"
+    :required="true"
+  >
+    <template #tooltip>
+      Specify tag pattern using MiXCR syntax
+    </template>
+  </PlTextField>
+
+  <PlDropdown
+    v-if="needAssembleClonesBy"
+    v-model="app.model.args.assembleClonesBy"
+    :options="assembleClonesByOptions"
+    label="Assemble clones by"
+    :required="true"
+  >
+    <template #tooltip>
+      Feature span used to group reads into clonotypes
+    </template>
+  </PlDropdown>
 
   <PlAccordionSection label="Advanced Settings">
     <PlCheckbox
-      v-model="app.model.args.highDiversityLibrary"
+      v-model="highDiversityLibrary"
     >
       High diversity dataset
       <PlTooltip class="info" position="top">
