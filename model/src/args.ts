@@ -42,15 +42,13 @@ const BlockArgsValidBase = z.object({
 
 export const BlockArgsValid = BlockArgsValidBase.superRefine(
   (data, ctx) => {
-    // If preset is a file (custom preset), chains must be provided and non-empty
-    if (data.preset.type === 'file') {
-      if (data.chains === undefined || data.chains.length === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Chains selection is required when using a custom preset file',
-          path: ['chains'],
-        });
-      }
+    // Chains must be provided and non-empty for all presets (both built-in and custom)
+    if (data.chains === undefined || data.chains.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Chains selection is required',
+        path: ['chains'],
+      });
     }
   },
 );

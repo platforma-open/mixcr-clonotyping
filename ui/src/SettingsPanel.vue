@@ -336,7 +336,7 @@ const highDiversityLibrary = computed({
     v-model="receptorOrChainsModel"
     label="Receptors"
     :options="receptorOrChainsOptions"
-    :required="app.model.args.preset?.type === 'file'"
+    :required="true"
   >
     <template #tooltip>
       Restrict the analysis to certain receptor types.
