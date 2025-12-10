@@ -6,44 +6,38 @@ packages:
   - test
 
 catalog:
-  '@milaboratories/ts-builder': ^1.0.5
-  '@milaboratories/ts-configs': ^1.0.6
-  '@platforma-sdk/workflow-tengo': ^5.6.5
-  '@platforma-sdk/model': ^1.46.0
-  '@platforma-sdk/ui-vue': ^1.46.1
-  '@platforma-sdk/tengo-builder': ^2.3.14
-  '@platforma-sdk/package-builder': ^3.10.7
-  '@platforma-sdk/block-tools': ^2.6.26
-  '@platforma-sdk/eslint-config': ^1.1.0
-  '@platforma-sdk/blocks-deps-updater': ^2.0.0
-
-  '@platforma-sdk/test': ^1.46.5
-  '@milaboratories/helpers': ^1.12.0
+  # SDK packages - exact versions, no ^ or ~
+  '@milaboratories/ts-builder': 1.0.5
+  '@milaboratories/ts-configs': 1.0.6
+  '@platforma-sdk/workflow-tengo': 5.6.5
+  '@platforma-sdk/model': 1.46.0
+  '@platforma-sdk/ui-vue': 1.46.1
+  '@platforma-sdk/tengo-builder': 2.3.14
+  '@platforma-sdk/package-builder': 3.10.7
+  '@platforma-sdk/block-tools': 2.6.26
+  '@platforma-sdk/eslint-config': 1.1.0
+  '@platforma-sdk/test': 1.46.5
+  '@milaboratories/helpers': 1.12.0
 
   '@platforma-open/milaboratories.software-mixcr': 4.7.0-254-develop
 
+  # Common dependencies - can use ^ or ~
   'vue': ^3.5.15
-
   'zod': ~3.23.8
   'utility-types': ^3.11.0
-
   'typescript': ~5.6.3
   'turbo': ^2.5.8
-
   'vitest': ~4.0.15
   'eslint': ^9.38.0
-
   '@vueuse/core': ^13.6.0
 
   'ag-grid-enterprise': &ag-grid ~34.1.2
   'ag-grid-vue3': *ag-grid
 
   '@changesets/cli': ^2.29.7
-  'js-yaml': ^4.1.0
   '@zip.js/zip.js': ^2.8.8
   '@types/wicg-file-system-access': ^2023.10.7
 
   # other blocks used in tests
-
   '@platforma-open/milaboratories.samples-and-data': ^1.10.14
   '@platforma-open/milaboratories.samples-and-data.model': ^1.11.2
