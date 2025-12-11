@@ -41,3 +41,7 @@ catalog:
   # other blocks used in tests
   '@platforma-open/milaboratories.samples-and-data': ^1.12.3
   '@platforma-open/milaboratories.samples-and-data.model': ^2.4.1
+
+  # peer
+  '@types/node': ^25.0.0
+  'vite': ^7.2.7

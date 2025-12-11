@@ -14,10 +14,13 @@
     "update-sdk": "block-tools update-deps"
   },
   "devDependencies": {
-    "typescript": "catalog:",
-    "turbo": "catalog:",
+    "@types/node": "catalog:",
     "@changesets/cli": "catalog:",
-    "@platforma-sdk/block-tools": "catalog:"
+    "@platforma-sdk/block-tools": "catalog:",
+    "turbo": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:",
+    "vite": "catalog:"
   },
   "packageManager": "pnpm@9.12.0",
   "pnpm": {

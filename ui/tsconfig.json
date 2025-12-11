@@ -1,9 +1,8 @@
 {
-  "extends": "@milaboratories/ts-configs/block/ui",
+  "extends": "@milaboratories/ts-configs/tsconfig.browser.json",
   "compilerOptions": {
     "rootDir": "./src",
-    "outDir": "./dist",
-    "lib": ["ESNext", "DOM", "DOM.Iterable"]
+    "outDir": "./dist"
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"]
 }

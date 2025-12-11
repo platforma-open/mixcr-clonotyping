@@ -1,9 +1,8 @@
 {
-  "extends": "@milaboratories/ts-configs/block/model",
+  "extends": "@milaboratories/ts-configs/tsconfig.node.json",
   "compilerOptions": {
-    "customConditions": ["sources"],
     "outDir": "./dist",
-    "rootDir": "./src"
+    "rootDir": "./src",
   },
   "include": [
     "src/**/*"

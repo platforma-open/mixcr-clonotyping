@@ -1,15 +1,8 @@
 {
+  "extends": "@milaboratories/ts-configs/tsconfig.node.json",
   "compilerOptions": {
-    "target": "es2020",
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "esModuleInterop": true,
-    "strict": true,
     "outDir": "./dist",
     "rootDir": "./src",
-    "sourceMap": true,
-    "declaration": true,
-    "skipLibCheck": true
   },
   "include": [
     "src/**/*"
@@ -18,5 +11,4 @@
     "node_modules",
     "dist"
   ],
-  "extends": "@milaboratories/ts-configs/block/test"
 }
