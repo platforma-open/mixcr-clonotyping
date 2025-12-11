@@ -4,7 +4,9 @@
   "version": "1.9.5",
   "description": "Block tests",
   "scripts": {
-    "test": "vitest"
+    "test": "vitest",
+    "lint": "eslint .",
+    "type-check": "tsc --noEmit"
   },
   "files": [],
   "keywords": [],

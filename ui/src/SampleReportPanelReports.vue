@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { PlId } from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
+import type { PlId } from '@platforma-sdk/model';
 import type {
   SimpleOption,
 } from '@platforma-sdk/ui-vue';

@@ -20,6 +20,11 @@
     "@platforma-sdk/block-tools": "catalog:"
   },
   "packageManager": "pnpm@9.12.0",
+  "pnpm": {
+    "overrides": {
+      "@milaboratories/ts-configs": "file:/Users/dbolotin/mi/core/platforma/tools/ts-configs/package.tgz"
+    }
+  },
   "--": {
     "overrides": {
       "@platforma-sdk/package-builder": "file:/Users/popoffvg/Documents/git/mil/platforma/tools/package-builder/package.tgz",

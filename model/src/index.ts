@@ -225,7 +225,6 @@ export const platforma = BlockModel.create('Heavy')
 export type BlockOutputs = InferOutputsType<typeof platforma>;
 export type Href = InferHrefType<typeof platforma>;
 export * from './args';
-export * from './helpers';
 export * from './preset';
 export * from './progress';
 export * from './qc';
