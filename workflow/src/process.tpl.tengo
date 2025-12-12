@@ -457,12 +457,37 @@ self.body(func(inputs) {
 		} ]
 
 		if !isSingleCell {
+			// Modify column visibility for TCR chains
+			isTCRChain := text.has_prefix(chain, "TCR")
+			columnsForAggregation := columnsSpecPerClonotypeNoAggregates + columnsSpecPerClonotypeAggregates
+			if isTCRChain {
+				columnsForAggregation = slices.map(columnsForAggregation, func(col) {
+					if col.column == "bestCGene" || col.column == "bestCHit" {
+						return maps.deepMerge(col, {
+							spec: {
+								annotations: maps.merge(col.spec.annotations, {
+									"pl7.app/table/visibility": "optional"
+								})
+							}
+						})
+					} else if col.column == "isotypePrimary" {
+						return maps.deepMerge(col, {
+							spec: {
+								annotations: maps.merge(col.spec.annotations, {
+									"pl7.app/table/visibility": "hidden"
+								})
+							}
+						})
+					}
+					return col
+				})
+			}
 			aggregationOutputs += [ {
 				type: "Xsv",
 				xsvType: "tsv",
 				settings: {
 					axes: [ axisByClonotypeKeyGen(chain) ],
-					columns: columnsSpecPerClonotypeNoAggregates + columnsSpecPerClonotypeAggregates,
+					columns: columnsForAggregation,
 					storageFormat: "Parquet",
 					partitionKeyLength: 0
 				},

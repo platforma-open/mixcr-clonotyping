@@ -260,13 +260,14 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId) {
 		spec: {
 			name: "pl7.app/vdj/readFractionMean",
 			valueType: "Double",
-			annotations: a(87130, true, {
+			annotations: a(87130, false, {
 				"pl7.app/min": "0",
 				"pl7.app/max": "1",
 				"pl7.app/isAbundance": "true",
 				"pl7.app/abundance/unit": "reads",
 				"pl7.app/abundance/normalized": "true",
 				"pl7.app/label": "Mean Fraction of Reads",
+				"pl7.app/description": "The average read fraction of a clonotype across all samples where it is present.",
 				"pl7.app/format": ".2p"
 			})
 		}
@@ -341,13 +342,14 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId) {
 			spec: {
 				name: "pl7.app/vdj/uniqueMoleculeFractionMean",
 				valueType: "Double",
-				annotations: a(87130, true, {
+				annotations: a(87130, false, {
 					"pl7.app/min": "0",
 					"pl7.app/max": "1",
 					"pl7.app/isAbundance": "true",
 					"pl7.app/abundance/unit": "molecules",
 					"pl7.app/abundance/normalized": "true",
 					"pl7.app/label": "Mean Fraction of UMIs",
+					"pl7.app/description": "The average UMI fraction of a clonotype across all samples where it is present.",
 					"pl7.app/format": ".2p"
 				})
 			}
