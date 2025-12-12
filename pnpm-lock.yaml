@@ -12,6 +12,12 @@ catalogs:
     '@milaboratories/helpers':
       specifier: 1.12.0
       version: 1.12.0
+    '@milaboratories/ts-builder':
+      specifier: 1.1.0
+      version: 1.1.0
+    '@milaboratories/ts-configs':
+      specifier: 1.1.0
+      version: 1.1.0
     '@platforma-open/milaboratories.samples-and-data':
       specifier: ^1.12.3
       version: 1.12.3
@@ -34,8 +40,8 @@ catalogs:
       specifier: 2.4.1
       version: 2.4.1
     '@platforma-sdk/test':
-      specifier: 1.47.5
-      version: 1.47.5
+      specifier: 1.47.6
+      version: 1.47.6
     '@platforma-sdk/ui-vue':
       specifier: 1.47.5
       version: 1.47.5
@@ -52,8 +58,8 @@ catalogs:
       specifier: ^14.1.0
       version: 14.1.0
     '@zip.js/zip.js':
-      specifier: ^2.8.8
-      version: 2.8.8
+      specifier: ^2.8.11
+      version: 2.8.11
     ag-grid-enterprise:
       specifier: ~34.1.2
       version: 34.1.2
@@ -84,11 +90,6 @@ catalogs:
     zod:
       specifier: ~3.23.8
       version: 3.23.8
-
-overrides:
-  '@milaboratories/build-configs': file:/Users/aleksandr/GIT/MILAB/platforma/tools/build-configs/package.tgz
-  '@milaboratories/ts-builder': file:/Users/aleksandr/GIT/MILAB/platforma/tools/ts-builder/package.tgz
-  '@milaboratories/ts-configs': file:/Users/aleksandr/GIT/MILAB/platforma/tools/ts-configs/package.tgz
 
 importers:
 
@@ -145,11 +146,11 @@ importers:
         version: 3.23.8
     devDependencies:
       '@milaboratories/ts-builder':
-        specifier: file:/Users/aleksandr/GIT/MILAB/platforma/tools/ts-builder/package.tgz
-        version: file:../platforma/tools/ts-builder/package.tgz(@microsoft/api-extractor@7.55.2(@types/node@25.0.0))(@types/node@25.0.0)(postcss@8.5.6)(tslib@2.8.1)(vitest@4.0.15(@types/node@25.0.0)(yaml@2.8.2))(yaml@2.8.2)
+        specifier: 'catalog:'
+        version: 1.1.0(@microsoft/api-extractor@7.55.2(@types/node@25.0.0))(@types/node@25.0.0)(postcss@8.5.6)(tslib@2.8.1)(yaml@2.8.2)
       '@milaboratories/ts-configs':
-        specifier: file:/Users/aleksandr/GIT/MILAB/platforma/tools/ts-configs/package.tgz
-        version: file:../platforma/tools/ts-configs/package.tgz(@types/node@25.0.0)(vite@7.2.7(@types/node@25.0.0)(yaml@2.8.2))(vitest@4.0.15(@types/node@25.0.0)(yaml@2.8.2))
+        specifier: 'catalog:'
+        version: 1.1.0
       '@platforma-sdk/block-tools':
         specifier: 'catalog:'
         version: 2.6.27
@@ -185,14 +186,14 @@ importers:
         version: link:../block
     devDependencies:
       '@milaboratories/ts-builder':
-        specifier: file:/Users/aleksandr/GIT/MILAB/platforma/tools/ts-builder/package.tgz
-        version: file:../platforma/tools/ts-builder/package.tgz(@microsoft/api-extractor@7.55.2(@types/node@25.0.0))(@types/node@25.0.0)(postcss@8.5.6)(tslib@2.8.1)(vitest@4.0.15(@types/node@25.0.0)(yaml@2.8.2))(yaml@2.8.2)
+        specifier: 'catalog:'
+        version: 1.1.0(@microsoft/api-extractor@7.55.2(@types/node@25.0.0))(@types/node@25.0.0)(postcss@8.5.6)(tslib@2.8.1)(yaml@2.8.2)
       '@milaboratories/ts-configs':
-        specifier: file:/Users/aleksandr/GIT/MILAB/platforma/tools/ts-configs/package.tgz
-        version: file:../platforma/tools/ts-configs/package.tgz(@types/node@25.0.0)(vite@6.4.1(@types/node@25.0.0)(yaml@2.8.2))(vitest@4.0.15(@types/node@25.0.0)(yaml@2.8.2))
+        specifier: 'catalog:'
+        version: 1.1.0
       '@platforma-sdk/test':
         specifier: 'catalog:'
-        version: 1.47.5(@types/node@25.0.0)(yaml@2.8.2)
+        version: 1.47.6(@types/node@25.0.0)(yaml@2.8.2)
 
   ui:
     dependencies:
@@ -228,11 +229,11 @@ importers:
         version: 3.23.8
     devDependencies:
       '@milaboratories/ts-builder':
-        specifier: file:/Users/aleksandr/GIT/MILAB/platforma/tools/ts-builder/package.tgz
-        version: file:../platforma/tools/ts-builder/package.tgz(@microsoft/api-extractor@7.55.2(@types/node@25.0.0))(@types/node@25.0.0)(postcss@8.5.6)(tslib@2.8.1)(vitest@4.0.15(@types/node@25.0.0)(yaml@2.8.2))(yaml@2.8.2)
+        specifier: 'catalog:'
+        version: 1.1.0(@microsoft/api-extractor@7.55.2(@types/node@25.0.0))(@types/node@25.0.0)(postcss@8.5.6)(tslib@2.8.1)(yaml@2.8.2)
       '@milaboratories/ts-configs':
-        specifier: file:/Users/aleksandr/GIT/MILAB/platforma/tools/ts-configs/package.tgz
-        version: file:../platforma/tools/ts-configs/package.tgz(@types/node@25.0.0)(vite@7.2.7(@types/node@25.0.0)(yaml@2.8.2))(vitest@4.0.15(@types/node@25.0.0)(yaml@2.8.2))
+        specifier: 'catalog:'
+        version: 1.1.0
       '@platforma-sdk/eslint-config':
         specifier: 'catalog:'
         version: 1.1.0(@eslint/js@9.39.1)(@stylistic/eslint-plugin@2.13.0(eslint@9.39.1)(typescript@5.6.3))(eslint-plugin-n@17.23.1(eslint@9.39.1)(typescript@5.6.3))(eslint-plugin-vue@9.33.0(eslint@9.39.1))(eslint@9.39.1)(globals@15.15.0)(typescript-eslint@8.49.0(eslint@9.39.1)(typescript@5.6.3))(typescript@5.6.3)
@@ -241,7 +242,7 @@ importers:
         version: 2023.10.7
       '@zip.js/zip.js':
         specifier: 'catalog:'
-        version: 2.8.8
+        version: 2.8.11
       eslint:
         specifier: 'catalog:'
         version: 9.39.1
@@ -262,14 +263,14 @@ importers:
         version: 5.6.6
     devDependencies:
       '@milaboratories/ts-configs':
-        specifier: file:/Users/aleksandr/GIT/MILAB/platforma/tools/ts-configs/package.tgz
-        version: file:../platforma/tools/ts-configs/package.tgz(@types/node@25.0.0)(vite@7.2.7(@types/node@25.0.0)(yaml@2.8.2))(vitest@4.0.15(@types/node@25.0.0)(yaml@2.8.2))
+        specifier: 'catalog:'
+        version: 1.1.0
       '@platforma-sdk/tengo-builder':
         specifier: 'catalog:'
         version: 2.4.1
       '@platforma-sdk/test':
         specifier: 'catalog:'
-        version: 1.47.5(@types/node@25.0.0)(yaml@2.8.2)
+        version: 1.47.6(@types/node@25.0.0)(yaml@2.8.2)
       typescript:
         specifier: 'catalog:'
         version: 5.6.3
@@ -971,9 +972,10 @@ packages:
   '@milaboratories/biowasm-tools@2.0.0':
     resolution: {integrity: sha512-XCfOea1JbsHhZJ7LvPTrb733bFEIbc02bvG69vTFolqeRv9AWKODxessjOURByGQ0bAj9cAzo21QXlFxzSqAtA==}
 
-  '@milaboratories/build-configs@file:../platforma/tools/build-configs/package.tgz':
-    resolution: {integrity: sha512-1O06ujD7/hNezs977HklhIG9AnYNbbic+rVTWm4IbVCT1exZrLZeBXjnspLPCoDbVyeetnv2H+UwtEZZkiOpIQ==, tarball: file:../platforma/tools/build-configs/package.tgz}
-    version: 1.0.9
+  '@milaboratories/build-configs@1.1.0':
+    resolution: {integrity: sha512-Wkhntp6vvnrBw/PA9BnciXDOSrTAexJqOnTIbq59C9EyiI66smxudz9HJLKulVwd/GpE6KO8X/F/A9YWKgsMUQ==}
+    deprecated:
+      tsconfig_lib_bundled.json: Use @milaboratories/ts-configs instead
 
   '@milaboratories/computable@2.7.4':
     resolution: {integrity: sha512-xqm4dhODYfk6e15ka4dVDWwOJLKK0+lsDN3Cwy/S6pYgw/X1OUN0nCRgsKmU+Qt2ZtBx+tTJv4/X2JbAe08Jiw==}
@@ -1001,8 +1003,8 @@ packages:
   '@milaboratories/pl-config@1.7.9':
     resolution: {integrity: sha512-SCKXhiap/2HWGa2TCFGaPgJ8Y8//XwCplFRnn6w5xdUyBOuc0gvvyckebW1tu+q75bFY10oLIRrintS/ptfkUA==}
 
-  '@milaboratories/pl-deployments@2.13.1':
-    resolution: {integrity: sha512-JdzAyXy7AoXRGbtT88fFANBm7sCrnuGFB+NwJFA1VfgnoPGCZHcFfQT9/Iixq6fPQpSi6tgxGpO44eaw5na5yA==}
+  '@milaboratories/pl-deployments@2.14.0':
+    resolution: {integrity: sha512-xUST88NpCYd9vX/igMuOtybwUnF5JyFm4kvueLULqdFLqPqpLBs8o0qdiAojxDW0d2o2c5UZMxZT4k2J4NoZyw==}
     engines: {node: '>=22.19.0'}
 
   '@milaboratories/pl-drivers@1.11.26':
@@ -1018,8 +1020,8 @@ packages:
   '@milaboratories/pl-http@1.2.0':
     resolution: {integrity: sha512-5iRxug4TjE88+XoMU5LVcXe1PEmXYfZI3WxJGrayzYQFM/9GiKuwcUsQ0kDlFmw+s6UlEAzgC9+MsJFKvU7C5Q==}
 
-  '@milaboratories/pl-middle-layer@1.43.86':
-    resolution: {integrity: sha512-cJ5IBOlATuSfnfxLQHtfCqs5WJx0fTPh/5DiSmLbNXxHC7XJ0WmCCpb51hH23+AdgITC+JUQa6WiWQoSMRSKGA==}
+  '@milaboratories/pl-middle-layer@1.43.87':
+    resolution: {integrity: sha512-hKzhtaD9D8Zssc89jXKcccC/KBBQBFAvdcQOrz3Ju7HKRJ6WxgD0aCv8G+ta4Kr+CNUWAmsuTX+Zn5Dmic52IQ==}
     engines: {node: '>=22.19.0'}
 
   '@milaboratories/pl-model-backend@1.1.30':
@@ -1061,18 +1063,12 @@ packages:
     os: [darwin, linux, win32]
     hasBin: true
 
-  '@milaboratories/ts-builder@file:../platforma/tools/ts-builder/package.tgz':
-    resolution: {integrity: sha512-1pGpehHnE+YFkU1e+c1iu5SximMOdoPzPLolnS7oXoo+1Z6cebs2tx2XfUKN2UXPNbqOzTvVljXuTQeOF1z66Q==, tarball: file:../platforma/tools/ts-builder/package.tgz}
-    version: 1.0.6
+  '@milaboratories/ts-builder@1.1.0':
+    resolution: {integrity: sha512-LTtMOAiw+wVIEzrc2GSa0DB8oBnjXzXPz81IpbB3yqb2QUCRCO2d+uLlZCGDBPet9phBdJrJ6EZVWytNHkLOiw==}
     hasBin: true
 
-  '@milaboratories/ts-configs@file:../platforma/tools/ts-configs/package.tgz':
-    resolution: {integrity: sha512-a6clayoW66o16zPIlffNl8ll+gEdUIMnMku0jA/Q9+4eTA9U18n7hTIt5Ppze8jcfU0T3Xq4gtpwT6RUrqJNDg==, tarball: file:../platforma/tools/ts-configs/package.tgz}
-    version: 1.0.6
-    peerDependencies:
-      '@types/node': ~24.5.2
-      vite: ^6.3.5
-      vitest: ^4.0.7
+  '@milaboratories/ts-configs@1.1.0':
+    resolution: {integrity: sha512-ofUsGDd/Crq25HBuNmy3R74l5jWJszrgCS9N99fzRsBZyvs5gEDPLLHNJHpDp5QS9gUHPX7NmtvSLIU7SMR7eg==}
 
   '@milaboratories/ts-helpers-oclif@1.1.33':
     resolution: {integrity: sha512-1200VRTW3L5GNvjAiBXrsbLnvMGycuiyXMa6WyY154wk8D3oERaOCpzUDNtTDIf+QnXmJNrc9GSlI4940eCl7A==}
@@ -1214,8 +1210,8 @@ packages:
     engines: {node: '>=22'}
     hasBin: true
 
-  '@platforma-sdk/test@1.47.5':
-    resolution: {integrity: sha512-K0WM/WChLNX1W6vLjn1LdEunwfF8E8ZEHqCLV8YjiQshosKNXHwVdK/e1w+lysxoKR+tB59ao+fOHnHPF54WVQ==}
+  '@platforma-sdk/test@1.47.6':
+    resolution: {integrity: sha512-YL5Vy048d87ot8N5S3Nv7znatye5CVWN8HDzgkcSp/nJrmoRCtipEwCx3CfS4JOgE3IWwp+nuY7zhK5IpnEevw==}
 
   '@platforma-sdk/ui-vue@1.47.5':
     resolution: {integrity: sha512-nZB26lT7W5sPj3fVa+N9ObABtDtMiSr1ZHNt5/7JAJfcELn2XaHrzVx5uxh/9g1QA/KE7pwT7jXPTYeYAlss9A==}
@@ -2011,8 +2007,8 @@ packages:
     peerDependencies:
       vue: ^3.5.0
 
-  '@zip.js/zip.js@2.8.8':
-    resolution: {integrity: sha512-v0KutehhSAuaoFAFGLp+V4+UiZ1mIxQ8vNOYMD7k9ZJaBbtQV49MYlg568oRLiuwWDg2Di58Iw3Q0ESNWR+5JA==}
+  '@zip.js/zip.js@2.8.11':
+    resolution: {integrity: sha512-0fztsk/0ryJ+2PPr9EyXS5/Co7OK8q3zY/xOoozEWaUsL5x+C0cyZ4YyMuUffOO2Dx/rAdq4JMPqW0VUtm+vzA==}
     engines: {bun: '>=0.7.0', deno: '>=1.0.0', node: '>=18.0.0'}
 
   abbrev@2.0.0:
@@ -5172,7 +5168,7 @@ snapshots:
 
   '@milaboratories/biowasm-tools@2.0.0': {}
 
-  '@milaboratories/build-configs@file:../platforma/tools/build-configs/package.tgz(@microsoft/api-extractor@7.55.2(@types/node@25.0.0))(@types/node@25.0.0)(postcss@8.5.6)(tslib@2.8.1)(yaml@2.8.2)':
+  '@milaboratories/build-configs@1.1.0(@microsoft/api-extractor@7.55.2(@types/node@25.0.0))(@types/node@25.0.0)(postcss@8.5.6)(tslib@2.8.1)(yaml@2.8.2)':
     dependencies:
       '@rollup/plugin-commonjs': 28.0.9(rollup@4.53.3)
       '@rollup/plugin-json': 6.1.0(rollup@4.53.3)
@@ -5279,7 +5275,7 @@ snapshots:
       yaml: 2.8.2
       zod: 3.23.8
 
-  '@milaboratories/pl-deployments@2.13.1':
+  '@milaboratories/pl-deployments@2.14.0':
     dependencies:
       '@milaboratories/pl-config': 1.7.9
       '@milaboratories/pl-http': 1.2.0
@@ -5342,14 +5338,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@milaboratories/pl-middle-layer@1.43.86':
+  '@milaboratories/pl-middle-layer@1.43.87':
     dependencies:
       '@milaboratories/computable': 2.7.4
       '@milaboratories/pf-driver': 1.0.10
       '@milaboratories/pframes-rs-node': 1.0.109
       '@milaboratories/pl-client': 2.16.13
       '@milaboratories/pl-config': 1.7.9
-      '@milaboratories/pl-deployments': 2.13.1
+      '@milaboratories/pl-deployments': 2.14.0
       '@milaboratories/pl-drivers': 1.11.26
       '@milaboratories/pl-errors': 1.1.45
       '@milaboratories/pl-http': 1.2.0
@@ -5446,10 +5442,10 @@ snapshots:
 
   '@milaboratories/tengo-tester@1.6.4': {}
 
-  '@milaboratories/ts-builder@file:../platforma/tools/ts-builder/package.tgz(@microsoft/api-extractor@7.55.2(@types/node@25.0.0))(@types/node@25.0.0)(postcss@8.5.6)(tslib@2.8.1)(vitest@4.0.15(@types/node@25.0.0)(yaml@2.8.2))(yaml@2.8.2)':
+  '@milaboratories/ts-builder@1.1.0(@microsoft/api-extractor@7.55.2(@types/node@25.0.0))(@types/node@25.0.0)(postcss@8.5.6)(tslib@2.8.1)(yaml@2.8.2)':
     dependencies:
-      '@milaboratories/build-configs': file:../platforma/tools/build-configs/package.tgz(@microsoft/api-extractor@7.55.2(@types/node@25.0.0))(@types/node@25.0.0)(postcss@8.5.6)(tslib@2.8.1)(yaml@2.8.2)
-      '@milaboratories/ts-configs': file:../platforma/tools/ts-configs/package.tgz(@types/node@25.0.0)(vite@6.4.1(@types/node@25.0.0)(yaml@2.8.2))(vitest@4.0.15(@types/node@25.0.0)(yaml@2.8.2))
+      '@milaboratories/build-configs': 1.1.0(@microsoft/api-extractor@7.55.2(@types/node@25.0.0))(@types/node@25.0.0)(postcss@8.5.6)(tslib@2.8.1)(yaml@2.8.2)
+      '@milaboratories/ts-configs': 1.1.0
       commander: 12.1.0
       rollup: 4.53.3
       rollup-plugin-copy: 3.5.0
@@ -5472,20 +5468,9 @@ snapshots:
       - terser
       - tslib
       - tsx
-      - vitest
       - yaml
 
-  '@milaboratories/ts-configs@file:../platforma/tools/ts-configs/package.tgz(@types/node@25.0.0)(vite@6.4.1(@types/node@25.0.0)(yaml@2.8.2))(vitest@4.0.15(@types/node@25.0.0)(yaml@2.8.2))':
-    dependencies:
-      '@types/node': 25.0.0
-      vite: 6.4.1(@types/node@25.0.0)(yaml@2.8.2)
-      vitest: 4.0.15(@types/node@25.0.0)(yaml@2.8.2)
-
-  '@milaboratories/ts-configs@file:../platforma/tools/ts-configs/package.tgz(@types/node@25.0.0)(vite@7.2.7(@types/node@25.0.0)(yaml@2.8.2))(vitest@4.0.15(@types/node@25.0.0)(yaml@2.8.2))':
-    dependencies:
-      '@types/node': 25.0.0
-      vite: 7.2.7(@types/node@25.0.0)(yaml@2.8.2)
-      vitest: 4.0.15(@types/node@25.0.0)(yaml@2.8.2)
+  '@milaboratories/ts-configs@1.1.0': {}
 
   '@milaboratories/ts-helpers-oclif@1.1.33':
     dependencies:
@@ -5718,11 +5703,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@platforma-sdk/test@1.47.5(@types/node@25.0.0)(yaml@2.8.2)':
+  '@platforma-sdk/test@1.47.6(@types/node@25.0.0)(yaml@2.8.2)':
     dependencies:
       '@milaboratories/computable': 2.7.4
       '@milaboratories/pl-client': 2.16.13
-      '@milaboratories/pl-middle-layer': 1.43.86
+      '@milaboratories/pl-middle-layer': 1.43.87
       '@milaboratories/pl-tree': 1.8.20
       '@milaboratories/ts-helpers': 1.5.4
       '@platforma-sdk/model': 1.47.5
@@ -5766,7 +5751,7 @@ snapshots:
       '@types/semver': 7.7.1
       '@vueuse/core': 13.9.0(vue@3.5.25(typescript@5.6.3))
       '@vueuse/integrations': 13.9.0(sortablejs@1.15.6)(vue@3.5.25(typescript@5.6.3))
-      '@zip.js/zip.js': 2.8.8
+      '@zip.js/zip.js': 2.8.11
       ag-grid-enterprise: 34.1.2
       ag-grid-vue3: 34.1.2(vue@3.5.25(typescript@5.6.3))
       canonicalize: 2.1.0
@@ -6676,7 +6661,7 @@ snapshots:
       '@vue/shared': 3.5.25
       csstype: 3.2.3
 
-  '@vue/server-renderer@3.5.25(vue@3.5.25(typescript@5.6.3))':
+  '@vue/server-renderer@3.5.25(vue@3.5.25(typescript@5.4.5))':
     dependencies:
       '@vue/compiler-ssr': 3.5.25
       '@vue/shared': 3.5.25
@@ -6723,7 +6708,7 @@ snapshots:
     dependencies:
       vue: 3.5.25(typescript@5.6.3)
 
-  '@zip.js/zip.js@2.8.8': {}
+  '@zip.js/zip.js@2.8.11': {}
 
   abbrev@2.0.0: {}
 
@@ -8721,7 +8706,7 @@ snapshots:
       '@vue/compiler-dom': 3.5.25
       '@vue/compiler-sfc': 3.5.25
       '@vue/runtime-dom': 3.5.25
-      '@vue/server-renderer': 3.5.25(vue@3.5.25(typescript@5.6.3))
+      '@vue/server-renderer': 3.5.25(vue@3.5.25(typescript@5.4.5))
       '@vue/shared': 3.5.25
     optionalDependencies:
       typescript: 5.6.3
