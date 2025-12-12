@@ -1,14 +1,14 @@
 {
-    "extends": "@milaboratories/ts-configs/tsconfig.node.json",
-    "compilerOptions": {
-        "outDir": "./dist",
-        "rootDir": "./src"
-    },
-    "include": [
-        "src/**/*"
-    ],
-    "exclude": [
-        "dist",
-        "node_modules"
-    ]
+  "extends": "@milaboratories/ts-configs/blocks/tsconfig.model.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules"
+  ]
 }

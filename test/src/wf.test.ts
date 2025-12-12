@@ -6,13 +6,12 @@ import {
   platforma,
   Qc,
   SupportedPresetList,
-  uniquePlId
 } from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
 import { awaitStableState, blockTest } from '@platforma-sdk/test';
 import { blockSpec as samplesAndDataBlockSpec } from '@platforma-open/milaboratories.samples-and-data';
 import { BlockArgs as SamplesAndDataBlockArgs } from '@platforma-open/milaboratories.samples-and-data.model';
 import { blockSpec as myBlockSpec } from 'this-block';
-import { InferBlockState, fromPlRef, wrapOutputs } from '@platforma-sdk/model';
+import { InferBlockState, fromPlRef, uniquePlId, wrapOutputs } from '@platforma-sdk/model';
 
 blockTest('empty imputs', { timeout: 20000 }, async ({ rawPrj: project, ml, helpers, expect }) => {
   const blockId = await project.addBlock('Block', myBlockSpec);
