@@ -260,7 +260,7 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId) {
 		spec: {
 			name: "pl7.app/vdj/readFractionMean",
 			valueType: "Double",
-			annotations: a(87130, true, {
+			annotations: a(87130, false, {
 				"pl7.app/min": "0",
 				"pl7.app/max": "1",
 				"pl7.app/isAbundance": "true",
@@ -341,7 +341,7 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId) {
 			spec: {
 				name: "pl7.app/vdj/uniqueMoleculeFractionMean",
 				valueType: "Double",
-				annotations: a(87130, true, {
+				annotations: a(87130, false, {
 					"pl7.app/min": "0",
 					"pl7.app/max": "1",
 					"pl7.app/isAbundance": "true",
