@@ -267,6 +267,7 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId) {
 				"pl7.app/abundance/unit": "reads",
 				"pl7.app/abundance/normalized": "true",
 				"pl7.app/label": "Mean Fraction of Reads",
+				"pl7.app/description": "The average read fraction of a clonotype across all samples where it is present.",
 				"pl7.app/format": ".2p"
 			})
 		}
@@ -348,6 +349,7 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId) {
 					"pl7.app/abundance/unit": "molecules",
 					"pl7.app/abundance/normalized": "true",
 					"pl7.app/label": "Mean Fraction of UMIs",
+					"pl7.app/description": "The average UMI fraction of a clonotype across all samples where it is present.",
 					"pl7.app/format": ".2p"
 				})
 			}
