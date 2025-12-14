@@ -12,7 +12,7 @@ import { awaitStableState, blockTest } from '@platforma-sdk/test';
 import { blockSpec as samplesAndDataBlockSpec } from '@platforma-open/milaboratories.samples-and-data';
 import type { BlockArgs as SamplesAndDataBlockArgs } from '@platforma-open/milaboratories.samples-and-data.model';
 import { blockSpec as myBlockSpec } from 'this-block';
-import type { InferBlockState } from '@platforma-sdk/model';
+import type { InferBlockState, InferOutputsType } from '@platforma-sdk/model';
 import { uniquePlId, wrapOutputs } from '@platforma-sdk/model';
 
 blockTest('empty imputs', { timeout: 20000 }, async ({ rawPrj: project, ml, expect }) => {
@@ -96,6 +96,8 @@ blockTest(
           },
         },
       ],
+      h5adFilesToPreprocess: [],
+      seuratFilesToPreprocess: [],
     } satisfies SamplesAndDataBlockArgs);
     await project.runBlock(sndBlockId);
     await helpers.awaitBlockDone(sndBlockId, 8000);
@@ -150,11 +152,12 @@ blockTest(
     expect(outputs2.sampleLabels![sample1Id]).toBeDefined();
 
     await project.runBlock(clonotypingBlockId);
-    const clonotypingStableState3 = (await helpers.awaitBlockDoneAndGetStableBlockState(
+    const clonotypingStableState3 = await helpers.awaitBlockDoneAndGetStableBlockState(
       clonotypingBlockId,
       100000,
-    ));
-    const outputs3 = wrapOutputs<BlockOutputs>(clonotypingStableState3.outputs);
+    );
+
+    const outputs3 = wrapOutputs<BlockOutputs>(clonotypingStableState3.outputs as InferOutputsType<typeof platforma>);
 
     // console.dir(clonotypingStableState3, { depth: 8 });
 
@@ -164,10 +167,10 @@ blockTest(
     expect(qcEntry).toBeDefined();
 
     const alignJsonReportEntry = outputs3.reports.data.find(
-      (e: { key: string[] }) => e.key[1] === 'align' && e.key[2] === 'json',
+      (e: { key: (string | number)[] }) => e.key[1] === 'align' && e.key[2] === 'json',
     );
     const assembleJsonReportEntry = outputs3.reports.data.find(
-      (e: { key: string[] }) => e.key[1] === 'assemble' && e.key[2] === 'json',
+      (e: { key: (string | number)[] }) => e.key[1] === 'assemble' && e.key[2] === 'json',
     );
 
     expect(alignJsonReportEntry).toBeDefined();
@@ -198,7 +201,7 @@ blockTest(
 
     expect(alignReport.aligned).greaterThan(2);
 
-    const clonesPfHandle = wrapOutputs(clonotypingStableState3.outputs).clones!;
+    const clonesPfHandle = wrapOutputs<BlockOutputs>(clonotypingStableState3.outputs as InferOutputsType<typeof platforma>).clones!;
 
     const clonesPfColumnList = await ml.driverKit.pFrameDriver.listColumns(clonesPfHandle);
 
@@ -266,6 +269,8 @@ blockTest(
           },
         },
       ],
+      h5adFilesToPreprocess: [],
+      seuratFilesToPreprocess: [],
     } satisfies SamplesAndDataBlockArgs);
     await project.runBlock(sndBlockId);
     await helpers.awaitBlockDone(sndBlockId, 8000);
@@ -321,11 +326,12 @@ blockTest(
     expect(outputs2.sampleLabels![sample1Id]).toBeDefined();
 
     await project.runBlock(clonotypingBlockId);
-    const clonotypingStableState3 = (await helpers.awaitBlockDoneAndGetStableBlockState(
+    const clonotypingStableState3 = await helpers.awaitBlockDoneAndGetStableBlockState(
       clonotypingBlockId,
       300000,
-    ));
-    const outputs3 = wrapOutputs<BlockOutputs>(clonotypingStableState3.outputs);
+    );
+
+    const outputs3 = wrapOutputs<BlockOutputs>(clonotypingStableState3.outputs as InferOutputsType<typeof platforma>);
 
     // console.dir(clonotypingStableState3, { depth: 8 });
 
@@ -335,10 +341,10 @@ blockTest(
     expect(qcEntry).toBeDefined();
 
     const alignJsonReportEntry = outputs3.reports.data.find(
-      (e: { key: string[] }) => e.key[1] === 'align' && e.key[2] === 'json',
+      (e: { key: (string | number)[] }) => e.key[1] === 'align' && e.key[2] === 'json',
     );
     const assembleJsonReportEntry = outputs3.reports.data.find(
-      (e: { key: string[] }) => e.key[1] === 'assemble' && e.key[2] === 'json',
+      (e: { key: (string | number)[] }) => e.key[1] === 'assemble' && e.key[2] === 'json',
     );
 
     expect(alignJsonReportEntry).toBeDefined();
@@ -369,7 +375,7 @@ blockTest(
 
     expect(alignReport.aligned).greaterThan(2);
 
-    const clonesPfHandle = wrapOutputs(clonotypingStableState3.outputs).clones!;
+    const clonesPfHandle = wrapOutputs<BlockOutputs>(clonotypingStableState3.outputs as InferOutputsType<typeof platforma>).clones!;
 
     const clonesPfColumnList = await ml.driverKit.pFrameDriver.listColumns(clonesPfHandle);
 
