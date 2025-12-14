@@ -14,7 +14,6 @@
     "update-sdk": "block-tools update-deps"
   },
   "devDependencies": {
-    "@types/node": "catalog:",
     "@changesets/cli": "catalog:",
     "@platforma-sdk/block-tools": "catalog:",
     "turbo": "catalog:",
