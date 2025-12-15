@@ -466,5 +466,11 @@ const highDiversityLibrary = computed({
       :minValue="1"
       :maxValue="999999"
     />
+
+    <PlTextField
+      v-model="app.model.args.additionalArgs"
+      label="Additional arguments"
+      placeholder="Additional arguments"
+    />
   </PlAccordionSection>
 </template>
