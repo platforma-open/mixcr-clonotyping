@@ -461,20 +461,18 @@ self.body(func(inputs) {
 			isTCRChain := text.has_prefix(chain, "TCR")
 			columnsForAggregation := columnsSpecPerClonotypeNoAggregates + columnsSpecPerClonotypeAggregates
 			if isTCRChain {
+				visibilitySettings := {
+					"bestCGene":      "optional",
+					"bestCHit":       "optional",
+					"isotypePrimary": "hidden"
+				}
 				columnsForAggregation = slices.map(columnsForAggregation, func(col) {
-					if col.column == "bestCGene" || col.column == "bestCHit" {
+					visibility := visibilitySettings[col.column]
+					if !is_undefined(visibility) {
 						return maps.deepMerge(col, {
 							spec: {
 								annotations: maps.merge(col.spec.annotations, {
-									"pl7.app/table/visibility": "optional"
-								})
-							}
-						})
-					} else if col.column == "isotypePrimary" {
-						return maps.deepMerge(col, {
-							spec: {
-								annotations: maps.merge(col.spec.annotations, {
-									"pl7.app/table/visibility": "hidden"
+									"pl7.app/table/visibility": visibility
 								})
 							}
 						})
@@ -621,25 +619,23 @@ self.body(func(inputs) {
 				isTCRChain := text.has_prefix(chain, "TCR")
 				columnsForSingleCell := columnsSpecPerClonotypeNoAggregates
 				if isTCRChain {
+					visibilitySettings := {
+						"bestCGene":      "optional",
+						"bestCHit":       "optional",
+						"isotypePrimary": "hidden"
+					}
 					columnsForSingleCell = slices.map(columnsForSingleCell, func(col) {
-						if col.column == "bestCGene" || col.column == "bestCHit" {
-							return maps.deepMerge(col, {
-								spec: {
-									annotations: maps.merge(col.spec.annotations, {
-										"pl7.app/table/visibility": "optional"
-									})
-								}
-							})
-						} else if col.column == "isotypePrimary" {
-							return maps.deepMerge(col, {
-								spec: {
-									annotations: maps.merge(col.spec.annotations, {
-										"pl7.app/table/visibility": "hidden"
-									})
-								}
-							})
-						}
-						return col
+					visibility := visibilitySettings[col.column]
+					if !is_undefined(visibility) {
+						return maps.deepMerge(col, {
+							spec: {
+								annotations: maps.merge(col.spec.annotations, {
+									"pl7.app/table/visibility": visibility
+								})
+							}
+						})
+					}
+					return col
 					})
 				}
 
