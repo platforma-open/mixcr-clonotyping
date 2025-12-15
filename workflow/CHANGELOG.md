@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.17.1
+
+### Patch Changes
+
+- 5d90233: Hide non-relevant columns
+
 ## 3.17.0
 
 ### Minor Changes
