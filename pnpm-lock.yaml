@@ -12,6 +12,12 @@ catalogs:
     '@milaboratories/helpers':
       specifier: 1.12.0
       version: 1.12.0
+    '@milaboratories/ts-builder':
+      specifier: 1.2.0
+      version: 1.2.0
+    '@milaboratories/ts-configs':
+      specifier: 1.2.0
+      version: 1.2.0
     '@platforma-open/milaboratories.samples-and-data':
       specifier: ^1.12.3
       version: 1.12.3
@@ -24,6 +30,9 @@ catalogs:
     '@platforma-sdk/block-tools':
       specifier: 2.6.27
       version: 2.6.27
+    '@platforma-sdk/eslint-config':
+      specifier: 1.2.0
+      version: 1.2.0
     '@platforma-sdk/model':
       specifier: 1.47.5
       version: 1.47.5
@@ -31,8 +40,8 @@ catalogs:
       specifier: 2.4.1
       version: 2.4.1
     '@platforma-sdk/test':
-      specifier: 1.47.6
-      version: 1.47.6
+      specifier: 1.48.1
+      version: 1.48.1
     '@platforma-sdk/ui-vue':
       specifier: 1.48.0
       version: 1.48.0
@@ -66,9 +75,6 @@ catalogs:
     utility-types:
       specifier: ^3.11.0
       version: 3.11.0
-    vite:
-      specifier: ^7.2.7
-      version: 7.2.7
     vitest:
       specifier: ~4.0.15
       version: 4.0.15
@@ -78,12 +84,6 @@ catalogs:
     zod:
       specifier: ~3.23.8
       version: 3.23.8
-
-overrides:
-  '@milaboratories/build-configs': file:/Users/dbolotin/mi/core/platforma/tools/build-configs/package.tgz
-  '@milaboratories/ts-builder': file:/Users/dbolotin/mi/core/platforma/tools/ts-builder/package.tgz
-  '@milaboratories/ts-configs': file:/Users/dbolotin/mi/core/platforma/tools/ts-configs/package.tgz
-  '@platforma-sdk/eslint-config': file:/Users/dbolotin/mi/core/platforma/sdk/eslint-config/package.tgz
 
 importers:
 
@@ -101,12 +101,6 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 5.6.3
-      vite:
-        specifier: 'catalog:'
-        version: 7.2.7(@types/node@25.0.0)(yaml@2.8.2)
-      vitest:
-        specifier: 'catalog:'
-        version: 4.0.15(@types/node@25.0.0)(yaml@2.8.2)
 
   block:
     dependencies:
@@ -137,17 +131,17 @@ importers:
         version: 3.23.8
     devDependencies:
       '@milaboratories/ts-builder':
-        specifier: file:/Users/dbolotin/mi/core/platforma/tools/ts-builder/package.tgz
-        version: file:../../core/platforma/tools/ts-builder/package.tgz(@microsoft/api-extractor@7.55.2(@types/node@25.0.0))(@types/node@25.0.0)(postcss@8.5.6)(tslib@2.8.1)(yaml@2.8.2)
+        specifier: 'catalog:'
+        version: 1.2.0(@microsoft/api-extractor@7.55.2(@types/node@25.0.0))(@types/node@25.0.0)(postcss@8.5.6)(tslib@2.8.1)(yaml@2.8.2)
       '@milaboratories/ts-configs':
-        specifier: file:/Users/dbolotin/mi/core/platforma/tools/ts-configs/package.tgz
-        version: file:../../core/platforma/tools/ts-configs/package.tgz
+        specifier: 'catalog:'
+        version: 1.2.0
       '@platforma-sdk/block-tools':
         specifier: 'catalog:'
         version: 2.6.27
       '@platforma-sdk/eslint-config':
-        specifier: file:/Users/dbolotin/mi/core/platforma/sdk/eslint-config/package.tgz
-        version: file:../../core/platforma/sdk/eslint-config/package.tgz(@eslint/js@9.39.2)(@stylistic/eslint-plugin@2.13.0(eslint@9.39.2)(typescript@5.6.3))(eslint-plugin-n@17.23.1(eslint@9.39.2)(typescript@5.6.3))(eslint-plugin-vue@9.33.0(eslint@9.39.2))(eslint@9.39.2)(globals@15.15.0)(typescript-eslint@8.49.0(eslint@9.39.2)(typescript@5.6.3))(typescript@5.6.3)
+        specifier: 'catalog:'
+        version: 1.2.0(@eslint/js@9.39.2)(@stylistic/eslint-plugin@2.13.0(eslint@9.39.2)(typescript@5.6.3))(eslint-plugin-n@17.23.1(eslint@9.39.2)(typescript@5.6.3))(eslint-plugin-vue@9.33.0(eslint@9.39.2))(eslint@9.39.2)(globals@15.15.0)(typescript-eslint@8.49.0(eslint@9.39.2)(typescript@5.6.3))(typescript@5.6.3)
       eslint:
         specifier: 'catalog:'
         version: 9.39.2
@@ -177,17 +171,17 @@ importers:
         version: link:../block
     devDependencies:
       '@milaboratories/ts-builder':
-        specifier: file:/Users/dbolotin/mi/core/platforma/tools/ts-builder/package.tgz
-        version: file:../../core/platforma/tools/ts-builder/package.tgz(@microsoft/api-extractor@7.55.2(@types/node@25.0.0))(@types/node@25.0.0)(postcss@8.5.6)(tslib@2.8.1)(yaml@2.8.2)
+        specifier: 'catalog:'
+        version: 1.2.0(@microsoft/api-extractor@7.55.2(@types/node@25.0.0))(@types/node@25.0.0)(postcss@8.5.6)(tslib@2.8.1)(yaml@2.8.2)
       '@milaboratories/ts-configs':
-        specifier: file:/Users/dbolotin/mi/core/platforma/tools/ts-configs/package.tgz
-        version: file:../../core/platforma/tools/ts-configs/package.tgz
+        specifier: 'catalog:'
+        version: 1.2.0
       '@platforma-sdk/eslint-config':
-        specifier: file:/Users/dbolotin/mi/core/platforma/sdk/eslint-config/package.tgz
-        version: file:../../core/platforma/sdk/eslint-config/package.tgz(@eslint/js@9.39.2)(@stylistic/eslint-plugin@2.13.0(eslint@9.39.2)(typescript@5.6.3))(eslint-plugin-n@17.23.1(eslint@9.39.2)(typescript@5.6.3))(eslint-plugin-vue@9.33.0(eslint@9.39.2))(eslint@9.39.2)(globals@15.15.0)(typescript-eslint@8.49.0(eslint@9.39.2)(typescript@5.6.3))(typescript@5.6.3)
+        specifier: 'catalog:'
+        version: 1.2.0(@eslint/js@9.39.2)(@stylistic/eslint-plugin@2.13.0(eslint@9.39.2)(typescript@5.6.3))(eslint-plugin-n@17.23.1(eslint@9.39.2)(typescript@5.6.3))(eslint-plugin-vue@9.33.0(eslint@9.39.2))(eslint@9.39.2)(globals@15.15.0)(typescript-eslint@8.49.0(eslint@9.39.2)(typescript@5.6.3))(typescript@5.6.3)
       '@platforma-sdk/test':
         specifier: 'catalog:'
-        version: 1.47.6(@types/node@25.0.0)(yaml@2.8.2)
+        version: 1.48.1(@types/node@25.0.0)(yaml@2.8.2)
       eslint:
         specifier: 'catalog:'
         version: 9.39.2
@@ -232,14 +226,14 @@ importers:
         version: 3.23.8
     devDependencies:
       '@milaboratories/ts-builder':
-        specifier: file:/Users/dbolotin/mi/core/platforma/tools/ts-builder/package.tgz
-        version: file:../../core/platforma/tools/ts-builder/package.tgz(@microsoft/api-extractor@7.55.2(@types/node@25.0.0))(@types/node@25.0.0)(postcss@8.5.6)(tslib@2.8.1)(yaml@2.8.2)
+        specifier: 'catalog:'
+        version: 1.2.0(@microsoft/api-extractor@7.55.2(@types/node@25.0.0))(@types/node@25.0.0)(postcss@8.5.6)(tslib@2.8.1)(yaml@2.8.2)
       '@milaboratories/ts-configs':
-        specifier: file:/Users/dbolotin/mi/core/platforma/tools/ts-configs/package.tgz
-        version: file:../../core/platforma/tools/ts-configs/package.tgz
+        specifier: 'catalog:'
+        version: 1.2.0
       '@platforma-sdk/eslint-config':
-        specifier: file:/Users/dbolotin/mi/core/platforma/sdk/eslint-config/package.tgz
-        version: file:../../core/platforma/sdk/eslint-config/package.tgz(@eslint/js@9.39.2)(@stylistic/eslint-plugin@2.13.0(eslint@9.39.2)(typescript@5.6.3))(eslint-plugin-n@17.23.1(eslint@9.39.2)(typescript@5.6.3))(eslint-plugin-vue@9.33.0(eslint@9.39.2))(eslint@9.39.2)(globals@15.15.0)(typescript-eslint@8.49.0(eslint@9.39.2)(typescript@5.6.3))(typescript@5.6.3)
+        specifier: 'catalog:'
+        version: 1.2.0(@eslint/js@9.39.2)(@stylistic/eslint-plugin@2.13.0(eslint@9.39.2)(typescript@5.6.3))(eslint-plugin-n@17.23.1(eslint@9.39.2)(typescript@5.6.3))(eslint-plugin-vue@9.33.0(eslint@9.39.2))(eslint@9.39.2)(globals@15.15.0)(typescript-eslint@8.49.0(eslint@9.39.2)(typescript@5.6.3))(typescript@5.6.3)
       '@types/wicg-file-system-access':
         specifier: 'catalog:'
         version: 2023.10.7
@@ -266,14 +260,14 @@ importers:
         version: 5.6.6
     devDependencies:
       '@milaboratories/ts-builder':
-        specifier: file:/Users/dbolotin/mi/core/platforma/tools/ts-builder/package.tgz
-        version: file:../../core/platforma/tools/ts-builder/package.tgz(@microsoft/api-extractor@7.55.2(@types/node@25.0.0))(@types/node@25.0.0)(postcss@8.5.6)(tslib@2.8.1)(yaml@2.8.2)
+        specifier: 'catalog:'
+        version: 1.2.0(@microsoft/api-extractor@7.55.2(@types/node@25.0.0))(@types/node@25.0.0)(postcss@8.5.6)(tslib@2.8.1)(yaml@2.8.2)
       '@milaboratories/ts-configs':
-        specifier: file:/Users/dbolotin/mi/core/platforma/tools/ts-configs/package.tgz
-        version: file:../../core/platforma/tools/ts-configs/package.tgz
+        specifier: 'catalog:'
+        version: 1.2.0
       '@platforma-sdk/eslint-config':
-        specifier: file:/Users/dbolotin/mi/core/platforma/sdk/eslint-config/package.tgz
-        version: file:../../core/platforma/sdk/eslint-config/package.tgz(@eslint/js@9.39.2)(@stylistic/eslint-plugin@2.13.0(eslint@9.39.2)(typescript@5.6.3))(eslint-plugin-n@17.23.1(eslint@9.39.2)(typescript@5.6.3))(eslint-plugin-vue@9.33.0(eslint@9.39.2))(eslint@9.39.2)(globals@15.15.0)(typescript-eslint@8.49.0(eslint@9.39.2)(typescript@5.6.3))(typescript@5.6.3)
+        specifier: 'catalog:'
+        version: 1.2.0(@eslint/js@9.39.2)(@stylistic/eslint-plugin@2.13.0(eslint@9.39.2)(typescript@5.6.3))(eslint-plugin-n@17.23.1(eslint@9.39.2)(typescript@5.6.3))(eslint-plugin-vue@9.33.0(eslint@9.39.2))(eslint@9.39.2)(globals@15.15.0)(typescript-eslint@8.49.0(eslint@9.39.2)(typescript@5.6.3))(typescript@5.6.3)
       '@platforma-sdk/model':
         specifier: 'catalog:'
         version: 1.47.5
@@ -282,7 +276,7 @@ importers:
         version: 2.4.1
       '@platforma-sdk/test':
         specifier: 'catalog:'
-        version: 1.47.6(@types/node@25.0.0)(yaml@2.8.2)
+        version: 1.48.1(@types/node@25.0.0)(yaml@2.8.2)
       eslint:
         specifier: 'catalog:'
         version: 9.39.2
@@ -987,9 +981,10 @@ packages:
   '@milaboratories/biowasm-tools@2.0.0':
     resolution: {integrity: sha512-XCfOea1JbsHhZJ7LvPTrb733bFEIbc02bvG69vTFolqeRv9AWKODxessjOURByGQ0bAj9cAzo21QXlFxzSqAtA==}
 
-  '@milaboratories/build-configs@file:../../core/platforma/tools/build-configs/package.tgz':
-    resolution: {integrity: sha512-gsFqgr+OV2sqEa2WfZ0c9phizb0NOkVIEw1AWSAqnpCJ1elJv3JFwgPovlGIDOtKKktx2g5D8fYCsWWtV9QYmg==, tarball: file:../../core/platforma/tools/build-configs/package.tgz}
-    version: 1.1.1
+  '@milaboratories/build-configs@1.2.0':
+    resolution: {integrity: sha512-Mi3PyfnTBieGCI0ub8AsBDE+rMzWyNkmZZSxPtGu2qGE/m8uGi3wI000C/Qi68CK5Kp5LBg6dyi9AUjBJ3jPEA==}
+    deprecated:
+      tsconfig_lib_bundled.json: Use @milaboratories/ts-configs instead
 
   '@milaboratories/computable@2.7.4':
     resolution: {integrity: sha512-xqm4dhODYfk6e15ka4dVDWwOJLKK0+lsDN3Cwy/S6pYgw/X1OUN0nCRgsKmU+Qt2ZtBx+tTJv4/X2JbAe08Jiw==}
@@ -1021,8 +1016,8 @@ packages:
     resolution: {integrity: sha512-xUST88NpCYd9vX/igMuOtybwUnF5JyFm4kvueLULqdFLqPqpLBs8o0qdiAojxDW0d2o2c5UZMxZT4k2J4NoZyw==}
     engines: {node: '>=22.19.0'}
 
-  '@milaboratories/pl-drivers@1.11.26':
-    resolution: {integrity: sha512-H3Hl0XFZUWUEHpxpW4POqaDJoYjYB+VIhe5I5X5i9a5CveZWx7RKx68j5QqEuunxOdKOAnY6lNLCubpeYw66aw==}
+  '@milaboratories/pl-drivers@1.11.27':
+    resolution: {integrity: sha512-DtYmXqolQuqQpePjElwpU92Gc15XDCn2F6KpwQCUchf2Whhofw/vAZTQ9P6NeqPWuXqZcoenJsoGFdh6cMVMFA==}
     engines: {node: '>=22'}
 
   '@milaboratories/pl-error-like@1.12.5':
@@ -1034,8 +1029,8 @@ packages:
   '@milaboratories/pl-http@1.2.0':
     resolution: {integrity: sha512-5iRxug4TjE88+XoMU5LVcXe1PEmXYfZI3WxJGrayzYQFM/9GiKuwcUsQ0kDlFmw+s6UlEAzgC9+MsJFKvU7C5Q==}
 
-  '@milaboratories/pl-middle-layer@1.43.87':
-    resolution: {integrity: sha512-hKzhtaD9D8Zssc89jXKcccC/KBBQBFAvdcQOrz3Ju7HKRJ6WxgD0aCv8G+ta4Kr+CNUWAmsuTX+Zn5Dmic52IQ==}
+  '@milaboratories/pl-middle-layer@1.43.88':
+    resolution: {integrity: sha512-G+VnQ92nls3UtBFPqrj/hGfoHC4+6ut9MawYvWGU8EtANAXJ7PAQNACNf3xGgN0TvEiRKrqnV5d9V6BiZAzRTA==}
     engines: {node: '>=22.19.0'}
 
   '@milaboratories/pl-model-backend@1.1.30':
@@ -1077,14 +1072,12 @@ packages:
     os: [darwin, linux, win32]
     hasBin: true
 
-  '@milaboratories/ts-builder@file:../../core/platforma/tools/ts-builder/package.tgz':
-    resolution: {integrity: sha512-sCEJ3R/tFBBzzYM/Hs+GUBhETCb0zHiJrH8NvrxBJKZ34zWo8pLKrUcQ04x890nbekSRqIm8KRR2b64SM56qwg==, tarball: file:../../core/platforma/tools/ts-builder/package.tgz}
-    version: 1.1.1
+  '@milaboratories/ts-builder@1.2.0':
+    resolution: {integrity: sha512-d8HJ6oA9TkVvZeHp0SfS40z4/eWKNVAmq+jS/kb3Ml/8eMSU/j7sHkjlvDlY4oFKDzpSZsfgjFcH8B778Ub0SQ==}
     hasBin: true
 
-  '@milaboratories/ts-configs@file:../../core/platforma/tools/ts-configs/package.tgz':
-    resolution: {integrity: sha512-wTgah4aX3pJ8a68iiVY2w/0UKWtsmsiX0y6zr/WElluvjAZTNEpDm3eYBKmW3HbOi8b0INu85AU/sH5H8C/jVA==, tarball: file:../../core/platforma/tools/ts-configs/package.tgz}
-    version: 1.1.0
+  '@milaboratories/ts-configs@1.2.0':
+    resolution: {integrity: sha512-BSvXzyr8bkoEqWLrqT9MsbtVKCmknFsJylf+tlFyE5UcItiZYjM25AaPV6tqNTZWsUzPXwr3lP+kT3NO0WinEA==}
 
   '@milaboratories/ts-helpers-oclif@1.1.33':
     resolution: {integrity: sha512-1200VRTW3L5GNvjAiBXrsbLnvMGycuiyXMa6WyY154wk8D3oERaOCpzUDNtTDIf+QnXmJNrc9GSlI4940eCl7A==}
@@ -1203,9 +1196,8 @@ packages:
     resolution: {integrity: sha512-cef5ysA011ub5bofbWQJ3EM9rZ7A4ixGMKhFIsF2VNwYrCu5XRHsayA6vDeFOBjX4Jnq9D0QztW0JUxXD73bpw==}
     hasBin: true
 
-  '@platforma-sdk/eslint-config@file:../../core/platforma/sdk/eslint-config/package.tgz':
-    resolution: {integrity: sha512-rJjKD1WLlrCSVR7o5l0kJiOEo29yEIOGwFhZ8Kq+pGvZcFoOwYKBvjNw9EPiEb6U2AyVucI01Ll3KvI5PpsFgQ==, tarball: file:../../core/platforma/sdk/eslint-config/package.tgz}
-    version: 1.1.0
+  '@platforma-sdk/eslint-config@1.2.0':
+    resolution: {integrity: sha512-ZJJWi6NBvvTtdjSrcds8q/bXQMVLE8JouLz7OwSiEN6m4UfRe14oMSnnYHxpVr7V5aIdRoORPb929XzS5MIw2A==}
     peerDependencies:
       '@eslint/js': ^9.16.0
       '@stylistic/eslint-plugin': ^2.11.0
@@ -1227,8 +1219,8 @@ packages:
     engines: {node: '>=22'}
     hasBin: true
 
-  '@platforma-sdk/test@1.47.6':
-    resolution: {integrity: sha512-YL5Vy048d87ot8N5S3Nv7znatye5CVWN8HDzgkcSp/nJrmoRCtipEwCx3CfS4JOgE3IWwp+nuY7zhK5IpnEevw==}
+  '@platforma-sdk/test@1.48.1':
+    resolution: {integrity: sha512-WG+DOJ6cDiXn1KSs/oryXIWoZQKMG4ZFOnYV+TfxaX6hkXpMVo1SD97zhmANtAlkbGwUGm1FTT6Rhs1J/OHwng==}
 
   '@platforma-sdk/ui-vue@1.48.0':
     resolution: {integrity: sha512-agLRKsG1f1pLP9Hx2SytsLHXNlCsDhXCWNgzhyXAwIF2FTXafSGgoWJ0Vy/HdwGwazX7t1x+qNuTObBXAkYPjQ==}
@@ -5185,7 +5177,7 @@ snapshots:
 
   '@milaboratories/biowasm-tools@2.0.0': {}
 
-  '@milaboratories/build-configs@file:../../core/platforma/tools/build-configs/package.tgz(@microsoft/api-extractor@7.55.2(@types/node@25.0.0))(@types/node@25.0.0)(postcss@8.5.6)(tslib@2.8.1)(yaml@2.8.2)':
+  '@milaboratories/build-configs@1.2.0(@microsoft/api-extractor@7.55.2(@types/node@25.0.0))(@types/node@25.0.0)(postcss@8.5.6)(tslib@2.8.1)(yaml@2.8.2)':
     dependencies:
       '@rollup/plugin-commonjs': 28.0.9(rollup@4.53.3)
       '@rollup/plugin-json': 6.1.0(rollup@4.53.3)
@@ -5308,7 +5300,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@milaboratories/pl-drivers@1.11.26':
+  '@milaboratories/pl-drivers@1.11.27':
     dependencies:
       '@grpc/grpc-js': 1.13.4
       '@milaboratories/computable': 2.7.4
@@ -5355,7 +5347,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@milaboratories/pl-middle-layer@1.43.87':
+  '@milaboratories/pl-middle-layer@1.43.88':
     dependencies:
       '@milaboratories/computable': 2.7.4
       '@milaboratories/pf-driver': 1.0.10
@@ -5363,7 +5355,7 @@ snapshots:
       '@milaboratories/pl-client': 2.16.13
       '@milaboratories/pl-config': 1.7.9
       '@milaboratories/pl-deployments': 2.14.0
-      '@milaboratories/pl-drivers': 1.11.26
+      '@milaboratories/pl-drivers': 1.11.27
       '@milaboratories/pl-errors': 1.1.45
       '@milaboratories/pl-http': 1.2.0
       '@milaboratories/pl-model-backend': 1.1.30
@@ -5459,10 +5451,10 @@ snapshots:
 
   '@milaboratories/tengo-tester@1.6.4': {}
 
-  '@milaboratories/ts-builder@file:../../core/platforma/tools/ts-builder/package.tgz(@microsoft/api-extractor@7.55.2(@types/node@25.0.0))(@types/node@25.0.0)(postcss@8.5.6)(tslib@2.8.1)(yaml@2.8.2)':
+  '@milaboratories/ts-builder@1.2.0(@microsoft/api-extractor@7.55.2(@types/node@25.0.0))(@types/node@25.0.0)(postcss@8.5.6)(tslib@2.8.1)(yaml@2.8.2)':
     dependencies:
-      '@milaboratories/build-configs': file:../../core/platforma/tools/build-configs/package.tgz(@microsoft/api-extractor@7.55.2(@types/node@25.0.0))(@types/node@25.0.0)(postcss@8.5.6)(tslib@2.8.1)(yaml@2.8.2)
-      '@milaboratories/ts-configs': file:../../core/platforma/tools/ts-configs/package.tgz
+      '@milaboratories/build-configs': 1.2.0(@microsoft/api-extractor@7.55.2(@types/node@25.0.0))(@types/node@25.0.0)(postcss@8.5.6)(tslib@2.8.1)(yaml@2.8.2)
+      '@milaboratories/ts-configs': 1.2.0
       commander: 12.1.0
       rollup: 4.53.3
       rollup-plugin-copy: 3.5.0
@@ -5487,7 +5479,7 @@ snapshots:
       - tsx
       - yaml
 
-  '@milaboratories/ts-configs@file:../../core/platforma/tools/ts-configs/package.tgz': {}
+  '@milaboratories/ts-configs@1.2.0': {}
 
   '@milaboratories/ts-helpers-oclif@1.1.33':
     dependencies:
@@ -5677,7 +5669,7 @@ snapshots:
     dependencies:
       yaml: 2.8.2
 
-  '@platforma-sdk/eslint-config@file:../../core/platforma/sdk/eslint-config/package.tgz(@eslint/js@9.39.2)(@stylistic/eslint-plugin@2.13.0(eslint@9.39.2)(typescript@5.6.3))(eslint-plugin-n@17.23.1(eslint@9.39.2)(typescript@5.6.3))(eslint-plugin-vue@9.33.0(eslint@9.39.2))(eslint@9.39.2)(globals@15.15.0)(typescript-eslint@8.49.0(eslint@9.39.2)(typescript@5.6.3))(typescript@5.6.3)':
+  '@platforma-sdk/eslint-config@1.2.0(@eslint/js@9.39.2)(@stylistic/eslint-plugin@2.13.0(eslint@9.39.2)(typescript@5.6.3))(eslint-plugin-n@17.23.1(eslint@9.39.2)(typescript@5.6.3))(eslint-plugin-vue@9.33.0(eslint@9.39.2))(eslint@9.39.2)(globals@15.15.0)(typescript-eslint@8.49.0(eslint@9.39.2)(typescript@5.6.3))(typescript@5.6.3)':
     dependencies:
       '@eslint/js': 9.39.2
       '@stylistic/eslint-plugin': 2.13.0(eslint@9.39.2)(typescript@5.6.3)
@@ -5720,11 +5712,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@platforma-sdk/test@1.47.6(@types/node@25.0.0)(yaml@2.8.2)':
+  '@platforma-sdk/test@1.48.1(@types/node@25.0.0)(yaml@2.8.2)':
     dependencies:
       '@milaboratories/computable': 2.7.4
       '@milaboratories/pl-client': 2.16.13
-      '@milaboratories/pl-middle-layer': 1.43.87
+      '@milaboratories/pl-middle-layer': 1.43.88
       '@milaboratories/pl-tree': 1.8.20
       '@milaboratories/ts-helpers': 1.5.4
       '@platforma-sdk/model': 1.47.5

@@ -17,9 +17,7 @@
     "@changesets/cli": "catalog:",
     "@platforma-sdk/block-tools": "catalog:",
     "turbo": "catalog:",
-    "typescript": "catalog:",
-    "vitest": "catalog:",
-    "vite": "catalog:"
+    "typescript": "catalog:"
   },
   "packageManager": "pnpm@9.12.0",
   "--": {
@@ -28,7 +26,7 @@
       "@platforma-sdk/workflow-tengo": "file:/Users/popoffvg/Documents/git/mil/platforma/sdk/workflow-tengo/package.tgz"
     }
   },
-  "pnpm": {
+  "//pnpm": {
     "overrides": {
       "@milaboratories/build-configs": "file:/Users/dbolotin/mi/core/platforma/tools/build-configs/package.tgz",
       "@milaboratories/ts-builder": "file:/Users/dbolotin/mi/core/platforma/tools/ts-builder/package.tgz",
