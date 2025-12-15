@@ -4,7 +4,9 @@
   "version": "1.9.5",
   "description": "Block tests",
   "scripts": {
-    "test": "vitest"
+    "test": "vitest",
+    "lint": "eslint .",
+    "type-check": "ts-builder types --target block-test"
   },
   "files": [],
   "keywords": [],
@@ -16,8 +18,12 @@
     "@platforma-sdk/model": "catalog:"
   },
   "devDependencies": {
+    "@milaboratories/ts-builder": "catalog:",
+    "@milaboratories/ts-configs": "catalog:",
+    "@platforma-sdk/eslint-config": "catalog:",
     "@platforma-sdk/test": "catalog:",
-    "vitest": "catalog:",
-    "typescript": "catalog:"
+    "eslint": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

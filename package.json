@@ -1,29 +1,39 @@
 {
-  "name": "@platforma-open/milaboratories.mixcr-clonotyping-2",
   "scripts": {
-    "pretty": "prettier --write \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json,vue}\"",
     "build": "turbo run build",
-    "build:dev": "PL_PKG_DEV=local turbo run build",
-    "test": "PL_PKG_DEV=local turbo run test --concurrency 1",
-    "test:dry-run": "PL_PKG_DEV=local turbo run test --dry-run=json",
+    "build:dev": "env PL_PKG_DEV=local turbo run build",
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check",
+    "test": "env PL_PKG_DEV=local turbo run test --concurrency 1 --env-mode=loose",
+    "test:dry-run": "env PL_PKG_DEV=local turbo run test --dry-run=json",
     "mark-stable": "turbo run mark-stable",
     "do-pack": "turbo run do-pack",
     "watch": "turbo watch build",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "update-sdk": "node scripts/update-sdk-packages.js"
+    "update-sdk": "block-tools update-deps"
   },
   "devDependencies": {
-    "typescript": "catalog:",
-    "turbo": "catalog:",
     "@changesets/cli": "catalog:",
-    "js-yaml": "catalog:"
+    "@platforma-sdk/block-tools": "catalog:",
+    "turbo": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:",
+    "vite": "catalog:"
   },
   "packageManager": "pnpm@9.12.0",
   "--": {
     "overrides": {
       "@platforma-sdk/package-builder": "file:/Users/popoffvg/Documents/git/mil/platforma/tools/package-builder/package.tgz",
       "@platforma-sdk/workflow-tengo": "file:/Users/popoffvg/Documents/git/mil/platforma/sdk/workflow-tengo/package.tgz"
+    }
+  },
+  "pnpm": {
+    "overrides": {
+      "@milaboratories/build-configs": "file:/Users/dbolotin/mi/core/platforma/tools/build-configs/package.tgz",
+      "@milaboratories/ts-builder": "file:/Users/dbolotin/mi/core/platforma/tools/ts-builder/package.tgz",
+      "@milaboratories/ts-configs": "file:/Users/dbolotin/mi/core/platforma/tools/ts-configs/package.tgz",
+      "@platforma-sdk/eslint-config": "file:/Users/dbolotin/mi/core/platforma/sdk/eslint-config/package.tgz"
     }
   },
   "///": {
