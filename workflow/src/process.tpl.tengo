@@ -457,12 +457,35 @@ self.body(func(inputs) {
 		} ]
 
 		if !isSingleCell {
+			// Modify column visibility for TCR chains
+			isTCRChain := text.has_prefix(chain, "TCR")
+			columnsForAggregation := columnsSpecPerClonotypeNoAggregates + columnsSpecPerClonotypeAggregates
+			if isTCRChain {
+				visibilitySettings := {
+					"bestCGene":      "optional",
+					"bestCHit":       "optional",
+					"isotypePrimary": "hidden"
+				}
+				columnsForAggregation = slices.map(columnsForAggregation, func(col) {
+					visibility := visibilitySettings[col.column]
+					if !is_undefined(visibility) {
+						return maps.deepMerge(col, {
+							spec: {
+								annotations: maps.merge(col.spec.annotations, {
+									"pl7.app/table/visibility": visibility
+								})
+							}
+						})
+					}
+					return col
+				})
+			}
 			aggregationOutputs += [ {
 				type: "Xsv",
 				xsvType: "tsv",
 				settings: {
 					axes: [ axisByClonotypeKeyGen(chain) ],
-					columns: columnsSpecPerClonotypeNoAggregates + columnsSpecPerClonotypeAggregates,
+					columns: columnsForAggregation,
 					storageFormat: "Parquet",
 					partitionKeyLength: 0
 				},
@@ -588,8 +611,33 @@ self.body(func(inputs) {
 			for chainIdx in [0, 1] {
 				// "A" chain is always the one that is more diverse
 				chainLetterU := ["A", "B"][chainIdx]
-				chainNameU := chainInfos[receptorInfo.chains[chainIdx]].shortName
+				chain := receptorInfo.chains[chainIdx]
+				chainNameU := chainInfos[chain].shortName
 				chainNameL := text.to_lower(chainNameU)
+
+				// Modify column visibility for TCR chains
+				isTCRChain := text.has_prefix(chain, "TCR")
+				columnsForSingleCell := columnsSpecPerClonotypeNoAggregates
+				if isTCRChain {
+					visibilitySettings := {
+						"bestCGene":      "optional",
+						"bestCHit":       "optional",
+						"isotypePrimary": "hidden"
+					}
+					columnsForSingleCell = slices.map(columnsForSingleCell, func(col) {
+					visibility := visibilitySettings[col.column]
+					if !is_undefined(visibility) {
+						return maps.deepMerge(col, {
+							spec: {
+								annotations: maps.merge(col.spec.annotations, {
+									"pl7.app/table/visibility": visibility
+								})
+							}
+						})
+					}
+					return col
+					})
+				}
 
 				for isPrimary in [true, false] {
 					pPrefixU := isPrimary ? "Primary" : "Secondary"
@@ -630,7 +678,7 @@ self.body(func(inputs) {
 						xsvType: "tsv",
 						settings: {
 							axes: [ axisByScClonotypeKeyGen(receptor) ],
-							columns: transformSpecs(isPrimary ? columnsSpecPerClonotypeNoAggregates : columnsSpecPerClonotypeSecondary, {
+							columns: transformSpecs(isPrimary ? columnsForSingleCell : columnsSpecPerClonotypeSecondary, {
 								spec: {
 									domain: {
 										"pl7.app/vdj/scClonotypeChain": chainLetterU,
