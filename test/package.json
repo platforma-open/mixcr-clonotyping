@@ -6,7 +6,7 @@
   "scripts": {
     "test": "vitest",
     "lint": "eslint .",
-    "type-check": "ts-builder types --target node"
+    "type-check": "ts-builder types --target block-test"
   },
   "files": [],
   "keywords": [],
@@ -20,6 +20,10 @@
   "devDependencies": {
     "@milaboratories/ts-builder": "catalog:",
     "@milaboratories/ts-configs": "catalog:",
-    "@platforma-sdk/test": "catalog:"
+    "@platforma-sdk/eslint-config": "catalog:",
+    "@platforma-sdk/test": "catalog:",
+    "eslint": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

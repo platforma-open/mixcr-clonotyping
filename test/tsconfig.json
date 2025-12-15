@@ -1,8 +1,8 @@
 {
-  "extends": "@milaboratories/ts-configs/blocks/tsconfig.test.json",
+  "extends": "@milaboratories/ts-configs/block/test",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": "./src"
   },
   "include": [
     "src/**/*"
@@ -10,5 +10,5 @@
   "exclude": [
     "node_modules",
     "dist"
-  ],
+  ]
 }

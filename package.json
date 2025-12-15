@@ -28,6 +28,14 @@
       "@platforma-sdk/workflow-tengo": "file:/Users/popoffvg/Documents/git/mil/platforma/sdk/workflow-tengo/package.tgz"
     }
   },
+  "pnpm": {
+    "overrides": {
+      "@milaboratories/build-configs": "file:/Users/dbolotin/mi/core/platforma/tools/build-configs/package.tgz",
+      "@milaboratories/ts-builder": "file:/Users/dbolotin/mi/core/platforma/tools/ts-builder/package.tgz",
+      "@milaboratories/ts-configs": "file:/Users/dbolotin/mi/core/platforma/tools/ts-configs/package.tgz",
+      "@platforma-sdk/eslint-config": "file:/Users/dbolotin/mi/core/platforma/sdk/eslint-config/package.tgz"
+    }
+  },
   "///": {
     "pnpm": {
       "overrides": {

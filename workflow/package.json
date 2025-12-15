@@ -6,6 +6,8 @@
     "build": "rm -rf dist && pl-tengo check && pl-tengo build",
     "format": "/usr/bin/env emacs --script ./format.el",
     "test": "vitest",
+    "lint": "eslint .",
+    "type-check": "ts-builder types --target block-test",
     "do-pack": "rm -f *.tgz && pnpm pack && mv *.tgz package.tgz"
   },
   "dependencies": {
@@ -13,10 +15,14 @@
     "@platforma-open/milaboratories.software-mixcr": "catalog:"
   },
   "devDependencies": {
+    "@milaboratories/ts-builder": "catalog:",
     "@milaboratories/ts-configs": "catalog:",
+    "@platforma-sdk/eslint-config": "catalog:",
     "@platforma-sdk/tengo-builder": "catalog:",
+    "@platforma-sdk/model": "catalog:",
     "@platforma-sdk/test": "catalog:",
-    "vitest": "catalog:",
-    "typescript": "catalog:"
+    "eslint": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }
