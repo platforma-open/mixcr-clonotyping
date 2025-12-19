@@ -368,6 +368,31 @@ self.body(func(inputs) {
 				cpu: 2,
 				name: "byCloneKeyBySample",
 				path: ["tsv"]
+			}, {
+				type: "Xsv",
+				xsvType: "tsv",
+				settings: {
+					axes: [ axisByClonotypeKeyGen(chain) ],
+					columns: [{
+						column: "link",
+						spec: {
+							name: "pl7.app/vdj/link",
+							valueType: "Int",
+							annotations: {
+								"pl7.app/isLinkerColumn": "true",
+								"pl7.app/label": "Sample to clonotype link",
+								"pl7.app/table/visibility": "hidden",
+								"pl7.app/table/orderPriority": "1"
+							}
+						}
+					}],
+					storageFormat: "Parquet",
+					partitionKeyLength: 0
+				},
+				mem: "16GiB",
+				cpu: 2,
+				name: "linker",
+				path: ["linker"]
 			} ]
 		}
 
@@ -551,6 +576,7 @@ self.body(func(inputs) {
 		} else {
 			// only adding data outputs if we are in bulk mode
 			exportResults.addXsvOutputToBuilder(clonotypes, "byCloneKeyBySample", "byCloneKeyBySample/" + chain + "/")
+			exportResults.addXsvOutputToBuilder(clonotypes, "linker", "linker/" + chain + "/")
 			aggregateByCloneKey.addXsvOutputToBuilder(clonotypes, "byCloneKey", "byCloneKey/" + chain + "/")
 		}
 	}
@@ -587,6 +613,34 @@ self.body(func(inputs) {
 				cpu: 2,
 				name: "abundanceTable",
 				path: ["abundanceTsv"]
+			}, {
+				type: "Xsv",
+				xsvType: "tsv",
+				settings: {
+					axes: [ {
+						column: "sampleId",
+						spec: sampleIdAxisSpec
+					}, axisByScClonotypeKeyGen(receptor) ],
+					columns: [{
+						column: "link",
+						spec: {
+							name: "pl7.app/vdj/link",
+							valueType: "Int",
+							annotations: {
+								"pl7.app/isLinkerColumn": "true",
+								"pl7.app/label": "Sample to clonotype link",
+								"pl7.app/table/visibility": "hidden",
+								"pl7.app/table/orderPriority": "1"
+							}
+						}
+					}],
+					storageFormat: "Parquet",
+					partitionKeyLength: 1
+				},
+				mem: "16GiB",
+				cpu: 2,
+				name: "linkerTable",
+				path: ["linkerTsv"]
 			}, {
 				type: "Xsv",
 				xsvType: "tsv",
@@ -752,6 +806,18 @@ self.body(func(inputs) {
 				)
 				resultsToCache["clonotypeProperties/abundance/" + receptor + "/" + columnName] = anonymizedData
 			}
+
+			// Add linkerTable for single-cell
+			for columnName in singleCellResult.listXsvColumns("linkerTable") {
+				anonymizedData := singleCellResult.outputData("linkerTable", columnName)
+				clonotypes.add(
+					"linker/" + receptor + "/" + columnName,
+					singleCellResult.outputSpec("linkerTable", columnName),
+					anonymize.deanonymizePKeys(anonymizedData, 0, [0], anonymizationResult.mapping)
+				)
+				resultsToCache["linker/" + receptor + "/" + columnName] = anonymizedData
+			}
+
 			singleCellResult.addXsvOutputToBuilder(clonotypes, "aggregates", "clonotypeProperties/aggregates/" + receptor + "/")
 
 			singleCellResult.addXsvOutputToBuilder(clonotypes, "propertiesAPrimary", "clonotypeProperties/" + receptor + "/aPrimary/")

@@ -12,7 +12,7 @@ clonotypeLabel := import(":clonotype-label")
 
 json := import("json")
 
-self.defineOutputs("tsv", "tsvForSingleCell")
+self.defineOutputs("tsv", "tsvForSingleCell", "linker")
 
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
 
@@ -149,6 +149,31 @@ self.body(func(inputs) {
 	ptablerResultMain := wfMain.run()
 	processedTsv := ptablerResultMain.getFile("output.tsv")
 	result.tsv = processedTsv
+
+	// Create linker TSV with just clonotypeKey and link columns for bulk data
+	wfLinker := pt.workflow().
+		inMediumQueue().
+		mem(ptMemGB).
+		cpu(2)
+	
+	frameLinkerMap := {
+		file: processedTsv,
+		xsvType: "tsv",
+		schema: [ { column: "clonotypeKey", type: "String" } ]
+	}
+	dfLinker := wfLinker.frame(frameLinkerMap, { inferSchema: false, id: "linker_table" })
+	
+	// Add link column with constant value 1
+	dfLinker.addColumns(
+		pt.lit(1).alias("link")
+	)
+	
+	// Select only clonotypeKey and link columns
+	dfLinker.select(pt.col("clonotypeKey"), pt.col("link"))
+	
+	dfLinker.save("linker.tsv")
+	ptablerResultLinker := wfLinker.run()
+	result.linker = ptablerResultLinker.getFile("linker.tsv")
 
 	if !is_undefined(cellTagColumns) {
 		mixcrForSingleCell := createExport(func(mixcrCmdBuilder) {
