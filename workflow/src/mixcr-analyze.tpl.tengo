@@ -143,14 +143,16 @@ self.body(func(inputs) {
 	if !is_undefined(assembleClonesBy) {
 		mixcrCmdBuilder.arg("--assemble-clonotypes-by").arg(assembleClonesBy)
 	}
-	// High diversity library tuning
-	highDiversityLibrary := params.highDiversityLibrary
-	if !is_undefined(highDiversityLibrary) && highDiversityLibrary {
+	// Error correction mode
+	errorCorrectionMode := params.errorCorrectionMode
+	if errorCorrectionMode == "relaxed" {
 		mixcrCmdBuilder.
 			arg("-Massemble.cloneAssemblerParameters.minimalQuality=20").
 			arg("-Massemble.cloneAssemblerParameters.badQualityThreshold=10").
 			arg("-Massemble.cloneAssemblerParameters.cloneClusteringParameters.searchParameters=oneMismatchOrIndel").
 			arg("-Massemble.cloneAssemblerParameters.cloneClusteringParameters.searchDepth=1")
+	} else if errorCorrectionMode == "off" {
+		mixcrCmdBuilder.arg("-Massemble.cloneAssemblerParameters.cloneClusteringParameters=null")
 	}
 
 	inputMap := inputData.inputs()

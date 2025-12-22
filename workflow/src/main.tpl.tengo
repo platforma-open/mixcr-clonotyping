@@ -122,16 +122,16 @@ wf.body(func(args) {
 			limitInput: limitInput,
 			perProcessMemGB: perProcessMemGB,
 			perProcessCPUs: perProcessCPUs,
-				highDiversityLibrary: args.highDiversityLibrary,
+			errorCorrectionMode: args.errorCorrectionMode,
 			blockId: blockId,
 			libraryId: libraryId,
 			presetCommonName: args.presetCommonName,
-				isLibraryFileGzipped: isLibraryFileGzipped,
-				leftAlignmentMode: args.leftAlignmentMode,
-				rightAlignmentMode: args.rightAlignmentMode,
-				materialType: args.materialType,
-				tagPattern: args.tagPattern,
-				assembleClonesBy: args.assembleClonesBy
+			isLibraryFileGzipped: isLibraryFileGzipped,
+			leftAlignmentMode: args.leftAlignmentMode,
+			rightAlignmentMode: args.rightAlignmentMode,
+			materialType: args.materialType,
+			tagPattern: args.tagPattern,
+			assembleClonesBy: args.assembleClonesBy
 		})
 	})
 

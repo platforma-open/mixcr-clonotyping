@@ -273,7 +273,7 @@ self.body(func(inputs) {
 					materialType: params.materialType,
 					tagPattern: params.tagPattern,
 					assembleClonesBy: params.assembleClonesBy,
-					highDiversityLibrary: params.highDiversityLibrary
+					errorCorrectionMode: params.errorCorrectionMode
 				},
 				library: library,
 				presetContent: presetContent
