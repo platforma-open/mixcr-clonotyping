@@ -17,7 +17,7 @@ math := import("math")
 
 self.defineOutputs("abundanceTsv", "clonotypeTsv",
 	"propertiesAPrimaryTsv", "propertiesASecondaryTsv", "propertiesBPrimaryTsv", "propertiesBSecondaryTsv",
-	"cellsTsv")
+	"cellsTsv", "linkerTsv")
 
 ptablerSw := assets.importSoftware("@platforma-open/milaboratories.software-ptabler:main")
 
@@ -212,10 +212,19 @@ self.body(func(inputs) {
 
 	cellCountsWithFractionDf.save("abundance.tsv")
 
+	// Create linker dataframe from cellCountsWithFractionDf with just sampleId, scClonotypeKey, and link=1
+	linkerDf := cellCountsWithFractionDf.withColumns(
+		pt.lit(1).alias("link")
+	).select(
+		pt.col("sampleId"), pt.col("scClonotypeKey"), pt.col("link")
+	)
+	linkerDf.save("linker.tsv")
+
 	cellGroupingRunResult := cellGroupingWf.run()
 
 	clonotypeTsv := cellGroupingRunResult.getFile("clonotype.tsv")
 	abundanceTsv := cellGroupingRunResult.getFile("abundance.tsv")
+	linkerTsv := cellGroupingRunResult.getFile("linker.tsv")
 	cellsTsv := cellGroupingRunResult.getFile("cells.tsv")
 
 	//
@@ -312,6 +321,9 @@ self.body(func(inputs) {
 
 		// used to build cell <-> clonotype linker column
 		cellsTsv: cellsTsv,
+
+		// linker table with sampleId, scClonotypeKey, and link columns
+		linkerTsv: linkerTsv,
 
 		// must have scClonotypeKey columns
 		propertiesAPrimaryTsv: outputProcessingRunResult.getFile(chainMappings[0].finalOutFile),

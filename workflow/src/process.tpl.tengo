@@ -273,7 +273,7 @@ self.body(func(inputs) {
 					materialType: params.materialType,
 					tagPattern: params.tagPattern,
 					assembleClonesBy: params.assembleClonesBy,
-					highDiversityLibrary: params.highDiversityLibrary
+					errorCorrectionMode: params.errorCorrectionMode
 				},
 				library: library,
 				presetContent: presetContent
@@ -368,6 +368,31 @@ self.body(func(inputs) {
 				cpu: 2,
 				name: "byCloneKeyBySample",
 				path: ["tsv"]
+			}, {
+				type: "Xsv",
+				xsvType: "tsv",
+				settings: {
+					axes: [ axisByClonotypeKeyGen(chain) ],
+					columns: [{
+						column: "link",
+						spec: {
+							name: "pl7.app/vdj/link",
+							valueType: "Int",
+							annotations: {
+								"pl7.app/isLinkerColumn": "true",
+								"pl7.app/label": "Sample to clonotype link",
+								"pl7.app/table/visibility": "hidden",
+								"pl7.app/table/orderPriority": "1"
+							}
+						}
+					}],
+					storageFormat: "Parquet",
+					partitionKeyLength: 0
+				},
+				mem: "16GiB",
+				cpu: 2,
+				name: "linker",
+				path: ["linker"]
 			} ]
 		}
 
@@ -551,6 +576,7 @@ self.body(func(inputs) {
 		} else {
 			// only adding data outputs if we are in bulk mode
 			exportResults.addXsvOutputToBuilder(clonotypes, "byCloneKeyBySample", "byCloneKeyBySample/" + chain + "/")
+			exportResults.addXsvOutputToBuilder(clonotypes, "linker", "linker/" + chain + "/")
 			aggregateByCloneKey.addXsvOutputToBuilder(clonotypes, "byCloneKey", "byCloneKey/" + chain + "/")
 		}
 	}
@@ -587,6 +613,34 @@ self.body(func(inputs) {
 				cpu: 2,
 				name: "abundanceTable",
 				path: ["abundanceTsv"]
+			}, {
+				type: "Xsv",
+				xsvType: "tsv",
+				settings: {
+					axes: [ {
+						column: "sampleId",
+						spec: sampleIdAxisSpec
+					}, axisByScClonotypeKeyGen(receptor) ],
+					columns: [{
+						column: "link",
+						spec: {
+							name: "pl7.app/vdj/link",
+							valueType: "Int",
+							annotations: {
+								"pl7.app/isLinkerColumn": "true",
+								"pl7.app/label": "Sample to clonotype link",
+								"pl7.app/table/visibility": "hidden",
+								"pl7.app/table/orderPriority": "1"
+							}
+						}
+					}],
+					storageFormat: "Parquet",
+					partitionKeyLength: 1
+				},
+				mem: "16GiB",
+				cpu: 2,
+				name: "linkerTable",
+				path: ["linkerTsv"]
 			}, {
 				type: "Xsv",
 				xsvType: "tsv",
@@ -742,16 +796,26 @@ self.body(func(inputs) {
 				}
 			)
 
-			// singleCellResult.addXsvOutputToBuilder(clonotypes, "abundanceTable", "clonotypeProperties/abundance/" + receptor + "/")
-			for columnName in singleCellResult.listXsvColumns("abundanceTable") {
-				anonymizedData := singleCellResult.outputData("abundanceTable", columnName)
-				clonotypes.add(
-					"clonotypeProperties/abundance/" + receptor + "/" + columnName,
-					singleCellResult.outputSpec("abundanceTable", columnName),
-					anonymize.deanonymizePKeys(anonymizedData, 0, [0], anonymizationResult.mapping)
-				)
-				resultsToCache["clonotypeProperties/abundance/" + receptor + "/" + columnName] = anonymizedData
+			// Helper function to add anonymized Xsv table columns to clonotypes builder
+			addAnonymizedXsvTable := func(tableName, pathPrefix) {
+				for columnName in singleCellResult.listXsvColumns(tableName) {
+					anonymizedData := singleCellResult.outputData(tableName, columnName)
+					fullPath := pathPrefix + "/" + columnName
+					clonotypes.add(
+						fullPath,
+						singleCellResult.outputSpec(tableName, columnName),
+						anonymize.deanonymizePKeys(anonymizedData, 0, [0], anonymizationResult.mapping)
+					)
+					resultsToCache[fullPath] = anonymizedData
+				}
 			}
+
+			// singleCellResult.addXsvOutputToBuilder(clonotypes, "abundanceTable", "clonotypeProperties/abundance/" + receptor + "/")
+			addAnonymizedXsvTable("abundanceTable", "clonotypeProperties/abundance/" + receptor)
+
+			// Add linkerTable for single-cell
+			addAnonymizedXsvTable("linkerTable", "linker/" + receptor)
+
 			singleCellResult.addXsvOutputToBuilder(clonotypes, "aggregates", "clonotypeProperties/aggregates/" + receptor + "/")
 
 			singleCellResult.addXsvOutputToBuilder(clonotypes, "propertiesAPrimary", "clonotypeProperties/" + receptor + "/aPrimary/")

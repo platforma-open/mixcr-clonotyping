@@ -4,7 +4,7 @@ import { SupportedPresetList } from '@platforma-open/milaboratories.mixcr-clonot
 import type { ImportFileHandle, PlRef } from '@platforma-sdk/model';
 import { getFilePathFromHandle } from '@platforma-sdk/model';
 import type { ListOption } from '@platforma-sdk/ui-vue';
-import { PlAccordionSection, PlBtnGroup, PlDropdown, PlDropdownMulti, PlDropdownRef, PlFileInput, PlTextField, PlNumberField, PlCheckbox, ReactiveFileContent, PlTooltip } from '@platforma-sdk/ui-vue';
+import { PlAccordionSection, PlBtnGroup, PlDropdown, PlDropdownMulti, PlDropdownRef, PlFileInput, PlTextField, PlNumberField, ReactiveFileContent } from '@platforma-sdk/ui-vue';
 import { computed, reactive, watch } from 'vue';
 import { useApp } from './app';
 import { retentive } from './retentive';
@@ -299,10 +299,16 @@ const receptorOrChainsModel = computed({
   },
 });
 
-const highDiversityLibrary = computed({
-  get: () => app.model.args.highDiversityLibrary ?? false,
-  set: (value: boolean) => {
-    app.model.args.highDiversityLibrary = value;
+const errorCorrectionOptions = [
+  { value: 'default', label: 'Default MiXCR error correction, slower assembly' },
+  { value: 'relaxed', label: 'Relaxed error correction, faster assembly' },
+  { value: 'off', label: 'No error correction, fastest assembly' },
+] as const;
+
+const errorCorrectionMode = computed({
+  get: () => app.model.args.errorCorrectionMode ?? 'default',
+  set: (value: 'relaxed' | 'default' | 'off') => {
+    app.model.args.errorCorrectionMode = value;
   },
 });
 </script>
@@ -416,14 +422,19 @@ const highDiversityLibrary = computed({
   </PlDropdown>
 
   <PlAccordionSection label="Advanced Settings">
-    <PlCheckbox
-      v-model="highDiversityLibrary"
+    <PlDropdown
+      v-model="errorCorrectionMode"
+      :options="errorCorrectionOptions"
+      label="Error correction"
     >
-      High diversity dataset
-      <PlTooltip class="info" position="top">
-        <template #tooltip>Use for high diversity datasets. Relaxed error correction, faster assembly.</template>
-      </PlTooltip>
-    </PlCheckbox>
+      <template #tooltip>
+        <ul>
+          <li><b>Default assembly:</b> The standard MiXCR clustering mode.</li>
+          <li><b>Faster assembly:</b> Relaxes fuzzy matching criteria, speeding up assembly.</li>
+          <li><b>Fastest assembly:</b> Further accelerates the process but disables error correction.</li>
+        </ul>
+      </template>
+    </PlDropdown>
 
     <PlTextField
       v-model="app.model.args.limitInput" :parse="parseNumber" :clearable="() => undefined"
