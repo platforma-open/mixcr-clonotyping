@@ -796,27 +796,25 @@ self.body(func(inputs) {
 				}
 			)
 
-			// singleCellResult.addXsvOutputToBuilder(clonotypes, "abundanceTable", "clonotypeProperties/abundance/" + receptor + "/")
-			for columnName in singleCellResult.listXsvColumns("abundanceTable") {
-				anonymizedData := singleCellResult.outputData("abundanceTable", columnName)
-				clonotypes.add(
-					"clonotypeProperties/abundance/" + receptor + "/" + columnName,
-					singleCellResult.outputSpec("abundanceTable", columnName),
-					anonymize.deanonymizePKeys(anonymizedData, 0, [0], anonymizationResult.mapping)
-				)
-				resultsToCache["clonotypeProperties/abundance/" + receptor + "/" + columnName] = anonymizedData
+			// Helper function to add anonymized Xsv table columns to clonotypes builder
+			addAnonymizedXsvTable := func(tableName, pathPrefix) {
+				for columnName in singleCellResult.listXsvColumns(tableName) {
+					anonymizedData := singleCellResult.outputData(tableName, columnName)
+					fullPath := pathPrefix + "/" + columnName
+					clonotypes.add(
+						fullPath,
+						singleCellResult.outputSpec(tableName, columnName),
+						anonymize.deanonymizePKeys(anonymizedData, 0, [0], anonymizationResult.mapping)
+					)
+					resultsToCache[fullPath] = anonymizedData
+				}
 			}
 
+			// singleCellResult.addXsvOutputToBuilder(clonotypes, "abundanceTable", "clonotypeProperties/abundance/" + receptor + "/")
+			addAnonymizedXsvTable("abundanceTable", "clonotypeProperties/abundance/" + receptor)
+
 			// Add linkerTable for single-cell
-			for columnName in singleCellResult.listXsvColumns("linkerTable") {
-				anonymizedData := singleCellResult.outputData("linkerTable", columnName)
-				clonotypes.add(
-					"linker/" + receptor + "/" + columnName,
-					singleCellResult.outputSpec("linkerTable", columnName),
-					anonymize.deanonymizePKeys(anonymizedData, 0, [0], anonymizationResult.mapping)
-				)
-				resultsToCache["linker/" + receptor + "/" + columnName] = anonymizedData
-			}
+			addAnonymizedXsvTable("linkerTable", "linker/" + receptor)
 
 			singleCellResult.addXsvOutputToBuilder(clonotypes, "aggregates", "clonotypeProperties/aggregates/" + receptor + "/")
 
