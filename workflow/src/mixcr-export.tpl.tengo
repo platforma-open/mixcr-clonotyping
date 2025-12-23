@@ -145,12 +145,12 @@ self.body(func(inputs) {
 	// Generate clonotypeLabel (C-XXXXX or C-XXXXX-RANK) from clonotypeKey for bulk data
 	dfMain = clonotypeLabel.addClonotypeLabelColumnsPt(dfMain, "clonotypeKey", "clonotypeLabel", pt)
 
-	dfMain.save("output.tsv")
-
-	// Create linker dataframe within the same workflow - more efficient than separate workflow
+	// Create linker dataframe BEFORE saving dfMain to avoid CID conflicts
 	dfLinker := dfMain.select(pt.col("clonotypeKey"))
 	dfLinker.addColumns(pt.lit(1).alias("link"))
 	dfLinker.save("linker.tsv")
+
+	dfMain.save("output.tsv")
 
 	ptablerResultMain := wfMain.run()
 	processedTsv := ptablerResultMain.getFile("output.tsv")
