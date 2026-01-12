@@ -28,6 +28,7 @@ export const platforma = BlockModel.create('Heavy')
 
   .withArgs<BlockArgs>({
     chains: ['IG', 'TCRAB', 'TCRGD'],
+    cloneClusteringMode: 'default',
   })
 
   .withUiState<UiState>({
