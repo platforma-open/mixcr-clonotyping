@@ -18,6 +18,8 @@ export const Preset = z.discriminatedUnion('type', [PresetName, PresetFile]);
 export type Preset = z.infer<typeof Preset>;
 
 const BlockArgsValidBase = z.object({
+  defaultBlockLabel: z.string(),
+  customBlockLabel: z.string(),
   input: PlRef,
   inputLibrary: PlRef.optional(),
   libraryFile: z.string().transform((v) => v as ImportFileHandle).optional(),
@@ -55,5 +57,10 @@ export const BlockArgsValid = BlockArgsValidBase.superRefine(
 );
 export type BlockArgsValid = z.infer<typeof BlockArgsValid>;
 
-export const BlockArgs = BlockArgsValidBase.partial({ input: true, preset: true });
+export const BlockArgs = BlockArgsValidBase.partial({
+  input: true,
+  preset: true,
+  defaultBlockLabel: true,
+  customBlockLabel: true,
+});
 export type BlockArgs = z.infer<typeof BlockArgs>;

@@ -25,8 +25,9 @@ export type UiState = {
 };
 
 export const platforma = BlockModel.create('Heavy')
-
   .withArgs<BlockArgs>({
+    defaultBlockLabel: '',
+    customBlockLabel: '',
     chains: ['IG', 'TCRAB', 'TCRGD'],
     cloneClusteringMode: 'default',
   })
@@ -163,7 +164,7 @@ export const platforma = BlockModel.create('Heavy')
     ) as Record<string, string>;
   })
 
-  .output('pt', (ctx) => {
+  .outputWithStatus('pt', (ctx) => {
     const pCols = ctx.outputs?.resolve({ field: 'qcReportTable', assertFieldType: 'Input', allowPermanentAbsence: true })?.getPColumns();
     if (pCols === undefined) {
       return undefined;
@@ -219,7 +220,9 @@ export const platforma = BlockModel.create('Heavy')
 
   .argsValid((ctx) => BlockArgsValid.safeParse(ctx.args).success)
 
-  .title((ctx) => (ctx.args.title ? `MiXCR Clonotyping - ${ctx.args.title}` : 'MiXCR Clonotyping'))
+  .title(() => 'MiXCR Clonotyping')
+
+  .subtitle((ctx) => ctx.args.customBlockLabel || ctx.args.defaultBlockLabel || '')
 
   .done(2);
 
