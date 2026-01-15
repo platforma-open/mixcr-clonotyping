@@ -1,19 +1,20 @@
 {
-  "name": "@platforma-open/milaboratories.mixcr-clonotyping-2",
   "scripts": {
-    "pretty": "prettier --write \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json,vue}\"",
     "build": "turbo run build",
-    "build:dev": "PL_PKG_DEV=local turbo run build",
-    "test": "PL_PKG_DEV=local turbo run test --concurrency 1",
-    "test:dry-run": "PL_PKG_DEV=local turbo run test --dry-run=json",
+    "build:dev": "env PL_PKG_DEV=local turbo run build",
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check",
+    "test": "env PL_PKG_DEV=local turbo run test --concurrency 1",
+    "test:dry-run": "env PL_PKG_DEV=local turbo run test --dry-run=json",
     "mark-stable": "turbo run mark-stable",
     "do-pack": "turbo run do-pack",
     "watch": "turbo watch build",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "update-sdk": "node scripts/update-sdk-packages.js"
+    "update-sdk": "block-tools update-deps"
   },
   "devDependencies": {
+    "@platforma-sdk/block-tools": "catalog:",
     "typescript": "catalog:",
     "turbo": "catalog:",
     "@changesets/cli": "catalog:",
