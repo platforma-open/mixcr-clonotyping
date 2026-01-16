@@ -430,15 +430,6 @@ const exportMinQuality = computed({
 
   <PlAccordionSection label="Advanced Settings">
     <PlSectionSeparator>MiXCR Settings</PlSectionSeparator>
-    <PlCheckbox
-      v-model="exportMinQuality"
-    >
-      Min quality columns
-      <PlTooltip class="info" position="top">
-        <template #tooltip>Export columns with minimum quality values for each feature in the output.</template>
-      </PlTooltip>
-    </PlCheckbox>
-
     <PlDropdown
       v-model="cloneClusteringMode"
       :options="cloneClusteringModeOptions"
@@ -457,6 +448,15 @@ const exportMinQuality = computed({
       v-model="app.model.args.limitInput" :parse="parseNumber" :clearable="() => undefined"
       label="Take only this number of reads into analysis"
     />
+
+    <PlCheckbox
+      v-model="exportMinQuality"
+    >
+      Min quality columns
+      <PlTooltip class="info" position="top">
+        <template #tooltip>Export columns with minimum quality values for each feature in the output.</template>
+      </PlTooltip>
+    </PlCheckbox>
 
     <PlBtnGroup v-model="computedTab" :options="librarySourceOptions" label="Custom reference library" />
     <PlDropdownRef
