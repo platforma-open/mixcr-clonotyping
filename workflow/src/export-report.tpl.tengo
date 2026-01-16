@@ -21,7 +21,6 @@ self.defineOutputs("qcReportTable")
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:main")
 ptablerSw := assets.importSoftware("@platforma-open/milaboratories.software-ptabler:main")
 
-
 self.body(func(inputs) {
     clnsData := inputs.clnsData
     presetSpecForBack := inputs.presetSpecForBack
@@ -35,6 +34,10 @@ self.body(func(inputs) {
 	hasUmi := !is_undefined(presetSpecForBack.umiTags) && len(presetSpecForBack.umiTags) > 0
     cellTags := presetSpecForBack.cellTags
     singleCellChainTsvsData := inputs.singleCellChainTsvsData
+
+    featureForFlags := "CDR3"
+    isOOFColumn := "isOOF" + featureForFlags
+    hasStopsColumn := "hasStopsIn" + featureForFlags
 
     chainInfos := {
 	"IGHeavy": { mixcrFilter: "IGH", name: "IG Heavy", shortName: "Heavy" },
@@ -126,6 +129,115 @@ self.body(func(inputs) {
 
     // Join counts and overwrite totalClonotypes to reflect exported (productive) clones
     joinedDf := processedDf.join(aggregatedCounts, { how: "left", on: ["sampleId"] })
+
+    // Count clonotypes filtered by stop codons and out-of-frame per sample
+    filterCountDfs := []
+    mixcrChainsArg := text.join(chainsForMixcr, ",")
+    for key, clnsFile in clnsFiles {
+        sampleId := json.decode(key)[0]
+        exportFiltersCmd := exec.builder().
+            inMediumQueue().
+            mem("16GiB").
+            cpu(2).
+            software(mixcrSw).
+            env("MI_USE_SYSTEM_CA", "true").
+            secret("MI_LICENSE", "MI_LICENSE").
+            arg("exportClones").
+            arg("--dont-split-files").
+            arg("--drop-default-fields").
+            arg("--reset-export-clone-table-splitting")
+        if mixcrChainsArg != "" {
+            exportFiltersCmd.arg("--chains").arg(mixcrChainsArg)
+        }
+        exportFiltersResult := exportFiltersCmd.
+            arg("-isOOF").arg(featureForFlags).
+            arg("-hasStops").arg(featureForFlags).
+            arg("clones.clns").
+            addFile("clones.clns", clnsFile).
+            arg("clones.tsv").
+            saveFile("clones.tsv").
+            cacheHours(3).
+            run()
+        filterTsv := exportFiltersResult.getFile("clones.tsv")
+        dfFilters := wf.frame(filterTsv, { xsvType: "tsv", inferSchema: false, schema: [ { column: isOOFColumn, type: "String" }, { column: hasStopsColumn, type: "String" } ] })
+        dfFilters = dfFilters.withColumns(
+            pt.when(pt.col(isOOFColumn).strToUpper().eq("TRUE")).then(pt.lit(1)).otherwise(pt.lit(0)).alias("__oof"),
+            pt.when(pt.col(hasStopsColumn).strToUpper().eq("TRUE")).then(pt.lit(1)).otherwise(pt.lit(0)).alias("__stop")
+        )
+        dfFilterCount := dfFilters.select(
+            pt.lit(sampleId).alias("sampleId"),
+            pt.col("__oof").sum().alias("assemble.clonotypesDroppedByOutOfFrame"),
+            pt.col("__stop").sum().alias("assemble.clonotypesDroppedByStopCodons")
+        )
+        filterCountDfs = append(filterCountDfs, dfFilterCount)
+    }
+
+    if len(filterCountDfs) > 0 {
+        filterCountsDf := len(filterCountDfs) > 1 ? pt.concat(filterCountDfs) : filterCountDfs[0]
+        joinedDf = joinedDf.join(filterCountsDf, { how: "left", on: ["sampleId"] })
+    } else {
+        joinedDf = joinedDf.withColumns(
+            pt.lit(0).alias("assemble.clonotypesDroppedByOutOfFrame"),
+            pt.lit(0).alias("assemble.clonotypesDroppedByStopCodons")
+        )
+    }
+
+    // Single-cell: per-chain counts of clonotypes dropped by stop codons / out-of-frame
+    if isSingleCell {
+        for chain in chains {
+            chainMixcr := chainInfos[chain].mixcrFilter
+            perChainFilterDfs := []
+            for key, clnsFile in clnsFiles {
+                sampleId := json.decode(key)[0]
+                exportChainFiltersCmd := exec.builder().
+                    inMediumQueue().
+                    mem("16GiB").
+                    cpu(2).
+                    software(mixcrSw).
+                    env("MI_USE_SYSTEM_CA", "true").
+                    secret("MI_LICENSE", "MI_LICENSE").
+                    arg("exportClones").
+                    arg("--dont-split-files").
+                    arg("--drop-default-fields").
+                    arg("--reset-export-clone-table-splitting").
+                    arg("--chains").arg(chainMixcr)
+                exportChainFiltersResult := exportChainFiltersCmd.
+                    arg("-isOOF").arg(featureForFlags).
+                    arg("-hasStops").arg(featureForFlags).
+                    arg("clones.clns").
+                    addFile("clones.clns", clnsFile).
+                    arg("clones.tsv").
+                    saveFile("clones.tsv").
+                    cacheHours(3).
+                    run()
+                chainFilterTsv := exportChainFiltersResult.getFile("clones.tsv")
+                dfChainFilters := wf.frame(chainFilterTsv, { xsvType: "tsv", inferSchema: false, schema: [ { column: isOOFColumn, type: "String" }, { column: hasStopsColumn, type: "String" } ] })
+                dfChainFilters = dfChainFilters.withColumns(
+                    pt.when(pt.col(isOOFColumn).strToUpper().eq("TRUE")).then(pt.lit(1)).otherwise(pt.lit(0)).alias("__oof"),
+                    pt.when(pt.col(hasStopsColumn).strToUpper().eq("TRUE")).then(pt.lit(1)).otherwise(pt.lit(0)).alias("__stop")
+                )
+                dfChainCount := dfChainFilters.select(
+                    pt.lit(sampleId).alias("sampleId"),
+                    pt.col("__oof").sum().alias("assemble.clonotypesDroppedByOutOfFrameByChain." + chain),
+                    pt.col("__stop").sum().alias("assemble.clonotypesDroppedByStopCodonsByChain." + chain)
+                )
+                perChainFilterDfs = append(perChainFilterDfs, dfChainCount)
+            }
+            if len(perChainFilterDfs) > 0 {
+                chainDf := len(perChainFilterDfs) > 1 ? pt.concat(perChainFilterDfs) : perChainFilterDfs[0]
+                chainAgg := chainDf.groupBy("sampleId").agg(
+                    pt.col("assemble.clonotypesDroppedByOutOfFrameByChain." + chain).sum().alias("assemble.clonotypesDroppedByOutOfFrameByChain." + chain),
+                    pt.col("assemble.clonotypesDroppedByStopCodonsByChain." + chain).sum().alias("assemble.clonotypesDroppedByStopCodonsByChain." + chain)
+                )
+                joinedDf = joinedDf.join(chainAgg, { how: "left", on: ["sampleId"] })
+            } else {
+                joinedDf = joinedDf.withColumns(
+                    pt.lit(0).alias("assemble.clonotypesDroppedByOutOfFrameByChain." + chain),
+                    pt.lit(0).alias("assemble.clonotypesDroppedByStopCodonsByChain." + chain)
+                )
+            }
+        }
+    }
 
     // Per-chain clonotype counts
     perChainJoined := joinedDf
@@ -250,6 +362,19 @@ self.body(func(inputs) {
             col := "clonotypesByChain." + chain
             finalDf = finalDf.withColumns(
                 pt.col(col).fillNull(0).cast("Long").alias(col)
+            )
+        }
+    }
+
+    finalDf = finalDf.withColumns(
+        pt.col("assemble.clonotypesDroppedByOutOfFrame").fillNull(0).cast("Long").alias("assemble.clonotypesDroppedByOutOfFrame"),
+        pt.col("assemble.clonotypesDroppedByStopCodons").fillNull(0).cast("Long").alias("assemble.clonotypesDroppedByStopCodons")
+    )
+    if isSingleCell {
+        for chain in chains {
+            finalDf = finalDf.withColumns(
+                pt.col("assemble.clonotypesDroppedByOutOfFrameByChain." + chain).fillNull(0).cast("Long").alias("assemble.clonotypesDroppedByOutOfFrameByChain." + chain),
+                pt.col("assemble.clonotypesDroppedByStopCodonsByChain." + chain).fillNull(0).cast("Long").alias("assemble.clonotypesDroppedByStopCodonsByChain." + chain)
             )
         }
     }
