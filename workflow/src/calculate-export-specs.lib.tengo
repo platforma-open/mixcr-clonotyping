@@ -129,13 +129,18 @@ addSpec := func(columns, additionalSpec) {
 // Ordering rules
 //   AA Sequences
 
-calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId) {
+calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId, exportMinQuality) {
 	ops := exportSpecOpsFromPreset(presetSpecForBack)
 
 	assemblingFeature := ops.assemblingFeature
 	cellTags := ops.cellTags
 	hasUmi := ops.hasUmi
 	splitByC := ops.splitByC
+	
+	// Default to false if not provided
+	if is_undefined(exportMinQuality) {
+		exportMinQuality = false
+	}
 
 	isSingleCell := !is_undefined(cellTags) && len(cellTags) > 0
 	hashCellKey := isSingleCell && len(cellTags) > 1
@@ -482,7 +487,7 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId) {
 						}
 					} ]
 				exportArgs += [ [ "-" + alphabetShortMixcr + "Feature" + imputedU, featureInFrameU ] ]
-				if !isImputed && !isAminoAcid {
+				if !isImputed && !isAminoAcid && exportMinQuality {
 					columnsSpecPerClonotypeNoAggregates += [ {
 							column: "minQual" + featureU,
 							id: "min-qual-" + featureL,

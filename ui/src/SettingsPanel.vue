@@ -4,7 +4,7 @@ import { SupportedPresetList } from '@platforma-open/milaboratories.mixcr-clonot
 import type { ImportFileHandle, PlRef } from '@platforma-sdk/model';
 import { getFilePathFromHandle } from '@platforma-sdk/model';
 import type { ListOption } from '@platforma-sdk/ui-vue';
-import { PlAccordionSection, PlBtnGroup, PlDropdown, PlDropdownMulti, PlDropdownRef, PlFileInput, PlTextField, PlNumberField, PlCheckbox, ReactiveFileContent, PlTooltip } from '@platforma-sdk/ui-vue';
+import { PlAccordionSection, PlBtnGroup, PlDropdown, PlDropdownMulti, PlDropdownRef, PlFileInput, PlTextField, PlNumberField, PlCheckbox, ReactiveFileContent, PlTooltip, PlSectionSeparator } from '@platforma-sdk/ui-vue';
 import { computed, reactive, watch } from 'vue';
 import { useApp } from './app';
 import { retentive } from './retentive';
@@ -299,10 +299,23 @@ const receptorOrChainsModel = computed({
   },
 });
 
-const highDiversityLibrary = computed({
-  get: () => app.model.args.highDiversityLibrary ?? false,
+const cloneClusteringModeOptions: ListOption[] = [
+  { value: 'default', label: 'Default MiXCR error correction, slower assembly' },
+  { value: 'relaxed', label: 'Relaxed error correction, faster assembly' },
+  { value: 'off', label: 'No error correction, fastest assembly' },
+];
+
+const cloneClusteringMode = computed({
+  get: () => app.model.args.cloneClusteringMode ?? 'default',
+  set: (value: string) => {
+    app.model.args.cloneClusteringMode = value as 'relaxed' | 'default' | 'off';
+  },
+});
+
+const exportMinQuality = computed({
+  get: () => app.model.args.exportMinQuality ?? false,
   set: (value: boolean) => {
-    app.model.args.highDiversityLibrary = value;
+    app.model.args.exportMinQuality = value;
   },
 });
 </script>
@@ -416,19 +429,34 @@ const highDiversityLibrary = computed({
   </PlDropdown>
 
   <PlAccordionSection label="Advanced Settings">
-    <PlCheckbox
-      v-model="highDiversityLibrary"
+    <PlSectionSeparator>MiXCR Settings</PlSectionSeparator>
+    <PlDropdown
+      v-model="cloneClusteringMode"
+      :options="cloneClusteringModeOptions"
+      label="Error correction"
     >
-      High diversity dataset
-      <PlTooltip class="info" position="top">
-        <template #tooltip>Use for high diversity datasets. Relaxed error correction, faster assembly.</template>
-      </PlTooltip>
-    </PlCheckbox>
+      <template #tooltip>
+        <ul>
+          <li><b>Default MiXCR error correction:</b> The standard MiXCR clustering mode.</li>
+          <li><b>Relaxed error correction:</b> Relaxes fuzzy matching criteria, speeding up assembly.</li>
+          <li><b>No error correction:</b> Further accelerates the process but disables error correction.</li>
+        </ul>
+      </template>
+    </PlDropdown>
 
     <PlTextField
       v-model="app.model.args.limitInput" :parse="parseNumber" :clearable="() => undefined"
       label="Take only this number of reads into analysis"
     />
+
+    <PlCheckbox
+      v-model="exportMinQuality"
+    >
+      Export minimum quality scores
+      <PlTooltip class="info" position="top">
+        <template #tooltip>Export additional columns with the minimum quality scores for each complementarity-determining region (CDR1, CDR2, CDR3) and framework region (FR1, FR2, FR3, FR4). If a specific assembling feature (e.g., VDJRegion) is used, its minimum quality will also be exported.</template>
+      </PlTooltip>
+    </PlCheckbox>
 
     <PlBtnGroup v-model="computedTab" :options="librarySourceOptions" label="Custom reference library" />
     <PlDropdownRef
@@ -453,6 +481,7 @@ const highDiversityLibrary = computed({
       />
     </template>
 
+    <PlSectionSeparator>Resource Allocation</PlSectionSeparator>
     <PlNumberField
       v-model="app.model.args.perProcessMemGB"
       label="Set memory per every sample process (GB)"
