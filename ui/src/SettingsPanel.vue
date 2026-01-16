@@ -452,9 +452,9 @@ const exportMinQuality = computed({
     <PlCheckbox
       v-model="exportMinQuality"
     >
-      Min quality columns
+      Export minimum quality scores
       <PlTooltip class="info" position="top">
-        <template #tooltip>Export columns with minimum quality values for each feature in the output.</template>
+        <template #tooltip>Export additional columns with the minimum quality scores for each complementarity-determining region (CDR1, CDR2, CDR3) and framework region (FR1, FR2, FR3, FR4). If a specific assembling feature (e.g., VDJRegion) is used, its minimum quality will also be exported.</template>
       </PlTooltip>
     </PlCheckbox>
 
