@@ -1,5 +1,18 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.13.0
+
+### Minor Changes
+
+- 070fc0b: Min quality checkbox, refactored error correction, dep updates
+
+### Patch Changes
+
+- Updated dependencies [070fc0b]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@3.18.0
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.21.0
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.ui@1.20.0
+
 ## 2.12.27
 
 ### Patch Changes
