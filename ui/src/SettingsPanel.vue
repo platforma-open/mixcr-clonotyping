@@ -4,7 +4,7 @@ import { SupportedPresetList } from '@platforma-open/milaboratories.mixcr-clonot
 import type { ImportFileHandle, PlRef } from '@platforma-sdk/model';
 import { getFilePathFromHandle } from '@platforma-sdk/model';
 import type { ListOption } from '@platforma-sdk/ui-vue';
-import { PlAccordionSection, PlBtnGroup, PlDropdown, PlDropdownMulti, PlDropdownRef, PlFileInput, PlTextField, PlNumberField, PlCheckbox, ReactiveFileContent, PlTooltip } from '@platforma-sdk/ui-vue';
+import { PlAccordionSection, PlBtnGroup, PlDropdown, PlDropdownMulti, PlDropdownRef, PlFileInput, PlTextField, PlNumberField, PlCheckbox, ReactiveFileContent, PlTooltip, PlSectionSeparator } from '@platforma-sdk/ui-vue';
 import { computed, reactive, watch } from 'vue';
 import { useApp } from './app';
 import { retentive } from './retentive';
@@ -416,6 +416,12 @@ const highDiversityLibrary = computed({
   </PlDropdown>
 
   <PlAccordionSection label="Advanced Settings">
+    <PlSectionSeparator>MiXCR Settings</PlSectionSeparator>
+    <PlTextField
+      v-model="app.model.args.limitInput" :parse="parseNumber" :clearable="() => undefined"
+      label="Take only this number of reads into analysis"
+    />
+
     <PlCheckbox
       v-model="highDiversityLibrary"
     >
@@ -424,11 +430,6 @@ const highDiversityLibrary = computed({
         <template #tooltip>Use for high diversity datasets. Relaxed error correction, faster assembly.</template>
       </PlTooltip>
     </PlCheckbox>
-
-    <PlTextField
-      v-model="app.model.args.limitInput" :parse="parseNumber" :clearable="() => undefined"
-      label="Take only this number of reads into analysis"
-    />
 
     <PlBtnGroup v-model="computedTab" :options="librarySourceOptions" label="Custom reference library" />
     <PlDropdownRef
@@ -453,6 +454,7 @@ const highDiversityLibrary = computed({
       />
     </template>
 
+    <PlSectionSeparator>Resource Allocation</PlSectionSeparator>
     <PlNumberField
       v-model="app.model.args.perProcessMemGB"
       label="Set memory per every sample process (GB)"
