@@ -568,6 +568,38 @@ getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellT
         }
     },
     {
+        column: "assemble.clonotypesDroppedByStopCodons",
+        id: "assemble-clonotypes-dropped-by-stop-codons",
+        allowNA: true,
+        naRegex: "NaN",
+        spec: {
+            name: "mixcr.com/reports/assemble/clonotypesDroppedByStopCodons",
+            valueType: "Long",
+            annotations: {
+                "pl7.app/min": "0",
+                "pl7.app/table/orderPriority": "108200",
+                "pl7.app/table/visibility": "optional",
+                "pl7.app/label": "Clonotypes Dropped - Stop Codons"
+            }
+        }
+    },
+    {
+        column: "assemble.clonotypesDroppedByOutOfFrame",
+        id: "assemble-clonotypes-dropped-by-out-of-frame",
+        allowNA: true,
+        naRegex: "NaN",
+        spec: {
+            name: "mixcr.com/reports/assemble/clonotypesDroppedByOutOfFrame",
+            valueType: "Long",
+            annotations: {
+                "pl7.app/min": "0",
+                "pl7.app/table/orderPriority": "108100",
+                "pl7.app/table/visibility": "optional",
+                "pl7.app/label": "Clonotypes Dropped - Out of Frame"
+            }
+        }
+    },
+    {
         column: "totalClonotypes",
         id: "total-clonotypes",
         allowNA: true,
@@ -1247,6 +1279,44 @@ getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellT
             }
         }
     }]
+
+    // Single-cell per-chain dropped clonotypes by OOF / stop codons
+    scDropOrder := 107700
+    for chain in chains {
+        singleCellColumns += [{
+            column: "assemble.clonotypesDroppedByOutOfFrameByChain." + chain,
+            id: "assemble-clonotypes-dropped-by-out-of-frame-by-chain-" + chain,
+            allowNA: true,
+            naRegex: "NaN",
+            spec: {
+                name: "mixcr.com/reports/assemble/clonotypesDroppedByOutOfFrameByChain/" + chain,
+                valueType: "Long",
+                annotations: {
+                    "pl7.app/min": "0",
+                    "pl7.app/table/orderPriority": string(scDropOrder),
+                    "pl7.app/table/visibility": "optional",
+                    "pl7.app/label": "Clonotypes Dropped - Out of Frame (" + chain + ")"
+                }
+            }
+        },
+        {
+            column: "assemble.clonotypesDroppedByStopCodonsByChain." + chain,
+            id: "assemble-clonotypes-dropped-by-stop-codons-by-chain-" + chain,
+            allowNA: true,
+            naRegex: "NaN",
+            spec: {
+                name: "mixcr.com/reports/assemble/clonotypesDroppedByStopCodonsByChain/" + chain,
+                valueType: "Long",
+                annotations: {
+                    "pl7.app/min": "0",
+                    "pl7.app/table/orderPriority": string(scDropOrder - 50),
+                    "pl7.app/table/visibility": "optional",
+                    "pl7.app/label": "Clonotypes Dropped - Stop Codons (" + chain + ")"
+                }
+            }
+        }]
+        scDropOrder -= 100
+    }
 
     for cellTag in cellTags {
         singleCellColumns += [{

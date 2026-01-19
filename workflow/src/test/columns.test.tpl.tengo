@@ -7,7 +7,7 @@ render := import("@platforma-sdk/workflow-tengo:render")
 calculatePresetInfoTpl := assets.importTemplate(":calculate-preset-info")
 columnsCalculateTpl := assets.importTemplate(":test.columns-calculate")
 
-self.defineOutputs("conf")
+self.defineOutputs("exportSpecs")
 
 self.body(func(inputs) {
 	preset := inputs.preset
