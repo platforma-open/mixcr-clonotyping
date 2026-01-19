@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.19.0
+
+### Minor Changes
+
+- 4f376a4: Columns with number of clonotypes dropped due stop codon or oof added to qc table. Dependencies updates
+
 ## 3.18.0
 
 ### Minor Changes
