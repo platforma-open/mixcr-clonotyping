@@ -269,7 +269,7 @@ const gridOptions: GridOptions<MiXCRResult> = {
     <div :style="{ flex: 1 }">
       <AgGridVue
         :theme="AgGridTheme" :style="{ height: '100%' }" :rowData="result" :defaultColDef="defaultColumnDef"
-        :columnDefs="columnDefs" :grid-options="gridOptions" :loadingOverlayComponentParams="{ notReady: true }"
+        :columnDefs="columnDefs" :grid-options="gridOptions" :loadingOverlayComponentParams="{ variant: 'not-ready' }"
         :loadingOverlayComponent="PlAgOverlayLoading" :noRowsOverlayComponent="PlAgOverlayNoRows"
         @grid-ready="onGridReady"
       />
