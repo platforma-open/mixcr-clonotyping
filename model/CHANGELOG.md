@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.21.0
+
+### Minor Changes
+
+- 070fc0b: Min quality checkbox, refactored error correction, dep updates
+
 ## 1.20.0
 
 ### Minor Changes

@@ -203,7 +203,7 @@ self.body(func(inputs) {
 		}
 	} ]
 
-	exportSpecs := calculateExportSpecs(presetSpecForBack, sampleIdAxisSpec, blockId)
+	exportSpecs := calculateExportSpecs(presetSpecForBack, sampleIdAxisSpec, blockId, params.exportMinQuality)
 
 	columnsSpecPerSample := exportSpecs.columnsSpecPerSample
 	columnsSpecPerSampleSc := exportSpecs.columnsSpecPerSampleSc
@@ -273,7 +273,7 @@ self.body(func(inputs) {
 					materialType: params.materialType,
 					tagPattern: params.tagPattern,
 					assembleClonesBy: params.assembleClonesBy,
-					highDiversityLibrary: params.highDiversityLibrary
+					cloneClusteringMode: params.cloneClusteringMode
 				},
 				library: library,
 				presetContent: presetContent

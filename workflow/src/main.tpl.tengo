@@ -122,7 +122,7 @@ wf.body(func(args) {
 			limitInput: limitInput,
 			perProcessMemGB: perProcessMemGB,
 			perProcessCPUs: perProcessCPUs,
-				highDiversityLibrary: args.highDiversityLibrary,
+				cloneClusteringMode: args.cloneClusteringMode,
 			blockId: blockId,
 			libraryId: libraryId,
 			presetCommonName: args.presetCommonName,
@@ -131,7 +131,8 @@ wf.body(func(args) {
 				rightAlignmentMode: args.rightAlignmentMode,
 				materialType: args.materialType,
 				tagPattern: args.tagPattern,
-				assembleClonesBy: args.assembleClonesBy
+				assembleClonesBy: args.assembleClonesBy,
+				exportMinQuality: args.exportMinQuality
 		})
 	})
 
