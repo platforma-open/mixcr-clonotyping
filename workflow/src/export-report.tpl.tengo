@@ -149,7 +149,7 @@ self.body(func(inputs) {
         if mixcrChainsArg != "" {
             exportFiltersCmd.arg("--chains").arg(mixcrChainsArg)
         }
-        exportFiltersResult := exportFiltersCmd.
+        exportFiltersCmd = exportFiltersCmd.
             arg("-isOOF").arg(featureForFlags).
             arg("-hasStops").arg(featureForFlags).
             arg("clones.clns").
@@ -163,8 +163,7 @@ self.body(func(inputs) {
 			    exportFiltersCmd.addFile("library.json", library)
 		    }
 		}
-        exportFiltersResult = exportFiltersResult.cacheHours(3).
-            run()
+        exportFiltersResult := exportFiltersCmd.cacheHours(3).run()
         filterTsv := exportFiltersResult.getFile("clones.tsv")
         dfFilters := wf.frame(filterTsv, { xsvType: "tsv", inferSchema: false, schema: [ { column: isOOFColumn, type: "String" }, { column: hasStopsColumn, type: "String" } ] })
         dfFilters = dfFilters.withColumns(
