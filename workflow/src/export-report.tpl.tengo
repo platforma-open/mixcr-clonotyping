@@ -155,8 +155,15 @@ self.body(func(inputs) {
             arg("clones.clns").
             addFile("clones.clns", clnsFile).
             arg("clones.tsv").
-            saveFile("clones.tsv").
-            cacheHours(3).
+            saveFile("clones.tsv")
+        if library {
+            if isLibraryFileGzipped {
+			    exportFiltersCmd.addFile("library.json.gz", library)
+		    } else {
+			    exportFiltersCmd.addFile("library.json", library)
+		    }
+		}
+        exportFiltersResult = exportFiltersResult.cacheHours(3).
             run()
         filterTsv := exportFiltersResult.getFile("clones.tsv")
         dfFilters := wf.frame(filterTsv, { xsvType: "tsv", inferSchema: false, schema: [ { column: isOOFColumn, type: "String" }, { column: hasStopsColumn, type: "String" } ] })
