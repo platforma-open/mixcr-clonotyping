@@ -43,8 +43,8 @@ catalogs:
       specifier: 1.51.6
       version: 1.51.6
     '@platforma-sdk/ui-vue':
-      specifier: 1.51.6
-      version: 1.51.6
+      specifier: 1.51.7
+      version: 1.51.7
     '@platforma-sdk/workflow-tengo':
       specifier: 5.8.0
       version: 5.8.0
@@ -211,7 +211,7 @@ importers:
         version: 1.51.6
       '@platforma-sdk/ui-vue':
         specifier: 'catalog:'
-        version: 1.51.6(sortablejs@1.15.6)(typescript@5.6.3)
+        version: 1.51.7(sortablejs@1.15.6)(typescript@5.6.3)
       '@vueuse/core':
         specifier: 'catalog:'
         version: 13.9.0(vue@3.5.26(typescript@5.6.3))
@@ -1427,8 +1427,8 @@ packages:
   '@platforma-sdk/test@1.51.6':
     resolution: {integrity: sha512-JwmNsQIZVuoM6KpcSutJ/oyxQUg9buYglJ0JhfYatiuRE1pWld3syDtB7CX6LnyfI0IyH7zK7hAeXDQldlGTSA==}
 
-  '@platforma-sdk/ui-vue@1.51.6':
-    resolution: {integrity: sha512-9JE8hNMN7pwCXUilGNtWZijztLy8+aYOeEdRPBQDK73T90uIHbAasYaHlSr4U9tBKEHv5OpKuQcSpk3E7SHm6Q==}
+  '@platforma-sdk/ui-vue@1.51.7':
+    resolution: {integrity: sha512-TEPe4Hvoyo5X6CXMMQrdgND0RBjb5uxsWQsj2n0sCAgGRXuuK4sL7lTX2YU69YTO7eyK8PcGuWGNR7Io0YL0+A==}
 
   '@platforma-sdk/workflow-tengo@5.8.0':
     resolution: {integrity: sha512-OJnnjBXt1VcS1QNMC90PlkXrWJoKQ/Nl3/NeTqzTmq1j5gT3cZXoIQYu1c31KZXBungUo8TphymBcs+qDGpVgA==}
@@ -6244,7 +6244,7 @@ snapshots:
       - typescript-eslint
       - yaml
 
-  '@platforma-sdk/ui-vue@1.51.6(sortablejs@1.15.6)(typescript@5.6.3)':
+  '@platforma-sdk/ui-vue@1.51.7(sortablejs@1.15.6)(typescript@5.6.3)':
     dependencies:
       '@milaboratories/biowasm-tools': 2.0.0
       '@milaboratories/ptabler-expression-js': 1.1.9
