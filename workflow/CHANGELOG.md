@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.20.0
+
+### Minor Changes
+
+- 984f9d8: Support custom block title and running status
+
 ## 3.19.0
 
 ### Minor Changes
