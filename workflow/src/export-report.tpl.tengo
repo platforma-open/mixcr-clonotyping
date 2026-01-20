@@ -149,15 +149,21 @@ self.body(func(inputs) {
         if mixcrChainsArg != "" {
             exportFiltersCmd.arg("--chains").arg(mixcrChainsArg)
         }
-        exportFiltersResult := exportFiltersCmd.
+        exportFiltersCmd = exportFiltersCmd.
             arg("-isOOF").arg(featureForFlags).
             arg("-hasStops").arg(featureForFlags).
             arg("clones.clns").
             addFile("clones.clns", clnsFile).
             arg("clones.tsv").
-            saveFile("clones.tsv").
-            cacheHours(3).
-            run()
+            saveFile("clones.tsv")
+        if library {
+            if isLibraryFileGzipped {
+			    exportFiltersCmd.addFile("library.json.gz", library)
+		    } else {
+			    exportFiltersCmd.addFile("library.json", library)
+		    }
+		}
+        exportFiltersResult := exportFiltersCmd.cacheHours(3).run()
         filterTsv := exportFiltersResult.getFile("clones.tsv")
         dfFilters := wf.frame(filterTsv, { xsvType: "tsv", inferSchema: false, schema: [ { column: isOOFColumn, type: "String" }, { column: hasStopsColumn, type: "String" } ] })
         dfFilters = dfFilters.withColumns(
