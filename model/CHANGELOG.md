@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.23.0
+
+### Minor Changes
+
+- 984f9d8: Support custom block title and running status
+
 ## 1.22.0
 
 ### Minor Changes

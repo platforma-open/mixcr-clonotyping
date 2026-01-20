@@ -2,6 +2,7 @@ import { platforma } from '@platforma-open/milaboratories.mixcr-clonotyping-2.mo
 import { defineApp } from '@platforma-sdk/ui-vue';
 import MainPageWrapper from './MainPageWrapper.vue';
 import QcReportTablePage from './QcReportTablePage.vue';
+import { watch } from 'vue';
 
 export const sdkPlugin = defineApp(platforma, (app) => {
   return {
@@ -19,3 +20,12 @@ export const sdkPlugin = defineApp(platforma, (app) => {
 });
 
 export const useApp = sdkPlugin.useApp;
+
+// Make sure labels are initialized
+const unwatch = watch(sdkPlugin, ({ loaded }) => {
+  if (!loaded) return;
+  const app = useApp();
+  app.model.args.customBlockLabel ??= '';
+  app.model.args.defaultBlockLabel ??= 'Select Clonotype Definition';
+  unwatch();
+});

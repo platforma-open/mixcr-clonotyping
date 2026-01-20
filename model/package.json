@@ -1,13 +1,23 @@
 {
   "name": "@platforma-open/milaboratories.mixcr-clonotyping-2.model",
-  "version": "1.22.0",
+  "version": "1.23.0",
   "description": "Block model",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "sources": "./src/index.ts",
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./dist/*": "./dist/*"
+  },
   "scripts": {
     "build": "ts-builder build --target block-model && block-tools build-model",
-    "test": "vitest",
+    "watch": "ts-builder build --target block-model --watch",
+    "type-check": "ts-builder types --target block-model",
+    "test": "vitest --run --passWithNoTests",
     "lint": "eslint .",
     "do-pack": "rm -f *.tgz && pnpm pack && mv *.tgz package.tgz"
   },

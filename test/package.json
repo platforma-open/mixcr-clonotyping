@@ -1,10 +1,12 @@
 {
   "name": "@platforma-open/milaboratories.mixcr-clonotyping-2.test",
   "private": true,
-  "version": "1.11.0",
+  "version": "1.12.0",
   "description": "Block tests",
   "scripts": {
-    "test": "vitest"
+    "test": "vitest --run --passWithNoTests",
+    "lint": "eslint .",
+    "type-check": "ts-builder types --target block-test"
   },
   "files": [],
   "keywords": [],
@@ -16,7 +18,11 @@
     "@platforma-sdk/model": "catalog:"
   },
   "devDependencies": {
+    "@milaboratories/ts-builder": "catalog:",
+    "@milaboratories/ts-configs": "catalog:",
+    "@platforma-sdk/eslint-config": "catalog:",
     "@platforma-sdk/test": "catalog:",
+    "eslint": "catalog:",
     "vitest": "catalog:",
     "typescript": "catalog:"
   }
