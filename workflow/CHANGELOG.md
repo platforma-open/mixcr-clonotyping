@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.22.0
+
+### Minor Changes
+
+- 22562b1: qc table multiple UMI support
+
 ## 3.21.0
 
 ### Minor Changes
