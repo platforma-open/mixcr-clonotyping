@@ -26,7 +26,7 @@ export type UiState = {
 
 export const platforma = BlockModel.create('Heavy')
   .withArgs<BlockArgs>({
-    defaultBlockLabel: '',
+    defaultBlockLabel: 'Select Dataset',
     customBlockLabel: '',
     chains: ['IG', 'TCRAB', 'TCRGD'],
     cloneClusteringMode: 'default',
