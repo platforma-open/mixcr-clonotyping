@@ -26,6 +26,6 @@ const unwatch = watch(sdkPlugin, ({ loaded }) => {
   if (!loaded) return;
   const app = useApp();
   app.model.args.customBlockLabel ??= '';
-  app.model.args.defaultBlockLabel ??= 'Select Clonotype Definition';
+  app.model.args.defaultBlockLabel ??= 'Select Dataset';
   unwatch();
 });
