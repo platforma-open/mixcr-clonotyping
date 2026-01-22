@@ -19,7 +19,7 @@
     "type-check": "ts-builder types --target block-model",
     "test": "vitest --run --passWithNoTests",
     "lint": "eslint .",
-    "do-pack": "rm -f *.tgz && pnpm pack && mv *.tgz package.tgz"
+    "do-pack": "shx rm -f *.tgz && pnpm pack && shx mv *.tgz package.tgz"
   },
   "dependencies": {
     "@platforma-sdk/model": "catalog:",

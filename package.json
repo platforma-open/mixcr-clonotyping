@@ -18,7 +18,8 @@
     "typescript": "catalog:",
     "turbo": "catalog:",
     "@changesets/cli": "catalog:",
-    "js-yaml": "catalog:"
+    "js-yaml": "catalog:",
+    "shx": "catalog:"
   },
   "packageManager": "pnpm@9.12.0",
   "--": {
