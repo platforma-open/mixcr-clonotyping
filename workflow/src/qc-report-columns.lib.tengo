@@ -3,9 +3,13 @@
 
 ll := import("@platforma-sdk/workflow-tengo:ll")
 pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
+text := import("text")
 
 // QC Report column specifications function
-getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellTags) {
+getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellTags, umiTags) {
+    if is_undefined(umiTags) {
+        umiTags = []
+    }
     // Bulk sequencing columns
     baseColumns := [
     {
@@ -656,73 +660,82 @@ getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellT
         }
     }
 
-    dataWithUmiColumns := [    {
-        column: "refineTags.UMI.outputCount",
-        id: "refine-tags-umi-output-count",
-        allowNA: true,
-        naRegex: "NaN",
-        spec: {
-            name: "mixcr.com/reports/refineTags/UMI/outputCount",
-            valueType: "Long",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/table/orderPriority": "85000",
-                "pl7.app/table/visibility": "optional",
-                "pl7.app/label": "Refine Tags UMI - Output Count"
+    dataWithUmiColumns := []
+    for idx, umiTag in umiTags {
+        orderBase := 85000 + idx * 10
+        orderBasePercents := 85100 + idx * 10
+        orderDiversity := 85200 + idx * 10
+        orderDiversityPercents := 85300 + idx * 10
+        tagL := text.to_lower(umiTag)
+        dataWithUmiColumns = dataWithUmiColumns + [{
+            column: "refineTags." + umiTag + ".outputCount",
+            id: "refine-tags-" + tagL + "-output-count",
+            allowNA: true,
+            naRegex: "NaN",
+            spec: {
+                name: "mixcr.com/reports/refineTags/" + umiTag + "/outputCount",
+                valueType: "Long",
+                annotations: {
+                    "pl7.app/min": "0",
+                    "pl7.app/table/orderPriority": string(orderBase),
+                    "pl7.app/table/visibility": "optional",
+                    "pl7.app/label": "Refine Tags " + umiTag + " - Output Count"
+                }
             }
-        }
-    },
-    {
-        column: "refineTags.UMI.outputCountPercents",
-        id: "refine-tags-umi-output-count-percents",
-        allowNA: true,
-        naRegex: "NaN",
-        spec: {
-            name: "mixcr.com/reports/refineTags/UMI/outputCountPercents",
-            valueType: "Double",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/max": "100",
-                "pl7.app/table/orderPriority": "85100",
-                "pl7.app/table/visibility": "default",
-                "pl7.app/label": "Refine Tags UMI - Output Count (%)"
+        },
+        {
+            column: "refineTags." + umiTag + ".outputCountPercents",
+            id: "refine-tags-" + tagL + "-output-count-percents",
+            allowNA: true,
+            naRegex: "NaN",
+            spec: {
+                name: "mixcr.com/reports/refineTags/" + umiTag + "/outputCountPercents",
+                valueType: "Double",
+                annotations: {
+                    "pl7.app/min": "0",
+                    "pl7.app/max": "100",
+                    "pl7.app/table/orderPriority": string(orderBasePercents),
+                    "pl7.app/table/visibility": "default",
+                    "pl7.app/label": "Refine Tags " + umiTag + " - Output Count (%)"
+                }
             }
-        }
-    },
-    {
-        column: "refineTags.UMI.outputDiversity",
-        id: "refine-tags-umi-output-diversity",
-        allowNA: true,
-        naRegex: "NaN",
-        spec: {
-            name: "mixcr.com/reports/refineTags/UMI/outputDiversity",
-            valueType: "Long",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/table/orderPriority": "85200",
-                "pl7.app/table/visibility": "optional",
-                "pl7.app/label": "Refine Tags UMI - Output Diversity"
+        },
+        {
+            column: "refineTags." + umiTag + ".outputDiversity",
+            id: "refine-tags-" + tagL + "-output-diversity",
+            allowNA: true,
+            naRegex: "NaN",
+            spec: {
+                name: "mixcr.com/reports/refineTags/" + umiTag + "/outputDiversity",
+                valueType: "Long",
+                annotations: {
+                    "pl7.app/min": "0",
+                    "pl7.app/table/orderPriority": string(orderDiversity),
+                    "pl7.app/table/visibility": "optional",
+                    "pl7.app/label": "Refine Tags " + umiTag + " - Output Diversity"
+                }
             }
-        }
-    },
-    {
-        column: "refineTags.UMI.outputDiversityPercents",
-        id: "refine-tags-umi-output-diversity-percents",
-        allowNA: true,
-        naRegex: "NaN",
-        spec: {
-            name: "mixcr.com/reports/refineTags/UMI/outputDiversityPercents",
-            valueType: "Double",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/max": "100",
-                "pl7.app/table/orderPriority": "85300",
-                "pl7.app/table/visibility": "default",
-                "pl7.app/label": "Refine Tags UMI - Output Diversity (%)"
+        },
+        {
+            column: "refineTags." + umiTag + ".outputDiversityPercents",
+            id: "refine-tags-" + tagL + "-output-diversity-percents",
+            allowNA: true,
+            naRegex: "NaN",
+            spec: {
+                name: "mixcr.com/reports/refineTags/" + umiTag + "/outputDiversityPercents",
+                valueType: "Double",
+                annotations: {
+                    "pl7.app/min": "0",
+                    "pl7.app/max": "100",
+                    "pl7.app/table/orderPriority": string(orderDiversityPercents),
+                    "pl7.app/table/visibility": "default",
+                    "pl7.app/label": "Refine Tags " + umiTag + " - Output Diversity (%)"
+                }
             }
-        }
-    },
-    {
+        }]
+    }
+
+    dataWithUmiColumns = dataWithUmiColumns + [{
         column: "refineTags.numberOfGroupsAccepted",
         id: "refine-tags-number-of-groups-accepted",
         allowNA: true,

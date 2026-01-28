@@ -1,11 +1,11 @@
 {
   "name": "@platforma-open/milaboratories.mixcr-clonotyping-2",
-  "version": "2.15.1",
+  "version": "2.15.2",
   "scripts": {
-    "build": "rm -rf ./block-pack && block-tools pack",
+    "build": "shx rm -rf ./block-pack && block-tools pack",
     "mark-stable": "block-tools mark-stable -r 's3://milab-euce1-prod-pkgs-s3-block-registry/pub/releases/?region=eu-central-1'",
     "prepublishOnly": "block-tools pack && block-tools publish -r 's3://milab-euce1-prod-pkgs-s3-block-registry/pub/releases/?region=eu-central-1'",
-    "do-pack": "rm -f *.tgz && block-tools pack && pnpm pack && mv *.tgz package.tgz"
+    "do-pack": "shx rm -f *.tgz && block-tools pack && pnpm pack && shx mv *.tgz package.tgz"
   },
   "files": [
     "index.d.ts",

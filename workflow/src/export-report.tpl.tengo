@@ -33,7 +33,8 @@ self.body(func(inputs) {
 	stopCodonReplacements := inputs.stopCodonReplacements
 
     isSingleCell := len(presetSpecForBack.cellTags) > 0
-	hasUmi := !is_undefined(presetSpecForBack.umiTags) && len(presetSpecForBack.umiTags) > 0
+    umiTags := presetSpecForBack.umiTags
+	hasUmi := !is_undefined(umiTags) && len(umiTags) > 0
     cellTags := presetSpecForBack.cellTags
     singleCellChainTsvsData := inputs.singleCellChainTsvsData
 	useStopCodonReplacement := !is_undefined(stopCodonTypes) && is_array(stopCodonTypes) && len(stopCodonTypes) > 0
@@ -492,7 +493,7 @@ self.body(func(inputs) {
     
     tsvFile := wfResult.getFile("qc-report-processed.tsv")
 
-    qcReportColumns := qcReportColumns(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellTags)
+    qcReportColumns := qcReportColumns(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellTags, umiTags)
     reportColumnsSpec := qcReportColumns.reportColumnsSpec
 
     qcReportTable := xsv.importFile(
