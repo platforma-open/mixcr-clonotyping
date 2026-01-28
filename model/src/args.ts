@@ -17,6 +17,15 @@ export type PresetFile = z.infer<typeof PresetFile>;
 export const Preset = z.discriminatedUnion('type', [PresetName, PresetFile]);
 export type Preset = z.infer<typeof Preset>;
 
+export const StopCodonType = z.enum(['amber', 'ochre', 'opal']);
+export type StopCodonType = z.infer<typeof StopCodonType>;
+
+export const StopCodonReplacements = z.object({
+  amber: z.string().optional(),
+  ochre: z.string().optional(),
+  opal: z.string().optional(),
+}).optional();
+
 const BlockArgsValidBase = z.object({
   defaultBlockLabel: z.string(),
   customBlockLabel: z.string(),
@@ -41,6 +50,8 @@ const BlockArgsValidBase = z.object({
   isGenericPreset: z.boolean().optional(),
   chains: z.array(z.string()).optional(),
   exportMinQuality: z.boolean().optional(),
+  stopCodonTypes: z.array(StopCodonType).optional(),
+  stopCodonReplacements: StopCodonReplacements,
 });
 
 export const BlockArgsValid = BlockArgsValidBase.superRefine(

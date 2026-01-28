@@ -1,0 +1,179 @@
+pt := import("@platforma-sdk/workflow-tengo:pt")
+text := import("text")
+
+applyStopCodonReplacementsPt := func(df, opts) {
+	if is_undefined(opts) {
+		return df
+	}
+	aminoAcidSeqColumns := opts.aminoAcidSeqColumns
+	aminoAcidSeqColumnPairs := opts.aminoAcidSeqColumnPairs
+	cdr3SeqColumns := opts.cdr3SeqColumns
+	stopCodonTypes := opts.stopCodonTypes
+	stopCodonReplacements := opts.stopCodonReplacements
+	allowedNtColumns := opts.allowedNtColumns
+
+	if is_undefined(aminoAcidSeqColumns) || !is_array(aminoAcidSeqColumns) || len(aminoAcidSeqColumns) == 0 {
+		return df
+	}
+	if is_undefined(stopCodonTypes) || !is_array(stopCodonTypes) || len(stopCodonTypes) == 0 {
+		return df
+	}
+	if !is_undefined(stopCodonReplacements) && !is_map(stopCodonReplacements) {
+		stopCodonReplacements = undefined
+	}
+	if !is_undefined(allowedNtColumns) && !is_array(allowedNtColumns) {
+		allowedNtColumns = undefined
+	}
+
+	contains := func(arr, value) {
+		for v in arr {
+			if v == value { return true }
+		}
+		return false
+	}
+
+	stopReplacement := func(stopType) {
+		if !contains(stopCodonTypes, stopType) {
+			return "*"
+		}
+		if is_undefined(stopCodonReplacements) {
+			return "*"
+		}
+		aa := stopCodonReplacements[stopType]
+		if is_undefined(aa) || aa == "" {
+			return "*"
+		}
+		return text.to_upper(aa)
+	}
+
+	codonMapBase := {
+		"TTT": "F", "TTC": "F", "TTA": "L", "TTG": "L",
+		"TCT": "S", "TCC": "S", "TCA": "S", "TCG": "S",
+		"TAT": "Y", "TAC": "Y", "TAA": "*",
+		"TAG": "*", "TGT": "C", "TGC": "C",
+		"TGA": "*", "TGG": "W",
+		"CTT": "L", "CTC": "L", "CTA": "L", "CTG": "L",
+		"CCT": "P", "CCC": "P", "CCA": "P", "CCG": "P",
+		"CAT": "H", "CAC": "H", "CAA": "Q", "CAG": "Q",
+		"CGT": "R", "CGC": "R", "CGA": "R", "CGG": "R",
+		"ATT": "I", "ATC": "I", "ATA": "I", "ATG": "M",
+		"ACT": "T", "ACC": "T", "ACA": "T", "ACG": "T",
+		"AAT": "N", "AAC": "N", "AAA": "K", "AAG": "K",
+		"AGT": "S", "AGC": "S", "AGA": "R", "AGG": "R",
+		"GTT": "V", "GTC": "V", "GTA": "V", "GTG": "V",
+		"GCT": "A", "GCC": "A", "GCA": "A", "GCG": "A",
+		"GAT": "D", "GAC": "D", "GAA": "E", "GAG": "E",
+		"GGT": "G", "GGC": "G", "GGA": "G", "GGG": "G"
+	}
+
+	codonMapReplace := {
+		"TTT": "F", "TTC": "F", "TTA": "L", "TTG": "L",
+		"TCT": "S", "TCC": "S", "TCA": "S", "TCG": "S",
+		"TAT": "Y", "TAC": "Y", "TAA": stopReplacement("ochre"),
+		"TAG": stopReplacement("amber"), "TGT": "C", "TGC": "C",
+		"TGA": stopReplacement("opal"), "TGG": "W",
+		"CTT": "L", "CTC": "L", "CTA": "L", "CTG": "L",
+		"CCT": "P", "CCC": "P", "CCA": "P", "CCG": "P",
+		"CAT": "H", "CAC": "H", "CAA": "Q", "CAG": "Q",
+		"CGT": "R", "CGC": "R", "CGA": "R", "CGG": "R",
+		"ATT": "I", "ATC": "I", "ATA": "I", "ATG": "M",
+		"ACT": "T", "ACC": "T", "ACA": "T", "ACG": "T",
+		"AAT": "N", "AAC": "N", "AAA": "K", "AAG": "K",
+		"AGT": "S", "AGC": "S", "AGA": "R", "AGG": "R",
+		"GTT": "V", "GTC": "V", "GTA": "V", "GTG": "V",
+		"GCT": "A", "GCC": "A", "GCA": "A", "GCG": "A",
+		"GAT": "D", "GAC": "D", "GAA": "E", "GAG": "E",
+		"GGT": "G", "GGC": "G", "GGA": "G", "GGG": "G"
+	}
+
+	translateNtToAaExpr := func(ntExpr, codonMap) {
+		seq := ntExpr.fillNull("").strToUpper()
+		seq = seq.strReplace("(.{3})", "$1|", { replaceAll: true })
+		for codon, aa in codonMap {
+			seq = seq.strReplace(codon + "|", aa + "|", { replaceAll: true, literal: true })
+		}
+		seq = seq.strReplace("\\|$", "", { replaceAll: false })
+		seq = seq.strReplace("|", "", { replaceAll: true, literal: true })
+		seq = seq.strReplace("[ACGT]{1,2}$", "", { replaceAll: true })
+		return seq
+	}
+
+	pairs := []
+	if is_array(aminoAcidSeqColumnPairs) && len(aminoAcidSeqColumnPairs) > 0 {
+		for p in aminoAcidSeqColumnPairs {
+			if is_map(p) && !is_undefined(p.aa) && !is_undefined(p.nt) {
+				if !is_undefined(allowedNtColumns) && !contains(allowedNtColumns, p.nt) {
+					continue
+				}
+				pairs = append(pairs, p)
+			}
+		}
+	}
+	if len(pairs) == 0 {
+		for aaCol in aminoAcidSeqColumns {
+			ntCol := text.replace(aaCol, "aaSeq", "nSeq", 1)
+			if text.has_suffix(ntCol, "InFrame") {
+				ntCol = text.replace(ntCol, "InFrame", "", 1)
+			}
+			if !is_undefined(allowedNtColumns) && !contains(allowedNtColumns, ntCol) {
+				continue
+			}
+			pairs = append(pairs, { aa: aaCol, nt: ntCol })
+		}
+	}
+
+	expressions := []
+	replacedAnyExprs := []
+	replacedColsExprs := []
+	aaColumnsUsed := []
+	for pair in pairs {
+		aaCol := pair.aa
+		ntCol := pair.nt
+		translatedBase := translateNtToAaExpr(pt.col(ntCol), codonMapBase)
+		translatedReplaced := translateNtToAaExpr(pt.col(ntCol), codonMapReplace)
+		expressions = append(expressions, translatedReplaced.alias(aaCol))
+		cond := translatedReplaced.neq(translatedBase)
+		replacedAnyExprs = append(replacedAnyExprs, cond)
+		replacedColsExprs = append(replacedColsExprs, pt.when(cond).then(pt.lit(aaCol)).otherwise(pt.lit("")))
+		aaColumnsUsed = append(aaColumnsUsed, aaCol)
+	}
+	if len(expressions) > 0 {
+		df = df.withColumns(expressions...)
+	}
+
+	if len(replacedAnyExprs) > 0 {
+		colsList := pt.concatStr(replacedColsExprs, { delimiter: "," })
+		colsList = colsList.strReplace(",+", ",", { replaceAll: true }).strReplace("^,|,$", "", { replaceAll: true })
+		df = df.withColumns(
+			pt.anyHorizontal(replacedAnyExprs...).alias("stopCodonReplaced"),
+			colsList.alias("stopCodonReplacedColumns")
+		)
+	}
+
+	stopChecks := []
+	for colName in aaColumnsUsed {
+		stopChecks = append(stopChecks, pt.col(colName).strContains("*", { literal: true }))
+	}
+	if len(stopChecks) > 0 {
+		df = df.filter(pt.anyHorizontal(stopChecks...).eq(false))
+	}
+
+	if !is_undefined(cdr3SeqColumns) && len(cdr3SeqColumns) > 0 {
+		regionChecks := []
+		for colName in cdr3SeqColumns {
+			if !contains(aaColumnsUsed, colName) {
+				continue
+			}
+			regionChecks = append(regionChecks, pt.col(colName).strToUpper().eq("REGION_NOT_COVERED"))
+		}
+		if len(regionChecks) > 0 {
+			df = df.filter(pt.anyHorizontal(regionChecks...).eq(false))
+		}
+	}
+
+	return df
+}
+
+export {
+	applyStopCodonReplacementsPt: applyStopCodonReplacementsPt
+}
