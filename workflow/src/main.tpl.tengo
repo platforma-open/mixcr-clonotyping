@@ -132,7 +132,9 @@ wf.body(func(args) {
 				materialType: args.materialType,
 				tagPattern: args.tagPattern,
 				assembleClonesBy: args.assembleClonesBy,
-				exportMinQuality: args.exportMinQuality
+				exportMinQuality: args.exportMinQuality,
+				stopCodonTypes: args.stopCodonTypes,
+				stopCodonReplacements: args.stopCodonReplacements
 		})
 	})
 
