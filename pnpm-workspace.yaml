@@ -39,6 +39,7 @@ catalog:
 
   '@changesets/cli': ^2.29.7
   'js-yaml': ^4.1.0
+  'shx': ^0.4.0
   '@zip.js/zip.js': ^2.8.8
   '@types/wicg-file-system-access': ^2023.10.7
 

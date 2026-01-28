@@ -1162,10 +1162,6 @@ packages:
     resolution: {integrity: sha512-EAPeEGnC7e+VXF5SU9GghZP4mnZFd4TzF2NxhS/R3y2igkzIdNc1GcO8Pnv3MaSJ9xrBKSRRdqPm8AkjcSalhw==}
     engines: {node: '>=22.19.0'}
 
-  '@milaboratories/ts-helpers@1.6.0':
-    resolution: {integrity: sha512-/IE/bkICWkNzbFgU8UEkuVG58crBUl4EOTtT8lzToIRVOU0LfLJwdTZqJgCurmgpaU2rlI02xtlzhg+G7cU0vQ==}
-    engines: {node: '>=22.19.0'}
-
   '@milaboratories/uikit@2.10.2':
     resolution: {integrity: sha512-q2i1TbqCCbpkNgVAJTOPTaz1W66vPBKCbIdX4u1OYe754M6AS9i2tuJL6wx3RhF1PdZvmFXTwfKTqgJCt87rNA==}
 
@@ -1288,10 +1284,6 @@ packages:
 
   '@platforma-sdk/block-tools@2.6.35':
     resolution: {integrity: sha512-usNjYau/S+FOLy0uD9MdDynK3nE7IiouuoYppyZBh49/OGV6wyjcXnBnRxJmp1TbxVw2w6h+eEo3fK3Dt8lhbg==}
-    hasBin: true
-
-  '@platforma-sdk/block-tools@2.6.30':
-    resolution: {integrity: sha512-Kkkuap5YL7Gt6J56pcABy6U1LEmMCnwt5kVVqBQm+VdDl+uu2erOlfgBBzna8ebsECOiJUM23PU7yj9BeJL6Fw==}
     hasBin: true
 
   '@platforma-sdk/blocks-deps-updater@2.0.0':
@@ -5886,11 +5878,6 @@ snapshots:
       canonicalize: 2.1.0
       denque: 2.1.0
 
-  '@milaboratories/ts-helpers@1.6.0':
-    dependencies:
-      canonicalize: 2.1.0
-      denque: 2.1.0
-
   '@milaboratories/uikit@2.10.2(typescript@5.6.3)':
     dependencies:
       '@milaboratories/helpers': 1.13.0
@@ -6073,29 +6060,6 @@ snapshots:
       '@milaboratories/resolve-helper': 1.1.1
       '@milaboratories/ts-helpers': 1.7.0
       '@milaboratories/ts-helpers-oclif': 1.1.35
-      '@oclif/core': 4.8.0
-      '@platforma-sdk/blocks-deps-updater': 2.0.0
-      canonicalize: 2.1.0
-      lru-cache: 11.2.4
-      mime-types: 2.1.35
-      remeda: 2.32.0
-      tar: 7.5.2
-      undici: 7.16.0
-      yaml: 2.8.2
-      zod: 3.23.8
-    transitivePeerDependencies:
-      - aws-crt
-      - supports-color
-
-  '@platforma-sdk/block-tools@2.6.30':
-    dependencies:
-      '@aws-sdk/client-s3': 3.859.0
-      '@milaboratories/pl-http': 1.2.0
-      '@milaboratories/pl-model-common': 1.24.0
-      '@milaboratories/pl-model-middle-layer': 1.10.0
-      '@milaboratories/resolve-helper': 1.1.1
-      '@milaboratories/ts-helpers': 1.6.0
-      '@milaboratories/ts-helpers-oclif': 1.1.34
       '@oclif/core': 4.8.0
       '@platforma-sdk/blocks-deps-updater': 2.0.0
       canonicalize: 2.1.0
