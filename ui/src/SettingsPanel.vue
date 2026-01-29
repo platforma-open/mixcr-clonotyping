@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Preset } from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
+import type { Preset, StopCodonType } from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
 import { SupportedPresetList } from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
 import type { ImportFileHandle, PlRef } from '@platforma-sdk/model';
 import { getFilePathFromHandle } from '@platforma-sdk/model';
@@ -318,6 +318,72 @@ const exportMinQuality = computed({
     app.model.args.exportMinQuality = value;
   },
 });
+
+const stopCodonOptions: ListOption<StopCodonType>[] = [
+  { label: 'Amber (TAG)', value: 'amber' },
+  { label: 'Ochre (TAA)', value: 'ochre' },
+  { label: 'Opal/Umber (TGA)', value: 'opal' },
+];
+
+const aminoAcidOptions: ListOption[] = [
+  { label: 'A (Ala)', value: 'A' },
+  { label: 'C (Cys)', value: 'C' },
+  { label: 'D (Asp)', value: 'D' },
+  { label: 'E (Glu)', value: 'E' },
+  { label: 'F (Phe)', value: 'F' },
+  { label: 'G (Gly)', value: 'G' },
+  { label: 'H (His)', value: 'H' },
+  { label: 'I (Ile)', value: 'I' },
+  { label: 'K (Lys)', value: 'K' },
+  { label: 'L (Leu)', value: 'L' },
+  { label: 'M (Met)', value: 'M' },
+  { label: 'N (Asn)', value: 'N' },
+  { label: 'P (Pro)', value: 'P' },
+  { label: 'Q (Gln)', value: 'Q' },
+  { label: 'R (Arg)', value: 'R' },
+  { label: 'S (Ser)', value: 'S' },
+  { label: 'T (Thr)', value: 'T' },
+  { label: 'V (Val)', value: 'V' },
+  { label: 'W (Trp)', value: 'W' },
+  { label: 'Y (Tyr)', value: 'Y' },
+];
+
+const stopCodonSelection = computed({
+  get: () => app.model.args.stopCodonTypes ?? [],
+  set: (value: StopCodonType[]) => {
+    app.model.args.stopCodonTypes = value.length > 0 ? value : undefined;
+  },
+});
+
+const stopCodonReplacementModel = (type: StopCodonType) =>
+  computed({
+    get: () => app.model.args.stopCodonReplacements?.[type],
+    set: (value: string | undefined) => {
+      const current = app.model.args.stopCodonReplacements ?? {};
+      if (value === undefined) {
+        if (current[type] !== undefined) {
+          delete current[type];
+        }
+        app.model.args.stopCodonReplacements = Object.keys(current).length > 0 ? current : undefined;
+      } else {
+        app.model.args.stopCodonReplacements = { ...current, [type]: value };
+      }
+    },
+  });
+
+const amberReplacement = stopCodonReplacementModel('amber');
+const ochreReplacement = stopCodonReplacementModel('ochre');
+const opalReplacement = stopCodonReplacementModel('opal');
+
+watch(stopCodonSelection, (selected) => {
+  const current = app.model.args.stopCodonReplacements;
+  if (!current) return;
+  const next = { ...current };
+  for (const key of Object.keys(next) as StopCodonType[]) {
+    if (!selected.includes(key)) delete next[key];
+  }
+  app.model.args.stopCodonReplacements = Object.keys(next).length > 0 ? next : undefined;
+});
 </script>
 
 <template>
@@ -480,6 +546,39 @@ const exportMinQuality = computed({
         placeholder="Type spicies name"
       />
     </template>
+
+    <PlSectionSeparator>Stop codon replacement</PlSectionSeparator>
+    <PlDropdownMulti
+      v-model="stopCodonSelection"
+      label="Stop codons"
+      :options="stopCodonOptions"
+      clearable
+    >
+      <template #tooltip>
+        Select stop codons to replace in amino acid sequences.
+      </template>
+    </PlDropdownMulti>
+    <PlDropdown
+      v-if="stopCodonSelection.includes('amber')"
+      v-model="amberReplacement"
+      :options="aminoAcidOptions"
+      label="Replace Amber (TAG) with"
+      clearable
+    />
+    <PlDropdown
+      v-if="stopCodonSelection.includes('ochre')"
+      v-model="ochreReplacement"
+      :options="aminoAcidOptions"
+      label="Replace Ochre (TAA) with"
+      clearable
+    />
+    <PlDropdown
+      v-if="stopCodonSelection.includes('opal')"
+      v-model="opalReplacement"
+      :options="aminoAcidOptions"
+      label="Replace Opal/Umber (TGA) with"
+      clearable
+    />
 
     <PlSectionSeparator>Resource Allocation</PlSectionSeparator>
     <PlNumberField

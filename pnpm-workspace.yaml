@@ -6,17 +6,17 @@ packages:
   - test
 
 catalog:
-  '@milaboratories/ts-builder': 1.2.2
+  '@milaboratories/ts-builder': 1.2.4
   '@milaboratories/ts-configs': 1.2.0
-  '@platforma-sdk/workflow-tengo': 5.8.0
-  '@platforma-sdk/model': 1.51.6
+  '@platforma-sdk/workflow-tengo': 5.8.1
+  '@platforma-sdk/model': 1.53.2
   '@platforma-sdk/ui-vue': 1.51.7
-  '@platforma-sdk/tengo-builder': 2.4.8
+  '@platforma-sdk/tengo-builder': 2.4.12
   '@platforma-sdk/package-builder': 3.11.0
-  '@platforma-sdk/block-tools': 2.6.30
+  '@platforma-sdk/block-tools': 2.6.35
   '@platforma-sdk/eslint-config': 1.2.0
 
-  '@platforma-sdk/test': 1.51.6
+  '@platforma-sdk/test': 1.53.2
   '@milaboratories/helpers': 1.13.0
 
   '@platforma-open/milaboratories.software-mixcr': 4.7.0-254-develop
@@ -29,8 +29,7 @@ catalog:
   'typescript': ~5.6.3
   'turbo': ^2.5.8
 
-  'vitest': ^4.0.7
-  'shx': ^0.4.0
+  'vitest': ^4.0.18
   'eslint': ^9.38.0
 
   '@vueuse/core': ^13.6.0
@@ -40,6 +39,7 @@ catalog:
 
   '@changesets/cli': ^2.29.7
   'js-yaml': ^4.1.0
+  'shx': ^0.4.0
   '@zip.js/zip.js': ^2.8.8
   '@types/wicg-file-system-access': ^2023.10.7
 

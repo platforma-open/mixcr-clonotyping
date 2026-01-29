@@ -210,6 +210,10 @@ self.body(func(inputs) {
 	columnsSpecPerClonotypeNoAggregates := exportSpecs.columnsSpecPerClonotypeNoAggregates
 	columnsSpecPerClonotypeAggregates := exportSpecs.columnsSpecPerClonotypeAggregates
 	columnsSpecPerClonotypeSc := exportSpecs.columnsSpecPerClonotypeSc
+	aminoAcidSeqColumns := exportSpecs.aminoAcidSeqColumns
+	aminoAcidSeqColumnPairs := exportSpecs.aminoAcidSeqColumnPairs
+	cdr3SeqColumns := exportSpecs.cdr3SeqColumns
+	productiveFeature := exportSpecs.productiveFeature
 
 	clonotypeKeyColumns := exportSpecs.clonotypeKeyColumns
 	clonotypeKeyArgs := exportSpecs.clonotypeKeyArgs
@@ -406,6 +410,10 @@ self.body(func(inputs) {
 						clonotypeKeyColumns: clonotypeKeyColumns,
 						clonotypeKeyArgs: clonotypeKeyArgs,
 
+						aminoAcidSeqColumns: aminoAcidSeqColumns,
+						aminoAcidSeqColumnPairs: aminoAcidSeqColumnPairs,
+						cdr3SeqColumns: cdr3SeqColumns,
+
 						mainIsProductiveColumn: mainIsProductiveColumn,
 						mainIsProductiveArgs: mainIsProductiveArgs,
 						mainAbundanceColumnNormalized: mainAbundanceColumnNormalized,
@@ -419,7 +427,9 @@ self.body(func(inputs) {
 						mainAbundanceColumnIsReadCount: (!is_undefined(cellTagColumns) && len(cellTagColumns) > 0 && mainAbundanceColumnUnnormalized == "readCount") ? true : undefined,
 
 						exportArgs: exportArgs,
-						isLibraryFileGzipped: isLibraryFileGzipped
+						isLibraryFileGzipped: isLibraryFileGzipped,
+						stopCodonTypes: params.stopCodonTypes,
+						stopCodonReplacements: params.stopCodonReplacements
 					}, { removeUndefs: true }),
 					library: library
 				},
@@ -779,6 +789,9 @@ self.body(func(inputs) {
 		library: library,
 		isLibraryFileGzipped: isLibraryFileGzipped,
         clonotypeTablesData: clonotypeTablesData,
+		productiveFeature: productiveFeature,
+		stopCodonTypes: params.stopCodonTypes,
+		stopCodonReplacements: params.stopCodonReplacements,
 		singleCellChainTsvsData: singleCellChainTsvs
 	})
 
