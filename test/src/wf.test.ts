@@ -163,7 +163,7 @@ blockTest(
 
     expect(outputs3.reports.isComplete).toEqual(true);
 
-    const qcEntry = outputs3.qc.data[0];
+    const qcEntry = outputs3.qc!.data[0];
     expect(qcEntry).toBeDefined();
 
     const reportEntries = outputs3.reports.data;
@@ -356,7 +356,7 @@ blockTest(
 
     expect(outputs3.reports.isComplete).toEqual(true);
 
-    const qcEntry = outputs3.qc.data[0];
+    const qcEntry = outputs3.qc!.data[0];
     expect(qcEntry).toBeDefined();
 
     const reportEntries = outputs3.reports.data;
