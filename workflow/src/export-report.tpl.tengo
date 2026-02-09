@@ -34,6 +34,12 @@ self.body(func(inputs) {
     umiTags := presetSpecForBack.umiTags
 	hasUmi := !is_undefined(umiTags) && len(umiTags) > 0
     cellTags := presetSpecForBack.cellTags
+    hasAssembleCells := false
+    for stage in presetSpecForBack.analysisStages {
+        if stage == "assembleCells" {
+            hasAssembleCells = true
+        }
+    }
     singleCellChainTsvsData := inputs.singleCellChainTsvsData
 
     featureForFlags := "CDR3"
@@ -410,7 +416,7 @@ self.body(func(inputs) {
     
     tsvFile := wfResult.getFile("qc-report-processed.tsv")
 
-    qcReportColumns := qcReportColumns(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellTags, umiTags)
+    qcReportColumns := qcReportColumns(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellTags, umiTags, hasAssembleCells)
     reportColumnsSpec := qcReportColumns.reportColumnsSpec
 
     qcReportTable := xsv.importFile(
