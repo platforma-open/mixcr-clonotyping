@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.23.0
+
+### Minor Changes
+
+- 3c8ed71: stop codon replacement and dep updates
+
 ## 3.22.0
 
 ### Minor Changes
