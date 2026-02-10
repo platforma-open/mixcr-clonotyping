@@ -29,16 +29,79 @@ self.body(func(inputs) {
     library := inputs.library
     isLibraryFileGzipped := inputs.isLibraryFileGzipped
     clonotypeTablesData := inputs.clonotypeTablesData
+	stopCodonTypes := inputs.stopCodonTypes
+	stopCodonReplacements := inputs.stopCodonReplacements
 
     isSingleCell := len(presetSpecForBack.cellTags) > 0
     umiTags := presetSpecForBack.umiTags
 	hasUmi := !is_undefined(umiTags) && len(umiTags) > 0
     cellTags := presetSpecForBack.cellTags
     singleCellChainTsvsData := inputs.singleCellChainTsvsData
+	useStopCodonReplacement := !is_undefined(stopCodonTypes) && is_array(stopCodonTypes) && len(stopCodonTypes) > 0
+	if is_undefined(stopCodonReplacements) || !is_map(stopCodonReplacements) {
+		stopCodonReplacements = {}
+	}
 
-    featureForFlags := "CDR3"
+    featureForFlags := inputs.productiveFeature
+    if is_undefined(featureForFlags) || featureForFlags == "" {
+        featureForFlags = "CDR3"
+    }
     isOOFColumn := "isOOF" + featureForFlags
     hasStopsColumn := "hasStopsIn" + featureForFlags
+
+	contains := func(arr, value) {
+		for v in arr {
+			if v == value { return true }
+		}
+		return false
+	}
+
+	stopReplacement := func(stopType) {
+		if !contains(stopCodonTypes, stopType) {
+			return "*"
+		}
+		aa := stopCodonReplacements[stopType]
+		if is_undefined(aa) || aa == "" {
+			return "*"
+		}
+		return text.to_upper(aa)
+	}
+
+    ll.print("__THE_LOG__", stopReplacement("ochre"))
+    ll.print("__THE_LOG__", stopReplacement("amber"))
+    ll.print("__THE_LOG__", stopReplacement("opal"))
+
+	codonMapReplace := {
+		"TTT": "F", "TTC": "F", "TTA": "L", "TTG": "L",
+		"TCT": "S", "TCC": "S", "TCA": "S", "TCG": "S",
+		"TAT": "Y", "TAC": "Y", "TAA": stopReplacement("ochre"),
+		"TAG": stopReplacement("amber"), "TGT": "C", "TGC": "C",
+		"TGA": stopReplacement("opal"), "TGG": "W",
+		"CTT": "L", "CTC": "L", "CTA": "L", "CTG": "L",
+		"CCT": "P", "CCC": "P", "CCA": "P", "CCG": "P",
+		"CAT": "H", "CAC": "H", "CAA": "Q", "CAG": "Q",
+		"CGT": "R", "CGC": "R", "CGA": "R", "CGG": "R",
+		"ATT": "I", "ATC": "I", "ATA": "I", "ATG": "M",
+		"ACT": "T", "ACC": "T", "ACA": "T", "ACG": "T",
+		"AAT": "N", "AAC": "N", "AAA": "K", "AAG": "K",
+		"AGT": "S", "AGC": "S", "AGA": "R", "AGG": "R",
+		"GTT": "V", "GTC": "V", "GTA": "V", "GTG": "V",
+		"GCT": "A", "GCC": "A", "GCA": "A", "GCG": "A",
+		"GAT": "D", "GAC": "D", "GAA": "E", "GAG": "E",
+		"GGT": "G", "GGC": "G", "GGA": "G", "GGG": "G"
+	}
+
+	translateNtToAaExpr := func(ntExpr, codonMap) {
+		seq := ntExpr.fillNull("").strToUpper()
+		seq = seq.strReplace("(.{3})", "$1|", { replaceAll: true })
+		for codon, aa in codonMap {
+			seq = seq.strReplace(codon + "|", aa + "|", { replaceAll: true, literal: true })
+		}
+		seq = seq.strReplace("\\|$", "", { replaceAll: false })
+		seq = seq.strReplace("|", "", { replaceAll: true, literal: true })
+		seq = seq.strReplace("[ACGT]{1,2}$", "", { replaceAll: true })
+		return seq
+	}
 
     chainInfos := {
 	"IGHeavy": { mixcrFilter: "IGH", name: "IG Heavy", shortName: "Heavy" },
@@ -153,6 +216,7 @@ self.body(func(inputs) {
         exportFiltersCmd = exportFiltersCmd.
             arg("-isOOF").arg(featureForFlags).
             arg("-hasStops").arg(featureForFlags).
+            arg("-nFeature").arg(featureForFlags).
             arg("clones.clns").
             addFile("clones.clns", clnsFile).
             arg("clones.tsv").
@@ -166,10 +230,19 @@ self.body(func(inputs) {
 		}
         exportFiltersResult := exportFiltersCmd.cacheHours(3).run()
         filterTsv := exportFiltersResult.getFile("clones.tsv")
-        dfFilters := wf.frame(filterTsv, { xsvType: "tsv", inferSchema: false, schema: [ { column: isOOFColumn, type: "String" }, { column: hasStopsColumn, type: "String" } ] })
+        schema := [ { column: isOOFColumn, type: "String" }, { column: hasStopsColumn, type: "String" } ]
+        if useStopCodonReplacement {
+            schema = append(schema, { column: "nSeq" + featureForFlags, type: "String" })
+        }
+        dfFilters := wf.frame(filterTsv, { xsvType: "tsv", inferSchema: false, schema: schema })
+        stopExpr := pt.when(pt.col(hasStopsColumn).strToUpper().eq("TRUE")).then(pt.lit(1)).otherwise(pt.lit(0))
+        if useStopCodonReplacement {
+            translated := translateNtToAaExpr(pt.col("nSeq" + featureForFlags), codonMapReplace)
+            stopExpr = pt.when(translated.strContains("*", { literal: true })).then(pt.lit(1)).otherwise(pt.lit(0))
+        }
         dfFilters = dfFilters.withColumns(
             pt.when(pt.col(isOOFColumn).strToUpper().eq("TRUE")).then(pt.lit(1)).otherwise(pt.lit(0)).alias("__oof"),
-            pt.when(pt.col(hasStopsColumn).strToUpper().eq("TRUE")).then(pt.lit(1)).otherwise(pt.lit(0)).alias("__stop")
+            stopExpr.alias("__stop")
         )
         dfFilterCount := dfFilters.select(
             pt.lit(sampleId).alias("sampleId"),
@@ -211,6 +284,7 @@ self.body(func(inputs) {
                 exportChainFiltersResult := exportChainFiltersCmd.
                     arg("-isOOF").arg(featureForFlags).
                     arg("-hasStops").arg(featureForFlags).
+                    arg("-nFeature").arg(featureForFlags).
                     arg("clones.clns").
                     addFile("clones.clns", clnsFile).
                     arg("clones.tsv").
@@ -218,10 +292,19 @@ self.body(func(inputs) {
                     cacheHours(3).
                     run()
                 chainFilterTsv := exportChainFiltersResult.getFile("clones.tsv")
-                dfChainFilters := wf.frame(chainFilterTsv, { xsvType: "tsv", inferSchema: false, schema: [ { column: isOOFColumn, type: "String" }, { column: hasStopsColumn, type: "String" } ] })
+                chainSchema := [ { column: isOOFColumn, type: "String" }, { column: hasStopsColumn, type: "String" } ]
+                if useStopCodonReplacement {
+                    chainSchema = append(chainSchema, { column: "nSeq" + featureForFlags, type: "String" })
+                }
+                dfChainFilters := wf.frame(chainFilterTsv, { xsvType: "tsv", inferSchema: false, schema: chainSchema })
+                chainStopExpr := pt.when(pt.col(hasStopsColumn).strToUpper().eq("TRUE")).then(pt.lit(1)).otherwise(pt.lit(0))
+                if useStopCodonReplacement {
+                    translated := translateNtToAaExpr(pt.col("nSeq" + featureForFlags), codonMapReplace)
+                    chainStopExpr = pt.when(translated.strContains("*", { literal: true })).then(pt.lit(1)).otherwise(pt.lit(0))
+                }
                 dfChainFilters = dfChainFilters.withColumns(
                     pt.when(pt.col(isOOFColumn).strToUpper().eq("TRUE")).then(pt.lit(1)).otherwise(pt.lit(0)).alias("__oof"),
-                    pt.when(pt.col(hasStopsColumn).strToUpper().eq("TRUE")).then(pt.lit(1)).otherwise(pt.lit(0)).alias("__stop")
+                    chainStopExpr.alias("__stop")
                 )
                 dfChainCount := dfChainFilters.select(
                     pt.lit(sampleId).alias("sampleId"),
