@@ -6,7 +6,7 @@
   "scripts": {
     "test": "vitest --run --passWithNoTests",
     "lint": "eslint .",
-    "type-check": "ts-builder types --target block-test"
+    "type-check": "ts-builder type-check --target block-test"
   },
   "files": [],
   "keywords": [],

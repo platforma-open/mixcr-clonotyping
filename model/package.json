@@ -16,7 +16,7 @@
   "scripts": {
     "build": "ts-builder build --target block-model && block-tools build-model",
     "watch": "ts-builder build --target block-model --watch",
-    "type-check": "ts-builder types --target block-model",
+    "type-check": "ts-builder type-check --target block-model",
     "test": "vitest --run --passWithNoTests",
     "lint": "eslint .",
     "do-pack": "shx rm -f *.tgz && pnpm pack && shx mv *.tgz package.tgz"
