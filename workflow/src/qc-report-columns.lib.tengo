@@ -6,7 +6,7 @@ pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 text := import("text")
 
 // QC Report column specifications function
-getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellTags, umiTags) {
+getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellTags, umiTags, hasAssembleCells) {
     if is_undefined(umiTags) {
         umiTags = []
     }
@@ -1045,253 +1045,258 @@ getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellT
     //         }
     //     }
     // },
-    {
-        column: "assembleCells.cellBarcodesWithFoundGroups",
-        id: "assemble-cells-cell-barcodes-with-found-groups",
-        allowNA: true,
-        naRegex: "NaN",
-        spec: {
-            name: "mixcr.com/reports/assembleCells/cellBarcodesWithFoundGroups",
-            valueType: "Long",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/table/orderPriority": "65000",
-                "pl7.app/table/visibility": "optional",
-                "pl7.app/label": "Cell Barcodes with Found Groups"
+    ]
+
+    if hasAssembleCells {
+        singleCellColumns += [
+        {
+            column: "assembleCells.cellBarcodesWithFoundGroups",
+            id: "assemble-cells-cell-barcodes-with-found-groups",
+            allowNA: true,
+            naRegex: "NaN",
+            spec: {
+                name: "mixcr.com/reports/assembleCells/cellBarcodesWithFoundGroups",
+                valueType: "Long",
+                annotations: {
+                    "pl7.app/min": "0",
+                    "pl7.app/table/orderPriority": "65000",
+                    "pl7.app/table/visibility": "optional",
+                    "pl7.app/label": "Cell Barcodes with Found Groups"
+                }
             }
-        }
-    },
-    {
-        column: "assembleCells.cellBarcodesWithFoundGroupsPercents",
-        id: "assemble-cells-cell-barcodes-with-found-groups-percents",
-        allowNA: true,
-        naRegex: "NaN",
-        spec: {
-            name: "mixcr.com/reports/assembleCells/cellBarcodesWithFoundGroupsPercents",
-            valueType: "Double",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/max": "100",
-                "pl7.app/table/orderPriority": "64100",
-                "pl7.app/table/visibility": "default",
-                "pl7.app/label": "Cell Barcodes with Found Groups (%)"
+        },
+        {
+            column: "assembleCells.cellBarcodesWithFoundGroupsPercents",
+            id: "assemble-cells-cell-barcodes-with-found-groups-percents",
+            allowNA: true,
+            naRegex: "NaN",
+            spec: {
+                name: "mixcr.com/reports/assembleCells/cellBarcodesWithFoundGroupsPercents",
+                valueType: "Double",
+                annotations: {
+                    "pl7.app/min": "0",
+                    "pl7.app/max": "100",
+                    "pl7.app/table/orderPriority": "64100",
+                    "pl7.app/table/visibility": "default",
+                    "pl7.app/label": "Cell Barcodes with Found Groups (%)"
+                }
             }
-        }
-    },
-    {
-        column: "assembleCells.cellsNotIncludedBecauseContamination",
-        id: "assemble-cells-cells-not-included-because-contamination",
-        allowNA: true,
-        naRegex: "",
-        spec: {
-            name: "mixcr.com/reports/assembleCells/cellsNotIncludedBecauseContamination",
-            valueType: "Long",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/table/orderPriority": "64200",
-                "pl7.app/table/visibility": "optional",
-                "pl7.app/label": "Cells Not Included Because Contamination"
+        },
+        {
+            column: "assembleCells.cellsNotIncludedBecauseContamination",
+            id: "assemble-cells-cells-not-included-because-contamination",
+            allowNA: true,
+            naRegex: "",
+            spec: {
+                name: "mixcr.com/reports/assembleCells/cellsNotIncludedBecauseContamination",
+                valueType: "Long",
+                annotations: {
+                    "pl7.app/min": "0",
+                    "pl7.app/table/orderPriority": "64200",
+                    "pl7.app/table/visibility": "optional",
+                    "pl7.app/label": "Cells Not Included Because Contamination"
+                }
             }
-        }
-    },
-    {
-        column: "assembleCells.cellsNotIncludedBecauseContaminationPercents",
-        id: "assemble-cells-cells-not-included-because-contamination-percents",
-        allowNA: true,
-        naRegex: "NaN",
-        spec: {
-            name: "mixcr.com/reports/assembleCells/cellsNotIncludedBecauseContaminationPercents",
-            valueType: "Double",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/max": "100",
-                "pl7.app/table/orderPriority": "64300",
-                "pl7.app/table/visibility": "default",
-                "pl7.app/label": "Cells Not Included Because Contamination (%)"
+        },
+        {
+            column: "assembleCells.cellsNotIncludedBecauseContaminationPercents",
+            id: "assemble-cells-cells-not-included-because-contamination-percents",
+            allowNA: true,
+            naRegex: "NaN",
+            spec: {
+                name: "mixcr.com/reports/assembleCells/cellsNotIncludedBecauseContaminationPercents",
+                valueType: "Double",
+                annotations: {
+                    "pl7.app/min": "0",
+                    "pl7.app/max": "100",
+                    "pl7.app/table/orderPriority": "64300",
+                    "pl7.app/table/visibility": "default",
+                    "pl7.app/label": "Cells Not Included Because Contamination (%)"
+                }
             }
-        }
-    },
-    {
-        column: "assembleCells.cloneContamination",
-        id: "assemble-cells-clone-contamination",
-        allowNA: true,
-        naRegex: "NaN",
-        spec: {
-            name: "mixcr.com/reports/assembleCells/cloneContamination",
-            valueType: "Long",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/table/orderPriority": "64400",
-                "pl7.app/table/visibility": "optional",
-                "pl7.app/label": "Clone Contamination"
+        },
+        {
+            column: "assembleCells.cloneContamination",
+            id: "assemble-cells-clone-contamination",
+            allowNA: true,
+            naRegex: "NaN",
+            spec: {
+                name: "mixcr.com/reports/assembleCells/cloneContamination",
+                valueType: "Long",
+                annotations: {
+                    "pl7.app/min": "0",
+                    "pl7.app/table/orderPriority": "64400",
+                    "pl7.app/table/visibility": "optional",
+                    "pl7.app/label": "Clone Contamination"
+                }
             }
-        }
-    },
-    {
-        column: "assembleCells.cloneContaminationPercents",
-        id: "assemble-cells-clone-contamination-percents",
-        allowNA: true,
-        naRegex: "NaN",
-        spec: {
-            name: "mixcr.com/reports/assembleCells/cloneContaminationPercents",
-            valueType: "Double",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/max": "100",
-                "pl7.app/table/orderPriority": "64500",
-                "pl7.app/table/visibility": "default",
-                "pl7.app/label": "Clone Contamination (%)"
+        },
+        {
+            column: "assembleCells.cloneContaminationPercents",
+            id: "assemble-cells-clone-contamination-percents",
+            allowNA: true,
+            naRegex: "NaN",
+            spec: {
+                name: "mixcr.com/reports/assembleCells/cloneContaminationPercents",
+                valueType: "Double",
+                annotations: {
+                    "pl7.app/min": "0",
+                    "pl7.app/max": "100",
+                    "pl7.app/table/orderPriority": "64500",
+                    "pl7.app/table/visibility": "default",
+                    "pl7.app/label": "Clone Contamination (%)"
+                }
             }
-        }
-    },
-    {
-        column: "assembleCells.contaminatedCells",
-        id: "assemble-cells-contaminated-cells",
-        allowNA: true,
-        naRegex: "NaN",
-        spec: {
-            name: "mixcr.com/reports/assembleCells/contaminatedCells",
-            valueType: "Long",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/table/orderPriority": "64600",
-                "pl7.app/table/visibility": "optional",
-                "pl7.app/label": "Contaminated Cells"
+        },
+        {
+            column: "assembleCells.contaminatedCells",
+            id: "assemble-cells-contaminated-cells",
+            allowNA: true,
+            naRegex: "NaN",
+            spec: {
+                name: "mixcr.com/reports/assembleCells/contaminatedCells",
+                valueType: "Long",
+                annotations: {
+                    "pl7.app/min": "0",
+                    "pl7.app/table/orderPriority": "64600",
+                    "pl7.app/table/visibility": "optional",
+                    "pl7.app/label": "Contaminated Cells"
+                }
             }
-        }
-    },
-    {
-        column: "assembleCells.contaminatedCellsPercents",
-        id: "assemble-cells-contaminated-cells-percents",
-        allowNA: true,
-        naRegex: "NaN",
-        spec: {
-            name: "mixcr.com/reports/assembleCells/contaminatedCellsPercents",
-            valueType: "Double",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/max": "100",
-                "pl7.app/table/orderPriority": "64700",
-                "pl7.app/table/visibility": "default",
-                "pl7.app/label": "Contaminated Cells (%)"
+        },
+        {
+            column: "assembleCells.contaminatedCellsPercents",
+            id: "assemble-cells-contaminated-cells-percents",
+            allowNA: true,
+            naRegex: "NaN",
+            spec: {
+                name: "mixcr.com/reports/assembleCells/contaminatedCellsPercents",
+                valueType: "Double",
+                annotations: {
+                    "pl7.app/min": "0",
+                    "pl7.app/max": "100",
+                    "pl7.app/table/orderPriority": "64700",
+                    "pl7.app/table/visibility": "default",
+                    "pl7.app/label": "Contaminated Cells (%)"
+                }
             }
-        }
-    },
-    {
-        column: "assembleCells.groupsWithTooMatchClones",
-        id: "assemble-cells-groups-with-too-match-clones",
-        allowNA: true,
-        naRegex: "NaN",
-        spec: {
-            name: "mixcr.com/reports/assembleCells/groupsWithTooMatchClones",
-            valueType: "Long",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/table/orderPriority": "64800",
-                "pl7.app/table/visibility": "optional",
-                "pl7.app/label": "Groups with Too Many Clones"
+        },
+        {
+            column: "assembleCells.groupsWithTooMatchClones",
+            id: "assemble-cells-groups-with-too-match-clones",
+            allowNA: true,
+            naRegex: "NaN",
+            spec: {
+                name: "mixcr.com/reports/assembleCells/groupsWithTooMatchClones",
+                valueType: "Long",
+                annotations: {
+                    "pl7.app/min": "0",
+                    "pl7.app/table/orderPriority": "64800",
+                    "pl7.app/table/visibility": "optional",
+                    "pl7.app/label": "Groups with Too Many Clones"
+                }
             }
-        }
-    },
-    {
-        column: "assembleCells.groupsWithTooMatchClonesPercents",
-        id: "assemble-cells-groups-with-too-match-clones-percents",
-        allowNA: true,
-        naRegex: "NaN",
-        spec: {
-            name: "mixcr.com/reports/assembleCells/groupsWithTooMatchClonesPercents",
-            valueType: "Double",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/max": "100",
-                "pl7.app/table/orderPriority": "64900",
-                "pl7.app/table/visibility": "default",
-                "pl7.app/label": "Groups with Too Many Clones (%)"
+        },
+        {
+            column: "assembleCells.groupsWithTooMatchClonesPercents",
+            id: "assemble-cells-groups-with-too-match-clones-percents",
+            allowNA: true,
+            naRegex: "NaN",
+            spec: {
+                name: "mixcr.com/reports/assembleCells/groupsWithTooMatchClonesPercents",
+                valueType: "Double",
+                annotations: {
+                    "pl7.app/min": "0",
+                    "pl7.app/max": "100",
+                    "pl7.app/table/orderPriority": "64900",
+                    "pl7.app/table/visibility": "default",
+                    "pl7.app/label": "Groups with Too Many Clones (%)"
+                }
             }
-        }
-    },
-    {
-        column: "assembleCells.invalidGroups",
-        id: "assemble-cells-invalid-groups",
-        allowNA: true,
-        naRegex: "NaN",
-        spec: {
-            name: "mixcr.com/reports/assembleCells/invalidGroups",
-            valueType: "Long",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/table/orderPriority": "65000",
-                "pl7.app/table/visibility": "optional",
-                "pl7.app/label": "Invalid Groups"
+        },
+        {
+            column: "assembleCells.invalidGroups",
+            id: "assemble-cells-invalid-groups",
+            allowNA: true,
+            naRegex: "NaN",
+            spec: {
+                name: "mixcr.com/reports/assembleCells/invalidGroups",
+                valueType: "Long",
+                annotations: {
+                    "pl7.app/min": "0",
+                    "pl7.app/table/orderPriority": "65000",
+                    "pl7.app/table/visibility": "optional",
+                    "pl7.app/label": "Invalid Groups"
+                }
             }
-        }
-    },
-    {
-        column: "assembleCells.invalidGroupsPercents",
-        id: "assemble-cells-invalid-groups-percents",
-        allowNA: true,
-        naRegex: "NaN",
-        spec: {
-            name: "mixcr.com/reports/assembleCells/invalidGroupsPercents",
-            valueType: "Double",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/max": "100",
-                "pl7.app/table/orderPriority": "65100",
-                "pl7.app/table/visibility": "default",
-                "pl7.app/label": "Invalid Groups (%)"
+        },
+        {
+            column: "assembleCells.invalidGroupsPercents",
+            id: "assemble-cells-invalid-groups-percents",
+            allowNA: true,
+            naRegex: "NaN",
+            spec: {
+                name: "mixcr.com/reports/assembleCells/invalidGroupsPercents",
+                valueType: "Double",
+                annotations: {
+                    "pl7.app/min": "0",
+                    "pl7.app/max": "100",
+                    "pl7.app/table/orderPriority": "65100",
+                    "pl7.app/table/visibility": "default",
+                    "pl7.app/label": "Invalid Groups (%)"
+                }
             }
-        }
-    },
-    {
-        column: "assembleCells.numberOfGroups",
-        id: "assemble-cells-number-of-groups",
-        allowNA: true,
-        naRegex: "NaN",
-        spec: {
-            name: "mixcr.com/reports/assembleCells/numberOfGroups",
-            valueType: "Long",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/table/orderPriority": "65200",
-                "pl7.app/table/visibility": "optional",
-                "pl7.app/label": "Number of Groups"
+        },
+        {
+            column: "assembleCells.numberOfGroups",
+            id: "assemble-cells-number-of-groups",
+            allowNA: true,
+            naRegex: "NaN",
+            spec: {
+                name: "mixcr.com/reports/assembleCells/numberOfGroups",
+                valueType: "Long",
+                annotations: {
+                    "pl7.app/min": "0",
+                    "pl7.app/table/orderPriority": "65200",
+                    "pl7.app/table/visibility": "optional",
+                    "pl7.app/label": "Number of Groups"
+                }
             }
-        }
-    },
-    {
-        column: "assembleCells.unassignedClonotypes",
-        id: "assemble-cells-unassigned-clonotypes",
-        allowNA: true,
-        naRegex: "NaN",
-        spec: {
-            name: "mixcr.com/reports/assembleCells/unassignedClonotypes",
-            valueType: "Long",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/table/orderPriority": "65300",
-                "pl7.app/table/visibility": "optional",
-                "pl7.app/label": "Unassigned Clonotypes"
+        },
+        {
+            column: "assembleCells.unassignedClonotypes",
+            id: "assemble-cells-unassigned-clonotypes",
+            allowNA: true,
+            naRegex: "NaN",
+            spec: {
+                name: "mixcr.com/reports/assembleCells/unassignedClonotypes",
+                valueType: "Long",
+                annotations: {
+                    "pl7.app/min": "0",
+                    "pl7.app/table/orderPriority": "65300",
+                    "pl7.app/table/visibility": "optional",
+                    "pl7.app/label": "Unassigned Clonotypes"
+                }
             }
-        }
-    },
-    {
-        column: "assembleCells.unassignedClonotypesPercents",
-        id: "assemble-cells-unassigned-clonotypes-percents",
-        allowNA: true,
-        naRegex: "NaN",
-        spec: {
-            name: "mixcr.com/reports/assembleCells/unassignedClonotypesPercents",
-            valueType: "Double",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/max": "100",
-                "pl7.app/table/orderPriority": "65400",
-                "pl7.app/table/visibility": "default",
-                "pl7.app/label": "Unassigned Clonotypes (%)"
+        },
+        {
+            column: "assembleCells.unassignedClonotypesPercents",
+            id: "assemble-cells-unassigned-clonotypes-percents",
+            allowNA: true,
+            naRegex: "NaN",
+            spec: {
+                name: "mixcr.com/reports/assembleCells/unassignedClonotypesPercents",
+                valueType: "Double",
+                annotations: {
+                    "pl7.app/min": "0",
+                    "pl7.app/max": "100",
+                    "pl7.app/table/orderPriority": "65400",
+                    "pl7.app/table/visibility": "default",
+                    "pl7.app/label": "Unassigned Clonotypes (%)"
+                }
             }
-        }
-    }]
+        }]
+    } // end if hasAssembleCells
 
     // Single-cell per-chain dropped clonotypes by OOF / stop codons
     scDropOrder := 107700

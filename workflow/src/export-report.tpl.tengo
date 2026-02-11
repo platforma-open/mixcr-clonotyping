@@ -36,6 +36,12 @@ self.body(func(inputs) {
     umiTags := presetSpecForBack.umiTags
 	hasUmi := !is_undefined(umiTags) && len(umiTags) > 0
     cellTags := presetSpecForBack.cellTags
+    hasAssembleCells := false
+    for stage in presetSpecForBack.analysisStages {
+        if stage == "assembleCells" {
+            hasAssembleCells = true
+        }
+    }
     singleCellChainTsvsData := inputs.singleCellChainTsvsData
 	useStopCodonReplacement := !is_undefined(stopCodonTypes) && is_array(stopCodonTypes) && len(stopCodonTypes) > 0
 	if is_undefined(stopCodonReplacements) || !is_map(stopCodonReplacements) {
@@ -126,6 +132,7 @@ self.body(func(inputs) {
         software(mixcrSw).
         env("MI_USE_SYSTEM_CA", "true").
         secret("MI_LICENSE", "MI_LICENSE").
+        env("MI_LICENSE_DEBUG", "MI_LICENSE_DEBUG").
         arg("exportReportsTable")
     
     // Add all clns files as input
@@ -206,6 +213,7 @@ self.body(func(inputs) {
             software(mixcrSw).
             env("MI_USE_SYSTEM_CA", "true").
             secret("MI_LICENSE", "MI_LICENSE").
+            env("MI_LICENSE_DEBUG", "MI_LICENSE_DEBUG").
             arg("exportClones").
             arg("--dont-split-files").
             arg("--drop-default-fields").
@@ -276,6 +284,7 @@ self.body(func(inputs) {
                     software(mixcrSw).
                     env("MI_USE_SYSTEM_CA", "true").
                     secret("MI_LICENSE", "MI_LICENSE").
+                    env("MI_LICENSE_DEBUG", "MI_LICENSE_DEBUG").
                     arg("exportClones").
                     arg("--dont-split-files").
                     arg("--drop-default-fields").
@@ -493,7 +502,7 @@ self.body(func(inputs) {
     
     tsvFile := wfResult.getFile("qc-report-processed.tsv")
 
-    qcReportColumns := qcReportColumns(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellTags, umiTags)
+    qcReportColumns := qcReportColumns(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellTags, umiTags, hasAssembleCells)
     reportColumnsSpec := qcReportColumns.reportColumnsSpec
 
     qcReportTable := xsv.importFile(

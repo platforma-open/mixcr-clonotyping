@@ -58,6 +58,13 @@ const result = refDebounced(MiXCRResultsFull, 100, {
   maxWait: 200,
 });
 
+const loadingOverlayParams = computed(() => {
+  if (app.model.outputs.started) {
+    return { variant: 'running' as const, runningText: 'Loading Sample List' };
+  }
+  return { variant: 'not-ready' as const };
+});
+
 // Export archive configuration
 const fileExports = computed(() => {
   const rawTsvs = app.model.outputs.rawTsvs;
@@ -108,7 +115,10 @@ const data = reactive<{
 watch(
   () => app.model.outputs.started,
   (newVal, oldVal) => {
-    if (oldVal === false && newVal === true) data.settingsOpen = false;
+    if (oldVal === false && newVal === true) {
+      data.settingsOpen = false;
+      gridApi.value?.showLoadingOverlay();
+    }
     if (oldVal === true && newVal === false) data.settingsOpen = true;
   },
 );
@@ -269,7 +279,7 @@ const gridOptions: GridOptions<MiXCRResult> = {
     <div :style="{ flex: 1 }">
       <AgGridVue
         :theme="AgGridTheme" :style="{ height: '100%' }" :rowData="result" :defaultColDef="defaultColumnDef"
-        :columnDefs="columnDefs" :grid-options="gridOptions" :loadingOverlayComponentParams="{ variant: 'not-ready' }"
+        :columnDefs="columnDefs" :grid-options="gridOptions" :loadingOverlayComponentParams="loadingOverlayParams"
         :loadingOverlayComponent="PlAgOverlayLoading" :noRowsOverlayComponent="PlAgOverlayNoRows"
         @grid-ready="onGridReady"
       />
