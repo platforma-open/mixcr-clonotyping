@@ -193,7 +193,8 @@ self.body(func(inputs) {
 	clonotypeTableDf := allChainsFilteredDf.groupBy(
 		"scClonotypeKey", "clonotypeKeyA1", "clonotypeKeyA2", "clonotypeKeyB1", "clonotypeKeyB2"
 	).agg(
-		pt.col("sampleId").nUnique().alias("sampleCount")
+		pt.col("sampleId").nUnique().alias("sampleCount"),
+		pt.col("cellKey").count().alias("uniqueCellCountSum")
 	)
 
 	clonotypeTableDf = clonotypeLabel.addClonotypeLabelColumnsPt(clonotypeTableDf, "scClonotypeKey", "clonotypeLabel", pt)
@@ -234,7 +235,8 @@ self.body(func(inputs) {
 		{ column: "clonotypeKeyA2", type: "String" },
 		{ column: "clonotypeKeyB1", type: "String" },
 		{ column: "clonotypeKeyB2", type: "String" },
-		{ column: "sampleCount", type: "Int" }
+		{ column: "sampleCount", type: "Int" },
+		{ column: "uniqueCellCountSum", type: "Long" }
 	]
 
 	mainClonotypesDf := outputProcessingWf.frame(clonotypeTsv, {
