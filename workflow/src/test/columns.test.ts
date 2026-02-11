@@ -46,6 +46,7 @@ const testCases: TestCase[] = [
       // expect(config.columnsSpec.find((c: any) => c.column === 'cellGroup')).toBeDefined();
       expect(config.columnsSpec.find((c: any) => c.column === 'uniqueMoleculeCount')).toBeDefined();
       expect(config.columnsSpec.find((c: any) => c.column === 'uniqueMoleculeFraction')).toBeDefined();
+      expect(config.columnsSpecPerClonotypeSc.find((c: any) => c.column === 'uniqueCellCountSum')).toBeDefined();
       expect(config.columnsSpec.find((c: any) => c.column === 'nSeqFR1')).toBeDefined();
       expect(config.columnsSpec.find((c: any) => c.column === 'nSeqCDR1')).toBeDefined();
       expect(config.columnsSpec.find((c: any) => c.column === 'nSeqFR2')).toBeDefined();
