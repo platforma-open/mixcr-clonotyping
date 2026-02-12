@@ -1,5 +1,23 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.test
 
+## 1.13.1
+
+### Patch Changes
+
+- Updated dependencies [6f30f09]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.24.1
+
+## 1.13.0
+
+### Minor Changes
+
+- 3c8ed71: stop codon replacement and dep updates
+
+### Patch Changes
+
+- Updated dependencies [3c8ed71]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.24.0
+
 ## 1.12.0
 
 ### Minor Changes

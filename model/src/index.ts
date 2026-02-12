@@ -56,9 +56,11 @@ export const platforma = BlockModel.create('Heavy')
     else return undefined;
   })
 
-  .output('qc', (ctx) =>
-    parseResourceMap(ctx.outputs?.resolve('qc'), (acc) => acc.getFileHandle(), true),
-  )
+  .output('qc', (ctx) => {
+    const acc = ctx.outputs?.resolve('qc');
+    if (!acc || !acc.getInputsLocked()) return undefined;
+    return parseResourceMap(acc, (acc) => acc.getFileHandle(), true);
+  })
 
   .output('reports', (ctx) =>
     parseResourceMap(ctx.outputs?.resolve('reports'), (acc) => acc.getFileHandle(), false),

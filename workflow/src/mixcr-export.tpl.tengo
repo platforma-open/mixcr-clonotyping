@@ -9,8 +9,10 @@ assets := import("@platforma-sdk/workflow-tengo:assets")
 exec := import("@platforma-sdk/workflow-tengo:exec")
 pt := import("@platforma-sdk/workflow-tengo:pt")
 clonotypeLabel := import(":clonotype-label")
+stopCodonReplacement := import(":stop-codon-replacement")
 
 json := import("json")
+text := import("text")
 
 self.defineOutputs("tsv", "tsvForSingleCell")
 
@@ -24,6 +26,11 @@ self.body(func(inputs) {
 	isLibraryFileGzipped := params.isLibraryFileGzipped
 	chains := params.chains
 	exportArgs := params.exportArgs
+	stopCodonTypes := params.stopCodonTypes
+	stopCodonReplacements := params.stopCodonReplacements
+	aminoAcidSeqColumns := params.aminoAcidSeqColumns
+	aminoAcidSeqColumnPairs := params.aminoAcidSeqColumnPairs
+	cdr3SeqColumns := params.cdr3SeqColumns
 	
 	clonotypeKeyColumns := params.clonotypeKeyColumns
 	clonotypeKeyArgs := params.clonotypeKeyArgs
@@ -39,6 +46,8 @@ self.body(func(inputs) {
     mainAbundanceColumnIsReadCount := params.mainAbundanceColumnIsReadCount == true
     mainIsProductiveArgs := params.mainIsProductiveArgs
     mainIsProductiveColumn := params.mainIsProductiveColumn
+
+	useProductiveFilter := is_undefined(stopCodonTypes) || len(stopCodonTypes) == 0
 
 	exportMemGB := undefined 
 	if !is_undefined(inputs.perProcessMemGB) {
@@ -69,12 +78,17 @@ self.body(func(inputs) {
 			env("MI_USE_SYSTEM_CA", "true").
 			software(mixcrSw).
 			secret("MI_LICENSE", "MI_LICENSE").
+			env("MI_LICENSE_DEBUG", "MI_LICENSE_DEBUG").
 			arg("exportClones").
 			arg("--dont-split-files").
 			arg("--drop-default-fields").
 			arg("--reset-export-clone-table-splitting").
-			arg("--export-productive-clones-only").
 			arg("--chains").arg(chains)
+		if useProductiveFilter {
+			mixcrCmdBuilder = mixcrCmdBuilder.arg("--export-productive-clones-only")
+		} else {
+			mixcrCmdBuilder = mixcrCmdBuilder.arg("--filter-out-of-frames")
+		}
 
 		if library {
 			if isLibraryFileGzipped {
@@ -138,6 +152,13 @@ self.body(func(inputs) {
                 alias(mainIsProductiveColumn)
         )
     }
+	dfMain = stopCodonReplacement.applyStopCodonReplacementsPt(dfMain, {
+		aminoAcidSeqColumns: aminoAcidSeqColumns,
+		aminoAcidSeqColumnPairs: aminoAcidSeqColumnPairs,
+		cdr3SeqColumns: cdr3SeqColumns,
+		stopCodonTypes: stopCodonTypes,
+		stopCodonReplacements: stopCodonReplacements
+	})
 	dfMain.addColumns(
 		hashKeyDerivationExpressionPt(clonotypeKeyColumns).alias("clonotypeKey")
 	)
@@ -197,6 +218,24 @@ self.body(func(inputs) {
             )
         }
 
+		dfSingleCell = stopCodonReplacement.applyStopCodonReplacementsPt(dfSingleCell, {
+			aminoAcidSeqColumns: aminoAcidSeqColumns,
+			aminoAcidSeqColumnPairs: aminoAcidSeqColumnPairs,
+			cdr3SeqColumns: cdr3SeqColumns,
+			stopCodonTypes: stopCodonTypes,
+		stopCodonReplacements: stopCodonReplacements,
+		allowedNtColumns: func() {
+			allowed := []
+			if !is_undefined(clonotypeKeyColumns) {
+				for col in clonotypeKeyColumns {
+					if text.has_prefix(col, "nSeq") {
+						allowed = append(allowed, col)
+					}
+				}
+			}
+			return allowed
+		}()
+		})
 		dfSingleCell.addColumns(
 			hashKeyDerivationExpressionPt(clonotypeKeyColumns).alias("clonotypeKey"),
 			hashCellKey ? hashKeyDerivationExpressionPt(cellTagColumns).alias("cellKey") : pt.col(cellTagColumns[0]).alias("cellKey")

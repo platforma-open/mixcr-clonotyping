@@ -1,5 +1,27 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.16.1
+
+### Patch Changes
+
+- Updated dependencies [6f30f09]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@3.23.1
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.24.1
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.ui@1.23.1
+
+## 2.16.0
+
+### Minor Changes
+
+- 3c8ed71: stop codon replacement and dep updates
+
+### Patch Changes
+
+- Updated dependencies [3c8ed71]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@3.23.0
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.24.0
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.ui@1.23.0
+
 ## 2.15.2
 
 ### Patch Changes

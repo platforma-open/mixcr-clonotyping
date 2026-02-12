@@ -466,6 +466,9 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId, expor
 	}
 
 	orderP := 80000
+	aminoAcidSeqColumns := []
+	aminoAcidSeqColumnPairs := []
+	cdr3SeqColumns := []
 
 	// Sequences
 
@@ -490,6 +493,16 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId, expor
 				alphabetShortMixcr := isAminoAcid ? "aa" : "n"
 				columnName := alphabetShortMixcr + "Seq" + imputedU + featureInFrameU
 				visibility := featureU == "CDR3" && (!isSingleCell || isAminoAcid) // isSingleCell ? (featureU == "CDR3") && isAminoAcid : (featureU == "CDR3") || (featureU == assemblingFeature)
+				if featureU == "CDR3" {
+					cdr3SeqColumns += [ columnName ]
+				}
+				if isAminoAcid {
+					aminoAcidSeqColumns += [ columnName ]
+					aminoAcidSeqColumnPairs += [ {
+						aa: columnName,
+						nt: "nSeq" + imputedU + featureU
+					} ]
+				}
 				columnsSpecPerClonotypeNoAggregates += [ {
 						column: columnName,
 						id: alphabetShortMixcr + "-seq-" + featureInFrameL + (isImputed ? "-imputed" : ""),
@@ -997,6 +1010,7 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId, expor
 	}
 
 	return {
+		productiveFeature: productiveFeature,
 		clonotypeKeyColumns: clonotypeKeyColumns,
 		clonotypeKeyArgs: clonotypeKeyArgs,
 
@@ -1004,6 +1018,10 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId, expor
 
 		axisByClonotypeKeyGen: axisByClonotypeKeyGen,
 		axisByScClonotypeKeyGen: axisByScClonotypeKeyGen,
+
+		aminoAcidSeqColumns: aminoAcidSeqColumns,
+		aminoAcidSeqColumnPairs: aminoAcidSeqColumnPairs,
+		cdr3SeqColumns: cdr3SeqColumns,
 
 		columnsSpecPerSample: columnsSpecPerSample,
 		columnsSpecPerSampleSc: columnsSpecPerSampleSc,

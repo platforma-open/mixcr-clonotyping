@@ -1,5 +1,17 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.23.1
+
+### Patch Changes
+
+- 6f30f09: Upgrade MiXCR to 4.7.0-300-develop, add MI_LICENSE_DEBUG env, fix assembleCells column error in SC QC report, show loading spinner while sample list loads
+
+## 3.23.0
+
+### Minor Changes
+
+- 3c8ed71: stop codon replacement and dep updates
+
 ## 3.22.0
 
 ### Minor Changes
