@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.23.2
+
+### Patch Changes
+
+- 40ec375: Upgrade MiXCR to 4.7.0-302-develop
+
 ## 3.23.1
 
 ### Patch Changes
