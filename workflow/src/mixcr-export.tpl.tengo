@@ -1,4 +1,4 @@
-//tengo:hash_override E5C1AD4C-B44D-4DE1-BBF1-4CB42ED7579A
+//tengo:hash_override 2026-02-13
 
 ll := import("@platforma-sdk/workflow-tengo:ll")
 self := import("@platforma-sdk/workflow-tengo:tpl.light")
