@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.23.4
+
+### Patch Changes
+
+- 9c08972: Update RNA-seq preset
+
 ## 3.23.3
 
 ### Patch Changes
