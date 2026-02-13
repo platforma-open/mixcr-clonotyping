@@ -159,6 +159,15 @@ self.body(func(inputs) {
 		stopCodonTypes: stopCodonTypes,
 		stopCodonReplacements: stopCodonReplacements
 	})
+
+	// Filter for exclusive TRA/TRD chain assignment.
+	// MiXCR --chains filter is permissive (any V/J/C gene locus match),
+	// so clonotypes with shared TRDV genes pass both --chains TRA and --chains TRD.
+	// Use topChains (intersection of best V/J/C hits) to enforce exclusivity.
+	if chains == "TRA" || chains == "TRD" {
+		dfMain = dfMain.filter(pt.col("topChains").eq(chains))
+	}
+
 	dfMain.addColumns(
 		hashKeyDerivationExpressionPt(clonotypeKeyColumns).alias("clonotypeKey")
 	)
