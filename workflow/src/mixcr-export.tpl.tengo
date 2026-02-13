@@ -186,7 +186,12 @@ self.body(func(inputs) {
 				arg("--split-by-tags").arg("Cell").
 				arg("-tags").arg("Cell")
 
-			for argGrp in (clonotypeKeyArgs + mainIsProductiveArgs + mainAbundanceColumnUnnormalizedArgs) {
+			scExportArgs := clonotypeKeyArgs + mainIsProductiveArgs + mainAbundanceColumnUnnormalizedArgs
+			// Add -topChains for TRA/TRD filtering (shared TRAD locus)
+			if chains == "TRA" || chains == "TRD" {
+				scExportArgs = scExportArgs + [[ "-topChains" ]]
+			}
+			for argGrp in scExportArgs {
 				for arg in argGrp {
 					mixcrCmdBuilder.arg(arg)
 				}
@@ -245,6 +250,12 @@ self.body(func(inputs) {
 			return allowed
 		}()
 		})
+
+		// Filter for exclusive TRA/TRD chain assignment (same as bulk path)
+		if chains == "TRA" || chains == "TRD" {
+			dfSingleCell = dfSingleCell.filter(pt.col("topChains").eq(chains))
+		}
+
 		dfSingleCell.addColumns(
 			hashKeyDerivationExpressionPt(clonotypeKeyColumns).alias("clonotypeKey"),
 			hashCellKey ? hashKeyDerivationExpressionPt(cellTagColumns).alias("cellKey") : pt.col(cellTagColumns[0]).alias("cellKey")
