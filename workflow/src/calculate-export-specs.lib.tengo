@@ -133,6 +133,7 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId, expor
 	ops := exportSpecOpsFromPreset(presetSpecForBack)
 
 	assemblingFeature := ops.assemblingFeature
+	isRnaSeqPreset := is_undefined(assemblingFeature)
 	cellTags := ops.cellTags
 	hasUmi := ops.hasUmi
 	splitByC := ops.splitByC
@@ -175,12 +176,35 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId, expor
 	clonotypeKeyArgs := undefined
 
 	if !is_undefined(assemblingFeature) {
-		clonotypeKeyColumns = ["nSeq" + assemblingFeature, "bestVGene", "bestJGene"]
-		clonotypeKeyArgs = [
-			[ "-nFeature", assemblingFeature ],
-			[ "-vGene" ],
-			[ "-jGene" ]
-		]
+		if isRnaSeqPreset {
+			clonotypeKeyColumns = [
+				"nSeqFR1",
+				"nSeqCDR1",
+				"nSeqFR2",
+				"nSeqCDR2",
+				"nSeqFR3",
+				"nSeqCDR3",
+				"bestVGene",
+				"bestJGene"
+			]
+			clonotypeKeyArgs = [
+				[ "-nFeature", "FR1" ],
+				[ "-nFeature", "CDR1" ],
+				[ "-nFeature", "FR2" ],
+				[ "-nFeature", "CDR2" ],
+				[ "-nFeature", "FR3" ],
+				[ "-nFeature", "CDR3" ],
+				[ "-vGene" ],
+				[ "-jGene" ]
+			]
+		} else {
+			clonotypeKeyColumns = ["nSeq" + assemblingFeature, "bestVGene", "bestJGene"]
+			clonotypeKeyArgs = [
+				[ "-nFeature", assemblingFeature ],
+				[ "-vGene" ],
+				[ "-jGene" ]
+			]
+		}
 		if splitByC {
 			clonotypeKeyColumns += ["bestCHit"]
 			clonotypeKeyArgs += [ [ "-cHit" ] ]

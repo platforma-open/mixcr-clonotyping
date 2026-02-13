@@ -111,6 +111,16 @@ const testCases: TestCase[] = [
       expect(config.columnsSpec.find((c: any) => c.column === 'readFraction')).toBeDefined();
       expect(config.columnsSpec.find((c: any) => c.column === 'nSeqCDR3')).toBeDefined();
       expect(config.columnsSpec.find((c: any) => c.column === 'aaSeqCDR3')).toBeDefined();
+      expect(config.clonotypeKeyColumns).toEqual([
+        'nSeqFR1',
+        'nSeqCDR1',
+        'nSeqFR2',
+        'nSeqCDR2',
+        'nSeqFR3',
+        'nSeqCDR3',
+        'bestVGene',
+        'bestJGene'
+      ]);
     }
   },
   {
