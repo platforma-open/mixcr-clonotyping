@@ -7,6 +7,7 @@ smart := import("@platforma-sdk/workflow-tengo:smart")
 slices := import("@platforma-sdk/workflow-tengo:slices")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 exec := import("@platforma-sdk/workflow-tengo:exec")
+units := import("@platforma-sdk/workflow-tengo:units")
 pt := import("@platforma-sdk/workflow-tengo:pt")
 clonotypeLabel := import(":clonotype-label")
 stopCodonReplacement := import(":stop-codon-replacement")
@@ -31,7 +32,7 @@ self.body(func(inputs) {
 	aminoAcidSeqColumns := params.aminoAcidSeqColumns
 	aminoAcidSeqColumnPairs := params.aminoAcidSeqColumnPairs
 	cdr3SeqColumns := params.cdr3SeqColumns
-	
+
 	clonotypeKeyColumns := params.clonotypeKeyColumns
 	clonotypeKeyArgs := params.clonotypeKeyArgs
 
@@ -49,7 +50,7 @@ self.body(func(inputs) {
 
 	useProductiveFilter := is_undefined(stopCodonTypes) || len(stopCodonTypes) == 0
 
-	exportMemGB := undefined 
+	exportMemGB := undefined
 	if !is_undefined(inputs.perProcessMemGB) {
 		exportMemGB = int(1.0*inputs.perProcessMemGB/4.0)
 		if exportMemGB < 12 {
@@ -59,8 +60,7 @@ self.body(func(inputs) {
 		exportMemGB = 12
 	}
 	ptMemGB := int(2.0*exportMemGB/3.0)
-	
-	
+
 	hashKeyDerivationExpressionPt := func(sourceColumns) {
 		return pt.concatStr(
 			slices.map(sourceColumns, func(colName) { return pt.col(colName).fillNull("") }),
@@ -130,7 +130,7 @@ self.body(func(inputs) {
 	// PTabler processing for main TSV output
 	wfMain := pt.workflow().
 		inMediumQueue().
-		mem(ptMemGB).
+		mem(ptMemGB * units.GiB).
 		cpu(2)
 
 	frameInputMap := {
