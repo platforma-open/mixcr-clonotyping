@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.23.5
+
+### Patch Changes
+
+- 5279399: Fix memory request for pt invocation
+
 ## 3.23.4
 
 ### Patch Changes
