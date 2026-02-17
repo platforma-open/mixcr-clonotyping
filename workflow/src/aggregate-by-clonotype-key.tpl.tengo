@@ -78,9 +78,14 @@ self.body(func(inputs) {
 	}
 
 	aggExpressions := []
+	hasFractionCDRMutations := false
 
 	for colDef in schemaPerClonotypeNoAggregates {
 		if colDef.column == "clonotypeLabel" || colDef.column == "nLengthTotalAdded" {
+			continue
+		}
+		if colDef.column == "fractionCDRMutations" {
+			hasFractionCDRMutations = true
 			continue
 		}
 		aggExpressions = append(aggExpressions,
@@ -103,6 +108,24 @@ self.body(func(inputs) {
 			otherwise(pt.col("nLengthVJJunction").cast("Int")).
 			alias("nLengthTotalAdded")
 	)
+
+	// Calculate CDR mutation fraction: CDR / (CDR + FWR), fallback 1.0 when NA or zero denominator
+	if hasFractionCDRMutations {
+		cdr := "aaMutationsCountCDR1,CDR2"
+		fwr := "aaMutationsCountFR1,FR2,FR3,FR4"
+		aggregatedDf = aggregatedDf.withColumns(
+			pt.when(
+				pt.col(cdr).isNotNull().
+					and(pt.col(fwr).isNotNull()).
+					and(pt.col(cdr).cast("Double").plus(pt.col(fwr).cast("Double")).gt(0.0))
+			).then(
+				pt.col(cdr).cast("Double").truediv(
+					pt.col(cdr).cast("Double").plus(pt.col(fwr).cast("Double"))
+				)
+			).otherwise(pt.lit(1.0)).
+				alias("fractionCDRMutations")
+		)
+	}
 
 	aggregatedDf = clonotypeLabel.addClonotypeLabelColumnsPt(aggregatedDf, "clonotypeKey", "clonotypeLabel", pt)
 
