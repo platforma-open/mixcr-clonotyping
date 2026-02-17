@@ -765,6 +765,55 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId, expor
 		}
 	}
 
+	// Cross-region SHM mutation counts (only for full VDJRegion assembling)
+
+	if assemblingFeature == "VDJRegion" {
+		nMutationsFeature := coreGeneFeatures["V"] + "," + coreGeneFeatures["J"]
+
+		crossRegionMutations := [ {
+			exportFlag: "nMutationsCount",
+			feature: nMutationsFeature,
+			id: "n-mutations-total",
+			label: "Nt mutations",
+			specName: "pl7.app/vdj/sequence/nMutations",
+			rankingOrder: "decreasing"
+		}, {
+			exportFlag: "aaMutationsCount",
+			feature: "CDR1,CDR2",
+			id: "aa-mutations-cdr",
+			label: "AA mutations (CDR)",
+			specName: "pl7.app/vdj/sequence/nAAMutationsCDR",
+			rankingOrder: "decreasing"
+		}, {
+			exportFlag: "aaMutationsCount",
+			feature: "FR1,FR2,FR3,FR4",
+			id: "aa-mutations-fwr",
+			label: "AA mutations (FWR)",
+			specName: "pl7.app/vdj/sequence/nAAMutationsFWR",
+			rankingOrder: "increasing"
+		} ]
+
+		for col in crossRegionMutations {
+			columnsSpecPerClonotypeNoAggregates += [ {
+				column: col.exportFlag + col.feature,
+				id: col.id,
+				allowNA: true,
+				naRegex: "region_not_covered",
+				spec: {
+					valueType: "Int",
+					name: col.specName,
+					annotations: a(orderP, false, {
+						"pl7.app/label": col.label,
+						"pl7.app/isScore": "true",
+						"pl7.app/score/rankingOrder": col.rankingOrder
+					})
+				}
+			} ]
+			exportArgs += [ [ "-" + col.exportFlag, col.feature ] ]
+			orderP -= 100
+		}
+	}
+
 	// Flags: productive, oof, stop codons
 
 	flagColumnVariants := [ {
