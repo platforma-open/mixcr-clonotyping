@@ -233,6 +233,8 @@ self.body(func(inputs) {
 
 	mainAbundanceColumnNormalized := exportSpecs.mainAbundanceColumnNormalized
 	mainAbundanceColumnUnnormalized := exportSpecs.mainAbundanceColumnUnnormalized
+
+	shmMapping := exportSpecs.shmMapping
 	mainAbundanceColumnNormalizedArgs := exportSpecs.mainAbundanceColumnNormalizedArgs
 	mainAbundanceColumnUnnormalizedArgs := exportSpecs.mainAbundanceColumnUnnormalizedArgs
 
@@ -566,6 +568,77 @@ self.body(func(inputs) {
 	}
 
 	if isSingleCell {
+		// SHM mutation columns: build filtering set and combined output specs
+		hasShm := len(shmMapping) > 0
+		shmColumnNames := {}
+		shmOutputSpecs := []
+		if hasShm {
+			for m in shmMapping {
+				shmColumnNames[m.tsvColumn] = true
+			}
+			shmColumnNames["fractionCDRMutations"] = true
+
+			orderP := 10400
+			shmDefs := [ {
+				outputColumn: "nMutations",
+				label: "Nt mutations",
+				specName: "pl7.app/vdj/sequence/nMutations",
+				valueType: "Int",
+				rankingOrder: "decreasing"
+			}, {
+				outputColumn: "nAAMutationsCDR",
+				label: "AA mutations (CDR)",
+				specName: "pl7.app/vdj/sequence/nAAMutationsCDR",
+				valueType: "Int",
+				rankingOrder: "decreasing"
+			}, {
+				outputColumn: "nAAMutationsFWR",
+				label: "AA mutations (FWR)",
+				specName: "pl7.app/vdj/sequence/nAAMutationsFWR",
+				valueType: "Int",
+				rankingOrder: "increasing"
+			} ]
+
+			for def in shmDefs {
+				shmOutputSpecs = append(shmOutputSpecs, {
+					column: def.outputColumn,
+					id: def.outputColumn,
+					allowNA: true,
+					naRegex: "^[a-z_]*$",
+					spec: {
+						valueType: def.valueType,
+						name: def.specName,
+						annotations: {
+							"pl7.app/label": def.label,
+							"pl7.app/table/orderPriority": string(orderP),
+							"pl7.app/table/visibility": "optional",
+							"pl7.app/isScore": "true",
+							"pl7.app/score/rankingOrder": def.rankingOrder
+						}
+					}
+				})
+				orderP -= 100
+			}
+
+			shmOutputSpecs = append(shmOutputSpecs, {
+				column: "fractionCDRMutations",
+				id: "fraction-cdr-mutations",
+				naRegex: "^[a-z_]*$",
+				allowNA: true,
+				spec: {
+					valueType: "Double",
+					name: "pl7.app/vdj/sequence/fractionCDRMutations",
+					annotations: {
+						"pl7.app/label": "CDR mutation fraction",
+						"pl7.app/table/orderPriority": string(orderP),
+						"pl7.app/table/visibility": "optional",
+						"pl7.app/isScore": "true",
+						"pl7.app/score/rankingOrder": "decreasing"
+					}
+				}
+			})
+		}
+
 		for receptor in receptors {
 			receptorInfo := receptorInfos[receptor]
 
@@ -627,7 +700,10 @@ self.body(func(inputs) {
 
 				// Modify column visibility for TCR chains
 				isTCRChain := text.has_prefix(chain, "TCR")
-				columnsForSingleCell := columnsSpecPerClonotypeNoAggregates
+				// Filter out SHM mutation columns (We will generate chain-agnostic columns)
+				columnsForSingleCell := hasShm ? slices.filter(columnsSpecPerClonotypeNoAggregates, func(col) {
+					return !shmColumnNames[col.column]
+				}) : columnsSpecPerClonotypeNoAggregates
 				if isTCRChain {
 					visibilitySettings := {
 						"bestCGene":      "optional",
@@ -718,6 +794,23 @@ self.body(func(inputs) {
 				path: ["cellsTsv"]
 			} ]
 
+			if hasShm {
+				singleCellOutputs += [ {
+					type: "Xsv",
+					xsvType: "tsv",
+					settings: {
+						axes: [ axisByScClonotypeKeyGen(receptor) ],
+						columns: shmOutputSpecs,
+						storageFormat: "Parquet",
+						partitionKeyLength: 0
+					},
+					mem: "12GiB",
+					cpu: 2,
+					name: "shmCombined",
+					path: ["shmTsv"]
+				} ]
+			}
+
 			chainA := receptorInfo.chains[0]
 			chainB := receptorInfo.chains[1]
 
@@ -746,7 +839,8 @@ self.body(func(inputs) {
 						params: {
 							mainAbundanceColumn: mainAbundanceColumnUnnormalized,
 							mainIsProductiveColumn: mainIsProductiveColumn,
-							schemaPerClonotypeNoAggregates: columnsToSchema(columnsSpecPerClonotypeNoAggregates)
+							schemaPerClonotypeNoAggregates: columnsToSchema(columnsSpecPerClonotypeNoAggregates),
+							shmMapping: shmMapping
 						}
 					}
 				}
@@ -768,6 +862,10 @@ self.body(func(inputs) {
 			singleCellResult.addXsvOutputToBuilder(clonotypes, "propertiesASecondary", "clonotypeProperties/" + receptor + "/aSecondary/")
 			singleCellResult.addXsvOutputToBuilder(clonotypes, "propertiesBPrimary", "clonotypeProperties/" + receptor + "/bPrimary/")
 			singleCellResult.addXsvOutputToBuilder(clonotypes, "propertiesBSecondary", "clonotypeProperties/" + receptor + "/bSecondary/")
+
+			if hasShm {
+				singleCellResult.addXsvOutputToBuilder(clonotypes, "shmCombined", "clonotypeProperties/" + receptor + "/shmCombined/")
+			}
 
 			for columnName in singleCellResult.listXsvColumns("cellsLinkerTable") {
 				anonymizedData := singleCellResult.outputData("cellsLinkerTable", columnName)
