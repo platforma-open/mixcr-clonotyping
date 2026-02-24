@@ -765,6 +765,83 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId, expor
 		}
 	}
 
+	// Cross-region SHM mutation counts (only for full VDJRegion assembling)
+	// shmMapping: [{ outputColumn, tsvColumn }] for single-cell chain summing
+	shmMapping := []
+
+	if assemblingFeature == "VDJRegion" {
+		nMutationsFeature := coreGeneFeatures["V"] + "," + coreGeneFeatures["J"]
+
+		crossRegionMutations := [ {
+			exportFlag: "nMutationsCount",
+			feature: nMutationsFeature,
+			id: "n-mutations-total",
+			label: "Nt mutations",
+			specName: "pl7.app/vdj/sequence/nMutations",
+			rankingOrder: "decreasing",
+			outputColumn: "nMutations"
+		}, {
+			exportFlag: "aaMutationsCount",
+			feature: "CDR1,CDR2",
+			id: "aa-mutations-cdr",
+			label: "AA mutations (CDR)",
+			specName: "pl7.app/vdj/sequence/nAAMutationsCDR",
+			rankingOrder: "decreasing",
+			outputColumn: "nAAMutationsCDR"
+		}, {
+			exportFlag: "aaMutationsCount",
+			feature: "FR1,FR2,FR3,FR4",
+			id: "aa-mutations-fwr",
+			label: "AA mutations (FWR)",
+			specName: "pl7.app/vdj/sequence/nAAMutationsFWR",
+			rankingOrder: "increasing",
+			outputColumn: "nAAMutationsFWR"
+		} ]
+
+		for col in crossRegionMutations {
+			columnsSpecPerClonotypeNoAggregates += [ {
+				column: col.exportFlag + col.feature,
+				id: col.id,
+				allowNA: true,
+				naRegex: "region_not_covered",
+				spec: {
+					valueType: "Int",
+					name: col.specName,
+					annotations: a(orderP, false, {
+						"pl7.app/label": col.label,
+						"pl7.app/isScore": "true",
+						"pl7.app/score/rankingOrder": col.rankingOrder
+					})
+				}
+			} ]
+			exportArgs += [ [ "-" + col.exportFlag, col.feature ] ]
+			shmMapping = append(shmMapping, {
+				outputColumn: col.outputColumn,
+				tsvColumn: col.exportFlag + col.feature
+			})
+			orderP -= 100
+		}
+
+		// CDR mutation fraction (computed in aggregate-by-clonotype-key)
+		columnsSpecPerClonotypeNoAggregates += [ {
+			column: "fractionCDRMutations",
+			id: "fraction-cdr-mutations",
+			naRegex: "^[a-z_]*$",
+			allowNA: true,
+			spec: {
+				valueType: "Double",
+				name: "pl7.app/vdj/sequence/fractionCDRMutations",
+				annotations: a(orderP, false, {
+					"pl7.app/label": "CDR mutation fraction",
+					"pl7.app/isScore": "true",
+					"pl7.app/score/rankingOrder": "decreasing",
+					"pl7.app/format": ".2f"
+				})
+			}
+		} ]
+		orderP -= 100
+	}
+
 	// Flags: productive, oof, stop codons
 
 	flagColumnVariants := [ {
@@ -1042,7 +1119,9 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId, expor
 		exportArgs: exportArgs,
 
 		hashCellKey: hashCellKey,
-		cellLinkerColumnSettingsGen: cellLinkerColumnSettingsGen
+		cellLinkerColumnSettingsGen: cellLinkerColumnSettingsGen,
+
+		shmMapping: shmMapping
 	}
 }
 

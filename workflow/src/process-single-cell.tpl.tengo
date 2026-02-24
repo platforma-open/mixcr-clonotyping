@@ -17,7 +17,7 @@ math := import("math")
 
 self.defineOutputs("abundanceTsv", "clonotypeTsv",
 	"propertiesAPrimaryTsv", "propertiesASecondaryTsv", "propertiesBPrimaryTsv", "propertiesBSecondaryTsv",
-	"cellsTsv")
+	"cellsTsv", "shmTsv")
 
 ptablerSw := assets.importSoftware("@platforma-open/milaboratories.software-ptabler:main")
 
@@ -36,6 +36,11 @@ self.body(func(inputs) {
 	mainIsProductiveColumn := inputs.params.mainIsProductiveColumn
 
 	schemaPerClonotypeNoAggregates := inputs.params.schemaPerClonotypeNoAggregates
+
+	shmMapping := inputs.params.shmMapping
+	if is_undefined(shmMapping) {
+		shmMapping = []
+	}
 
 	//
 	// Preprocessing
@@ -303,6 +308,96 @@ self.body(func(inputs) {
 
 	outputProcessingRunResult := outputProcessingWf.run()
 
+	propsAPrimaryFile := outputProcessingRunResult.getFile(chainMappings[0].finalOutFile)
+	propsBPrimaryFile := outputProcessingRunResult.getFile(chainMappings[2].finalOutFile)
+
+	// Sum SHM mutation columns across primary A+B chains
+	shmTsv := undefined
+	if len(shmMapping) > 0 {
+		shmSchema := [{ column: "scClonotypeKey", type: "String" }]
+		for m in shmMapping {
+			shmSchema = append(shmSchema, { column: m.tsvColumn, type: "String" })
+		}
+
+		shmWf := pt.workflow()
+
+		propsAShmDf := shmWf.frame(propsAPrimaryFile, {
+			xsvType: "tsv",
+			schema: shmSchema,
+			inferSchema: false
+		})
+		propsBShmDf := shmWf.frame(propsBPrimaryFile, {
+			xsvType: "tsv",
+			schema: shmSchema,
+			inferSchema: false,
+			id: "props_b_shm"
+		})
+
+		// Cast "region_not_covered" to null, then to Int
+		castExprs := []
+		for m in shmMapping {
+			castExprs = append(castExprs,
+				pt.when(pt.col(m.tsvColumn).eq("region_not_covered")).
+					then(pt.lit(undefined)).
+					otherwise(pt.col(m.tsvColumn)).
+					cast("Int").
+					alias(m.tsvColumn)
+			)
+		}
+		propsAShmDf = propsAShmDf.withColumns(castExprs...)
+		propsBShmDf = propsBShmDf.withColumns(castExprs...)
+
+		//Join A and B chains
+		leftCols := []
+		rightCols := []
+		for m in shmMapping {
+			leftCols = append(leftCols, { column: m.tsvColumn, rename: m.outputColumn + "_A" })
+			rightCols = append(rightCols, { column: m.tsvColumn, rename: m.outputColumn + "_B" })
+		}
+
+		shmCombinedDf := propsAShmDf.join(propsBShmDf, {
+			how: "full",
+			on: ["scClonotypeKey"],
+			coalesce: true,
+			leftColumns: leftCols,
+			rightColumns: rightCols
+		})
+
+		// Sum SHM mutation columns across primary A+B chains
+		for m in shmMapping {
+			shmCombinedDf = shmCombinedDf.withColumns(
+				pt.col(m.outputColumn + "_A").plus(pt.col(m.outputColumn + "_B")).
+					alias(m.outputColumn)
+			)
+		}
+
+		// Calculate CDR mutation fraction
+		cdr := "nAAMutationsCDR"
+		fwr := "nAAMutationsFWR"
+		shmCombinedDf = shmCombinedDf.withColumns(
+			pt.when(
+				pt.col(cdr).isNotNull().
+					and(pt.col(fwr).isNotNull()).
+					and(pt.col(cdr).cast("Double").plus(pt.col(fwr).cast("Double")).gt(0.0))
+			).then(
+				pt.col(cdr).cast("Double").truediv(
+					pt.col(cdr).cast("Double").plus(pt.col(fwr).cast("Double"))
+				)
+			).otherwise(pt.lit(1.0)).
+				alias("fractionCDRMutations")
+		)
+
+		shmOutputCols := ["scClonotypeKey"]
+		for m in shmMapping {
+			shmOutputCols = append(shmOutputCols, m.outputColumn)
+		}
+		shmOutputCols = append(shmOutputCols, "fractionCDRMutations")
+		shmCombinedDf.save("shm.tsv", { columns: shmOutputCols, xsvType: "tsv" })
+
+		shmRunResult := shmWf.run()
+		shmTsv = shmRunResult.getFile("shm.tsv")
+	}
+
 	return {
 		// must have sampleId and scClonotypeKey columns
 		abundanceTsv: abundanceTsv,
@@ -314,9 +409,11 @@ self.body(func(inputs) {
 		cellsTsv: cellsTsv,
 
 		// must have scClonotypeKey columns
-		propertiesAPrimaryTsv: outputProcessingRunResult.getFile(chainMappings[0].finalOutFile),
+		propertiesAPrimaryTsv: propsAPrimaryFile,
 		propertiesASecondaryTsv: outputProcessingRunResult.getFile(chainMappings[1].finalOutFile),
-		propertiesBPrimaryTsv: outputProcessingRunResult.getFile(chainMappings[2].finalOutFile),
-		propertiesBSecondaryTsv: outputProcessingRunResult.getFile(chainMappings[3].finalOutFile)
+		propertiesBPrimaryTsv: propsBPrimaryFile,
+		propertiesBSecondaryTsv: outputProcessingRunResult.getFile(chainMappings[3].finalOutFile),
+
+		shmTsv: shmTsv
 	}
 })
