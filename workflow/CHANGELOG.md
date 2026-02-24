@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.23.6
+
+### Patch Changes
+
+- b8a3a50: New mutation columns
+
 ## 3.23.5
 
 ### Patch Changes
