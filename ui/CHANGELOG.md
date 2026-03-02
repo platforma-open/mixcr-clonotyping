@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.24.0
+
+### Minor Changes
+
+- 34dfe5e: Add supporting cells column
+
 ## 1.23.1
 
 ### Patch Changes

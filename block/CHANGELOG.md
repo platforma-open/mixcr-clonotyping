@@ -1,5 +1,17 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.17.0
+
+### Minor Changes
+
+- 0a52727: Added "Supporting cells" p-column for single cell clonotyping
+
+### Patch Changes
+
+- Updated dependencies [34dfe5e]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.workflow@3.24.0
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.ui@1.24.0
+
 ## 2.16.6
 
 ### Patch Changes
