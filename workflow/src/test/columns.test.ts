@@ -1,5 +1,5 @@
 import { ImportFileHandle } from '@platforma-sdk/model';
-import { awaitStableState, tplTest, ML } from '@platforma-sdk/test';
+import { awaitStableState, ML, tplTest } from '@platforma-sdk/test';
 import { ExpectStatic } from 'vitest';
 
 type Preset =
@@ -46,6 +46,7 @@ const testCases: TestCase[] = [
       // expect(config.columnsSpec.find((c: any) => c.column === 'cellGroup')).toBeDefined();
       expect(config.columnsSpec.find((c: any) => c.column === 'uniqueMoleculeCount')).toBeDefined();
       expect(config.columnsSpec.find((c: any) => c.column === 'uniqueMoleculeFraction')).toBeDefined();
+      expect(config.columnsSpecPerClonotypeSc.find((c: any) => c.column === 'uniqueCellCountTotal')).toBeDefined();
       expect(config.columnsSpec.find((c: any) => c.column === 'nSeqFR1')).toBeDefined();
       expect(config.columnsSpec.find((c: any) => c.column === 'nSeqCDR1')).toBeDefined();
       expect(config.columnsSpec.find((c: any) => c.column === 'nSeqFR2')).toBeDefined();

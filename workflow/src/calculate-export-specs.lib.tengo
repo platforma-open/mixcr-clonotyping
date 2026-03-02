@@ -462,7 +462,27 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId, expor
 				})
 			}
 		} ]
-		columnsSpecPerClonotypeSc = [ sampleCountColumn, clonotypeLabelColumn ]
+		columnsSpecPerClonotypeSc = [
+			{
+				column: "uniqueCellCountTotal",
+				id: "cell-count-total",
+				allowNA: false,
+				spec: {
+					name: "pl7.app/vdj/uniqueCellCountTotal",
+					valueType: "Long",
+					annotations: a(87120, true, {
+						"pl7.app/min": "1",
+						"pl7.app/isAbundance": "true",
+						"pl7.app/abundance/unit": "cells",
+						"pl7.app/abundance/normalized": "false",
+						"pl7.app/label": "Supporting Cells",
+						"pl7.app/description": "The sum of a clonotype's cell counts across all samples."
+					})
+				}
+			}, 
+		sampleCountColumn,
+		clonotypeLabelColumn
+		]
 	}
 
 	orderP := 80000

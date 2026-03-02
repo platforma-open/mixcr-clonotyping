@@ -203,7 +203,7 @@ self.body(func(inputs) {
 		// PTabler processing for single-cell TSV output
 		wfSingleCell := pt.workflow().
 			inMediumQueue().
-			mem(ptMemGB).
+			mem(ptMemGB * units.GiB).
 			cpu(2)
 
 		frameLoadOps := {
