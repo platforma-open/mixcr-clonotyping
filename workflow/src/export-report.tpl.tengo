@@ -290,6 +290,13 @@ self.body(func(inputs) {
                     arg("--drop-default-fields").
                     arg("--reset-export-clone-table-splitting").
                     arg("--chains").arg(chainMixcr)
+                if library {
+                    if isLibraryFileGzipped {
+                        exportChainFiltersCmd.addFile("library.json.gz", library)
+                    } else {
+                        exportChainFiltersCmd.addFile("library.json", library)
+                    }
+                }
                 exportChainFiltersResult := exportChainFiltersCmd.
                     arg("-isOOF").arg(featureForFlags).
                     arg("-hasStops").arg(featureForFlags).
