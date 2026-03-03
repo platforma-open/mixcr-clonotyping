@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.24.1
+
+### Patch Changes
+
+- 2730802: Fix custom library usage
+
 ## 3.24.0
 
 ### Minor Changes
