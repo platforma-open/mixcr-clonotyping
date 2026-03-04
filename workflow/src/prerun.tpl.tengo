@@ -32,7 +32,9 @@ wf.body(func(args) {
 
 	outputs := {}
 
-	listPresets := render.create(listPresetsTpl, {})
+	listPresets := render.create(listPresetsTpl, {
+		dedupBreaker: smart.createJsonResource("turquoise-falcon-7k")
+	})
 	outputs.presets = listPresets.output("presets", 24 * 60 * 60 * 1000)
 
 	if !is_undefined(args.preset) {
