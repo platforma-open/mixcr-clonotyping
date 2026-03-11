@@ -945,7 +945,8 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId, expor
 				name: "pl7.app/vdj/isotype",
 				annotations: a(orderP, true, {
 					"pl7.app/label": "IG isotype",
-					"pl7.app/isDiscreteFilter": "true"
+					"pl7.app/isDiscreteFilter": "true",
+					"pl7.app/discreteValues": "[\"IgA\",\"IgD\",\"IgG\",\"IgE\",\"IgM\"]"
 				})
 			}
 		}, {
