@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.24.2
+
+### Patch Changes
+
+- b1187f5: Include discrete values in isotype annotation
+
 ## 3.24.1
 
 ### Patch Changes
