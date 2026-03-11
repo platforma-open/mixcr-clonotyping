@@ -123,6 +123,13 @@ self.body(func(inputs) {
 				alias("chainRank")
 		).withoutColumns("rawChainRank")
 
+		// Filter out non-productive chains so that cells with a non-productive
+		// primary chain will have no entry and get excluded by the downstream
+		// clonotypeKeyA1/B1 isNotNull filter.
+		dfWithChainRank = dfWithChainRank.filter(
+			pt.col(mainIsProductiveColumn).eq("true")
+		)
+
 		dfWithChainRank.save("output.tsv")
 
 		// Run the workflow
