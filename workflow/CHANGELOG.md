@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.24.3
+
+### Patch Changes
+
+- 0080f2b: Upgrade MiXCR software to 4.7.0-316-develop
+
 ## 3.24.2
 
 ### Patch Changes
