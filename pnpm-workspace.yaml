@@ -13,13 +13,13 @@ catalog:
   '@platforma-sdk/ui-vue': 1.58.8
   '@platforma-sdk/tengo-builder': 2.4.25
   '@platforma-sdk/package-builder': 3.11.6
-  '@platforma-sdk/block-tools': 2.6.68
+  '@platforma-sdk/block-tools': 2.6.70
   '@platforma-sdk/eslint-config': 1.2.0
 
   '@platforma-sdk/test': 1.58.7
   '@milaboratories/helpers': 1.13.5
 
-  '@platforma-open/milaboratories.software-mixcr': 4.7.0-316-develop
+  '@platforma-open/milaboratories.software-mixcr': 4.7.0-317-develop
 
   'vue': ^3.5.15
 
