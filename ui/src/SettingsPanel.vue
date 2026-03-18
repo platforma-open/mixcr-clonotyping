@@ -207,24 +207,6 @@ function setInput(inputRef?: PlRef) {
     app.model.args.title = undefined;
 }
 
-const limitInputStr = computed({
-  get: () => {
-    const v = app.model.args.limitInput;
-    return v !== undefined ? String(v) : undefined;
-  },
-  set: (v: string | undefined) => {
-    if (v === undefined || v === '') {
-      app.model.args.limitInput = undefined;
-      return;
-    }
-    const parsed = Number(v);
-    if (!Number.isFinite(parsed)) {
-      throw Error('Not a number');
-    }
-    app.model.args.limitInput = parsed;
-  },
-});
-
 type LocalState = {
   tab: 'fromFile' | 'fromBlock' | undefined;
 };
@@ -518,8 +500,8 @@ watch(stopCodonSelection, (selected) => {
       </template>
     </PlDropdown>
 
-    <PlTextField
-      v-model="limitInputStr" :clearable="true"
+    <PlNumberField
+      v-model="app.model.args.limitInput" :clearable="true" :minValue="1"
       label="Take only this number of reads into analysis"
     />
 
