@@ -4,7 +4,7 @@ import { SupportedPresetList } from '@platforma-open/milaboratories.mixcr-clonot
 import type { ImportFileHandle, PlRef } from '@platforma-sdk/model';
 import { getFilePathFromHandle } from '@platforma-sdk/model';
 import type { ListOption } from '@platforma-sdk/ui-vue';
-import { PlAccordionSection, PlBtnGroup, PlDropdown, PlDropdownMulti, PlDropdownRef, PlFileInput, PlTextField, PlNumberField, PlCheckbox, ReactiveFileContent, PlTooltip, PlSectionSeparator } from '@platforma-sdk/ui-vue';
+import { PlAccordionSection, PlBtnGroup, PlCheckbox, PlDropdown, PlDropdownMulti, PlDropdownRef, PlFileInput, PlNumberField, PlSectionSeparator, PlTextField, PlTooltip, ReactiveFileContent } from '@platforma-sdk/ui-vue';
 import { computed, reactive, watch } from 'vue';
 import { useApp } from './app';
 import { retentive } from './retentive';
@@ -207,15 +207,23 @@ function setInput(inputRef?: PlRef) {
     app.model.args.title = undefined;
 }
 
-function parseNumber(v: string): number {
-  const parsed = Number(v);
-
-  if (!Number.isFinite(parsed)) {
-    throw Error('Not a number');
-  }
-
-  return parsed;
-}
+const limitInputStr = computed({
+  get: () => {
+    const v = app.model.args.limitInput;
+    return v !== undefined ? String(v) : undefined;
+  },
+  set: (v: string | undefined) => {
+    if (v === undefined || v === '') {
+      app.model.args.limitInput = undefined;
+      return;
+    }
+    const parsed = Number(v);
+    if (!Number.isFinite(parsed)) {
+      throw Error('Not a number');
+    }
+    app.model.args.limitInput = parsed;
+  },
+});
 
 type LocalState = {
   tab: 'fromFile' | 'fromBlock' | undefined;
@@ -511,7 +519,7 @@ watch(stopCodonSelection, (selected) => {
     </PlDropdown>
 
     <PlTextField
-      v-model="app.model.args.limitInput" :parse="parseNumber" :clearable="() => undefined"
+      v-model="limitInputStr" :clearable="true"
       label="Take only this number of reads into analysis"
     />
 
