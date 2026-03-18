@@ -119,7 +119,6 @@ self.body(func(inputs) {
     }
 
     chainsForMixcr := []
-
     for chain in chains {
         chainsForMixcr += text.split(chainInfos[chain].mixcrFilter, ",")
     }
@@ -168,7 +167,7 @@ self.body(func(inputs) {
         inferSchema: false
     })
     
-        // Add the sampleId column and remove ".clns" from fileName using pTabler string methods
+    // Add the sampleId column writing on it fileName column content without ".clns" (minus(5))
     processedDf := df.withColumns(
         pt.col("fileName").strSlice(0, pt.col("fileName").strLenChars().minus(5)).alias("sampleId")
     )
@@ -345,7 +344,8 @@ self.body(func(inputs) {
         }
     }
 
-    // Per-chain clonotype counts
+    // Per-chain clonotype counts: Counts productive clonotypes per chain per sample
+    // Overwritten later with paired-only counts
     perChainJoined := joinedDf
     for chain in chains {
         chainData := clonotypeTablesData[chain]
@@ -407,6 +407,7 @@ self.body(func(inputs) {
             // Recompute per-chain clonotype counts using only paired cells
             perChainPairedJoined := perChainJoined
             totalPairedParts := []
+            pairedReadParts := []
             for chain in chains {
                 chainFiles := singleCellChainTsvsData[chain]
                 chainColPaired := "clonotypesByChain." + chain + ".paired"
@@ -431,6 +432,30 @@ self.body(func(inputs) {
                 chainAggPaired := partsDf.groupBy("sampleId").agg(pt.col("clonotypeKey").nUnique().alias(chainColPaired))
                 perChainPairedJoined = perChainPairedJoined.join(chainAggPaired, { how: "left", on: ["sampleId"] })
                 totalPairedParts = append(totalPairedParts, chainAggPaired.select(pt.col("sampleId"), pt.col(chainColPaired).alias("__pairedPart")))
+
+                // Compute reads for paired clonotypes from this chain
+                chainClonotypeData := clonotypeTablesData[chain]
+                if !is_undefined(chainClonotypeData) {
+                    // Deduplicate paired clonotypeKeys (a clonotype may appear in multiple paired cells)
+                    pairedCloneKeysDf := partsDf.groupBy("sampleId", "clonotypeKey").agg(
+                        pt.col("clonotypeKey").count().alias("__cnt")
+                    )
+                    chainReadDfs := []
+                    for key, clonesFile in chainClonotypeData.inputs() {
+                        sampleId := json.decode(key)[0]
+                        dfSrc := wf.frame(clonesFile, { xsvType: "tsv", inferSchema: false, schema: [ { column: "readCount", type: "Double" } ] })
+                        chainReadDfs = append(chainReadDfs, dfSrc.select(
+                            pt.lit(sampleId).alias("sampleId"),
+                            pt.col("clonotypeKey"),
+                            pt.col("readCount").round().cast("Long").alias("__pairedReadCount")
+                        ))
+                    }
+                    if len(chainReadDfs) > 0 {
+                        allChainReadsDf := len(chainReadDfs) > 1 ? pt.concat(chainReadDfs) : chainReadDfs[0]
+                        chainReadsJoined := allChainReadsDf.join(pairedCloneKeysDf, { how: "inner", on: ["sampleId", "clonotypeKey"] })
+                        pairedReadParts = append(pairedReadParts, chainReadsJoined.select(pt.col("sampleId"), pt.col("__pairedReadCount")))
+                    }
+                }
             }
 
             if len(totalPairedParts) > 0 {
@@ -440,8 +465,17 @@ self.body(func(inputs) {
             } else {
                 perChainJoined = perChainPairedJoined.withColumns(pt.lit(0).alias("exportedClonotypesPaired"))
             }
+
+            // Reads from paired clonotypes only
+            if len(pairedReadParts) > 0 {
+                pairedReadsDf := len(pairedReadParts) > 1 ? pt.concat(pairedReadParts) : pairedReadParts[0]
+                pairedReadsAgg := pairedReadsDf.groupBy("sampleId").agg(pt.col("__pairedReadCount").sum().alias("readsUsedInClonotypesPaired"))
+                perChainJoined = perChainJoined.join(pairedReadsAgg, { how: "left", on: ["sampleId"] })
+            } else {
+                perChainJoined = perChainJoined.withColumns(pt.lit(0).alias("readsUsedInClonotypesPaired"))
+            }
         } else {
-            perChainJoined = perChainJoined.withColumns(pt.lit(0).alias("scCellsTotal"), pt.lit(0).alias("scCellsBothChains"))
+            perChainJoined = perChainJoined.withColumns(pt.lit(0).alias("scCellsTotal"), pt.lit(0).alias("scCellsBothChains"), pt.lit(0).alias("readsUsedInClonotypesPaired"))
         }
     }
 
@@ -457,7 +491,7 @@ self.body(func(inputs) {
         }
         finalDf = finalDf.withColumns(
             pt.col("exportedClonotypesPaired").fillNull(0).cast("Long").alias("totalClonotypes"),
-            pt.col("readsUsedInClonotypesNew").fillNull(0).cast("Long").alias("readsUsedInClonotypes")
+            pt.col("readsUsedInClonotypesPaired").fillNull(0).cast("Long").alias("readsUsedInClonotypes")
         )
     } else {
         finalDf = finalDf.withColumns(
