@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.24.1
+
+### Patch Changes
+
+- b078936: update clone label to id
+
 ## 1.24.0
 
 ### Minor Changes

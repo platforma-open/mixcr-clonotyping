@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.24.5
+
+### Patch Changes
+
+- b078936: update clone label to id
+
 ## 3.24.4
 
 ### Patch Changes
