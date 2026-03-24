@@ -207,15 +207,24 @@ function setInput(inputRef?: PlRef) {
     app.model.args.title = undefined;
 }
 
-function parseNumber(v: string): number {
-  const parsed = Number(v);
+const DRY_RUN_READS_BULK = 100_000;
+const DRY_RUN_READS_SC = 500_000;
 
-  if (!Number.isFinite(parsed)) {
-    throw Error('Not a number');
-  }
+const runModeOptions: ListOption<'dry' | 'full'>[] = [
+  { label: 'Preview', value: 'dry' },
+  { label: 'Full run', value: 'full' },
+];
 
-  return parsed;
-}
+const runMode = computed({
+  get: () => (app.model.args.limitInput !== undefined ? 'dry' : 'full'),
+  set: (value: 'dry' | 'full') => {
+    if (value === 'dry') {
+      app.model.args.limitInput = isSingleCell.value ? DRY_RUN_READS_SC : DRY_RUN_READS_BULK;
+    } else {
+      app.model.args.limitInput = undefined;
+    }
+  },
+});
 
 type LocalState = {
   tab: 'fromFile' | 'fromBlock' | undefined;
@@ -494,6 +503,30 @@ watch(stopCodonSelection, (selected) => {
     </template>
   </PlDropdown>
 
+  <PlBtnGroup v-model="runMode" :options="runModeOptions" label="Run mode">
+    <template #tooltip>
+      Preview — runs the analysis on a small fraction of reads per sample. Use it to check that settings are correct and results look reasonable before launching a full run, which may take much longer.
+    </template>
+  </PlBtnGroup>
+
+  <template v-if="runMode === 'dry'">
+    <PlNumberField
+      v-model="app.model.args.limitInput"
+      label="Reads per sample limit"
+      :minValue="1"
+      :maxValue="999999999"
+    >
+      <template #tooltip>
+        Number of reads to use per sample in the dry run.
+        Recommended: 100,000 for bulk data, 500,000 for single-cell data.
+      </template>
+    </PlNumberField>
+    <p v-if="isSingleCell" style="font-size: 0.85em; color: var(--pl-color-warning, #b45309); margin: 0;">
+      For single-cell data, limiting reads reduces per-cell coverage and may affect assembly quality.
+      Consider running 1–2 complete samples at full depth instead.
+    </p>
+  </template>
+
   <PlAccordionSection label="Advanced Settings">
     <PlSectionSeparator>MiXCR Settings</PlSectionSeparator>
     <PlDropdown
@@ -509,11 +542,6 @@ watch(stopCodonSelection, (selected) => {
         </ul>
       </template>
     </PlDropdown>
-
-    <PlTextField
-      v-model="app.model.args.limitInput" :parse="parseNumber" :clearable="() => undefined"
-      label="Take only this number of reads into analysis"
-    />
 
     <PlCheckbox
       v-model="exportMinQuality"
