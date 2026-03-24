@@ -226,12 +226,6 @@ const runMode = computed({
   },
 });
 
-watch(isSingleCell, (sc) => {
-  if (app.model.args.limitInput !== undefined) {
-    app.model.args.limitInput = sc ? DRY_RUN_READS_SC : DRY_RUN_READS_BULK;
-  }
-});
-
 type LocalState = {
   tab: 'fromFile' | 'fromBlock' | undefined;
 };
