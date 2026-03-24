@@ -226,6 +226,12 @@ const runMode = computed({
   },
 });
 
+watch(isSingleCell, (sc) => {
+  if (app.model.args.limitInput !== undefined) {
+    app.model.args.limitInput = sc ? DRY_RUN_READS_SC : DRY_RUN_READS_BULK;
+  }
+});
+
 type LocalState = {
   tab: 'fromFile' | 'fromBlock' | undefined;
 };
@@ -514,14 +520,13 @@ watch(stopCodonSelection, (selected) => {
       v-model="app.model.args.limitInput"
       label="Reads per sample limit"
       :minValue="1"
-      :maxValue="999999999"
     >
       <template #tooltip>
         Number of reads to use per sample in the dry run.
         Recommended: 100,000 for bulk data, 500,000 for single-cell data.
       </template>
     </PlNumberField>
-    <p v-if="isSingleCell" style="font-size: 0.85em; color: var(--pl-color-warning, #b45309); margin: 0;">
+    <p v-if="isSingleCell" class="dry-run-sc-warning">
       For single-cell data, limiting reads reduces per-cell coverage and may affect assembly quality.
       Consider running 1–2 complete samples at full depth instead.
     </p>
@@ -624,3 +629,11 @@ watch(stopCodonSelection, (selected) => {
     />
   </PlAccordionSection>
 </template>
+
+<style scoped>
+.dry-run-sc-warning {
+  font-size: 0.85em;
+  color: var(--pl-color-warning);
+  margin: 0;
+}
+</style>
