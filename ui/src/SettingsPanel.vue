@@ -5,7 +5,7 @@ import type { ImportFileHandle, PlRef } from '@platforma-sdk/model';
 import { getFilePathFromHandle } from '@platforma-sdk/model';
 import type { ListOption } from '@platforma-sdk/ui-vue';
 import { PlAccordionSection, PlBtnGroup, PlCheckbox, PlDropdown, PlDropdownMulti, PlDropdownRef, PlFileInput, PlNumberField, PlSectionSeparator, PlTextField, PlTooltip, ReactiveFileContent } from '@platforma-sdk/ui-vue';
-import { computed, reactive, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { useApp } from './app';
 import { retentive } from './retentive';
 
@@ -209,6 +209,16 @@ function setInput(inputRef?: PlRef) {
 
 const DRY_RUN_READS_BULK = 100_000;
 const DRY_RUN_READS_SC = 500_000;
+const lastLimitInput = ref(app.model.args.limitInput);
+
+watch(
+  () => app.model.args.limitInput,
+  (newLimit) => {
+    if ((newLimit ?? 0) > 0) {
+      lastLimitInput.value = newLimit;
+    }
+  },
+);
 
 const runModeOptions: ListOption<'dry' | 'full'>[] = [
   { label: 'Preview', value: 'dry' },
@@ -216,10 +226,10 @@ const runModeOptions: ListOption<'dry' | 'full'>[] = [
 ];
 
 const runMode = computed({
-  get: () => (app.model.args.limitInput !== undefined ? 'dry' : 'full'),
+  get: () => ((app.model.args.limitInput ?? 0) > 0 ? 'dry' : 'full'),
   set: (value: 'dry' | 'full') => {
     if (value === 'dry') {
-      app.model.args.limitInput = isSingleCell.value ? DRY_RUN_READS_SC : DRY_RUN_READS_BULK;
+      app.model.args.limitInput = lastLimitInput.value ?? (isSingleCell.value ? DRY_RUN_READS_SC : DRY_RUN_READS_BULK);
     } else {
       app.model.args.limitInput = undefined;
     }
@@ -514,14 +524,13 @@ watch(stopCodonSelection, (selected) => {
       v-model="app.model.args.limitInput"
       label="Reads per sample limit"
       :minValue="1"
-      :maxValue="999999999"
     >
       <template #tooltip>
         Number of reads to use per sample in the dry run.
         Recommended: 100,000 for bulk data, 500,000 for single-cell data.
       </template>
     </PlNumberField>
-    <p v-if="isSingleCell" style="font-size: 0.85em; color: var(--pl-color-warning, #b45309); margin: 0;">
+    <p v-if="isSingleCell" class="sc-warning-message">
       For single-cell data, limiting reads reduces per-cell coverage and may affect assembly quality.
       Consider running 1–2 complete samples at full depth instead.
     </p>
@@ -624,3 +633,11 @@ watch(stopCodonSelection, (selected) => {
     />
   </PlAccordionSection>
 </template>
+
+<style scoped>
+.sc-warning-message {
+  font-size: 0.85em;
+  color: var(--pl-color-warning, #b45309);
+  margin: 0;
+}
+</style>
