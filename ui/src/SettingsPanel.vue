@@ -220,6 +220,16 @@ watch(
   },
 );
 
+watch(
+  () => app.model.args.preset,
+  () => {
+    if ((app.model.args.limitInput ?? 0) > 0) {
+      lastLimitInput.value = undefined;
+      app.model.args.limitInput = isSingleCell.value ? DRY_RUN_READS_SC : DRY_RUN_READS_BULK;
+    }
+  },
+);
+
 const runModeOptions: ListOption<'dry' | 'full'>[] = [
   { label: 'Preview', value: 'dry' },
   { label: 'Full run', value: 'full' },
