@@ -220,31 +220,30 @@ watch(
   },
 );
 
-watch(
-  () => app.model.args.preset,
-  () => {
-    if ((app.model.args.limitInput ?? 0) > 0) {
-      lastLimitInput.value = undefined;
-      app.model.args.limitInput = isSingleCell.value ? DRY_RUN_READS_SC : DRY_RUN_READS_BULK;
-    }
-  },
-);
-
 const runModeOptions: ListOption<'dry' | 'full'>[] = [
   { label: 'Preview', value: 'dry' },
   { label: 'Full run', value: 'full' },
 ];
 
-const runMode = computed({
-  get: () => ((app.model.args.limitInput ?? 0) > 0 ? 'dry' : 'full'),
-  set: (value: 'dry' | 'full') => {
-    if (value === 'dry') {
-      app.model.args.limitInput = lastLimitInput.value ?? (isSingleCell.value ? DRY_RUN_READS_SC : DRY_RUN_READS_BULK);
-    } else {
-      app.model.args.limitInput = undefined;
+const runMode = ref<'dry' | 'full'>((app.model.args.limitInput ?? 0) > 0 ? 'dry' : 'full');
+
+watch(runMode, (value) => {
+  if (value === 'dry') {
+    app.model.args.limitInput = lastLimitInput.value ?? (isSingleCell.value ? DRY_RUN_READS_SC : DRY_RUN_READS_BULK);
+  } else {
+    app.model.args.limitInput = undefined;
+  }
+});
+
+watch(
+  () => app.model.args.preset,
+  () => {
+    if (runMode.value === 'dry') {
+      lastLimitInput.value = undefined;
+      app.model.args.limitInput = isSingleCell.value ? DRY_RUN_READS_SC : DRY_RUN_READS_BULK;
     }
   },
-});
+);
 
 type LocalState = {
   tab: 'fromFile' | 'fromBlock' | undefined;
@@ -535,6 +534,7 @@ watch(stopCodonSelection, (selected) => {
       label="Reads per sample limit"
       :clearable="true"
       :minValue="1"
+      :error-message="app.model.args.limitInput == null ? 'Enter a number of reads to use per sample' : undefined"
     >
       <template #tooltip>
         Number of reads to use per sample in the dry run.
