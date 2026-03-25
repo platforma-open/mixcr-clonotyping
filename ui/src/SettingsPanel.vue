@@ -533,6 +533,7 @@ watch(stopCodonSelection, (selected) => {
     <PlNumberField
       v-model="app.model.args.limitInput"
       label="Reads per sample limit"
+      :clearable="true"
       :minValue="1"
     >
       <template #tooltip>
