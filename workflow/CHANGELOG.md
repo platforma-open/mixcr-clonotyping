@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.24.6
+
+### Patch Changes
+
+- eea91d6: Filter non productive sequences for single cell data
+
 ## 3.24.5
 
 ### Patch Changes
