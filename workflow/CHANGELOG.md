@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.25.0
+
+### Minor Changes
+
+- 979cbf8: Add descriptions to key columns from QC table and include number of clonotypes dropped from un-paired cells
+
 ## 3.24.6
 
 ### Patch Changes
