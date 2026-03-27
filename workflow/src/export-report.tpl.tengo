@@ -374,29 +374,29 @@ self.body(func(inputs) {
         )
         perChainJoined = perChainJoined.join(chainAgg, { how: "left", on: ["sampleId"] })
     }
-    // Single-cell: compute per-sample cell pairing stats (both chains vs one chain)
+    // Single-cell: compute per-sample cell pairing stats and paired clonotype counts
     if isSingleCell && !is_undefined(singleCellChainTsvsData) {
-        // Expect two chains for receptor; if more, we count any cell having A1 and B1 as both
-        // Build a map of per-sample cellKey presence per chain
+        // Load all single-cell chain TSVs once with (sampleId, cellKey, clonotypeKey, chain)
         scDfs := []
         maps.forEach(singleCellChainTsvsData, func(chainName, chainFiles) {
             maps.forEach(chainFiles.inputs(), func(key, f) {
                 sampleId := json.decode(key)[0]
-                df := wf.frame(f, { xsvType: "tsv", inferSchema: false, schema: [ { column: "cellKey", type: "String" } ] })
-                df2 := df.select(
+                df := wf.frame(f, { xsvType: "tsv", inferSchema: false, schema: [ { column: "cellKey", type: "String" }, { column: "clonotypeKey", type: "String" } ] })
+                scDfs = append(scDfs, df.select(
                     pt.lit(sampleId).alias("sampleId"),
-                    pt.col("cellKey").alias("cellKey"),
+                    pt.col("cellKey"),
+                    pt.col("clonotypeKey"),
                     pt.lit(chainName).alias("chain")
-                )
-                scDfs = append(scDfs, df2)
+                ))
             })
         })
         if len(scDfs) > 0 {
             scAll := len(scDfs) > 1 ? pt.concat(scDfs) : scDfs[0]
+
             // Count cells per sample across all chains (unique cellKey)
             cellsPerSample := scAll.groupBy("sampleId").agg(pt.col("cellKey").nUnique().alias("scCellsTotal"))
 
-            // Cells paired across different chains: require the same cellKey to appear in >1 distinct chains per sample
+            // Cells paired across different chains: cellKey appears in >1 distinct chain
             cellsPerSampleChainCounts := scAll.groupBy("sampleId", "cellKey").agg(pt.col("chain").nUnique().alias("_numChains"))
             bothChainCells := cellsPerSampleChainCounts.filter(pt.col("_numChains").gt(1)).groupBy("sampleId").agg(pt.col("cellKey").count().alias("scCellsBothChains"))
             pairedKeys := cellsPerSampleChainCounts.filter(pt.col("_numChains").gt(1)).select(pt.col("sampleId"), pt.col("cellKey"))
@@ -404,31 +404,20 @@ self.body(func(inputs) {
             perChainJoined = perChainJoined.join(cellsPerSample, { how: "left", on: ["sampleId"] })
             perChainJoined = perChainJoined.join(bothChainCells, { how: "left", on: ["sampleId"] })
 
-            // Recompute per-chain clonotype counts using only paired cells
+            // Filter to paired cells only
+            scPaired := scAll.join(pairedKeys, { how: "inner", on: ["sampleId", "cellKey"] })
+
+            // Per-chain clonotype counts from paired cells
             perChainPairedJoined := perChainJoined
             totalPairedParts := []
             for chain in chains {
-                chainFiles := singleCellChainTsvsData[chain]
                 chainColPaired := "clonotypesByChain." + chain + ".paired"
-                if is_undefined(chainFiles) {
+                if is_undefined(singleCellChainTsvsData[chain]) {
                     perChainPairedJoined = perChainPairedJoined.withColumns(pt.lit(0).alias(chainColPaired))
                     continue
                 }
-                parts := []
-                maps.forEach(chainFiles.inputs(), func(key, f) {
-                    sampleId := json.decode(key)[0]
-                    dfc := wf.frame(f, { xsvType: "tsv", inferSchema: false, schema: [ { column: "cellKey", type: "String" }, { column: "clonotypeKey", type: "String" } ] })
-                    dfc2 := dfc.select(pt.lit(sampleId).alias("sampleId"), pt.col("cellKey"), pt.col("clonotypeKey"))
-                    // join with paired keys for this sample
-                    dfcJoined := dfc2.join(pairedKeys, { how: "inner", on: ["sampleId", "cellKey"] })
-                    parts = append(parts, dfcJoined.select(pt.col("sampleId"), pt.col("clonotypeKey")))
-                })
-                if len(parts) == 0 {
-                    perChainPairedJoined = perChainPairedJoined.withColumns(pt.lit(0).alias(chainColPaired))
-                    continue
-                }
-                partsDf := len(parts) > 1 ? pt.concat(parts) : parts[0]
-                chainAggPaired := partsDf.groupBy("sampleId").agg(pt.col("clonotypeKey").nUnique().alias(chainColPaired))
+                chainPaired := scPaired.filter(pt.col("chain").eq(chain))
+                chainAggPaired := chainPaired.groupBy("sampleId").agg(pt.col("clonotypeKey").nUnique().alias(chainColPaired))
                 perChainPairedJoined = perChainPairedJoined.join(chainAggPaired, { how: "left", on: ["sampleId"] })
                 totalPairedParts = append(totalPairedParts, chainAggPaired.select(pt.col("sampleId"), pt.col(chainColPaired).alias("__pairedPart")))
             }
@@ -440,6 +429,7 @@ self.body(func(inputs) {
             } else {
                 perChainJoined = perChainPairedJoined.withColumns(pt.lit(0).alias("exportedClonotypesPaired"))
             }
+
         } else {
             perChainJoined = perChainJoined.withColumns(pt.lit(0).alias("scCellsTotal"), pt.lit(0).alias("scCellsBothChains"))
         }
@@ -457,7 +447,8 @@ self.body(func(inputs) {
         }
         finalDf = finalDf.withColumns(
             pt.col("exportedClonotypesPaired").fillNull(0).cast("Long").alias("totalClonotypes"),
-            pt.col("readsUsedInClonotypesNew").fillNull(0).cast("Long").alias("readsUsedInClonotypes")
+            pt.col("readsUsedInClonotypesNew").fillNull(0).cast("Long").alias("readsUsedInClonotypes"),
+            pt.col("exportedClonotypes").fillNull(0).cast("Long").minus(pt.col("exportedClonotypesPaired").fillNull(0).cast("Long")).alias("clonotypesDroppedUnpaired")
         )
     } else {
         finalDf = finalDf.withColumns(
