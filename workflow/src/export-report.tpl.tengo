@@ -410,7 +410,6 @@ self.body(func(inputs) {
             // Per-chain clonotype counts from paired cells
             perChainPairedJoined := perChainJoined
             totalPairedParts := []
-            availableChains := []
             for chain in chains {
                 chainColPaired := "clonotypesByChain." + chain + ".paired"
                 if is_undefined(singleCellChainTsvsData[chain]) {
@@ -421,7 +420,6 @@ self.body(func(inputs) {
                 chainAggPaired := chainPaired.groupBy("sampleId").agg(pt.col("clonotypeKey").nUnique().alias(chainColPaired))
                 perChainPairedJoined = perChainPairedJoined.join(chainAggPaired, { how: "left", on: ["sampleId"] })
                 totalPairedParts = append(totalPairedParts, chainAggPaired.select(pt.col("sampleId"), pt.col(chainColPaired).alias("__pairedPart")))
-                availableChains = append(availableChains, chain)
             }
 
             if len(totalPairedParts) > 0 {
