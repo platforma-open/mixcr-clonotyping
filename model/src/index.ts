@@ -44,6 +44,15 @@ const dataModel = new DataModelBuilder()
 
 export const platforma = BlockModelV3.create(dataModel)
 
+  .prerunArgs((data) => ({
+    preset: data.preset,
+    species: data.species,
+    leftAlignmentMode: data.leftAlignmentMode,
+    rightAlignmentMode: data.rightAlignmentMode,
+    materialType: data.materialType,
+    isGenericPreset: data.isGenericPreset,
+  }))
+
   .args((data) => {
     if (!BlockArgsValid.safeParse(data).success) throw new Error('Block args are not valid');
     return {

@@ -1,4 +1,4 @@
-import type { BlockArgs, BlockOutputs, platforma } from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
+import type { BlockData, BlockOutputs, platforma } from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
 import {
   AlignReport,
   AssembleReport,
@@ -11,7 +11,7 @@ import { blockSpec as samplesAndDataBlockSpec } from '@platforma-open/milaborato
 import type { BlockArgs as SamplesAndDataBlockArgs } from '@platforma-open/milaboratories.samples-and-data.model';
 import { blockSpec as myBlockSpec } from 'this-block';
 import type { InferBlockState } from '@platforma-sdk/model';
-import { wrapOutputs } from '@platforma-sdk/model';
+import { createPlDataTableStateV2, wrapOutputs } from '@platforma-sdk/model';
 
 type AxisSpec = { name: string; domain?: Record<string, string> };
 type PColumnListEntry = { spec: { axesSpec: AxisSpec[] } };
@@ -39,9 +39,18 @@ blockTest(
   { timeout: 30000 },
   async ({ rawPrj: project, expect }) => {
     const blockId = await project.addBlock('Block', myBlockSpec);
-    await project.setBlockArgs(blockId, {
-      preset: { type: 'name', name: 'milab-human-dna-xcr-7genes-multiplex' },
-    } satisfies BlockArgs);
+    await project.mutateBlockStorage(blockId, {
+      operation: 'update-block-data',
+      value: {
+        defaultBlockLabel: '',
+        customBlockLabel: '',
+        chains: [],
+        cloneClusteringMode: 'default',
+        tableState: createPlDataTableStateV2(),
+        runMode: 'full',
+        preset: { type: 'name', name: 'milab-human-dna-xcr-7genes-multiplex' },
+      } satisfies BlockData,
+    });
     const stableState = (await awaitStableState(
       project.getBlockState(blockId),
       10000,
@@ -134,11 +143,19 @@ blockTest(
 
     const clonotypingStableState1Outputs = wrapOutputs(clonotypingStableState1.outputs);
 
-    await project.setBlockArgs(clonotypingBlockId, {
-      input: clonotypingStableState1Outputs.inputOptions[0].ref,
-      preset: { type: 'name', name: 'milab-human-dna-xcr-7genes-multiplex' },
-      chains: ['IGHeavy', 'IGLight'],
-    } satisfies BlockArgs);
+    await project.mutateBlockStorage(clonotypingBlockId, {
+      operation: 'update-block-data',
+      value: {
+        defaultBlockLabel: '',
+        customBlockLabel: '',
+        input: clonotypingStableState1Outputs.inputOptions[0].ref,
+        preset: { type: 'name', name: 'milab-human-dna-xcr-7genes-multiplex' },
+        chains: ['IGHeavy', 'IGLight'],
+        cloneClusteringMode: 'default',
+        runMode: 'full',
+        tableState: createPlDataTableStateV2(),
+      } satisfies BlockData,
+    });
 
     const clonotypingStableState2 = (await awaitStableState(
       project.getBlockState(clonotypingBlockId),
@@ -326,12 +343,20 @@ blockTest(
 
     const clonotypingStableState1Outputs = wrapOutputs(clonotypingStableState1.outputs);
 
-    await project.setBlockArgs(clonotypingBlockId, {
-      input: clonotypingStableState1Outputs.inputOptions[0].ref,
-      preset: { type: 'name', name: '10x-sc-xcr-vdj' },
-      species: 'human',
-      chains: ['IG'],
-    } satisfies BlockArgs);
+    await project.mutateBlockStorage(clonotypingBlockId, {
+      operation: 'update-block-data',
+      value: {
+        defaultBlockLabel: '',
+        customBlockLabel: '',
+        input: clonotypingStableState1Outputs.inputOptions[0].ref,
+        preset: { type: 'name', name: '10x-sc-xcr-vdj' },
+        species: 'human',
+        chains: ['IG'],
+        cloneClusteringMode: 'default',
+        runMode: 'full',
+        tableState: createPlDataTableStateV2(),
+      } satisfies BlockData,
+    });
 
     const clonotypingStableState2 = (await awaitStableState(
       project.getBlockState(clonotypingBlockId),
