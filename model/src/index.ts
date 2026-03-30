@@ -54,7 +54,7 @@ export const platforma = BlockModelV3.create(dataModel)
   }))
 
   .args((data) => {
-    if (!BlockArgsValid.safeParse(data).success) throw new Error('Block args are not valid');
+    if (!BlockArgsValid.safeParse(data).success) return undefined;
     return {
       defaultBlockLabel: data.defaultBlockLabel ?? '',
       customBlockLabel: data.customBlockLabel ?? '',
