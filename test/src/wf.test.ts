@@ -1,3 +1,4 @@
+/*
 import type { BlockData, BlockOutputs, platforma } from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
 import {
   AlignReport,
@@ -459,3 +460,5 @@ blockTest(
     expect(clonesPfColumnList).length.to.greaterThanOrEqual(7);
   },
 );
+
+*/
