@@ -615,7 +615,8 @@ getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellT
                 "pl7.app/min": "0",
                 "pl7.app/table/orderPriority": "109000",
                 "pl7.app/table/visibility": "default",
-                "pl7.app/label": "Total Clonotypes"
+                "pl7.app/label": "Total Clonotypes",
+                "pl7.app/description": "Sum of unique clonotypes across all chains. In single-cell mode, only clonotypes from paired cells are counted."
             }
         }
     },
@@ -818,7 +819,8 @@ getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellT
                 "pl7.app/min": "0",
                 "pl7.app/table/orderPriority": "107900",
                 "pl7.app/table/visibility": "default",
-                "pl7.app/label": "Total number of cells (with paired chains)"
+                "pl7.app/label": "Total number of cells (with paired chains)",
+                "pl7.app/description": "Cells detected with at least two distinct chains (e.g. heavy and light)."
             }
         }
     }]
@@ -838,12 +840,32 @@ getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellT
                     "pl7.app/min": "0",
                     "pl7.app/table/orderPriority": string(n),
                     "pl7.app/table/visibility": "default",
-                    "pl7.app/label": "Clonotypes by Chain " + chain
+                    "pl7.app/label": "Clonotypes by Chain " + chain,
+                    "pl7.app/description": "Number of unique clonotypes for this chain (paired cells only). Includes secondary chain rearrangements."
                 }
             }
         }]
         n -= 100
     }
+
+    // Clonotypes dropped because the cell was unpaired (single-chain only)
+    singleCellColumns += [{
+        column: "clonotypesDroppedUnpaired",
+        id: "clonotypes-dropped-unpaired",
+        allowNA: true,
+        naRegex: "NaN",
+        spec: {
+            name: "mixcr.com/reports/singleCell/clonotypesDroppedUnpaired",
+            valueType: "Long",
+            annotations: {
+                "pl7.app/min": "0",
+                "pl7.app/table/orderPriority": "108150",
+                "pl7.app/table/visibility": "optional",
+                "pl7.app/label": "Clonotypes Dropped - Unpaired",
+                "pl7.app/description": "Clonotypes discarded because their cell lacked a paired chain."
+            }
+        }
+    }]
 
     // Single Cell columns
     singleCellColumns += [
