@@ -5,7 +5,7 @@ import type { ImportFileHandle, PlRef } from '@platforma-sdk/model';
 import { getFilePathFromHandle } from '@platforma-sdk/model';
 import type { ListOption } from '@platforma-sdk/ui-vue';
 import { PlAccordionSection, PlBtnGroup, PlCheckbox, PlDropdown, PlDropdownMulti, PlDropdownRef, PlFileInput, PlNumberField, PlSectionSeparator, PlTextField, PlTooltip, ReactiveFileContent } from '@platforma-sdk/ui-vue';
-import { computed, reactive, ref, watch } from 'vue';
+import { computed, reactive, watch } from 'vue';
 import { useApp } from './app';
 import { retentive } from './retentive';
 
@@ -14,7 +14,7 @@ const app = useApp();
 const reactiveFileContent = ReactiveFileContent.useGlobal();
 
 const data = reactive<{ presetType: Preset['type'] }>({
-  presetType: app.model.args.preset?.type ?? 'name',
+  presetType: app.model.data.preset?.type ?? 'name',
 });
 
 const speciesOptions: ListOption[] = [
@@ -54,7 +54,7 @@ const presetOptions = computed(() => {
 });
 
 const preset = computed(() => {
-  const preset = app.model.args.preset;
+  const preset = app.model.data.preset;
   return preset?.type === 'name'
     ? presets.value?.find((p) => p.presetName === preset.name)
     : undefined;
@@ -93,7 +93,7 @@ const isGenericPresetComputed = computed(() => {
 
 watch(isGenericPresetComputed, (v) => {
   // propagate to model args as optional boolean
-  (app.model.args as unknown as { isGenericPreset?: boolean }).isGenericPreset = v === undefined ? undefined : v;
+  app.model.data.isGenericPreset = v === undefined ? undefined : v;
 });
 
 const allFileImports = computed(() => {
@@ -102,12 +102,12 @@ const allFileImports = computed(() => {
 
 watch(needSpecies, (ns) => {
   if (ns === false // everything is loaded and we know that species is not specified as flag
-    && app.model.args.species !== undefined)
-    app.model.args.species = undefined;
+    && app.model.data.species !== undefined)
+    app.model.data.species = undefined;
 
   if (ns === true // the opposite of the above
-    && app.model.args.species === undefined)
-    app.model.args.species = 'hsa';
+    && app.model.data.species === undefined)
+    app.model.data.species = 'hsa';
 });
 
 const leftAlignmentModeOptions: ListOption[] = [
@@ -139,43 +139,43 @@ const assembleClonesByOptions: ListOption[] = [
 ];
 
 watch(needLeftAlignmentMode, (v) => {
-  if (v === false && app.model.args.leftAlignmentMode !== undefined)
-    app.model.args.leftAlignmentMode = undefined;
-  if (v === true && app.model.args.leftAlignmentMode === undefined)
-    app.model.args.leftAlignmentMode = '--rigid-left-alignment-boundary';
+  if (v === false && app.model.data.leftAlignmentMode !== undefined)
+    app.model.data.leftAlignmentMode = undefined;
+  if (v === true && app.model.data.leftAlignmentMode === undefined)
+    app.model.data.leftAlignmentMode = '--rigid-left-alignment-boundary';
 });
 watch(needRightAlignmentMode, (v) => {
-  if (v === false && app.model.args.rightAlignmentMode !== undefined)
-    app.model.args.rightAlignmentMode = undefined;
-  if (v === true && app.model.args.rightAlignmentMode === undefined)
-    app.model.args.rightAlignmentMode = '--floating-right-alignment-boundary C';
+  if (v === false && app.model.data.rightAlignmentMode !== undefined)
+    app.model.data.rightAlignmentMode = undefined;
+  if (v === true && app.model.data.rightAlignmentMode === undefined)
+    app.model.data.rightAlignmentMode = '--floating-right-alignment-boundary C';
 });
 watch(needMaterialType, (v) => {
-  if (v === false && app.model.args.materialType !== undefined)
-    app.model.args.materialType = undefined;
-  if (v === true && app.model.args.materialType === undefined)
-    app.model.args.materialType = '--dna';
+  if (v === false && app.model.data.materialType !== undefined)
+    app.model.data.materialType = undefined;
+  if (v === true && app.model.data.materialType === undefined)
+    app.model.data.materialType = '--dna';
 });
 watch(needTagPattern, (v) => {
-  if (v === false && app.model.args.tagPattern !== undefined)
-    app.model.args.tagPattern = undefined;
-  if (v === true && app.model.args.tagPattern === undefined)
-    app.model.args.tagPattern = '';
+  if (v === false && app.model.data.tagPattern !== undefined)
+    app.model.data.tagPattern = undefined;
+  if (v === true && app.model.data.tagPattern === undefined)
+    app.model.data.tagPattern = '';
 });
 watch(needAssembleClonesBy, (v) => {
-  if (v === false && app.model.args.assembleClonesBy !== undefined)
-    app.model.args.assembleClonesBy = undefined;
-  if (v === true && app.model.args.assembleClonesBy === undefined)
-    app.model.args.assembleClonesBy = 'CDR3';
+  if (v === false && app.model.data.assembleClonesBy !== undefined)
+    app.model.data.assembleClonesBy = undefined;
+  if (v === true && app.model.data.assembleClonesBy === undefined)
+    app.model.data.assembleClonesBy = 'CDR3';
 });
 
 function setPresetName(name?: string) {
   if (name === undefined) {
-    app.model.args.preset = undefined;
-    app.model.args.presetCommonName = undefined;
+    app.model.data.preset = undefined;
+    app.model.data.presetCommonName = undefined;
   } else {
-    app.model.args.preset = { type: 'name', name };
-    app.model.args.presetCommonName = presetOptions.value?.find((o) => o.value === name)?.label;
+    app.model.data.preset = { type: 'name', name };
+    app.model.data.presetCommonName = presetOptions.value?.find((o) => o.value === name)?.label;
   }
 }
 
@@ -186,11 +186,11 @@ function extractFileName(filePath: string) {
 
 function setPresetFile(file?: ImportFileHandle) {
   if (file === undefined) {
-    app.model.args.preset = undefined;
-    app.model.args.presetCommonName = undefined;
+    app.model.data.preset = undefined;
+    app.model.data.presetCommonName = undefined;
   } else {
-    app.model.args.preset = { type: 'file', file };
-    app.model.args.presetCommonName = extractFileName(getFilePathFromHandle(file));
+    app.model.data.preset = { type: 'file', file };
+    app.model.data.presetCommonName = extractFileName(getFilePathFromHandle(file));
   }
 }
 
@@ -200,47 +200,35 @@ function plRefsEqual(ref1: PlRef, ref2: PlRef) {
 }
 
 function setInput(inputRef?: PlRef) {
-  app.model.args.input = inputRef;
+  app.model.data.input = inputRef;
   if (inputRef)
-    app.model.args.title = inputOptions.value?.find((o) => plRefsEqual(o.ref, inputRef))?.label;
+    app.model.data.title = inputOptions.value?.find((o) => plRefsEqual(o.ref, inputRef))?.label;
   else
-    app.model.args.title = undefined;
+    app.model.data.title = undefined;
 }
 
 const DRY_RUN_READS_BULK = 100_000;
 const DRY_RUN_READS_SC = 500_000;
-const lastLimitInput = ref(app.model.args.limitInput);
-
-watch(
-  () => app.model.args.limitInput,
-  (newLimit) => {
-    if ((newLimit ?? 0) > 0) {
-      lastLimitInput.value = newLimit;
-    }
-  },
-);
 
 const runModeOptions: ListOption<'dry' | 'full'>[] = [
   { label: 'Preview', value: 'dry' },
   { label: 'Full run', value: 'full' },
 ];
 
-const runMode = ref<'dry' | 'full'>((app.model.args.limitInput ?? 0) > 0 ? 'dry' : 'full');
-
-watch(runMode, (value) => {
-  if (value === 'dry') {
-    app.model.args.limitInput = lastLimitInput.value ?? (isSingleCell.value ? DRY_RUN_READS_SC : DRY_RUN_READS_BULK);
-  } else {
-    app.model.args.limitInput = undefined;
-  }
-});
+watch(
+  () => app.model.data.runMode,
+  (value) => {
+    if (value === 'dry' && app.model.data.limitInput === undefined) {
+      app.model.data.limitInput = isSingleCell.value ? DRY_RUN_READS_SC : DRY_RUN_READS_BULK;
+    }
+  },
+);
 
 watch(
-  () => app.model.args.preset,
+  () => app.model.data.preset,
   () => {
-    if (runMode.value === 'dry') {
-      lastLimitInput.value = undefined;
-      app.model.args.limitInput = isSingleCell.value ? DRY_RUN_READS_SC : DRY_RUN_READS_BULK;
+    if (app.model.data.runMode === 'dry') {
+      app.model.data.limitInput = isSingleCell.value ? DRY_RUN_READS_SC : DRY_RUN_READS_BULK;
     }
   },
 );
@@ -255,7 +243,7 @@ const state = reactive<LocalState>({
 
 const computedTab = computed({
   get() {
-    return state.tab ?? (app.model.args.libraryFile ? 'fromFile' : 'fromBlock');
+    return state.tab ?? (app.model.data.libraryFile ? 'fromFile' : 'fromBlock');
   },
   set(tab) {
     state.tab = tab;
@@ -264,10 +252,10 @@ const computedTab = computed({
 
 watch(computedTab, (newValue, _oldValue) => {
   if (newValue === 'fromFile') {
-    app.model.args.inputLibrary = undefined;
+    app.model.data.inputLibrary = undefined;
   }
   if (newValue === 'fromBlock') {
-    app.model.args.libraryFile = undefined;
+    app.model.data.libraryFile = undefined;
   }
 });
 
@@ -277,27 +265,27 @@ const librarySourceOptions = [
 ] as const satisfies ListOption [];
 
 const computedSpecies = computed({
-  get: () => (app.model.args.libraryFile ? app.model.args.customSpecies : undefined),
+  get: () => (app.model.data.libraryFile ? app.model.data.customSpecies : undefined),
   set: (value) => {
-    app.model.args.customSpecies = value;
+    app.model.data.customSpecies = value;
   },
 });
 
 watch(
-  () => app.model.args.libraryFile,
+  () => app.model.data.libraryFile,
   (newFile) => {
     if (!newFile) {
-      app.model.args.customSpecies = undefined;
+      app.model.data.customSpecies = undefined;
     }
   },
 );
 
 watch(
-  () => app.model.args.libraryFile,
+  () => app.model.data.libraryFile,
   (newFile) => {
     if (newFile) {
       const libraryFileName = extractFileName(getFilePathFromHandle(newFile));
-      app.model.args.isLibraryFileGzipped = libraryFileName?.toLowerCase().endsWith('.gz') || false;
+      app.model.data.isLibraryFileGzipped = libraryFileName?.toLowerCase().endsWith('.gz') || false;
     }
   },
 );
@@ -321,9 +309,9 @@ const receptorOrChainsOptions = computed(() => {
 });
 
 const receptorOrChainsModel = computed({
-  get: () => (app.model.args.chains ?? []),
+  get: () => (app.model.data.chains ?? []),
   set: (value) => {
-    app.model.args.chains = value ?? [];
+    app.model.data.chains = value ?? [];
   },
 });
 
@@ -334,16 +322,16 @@ const cloneClusteringModeOptions: ListOption[] = [
 ];
 
 const cloneClusteringMode = computed({
-  get: () => app.model.args.cloneClusteringMode ?? 'default',
+  get: () => app.model.data.cloneClusteringMode ?? 'default',
   set: (value: string) => {
-    app.model.args.cloneClusteringMode = value as 'relaxed' | 'default' | 'off';
+    app.model.data.cloneClusteringMode = value as 'relaxed' | 'default' | 'off';
   },
 });
 
 const exportMinQuality = computed({
-  get: () => app.model.args.exportMinQuality ?? false,
+  get: () => app.model.data.exportMinQuality ?? false,
   set: (value: boolean) => {
-    app.model.args.exportMinQuality = value;
+    app.model.data.exportMinQuality = value;
   },
 });
 
@@ -377,24 +365,24 @@ const aminoAcidOptions: ListOption[] = [
 ];
 
 const stopCodonSelection = computed({
-  get: () => app.model.args.stopCodonTypes ?? [],
+  get: () => app.model.data.stopCodonTypes ?? [],
   set: (value: StopCodonType[]) => {
-    app.model.args.stopCodonTypes = value.length > 0 ? value : undefined;
+    app.model.data.stopCodonTypes = value.length > 0 ? value : undefined;
   },
 });
 
 const stopCodonReplacementModel = (type: StopCodonType) =>
   computed({
-    get: () => app.model.args.stopCodonReplacements?.[type],
+    get: () => app.model.data.stopCodonReplacements?.[type],
     set: (value: string | undefined) => {
-      const current = app.model.args.stopCodonReplacements ?? {};
+      const current = app.model.data.stopCodonReplacements ?? {};
       if (value === undefined) {
         if (current[type] !== undefined) {
           delete current[type];
         }
-        app.model.args.stopCodonReplacements = Object.keys(current).length > 0 ? current : undefined;
+        app.model.data.stopCodonReplacements = Object.keys(current).length > 0 ? current : undefined;
       } else {
-        app.model.args.stopCodonReplacements = { ...current, [type]: value };
+        app.model.data.stopCodonReplacements = { ...current, [type]: value };
       }
     },
   });
@@ -404,19 +392,19 @@ const ochreReplacement = stopCodonReplacementModel('ochre');
 const opalReplacement = stopCodonReplacementModel('opal');
 
 watch(stopCodonSelection, (selected) => {
-  const current = app.model.args.stopCodonReplacements;
+  const current = app.model.data.stopCodonReplacements;
   if (!current) return;
   const next = { ...current };
   for (const key of Object.keys(next) as StopCodonType[]) {
     if (!selected.includes(key)) delete next[key];
   }
-  app.model.args.stopCodonReplacements = Object.keys(next).length > 0 ? next : undefined;
+  app.model.data.stopCodonReplacements = Object.keys(next).length > 0 ? next : undefined;
 });
 </script>
 
 <template>
   <PlDropdownRef
-    :options="inputOptions" :model-value="app.model.args.input" label="Select dataset"
+    :options="inputOptions" :model-value="app.model.data.input" label="Select dataset"
     clearable
     @update:model-value="setInput"
   />
@@ -425,19 +413,19 @@ watch(stopCodonSelection, (selected) => {
 
   <PlDropdown
     v-if="data.presetType === 'name'" label="MiXCR Preset Name" :options="presetOptions"
-    :model-value="app.model.args.preset?.type === 'name' ? app.model.args.preset.name : undefined"
+    :model-value="app.model.data.preset?.type === 'name' ? app.model.data.preset.name : undefined"
     clearable @update:model-value="setPresetName"
   />
 
   <PlFileInput
     v-else show-filename-only file-dialog-title="Select preset file" placeholder="preset.yaml"
     :extensions="['yaml']"
-    :progress="(app.model.args.preset?.type === 'file' && app.model.args.preset.file) ? allFileImports[app.model.args.preset.file] : undefined"
-    :model-value="app.model.args.preset?.type === 'file' ? app.model.args.preset.file : undefined"
+    :progress="(app.model.data.preset?.type === 'file' && app.model.data.preset.file) ? allFileImports[app.model.data.preset.file] : undefined"
+    :model-value="app.model.data.preset?.type === 'file' ? app.model.data.preset.file : undefined"
     clearable @update:model-value="setPresetFile"
   />
 
-  <PlDropdown v-if="needSpecies" v-model="app.model.args.species" :options="speciesOptions" label="Select species" />
+  <PlDropdown v-if="needSpecies" v-model="app.model.data.species" :options="speciesOptions" label="Select species" />
 
   <PlDropdownMulti
     v-model="receptorOrChainsModel"
@@ -451,7 +439,7 @@ watch(stopCodonSelection, (selected) => {
   </PlDropdownMulti>
   <PlDropdown
     v-if="needLeftAlignmentMode"
-    v-model="app.model.args.leftAlignmentMode"
+    v-model="app.model.data.leftAlignmentMode"
     :options="leftAlignmentModeOptions"
     label="5'-end"
     :required="true"
@@ -467,7 +455,7 @@ watch(stopCodonSelection, (selected) => {
 
   <PlDropdown
     v-if="needRightAlignmentMode"
-    v-model="app.model.args.rightAlignmentMode"
+    v-model="app.model.data.rightAlignmentMode"
     :options="rightAlignmentModeOptions"
     label="3'-end"
     :required="true"
@@ -484,7 +472,7 @@ watch(stopCodonSelection, (selected) => {
 
   <PlDropdown
     v-if="needMaterialType"
-    v-model="app.model.args.materialType"
+    v-model="app.model.data.materialType"
     :options="materialTypeOptions"
     label="Material type"
     :required="true"
@@ -500,7 +488,7 @@ watch(stopCodonSelection, (selected) => {
 
   <PlTextField
     v-if="needTagPattern"
-    v-model="app.model.args.tagPattern"
+    v-model="app.model.data.tagPattern"
     :clearable="() => undefined"
     label="Tag pattern"
     :required="true"
@@ -512,7 +500,7 @@ watch(stopCodonSelection, (selected) => {
 
   <PlDropdown
     v-if="needAssembleClonesBy"
-    v-model="app.model.args.assembleClonesBy"
+    v-model="app.model.data.assembleClonesBy"
     :options="assembleClonesByOptions"
     label="Assemble clones by"
     :required="true"
@@ -522,19 +510,19 @@ watch(stopCodonSelection, (selected) => {
     </template>
   </PlDropdown>
 
-  <PlBtnGroup v-model="runMode" :options="runModeOptions" label="Run mode">
+  <PlBtnGroup v-model="app.model.data.runMode" :options="runModeOptions" label="Run mode">
     <template #tooltip>
       Preview — runs the analysis on a small fraction of reads per sample. Use it to check that settings are correct and results look reasonable before launching a full run, which may take much longer.
     </template>
   </PlBtnGroup>
 
-  <template v-if="runMode === 'dry'">
+  <template v-if="app.model.data.runMode === 'dry'">
     <PlNumberField
-      v-model="app.model.args.limitInput"
+      v-model="app.model.data.limitInput"
       label="Reads per sample limit"
       :clearable="true"
       :minValue="1"
-      :error-message="app.model.args.limitInput == null ? 'Enter a number of reads to use per sample' : undefined"
+      :error-message="app.model.data.limitInput == null ? 'Enter a number of reads to use per sample' : undefined"
     >
       <template #tooltip>
         Number of reads to use per sample in the dry run.
@@ -575,14 +563,14 @@ watch(stopCodonSelection, (selected) => {
     <PlBtnGroup v-model="computedTab" :options="librarySourceOptions" label="Custom reference library" />
     <PlDropdownRef
       v-if="computedTab === 'fromBlock'"
-      v-model="app.model.args.inputLibrary"
+      v-model="app.model.data.inputLibrary"
       :options="app.model.outputs.libraryOptions"
       label="Custom library"
       clearable
     />
     <template v-if="computedTab === 'fromFile'">
       <PlFileInput
-        v-model="app.model.args.libraryFile"
+        v-model="app.model.data.libraryFile"
         :progress="app.model.outputs.libraryUploadProgress"
         file-dialog-title="Select library file"
         clearable
@@ -630,14 +618,14 @@ watch(stopCodonSelection, (selected) => {
 
     <PlSectionSeparator>Resource Allocation</PlSectionSeparator>
     <PlNumberField
-      v-model="app.model.args.perProcessMemGB"
+      v-model="app.model.data.perProcessMemGB"
       label="Set memory per every sample process (GB)"
       :minValue="1"
       :maxValue="999999"
     />
 
     <PlNumberField
-      v-model="app.model.args.perProcessCPUs"
+      v-model="app.model.data.perProcessCPUs"
       label="Set CPUs number per every sample process"
       :minValue="1"
       :maxValue="999999"
