@@ -170,6 +170,7 @@ export const platforma = BlockModelV3.create(dataModel)
     if (inputSpec === undefined || !isPColumnSpec(inputSpec)) return undefined;
     const sampleAxisSpec = inputSpec.axesSpec[0];
 
+    // @todo implement get by spec
     const sampleLabelsObj = ctx.resultPool.getData().entries.find((f) => {
       const spec = f.obj.spec;
       if (!isPColumnSpec(spec)) return false;
@@ -191,6 +192,7 @@ export const platforma = BlockModelV3.create(dataModel)
     return Object.fromEntries(
       Object.entries(
         sampleLabelsObj.obj.data.getDataAsJson<{ data: Record<string, string> }>().data,
+        // @TODO zod
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       ).map((e) => [JSON.parse(e[0])[0], e[1]]),
     ) as Record<string, string>;
