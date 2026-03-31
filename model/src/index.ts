@@ -93,7 +93,7 @@ export const platforma = BlockModelV3.create(dataModel)
       ?.getDataAsJson<string>(),
   )
 
-  .output('libraryOptions', (ctx) =>
+  .retentiveOutput('libraryOptions', (ctx) =>
     ctx.resultPool.getOptions((spec) => spec.annotations?.['pl7.app/vdj/isLibrary'] === 'true',
       { includeNativeLabel: true, addLabelAsSuffix: true }),
   )
@@ -131,7 +131,7 @@ export const platforma = BlockModelV3.create(dataModel)
 
   .output('started', (ctx) => ctx.outputs !== undefined)
 
-  .output('done', (ctx) => {
+  .retentiveOutput('done', (ctx) => {
     return ctx.outputs !== undefined
       ? parseResourceMap(ctx.outputs?.resolve('clns'), (_acc) => true, false).data.map(
           (e) => e.key[0] as string,
@@ -139,7 +139,7 @@ export const platforma = BlockModelV3.create(dataModel)
       : undefined;
   })
 
-  .output('clones', (ctx) => {
+  .outputWithStatus('clones', (ctx) => {
     const collection = ctx.outputs?.resolve('clonotypes')?.parsePObjectCollection();
     if (collection === undefined) return undefined;
     // if (collection === undefined || !collection.isComplete) return undefined;
@@ -166,16 +166,10 @@ export const platforma = BlockModelV3.create(dataModel)
   .output('sampleLabels', (ctx): Record<string, string> | undefined => {
     const inputRef = ctx.data.input;
     if (inputRef === undefined) return undefined;
-    // @todo implement getSpecByRef method
-    const inputSpec = ctx.resultPool
-      .getSpecs()
-      .entries.find(
-        (obj) => obj.ref.blockId === inputRef.blockId && obj.ref.name === inputRef.name,
-      )?.obj;
+    const inputSpec = ctx.resultPool.getSpecByRef(inputRef);
     if (inputSpec === undefined || !isPColumnSpec(inputSpec)) return undefined;
     const sampleAxisSpec = inputSpec.axesSpec[0];
 
-    // @todo implement get by spec
     const sampleLabelsObj = ctx.resultPool.getData().entries.find((f) => {
       const spec = f.obj.spec;
       if (!isPColumnSpec(spec)) return false;
@@ -197,7 +191,6 @@ export const platforma = BlockModelV3.create(dataModel)
     return Object.fromEntries(
       Object.entries(
         sampleLabelsObj.obj.data.getDataAsJson<{ data: Record<string, string> }>().data,
-        // @TODO zod
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       ).map((e) => [JSON.parse(e[0])[0], e[1]]),
     ) as Record<string, string>;
