@@ -224,15 +224,6 @@ watch(
   },
 );
 
-watch(
-  () => app.model.data.preset,
-  () => {
-    if (app.model.data.runMode === 'dry') {
-      app.model.data.limitInput = isSingleCell.value ? DRY_RUN_READS_SC : DRY_RUN_READS_BULK;
-    }
-  },
-);
-
 type LocalState = {
   tab: 'fromFile' | 'fromBlock' | undefined;
 };
