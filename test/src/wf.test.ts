@@ -1,9 +1,10 @@
-/*
 import type { BlockData, BlockOutputs, platforma } from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
 import {
   AlignReport,
   AssembleReport,
   Qc,
+  // SupportedPresetList is used in commented-out prerun assertions below
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   SupportedPresetList,
   uniquePlId,
 } from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
@@ -17,49 +18,61 @@ import { createPlDataTableStateV2, wrapOutputs } from '@platforma-sdk/model';
 type AxisSpec = { name: string; domain?: Record<string, string> };
 type PColumnListEntry = { spec: { axesSpec: AxisSpec[] } };
 
-blockTest('empty imputs', { timeout: 20000 }, async ({ rawPrj: project, ml, expect }) => {
+// @todo Prerun assertions are commented out throughout this file.
+// The test framework (@platforma-sdk/test) has no mechanism to trigger or await
+// prerun/staging for BlockModelV3 blocks. retentiveOutput values that depend on
+// ctx.prerun (like presets and preset) start as { ok: true, value: undefined, stable: true },
+// and awaitStableState returns immediately without waiting for prerun to complete.
+// Re-enable these assertions when the test framework adds prerun/staging support.
+
+blockTest('empty inputs', { timeout: 20000 }, async ({ rawPrj: project, ml: _ml, expect }) => {
   const blockId = await project.addBlock('Block', myBlockSpec);
   const stableState = (await awaitStableState(
     project.getBlockState(blockId),
     25000,
   )) as InferBlockState<typeof platforma>;
   expect(stableState.outputs).toMatchObject({ inputOptions: { ok: true, value: [] } });
-  const presets = SupportedPresetList.parse(
-    JSON.parse(
-      Buffer.from(
-        await ml.driverKit.blobDriver.getContent(wrapOutputs(stableState.outputs).presets!.handle),
-      ).toString(),
-    ),
-  );
-  expect(presets).length.gt(10);
-  expect(presets?.map((p) => p.presetName)).toContain('10x-sc-xcr-vdj');
+  // @todo prerun: re-enable when test framework supports awaiting prerun outputs
+  // const presets = SupportedPresetList.parse(
+  //   JSON.parse(
+  //     Buffer.from(
+  //       await ml.driverKit.blobDriver.getContent(wrapOutputs(stableState.outputs).presets!.handle),
+  //     ).toString(),
+  //   ),
+  // );
+  // expect(presets).length.gt(10);
+  // expect(presets?.map((p) => p.presetName)).toContain('10x-sc-xcr-vdj');
 });
 
-blockTest(
-  'preset content',
-  { timeout: 30000 },
-  async ({ rawPrj: project, expect }) => {
-    const blockId = await project.addBlock('Block', myBlockSpec);
-    await project.mutateBlockStorage(blockId, {
-      operation: 'update-block-data',
-      value: {
-        defaultBlockLabel: '',
-        customBlockLabel: '',
-        chains: [],
-        cloneClusteringMode: 'default',
-        tableState: createPlDataTableStateV2(),
-        runMode: 'full',
-        preset: { type: 'name', name: 'milab-human-dna-xcr-7genes-multiplex' },
-      } satisfies BlockData,
-    });
-    const stableState = (await awaitStableState(
-      project.getBlockState(blockId),
-      10000,
-    )) as InferBlockState<typeof platforma>;
-    const preset = wrapOutputs(stableState.outputs).preset;
-    expect(preset).toBeTypeOf('object');
-  },
-);
+// @todo prerun: re-enable when test framework supports awaiting prerun outputs
+// This test depends entirely on prerun output (ctx.prerun) which the test framework
+// cannot currently trigger or await.
+//
+// blockTest(
+//   'preset content',
+//   { timeout: 30000 },
+//   async ({ rawPrj: project, expect }) => {
+//     const blockId = await project.addBlock('Block', myBlockSpec);
+//     await project.mutateBlockStorage(blockId, {
+//       operation: 'update-block-data',
+//       value: {
+//         defaultBlockLabel: '',
+//         customBlockLabel: '',
+//         chains: [],
+//         cloneClusteringMode: 'default',
+//         tableState: createPlDataTableStateV2(),
+//         runMode: 'full',
+//         preset: { type: 'name', name: 'milab-human-dna-xcr-7genes-multiplex' },
+//       } satisfies BlockData,
+//     });
+//     const stableState = (await awaitStableState(
+//       project.getBlockState(blockId),
+//       10000,
+//     )) as InferBlockState<typeof platforma>;
+//     const preset = wrapOutputs(stableState.outputs).preset;
+//     expect(preset).toBeTypeOf('object');
+//   },
+// );
 
 blockTest(
   'simple project',
@@ -133,14 +146,15 @@ blockTest(
       },
     });
 
-    const presets = SupportedPresetList.parse(
-      JSON.parse(
-        Buffer.from(
-          await ml.driverKit.blobDriver.getContent(wrapOutputs(clonotypingStableState1.outputs).presets!.handle),
-        ).toString(),
-      ),
-    );
-    expect(presets).length.gt(10);
+    // @todo prerun: re-enable when test framework supports awaiting prerun outputs
+    // const presets = SupportedPresetList.parse(
+    //   JSON.parse(
+    //     Buffer.from(
+    //       await ml.driverKit.blobDriver.getContent(wrapOutputs(clonotypingStableState1.outputs).presets!.handle),
+    //     ).toString(),
+    //   ),
+    // );
+    // expect(presets).length.gt(10);
 
     const clonotypingStableState1Outputs = wrapOutputs(clonotypingStableState1.outputs);
 
@@ -164,8 +178,6 @@ blockTest(
     )) as InferBlockState<typeof platforma>;
 
     const outputs2 = wrapOutputs<BlockOutputs>(clonotypingStableState2.outputs);
-    // console.dir(outputs2.sampleLabels, { depth: 5 });
-    // console.log(JSON.stringify([sample1Id]));
     expect(outputs2.sampleLabels![sample1Id]).toBeDefined();
 
     await project.runBlock(clonotypingBlockId);
@@ -176,8 +188,6 @@ blockTest(
     const outputs3 = wrapOutputs<BlockOutputs>(
       clonotypingStableState3.outputs as unknown as BlockOutputs,
     );
-
-    // console.dir(clonotypingStableState3, { depth: 8 });
 
     expect(outputs3.reports.isComplete).toEqual(true);
 
@@ -234,14 +244,11 @@ blockTest(
 
     const clonesPfHandle = wrapOutputs<BlockOutputs>(
       clonotypingStableState3.outputs as unknown as BlockOutputs,
-    )
-      .clones as Parameters<typeof ml.driverKit.pFrameDriver.listColumns>[0];
+    ).clones;
 
     const clonesPfColumnList = (await ml.driverKit.pFrameDriver.listColumns(
       clonesPfHandle,
     )) as PColumnListEntry[];
-
-    // console.dir(clonesPfColumnList[0].spec, { depth: 5 });
 
     expect(
       clonesPfColumnList
@@ -333,14 +340,15 @@ blockTest(
       },
     });
 
-    const presets = SupportedPresetList.parse(
-      JSON.parse(
-        Buffer.from(
-          await ml.driverKit.blobDriver.getContent(wrapOutputs(clonotypingStableState1.outputs).presets!.handle),
-        ).toString(),
-      ),
-    );
-    expect(presets).length.gt(10);
+    // @todo prerun: re-enable when test framework supports awaiting prerun outputs
+    // const presets = SupportedPresetList.parse(
+    //   JSON.parse(
+    //     Buffer.from(
+    //       await ml.driverKit.blobDriver.getContent(wrapOutputs(clonotypingStableState1.outputs).presets!.handle),
+    //     ).toString(),
+    //   ),
+    // );
+    // expect(presets).length.gt(10);
 
     const clonotypingStableState1Outputs = wrapOutputs(clonotypingStableState1.outputs);
 
@@ -365,8 +373,6 @@ blockTest(
     )) as InferBlockState<typeof platforma>;
 
     const outputs2 = wrapOutputs<BlockOutputs>(clonotypingStableState2.outputs);
-    // console.dir(outputs2.sampleLabels, { depth: 5 });
-    // console.log(JSON.stringify([sample1Id]));
     expect(outputs2.sampleLabels![sample1Id]).toBeDefined();
 
     await project.runBlock(clonotypingBlockId);
@@ -377,8 +383,6 @@ blockTest(
     const outputs3 = wrapOutputs<BlockOutputs>(
       clonotypingStableState3.outputs as unknown as BlockOutputs,
     );
-
-    // console.dir(clonotypingStableState3, { depth: 8 });
 
     expect(outputs3.reports.isComplete).toEqual(true);
 
@@ -435,14 +439,11 @@ blockTest(
 
     const clonesPfHandle = wrapOutputs<BlockOutputs>(
       clonotypingStableState3.outputs as unknown as BlockOutputs,
-    )
-      .clones as Parameters<typeof ml.driverKit.pFrameDriver.listColumns>[0];
+    ).clones;
 
     const clonesPfColumnList = (await ml.driverKit.pFrameDriver.listColumns(
       clonesPfHandle,
     )) as PColumnListEntry[];
-
-    // console.dir(clonesPfColumnList[0].spec, { depth: 5 });
 
     expect(
       clonesPfColumnList
@@ -460,5 +461,3 @@ blockTest(
     expect(clonesPfColumnList).length.to.greaterThanOrEqual(7);
   },
 );
-
-*/
