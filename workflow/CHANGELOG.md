@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.25.1
+
+### Patch Changes
+
+- 0cd5ea3: Upgrade MiXCR to 4.7.0-343-develop — packed NucleotideSequence storage for 4x memory reduction
+
 ## 3.25.0
 
 ### Minor Changes
