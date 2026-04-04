@@ -21,6 +21,9 @@
     "turbo": "catalog:",
     "typescript": "catalog:"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": ["@milaboratories/pframes-rs-node"]
+  },
   "packageManager": "pnpm@10.33.0",
   "--": {
     "overrides": {
