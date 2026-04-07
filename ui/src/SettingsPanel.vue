@@ -38,10 +38,7 @@ const presetSourceOptions: ListOption<Preset['type']>[] = [
 
 const inputOptions = retentive(computed(() => app.model.outputs.inputOptions));
 const presets = retentive(computed(() => {
-  const presetsOutput = app.model.outputs.presets;
-  const handle = presetsOutput?.handle;
-  const contentRef = reactiveFileContent.getContentJson(handle);
-  const rawContent = contentRef?.value;
+  const rawContent = reactiveFileContent.getContentJson(app.model.outputs.presets?.handle)?.value;
   if (rawContent === undefined)
     return undefined;
   return SupportedPresetList.parse(rawContent);
