@@ -38,7 +38,10 @@ const presetSourceOptions: ListOption<Preset['type']>[] = [
 
 const inputOptions = retentive(computed(() => app.model.outputs.inputOptions));
 const presets = retentive(computed(() => {
-  const rawContent = reactiveFileContent.getContentJson(app.model.outputs.presets?.handle)?.value;
+  const presetsOutput = app.model.outputs.presets;
+  const handle = presetsOutput?.handle;
+  const contentRef = reactiveFileContent.getContentJson(handle);
+  const rawContent = contentRef?.value;
   if (rawContent === undefined)
     return undefined;
   return SupportedPresetList.parse(rawContent);
@@ -224,6 +227,12 @@ watch(
   },
 );
 
+watch(isSingleCell, () => {
+  if (app.model.data.runMode === 'dry') {
+    app.model.data.limitInput = isSingleCell.value ? DRY_RUN_READS_SC : DRY_RUN_READS_BULK;
+  }
+});
+
 type LocalState = {
   tab: 'fromFile' | 'fromBlock' | undefined;
 };
@@ -397,6 +406,8 @@ watch(stopCodonSelection, (selected) => {
   <PlDropdownRef
     :options="inputOptions" :model-value="app.model.data.input" label="Select dataset"
     clearable
+    :required="true"
+    :error="!app.model.data.input ? 'Input dataset is required' : undefined"
     @update:model-value="setInput"
   />
 
@@ -405,6 +416,8 @@ watch(stopCodonSelection, (selected) => {
   <PlDropdown
     v-if="data.presetType === 'name'" label="MiXCR Preset Name" :options="presetOptions"
     :model-value="app.model.data.preset?.type === 'name' ? app.model.data.preset.name : undefined"
+    :required="true"
+    :error="!app.model.data.preset ? 'Preset is required' : undefined"
     clearable @update:model-value="setPresetName"
   />
 
@@ -423,6 +436,7 @@ watch(stopCodonSelection, (selected) => {
     label="Receptors"
     :options="receptorOrChainsOptions"
     :required="true"
+    :error="!app.model.data.chains || app.model.data.chains.length === 0 ? 'Chains selection is required' : undefined"
   >
     <template #tooltip>
       Restrict the analysis to certain receptor types.

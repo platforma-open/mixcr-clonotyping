@@ -54,11 +54,8 @@ export const platforma = BlockModelV3.create(dataModel)
   }))
 
   .args((data) => {
-    if (!data.input) throw new Error('Input dataset is required');
-    if (!data.preset) throw new Error('Preset is required');
-    if (!data.chains || data.chains.length === 0) throw new Error('Chains selection is required');
-    if (data.runMode === 'dry' && data.limitInput == null) throw new Error('Read limit is required for Preview mode');
     if (!BlockArgsValid.safeParse(data).success) return undefined;
+    if (data.runMode === 'dry' && data.limitInput == null) return undefined;
     return {
       defaultBlockLabel: data.defaultBlockLabel ?? '',
       customBlockLabel: data.customBlockLabel ?? '',
@@ -88,7 +85,7 @@ export const platforma = BlockModelV3.create(dataModel)
   })
 
   .retentiveOutput('presets', (ctx) =>
-    ctx.prerun?.resolve({ field: 'presets', assertFieldType: 'Input' })?.getFileHandle(),
+    ctx.prerun?.resolve({ field: 'presets', assertFieldType: 'Input', allowPermanentAbsence: true })?.getFileHandle(),
   )
 
   .retentiveOutput('preset', (ctx) =>
