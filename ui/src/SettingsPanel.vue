@@ -96,9 +96,7 @@ watch(isGenericPresetComputed, (v) => {
   app.model.data.isGenericPreset = v === undefined ? undefined : v;
 });
 
-const allFileImports = computed(() => {
-  return { ...(app.model.outputs.prerunFileImports ?? {}), ...(app.model.outputs.mainFileImports ?? {}) };
-});
+const allFileImports = computed(() => app.model.outputs.fileImports ?? {});
 
 watch(needSpecies, (ns) => {
   if (ns === false // everything is loaded and we know that species is not specified as flag

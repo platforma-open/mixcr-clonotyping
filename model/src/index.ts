@@ -236,28 +236,24 @@ export const platforma = BlockModelV3.create(dataModel)
   })
 
   .output(
-    'mainFileImports',
-    (ctx) =>
-      Object.fromEntries(
+    'fileImports',
+    (ctx) => {
+      const main = Object.fromEntries(
         ctx.outputs
           ?.resolve({ field: 'fileImports', assertFieldType: 'Input', allowPermanentAbsence: true })
           ?.mapFields((handle, acc) => [handle as ImportFileHandle, acc.getImportProgress()], {
             skipUnresolved: true,
           }) ?? [],
-      ),
-    { isActive: true },
-  )
-
-  .output(
-    'prerunFileImports',
-    (ctx) =>
-      Object.fromEntries(
+      );
+      const prerun = Object.fromEntries(
         ctx.prerun
           ?.resolve({ field: 'fileImports', assertFieldType: 'Input', allowPermanentAbsence: true })
           ?.mapFields((handle, acc) => [handle as ImportFileHandle, acc.getImportProgress()], {
             skipUnresolved: true,
           }) ?? [],
-      ),
+      );
+      return { ...prerun, ...main };
+    },
     { isActive: true },
   )
   .output(
