@@ -491,7 +491,7 @@ watch(stopCodonSelection, (selected) => {
   <PlTextField
     v-if="needTagPattern"
     v-model="app.model.data.tagPattern"
-    :clearable="() => undefined"
+    :clearable="(() => undefined) as any"
     label="Tag pattern"
     :required="true"
   >
