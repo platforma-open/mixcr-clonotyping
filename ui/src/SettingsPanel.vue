@@ -491,7 +491,7 @@ watch(stopCodonSelection, (selected) => {
   <PlTextField
     v-if="needTagPattern"
     v-model="app.model.data.tagPattern"
-    :clearable="(() => undefined) as any"
+    :clearable="() => ''"
     label="Tag pattern"
     :required="true"
   >
@@ -524,7 +524,7 @@ watch(stopCodonSelection, (selected) => {
       label="Reads per sample limit"
       :clearable="true"
       :minValue="1"
-      :error-message="app.model.data.limitInput == null ? 'Enter a number of reads to use per sample' : undefined"
+      :error-message="app.model.data.limitInput == null ? 'Read limit is required for Preview mode' : undefined"
     >
       <template #tooltip>
         Number of reads to use per sample in the dry run.

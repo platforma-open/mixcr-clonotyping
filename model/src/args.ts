@@ -54,18 +54,7 @@ const BlockArgsValidBase = z.object({
   stopCodonReplacements: StopCodonReplacements,
 });
 
-export const BlockArgsValid = BlockArgsValidBase.superRefine(
-  (data, ctx) => {
-    // Chains must be provided and non-empty for all presets (both built-in and custom)
-    if (data.chains === undefined || data.chains.length === 0) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Chains selection is required',
-        path: ['chains'],
-      });
-    }
-  },
-);
+export const BlockArgsValid = BlockArgsValidBase;
 export type BlockArgsValid = z.infer<typeof BlockArgsValid>;
 
 export const BlockArgs = BlockArgsValidBase.partial({
