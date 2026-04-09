@@ -1,10 +1,10 @@
 import { platforma } from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
-import { defineApp } from '@platforma-sdk/ui-vue';
+import { defineAppV3 } from '@platforma-sdk/ui-vue';
 import MainPageWrapper from './MainPageWrapper.vue';
 import QcReportTablePage from './QcReportTablePage.vue';
 import { watch } from 'vue';
 
-export const sdkPlugin = defineApp(platforma, (app) => {
+export const sdkPlugin = defineAppV3(platforma, (app) => {
   return {
     progress: () => {
       const qc = app.model.outputs.qc;
@@ -25,7 +25,7 @@ export const useApp = sdkPlugin.useApp;
 const unwatch = watch(sdkPlugin, ({ loaded }) => {
   if (!loaded) return;
   const app = useApp();
-  app.model.args.customBlockLabel ??= '';
-  app.model.args.defaultBlockLabel ??= 'Select Clonotype Definition';
+  app.model.data.customBlockLabel ??= '';
+  app.model.data.defaultBlockLabel ??= 'Select Clonotype Definition';
   unwatch();
 });

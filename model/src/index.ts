@@ -3,41 +3,92 @@ import type {
   PlDataTableStateV2,
 } from '@platforma-sdk/model';
 import {
-  BlockModel,
-  It,
-  MainOutputs,
-  StagingOutputs,
+  BlockModelV3,
+  DataModelBuilder,
   createPlDataTableV2,
   createPlDataTableStateV2,
-  getImportProgress,
-  getResourceField,
   isPColumn,
   isPColumnSpec,
-  mapResourceFields,
   parseResourceMap,
+  type ImportFileHandle,
   type InferOutputsType,
 } from '@platforma-sdk/model';
-import { BlockArgs, BlockArgsValid } from './args';
+import type { BlockArgs } from './args';
+import { BlockArgsValid } from './args';
 import { ProgressPrefix } from './progress';
 
-export type UiState = {
+export type BlockData = BlockArgs & {
+  tableState: PlDataTableStateV2;
+  runMode: 'dry' | 'full';
+};
+
+type LegacyUiState = {
   tableState: PlDataTableStateV2;
 };
 
-export const platforma = BlockModel.create('Heavy')
-  .withArgs<BlockArgs>({
+const dataModel = new DataModelBuilder()
+  .from<BlockData>('v1')
+  .upgradeLegacy<BlockArgs, LegacyUiState>(({ args, uiState }) => ({
+    ...args,
+    tableState: uiState.tableState,
+    runMode: (args.limitInput ?? 0) > 0 ? 'dry' : 'full',
+  }))
+  .init(() => ({
     defaultBlockLabel: '',
     customBlockLabel: '',
     chains: ['IG', 'TCRAB', 'TCRGD'],
     cloneClusteringMode: 'default',
-  })
-
-  .withUiState<UiState>({
     tableState: createPlDataTableStateV2(),
+    runMode: 'full',
+  }));
+
+export const platforma = BlockModelV3.create(dataModel)
+
+  .prerunArgs((data) => ({
+    preset: data.preset,
+    species: data.species,
+    leftAlignmentMode: data.leftAlignmentMode,
+    rightAlignmentMode: data.rightAlignmentMode,
+    materialType: data.materialType,
+    isGenericPreset: data.isGenericPreset,
+  }))
+
+  .args((data) => {
+    if (!data.input) throw new Error('Input dataset is required');
+    if (!data.preset) throw new Error('Preset is required');
+    if (!data.chains || data.chains.length === 0) throw new Error('Chains selection is required');
+    if (data.runMode === 'dry' && data.limitInput == null) throw new Error('Read limit is required for Preview mode');
+    if (!BlockArgsValid.safeParse(data).success) return undefined;
+    return {
+      defaultBlockLabel: data.defaultBlockLabel ?? '',
+      customBlockLabel: data.customBlockLabel ?? '',
+      input: data.input,
+      preset: data.preset,
+      chains: data.chains,
+      inputLibrary: data.inputLibrary,
+      libraryFile: data.libraryFile,
+      isLibraryFileGzipped: data.isLibraryFileGzipped,
+      species: data.species,
+      customSpecies: data.customSpecies,
+      materialType: data.materialType,
+      leftAlignmentMode: data.leftAlignmentMode,
+      rightAlignmentMode: data.rightAlignmentMode,
+      tagPattern: data.tagPattern,
+      assembleClonesBy: data.assembleClonesBy,
+      limitInput: data.runMode === 'dry' ? data.limitInput : undefined,
+      perProcessMemGB: data.perProcessMemGB,
+      perProcessCPUs: data.perProcessCPUs,
+      cloneClusteringMode: data.cloneClusteringMode,
+      presetCommonName: data.presetCommonName,
+      isGenericPreset: data.isGenericPreset,
+      exportMinQuality: data.exportMinQuality,
+      stopCodonTypes: data.stopCodonTypes,
+      stopCodonReplacements: data.stopCodonReplacements,
+    };
   })
 
   .retentiveOutput('presets', (ctx) =>
-    ctx.prerun?.resolve({ field: 'presets', assertFieldType: 'Input' })?.getFileHandle(),
+    ctx.prerun?.resolve({ field: 'presets', assertFieldType: 'Input', allowPermanentAbsence: true })?.getFileHandle(),
   )
 
   .retentiveOutput('preset', (ctx) =>
@@ -46,13 +97,13 @@ export const platforma = BlockModel.create('Heavy')
       ?.getDataAsJson<string>(),
   )
 
-  .output('libraryOptions', (ctx) =>
+  .retentiveOutput('libraryOptions', (ctx) =>
     ctx.resultPool.getOptions((spec) => spec.annotations?.['pl7.app/vdj/isLibrary'] === 'true',
       { includeNativeLabel: true, addLabelAsSuffix: true }),
   )
 
   .output('datasetSpec', (ctx) => {
-    if (ctx.args.inputLibrary) return ctx.resultPool.getSpecByRef(ctx.args.inputLibrary);
+    if (ctx.data.inputLibrary) return ctx.resultPool.getSpecByRef(ctx.data.inputLibrary);
     else return undefined;
   })
 
@@ -84,7 +135,7 @@ export const platforma = BlockModel.create('Heavy')
 
   .output('started', (ctx) => ctx.outputs !== undefined)
 
-  .output('done', (ctx) => {
+  .retentiveOutput('done', (ctx) => {
     return ctx.outputs !== undefined
       ? parseResourceMap(ctx.outputs?.resolve('clns'), (_acc) => true, false).data.map(
           (e) => e.key[0] as string,
@@ -92,7 +143,7 @@ export const platforma = BlockModel.create('Heavy')
       : undefined;
   })
 
-  .output('clones', (ctx) => {
+  .outputWithStatus('clones', (ctx) => {
     const collection = ctx.outputs?.resolve('clonotypes')?.parsePObjectCollection();
     if (collection === undefined) return undefined;
     // if (collection === undefined || !collection.isComplete) return undefined;
@@ -114,27 +165,12 @@ export const platforma = BlockModel.create('Heavy')
           || domain['pl7.app/fileExtension'] === 'fastq.gz')
       );
     });
-
-    // .map(
-    //   (v) =>
-    //     ({
-    //       ref: v.ref,
-    //       label: `${ctx.getBlockLabel(v.ref.blockId)} / ${
-    //         v.obj.annotations?.['pl7.app/label'] ?? `unlabelled`
-    //       }`
-    //     } satisfies Option)
-    // );
   })
 
   .output('sampleLabels', (ctx): Record<string, string> | undefined => {
-    const inputRef = ctx.args.input;
+    const inputRef = ctx.data.input;
     if (inputRef === undefined) return undefined;
-    // @todo implement getSpecByRef method
-    const inputSpec = ctx.resultPool
-      .getSpecs()
-      .entries.find(
-        (obj) => obj.ref.blockId === inputRef.blockId && obj.ref.name === inputRef.name,
-      )?.obj;
+    const inputSpec = ctx.resultPool.getSpecByRef(inputRef);
     if (inputSpec === undefined || !isPColumnSpec(inputSpec)) return undefined;
     const sampleAxisSpec = inputSpec.axesSpec[0];
 
@@ -174,7 +210,7 @@ export const platforma = BlockModel.create('Heavy')
     return createPlDataTableV2(
       ctx,
       pCols,
-      ctx.uiState.tableState,
+      ctx.data.tableState,
     );
   })
 
@@ -199,16 +235,26 @@ export const platforma = BlockModel.create('Heavy')
     });
   })
 
-  // @TODO migrate to lambdas and merge with prerunFileImports
   .output(
-    'mainFileImports',
-    mapResourceFields(getResourceField(MainOutputs, 'fileImports'), getImportProgress(It)),
-  )
-
-  // @TODO migrate to lambdas and merge with mainFileImports
-  .output(
-    'prerunFileImports',
-    mapResourceFields(getResourceField(StagingOutputs, 'fileImports'), getImportProgress(It)),
+    'fileImports',
+    (ctx) => {
+      const main = Object.fromEntries(
+        ctx.outputs
+          ?.resolve({ field: 'fileImports', assertFieldType: 'Input', allowPermanentAbsence: true })
+          ?.mapFields((handle, acc) => [handle as ImportFileHandle, acc.getImportProgress()], {
+            skipUnresolved: true,
+          }) ?? [],
+      );
+      const prerun = Object.fromEntries(
+        ctx.prerun
+          ?.resolve({ field: 'fileImports', assertFieldType: 'Input', allowPermanentAbsence: true })
+          ?.mapFields((handle, acc) => [handle as ImportFileHandle, acc.getImportProgress()], {
+            skipUnresolved: true,
+          }) ?? [],
+      );
+      return { ...prerun, ...main };
+    },
+    { isActive: true },
   )
   .output(
     'libraryUploadProgress', (ctx) => ctx.outputs?.resolve({ field: 'libraryImportHandle', allowPermanentAbsence: true })?.getImportProgress(), { isActive: true })
@@ -220,13 +266,11 @@ export const platforma = BlockModel.create('Heavy')
     ];
   })
 
-  .argsValid((ctx) => BlockArgsValid.safeParse(ctx.args).success)
-
   .title(() => 'MiXCR Clonotyping')
 
-  .subtitle((ctx) => ctx.args.customBlockLabel || ctx.args.defaultBlockLabel || '')
+  .subtitle((ctx) => ctx.data.customBlockLabel || ctx.data.defaultBlockLabel || '')
 
-  .done(2);
+  .done();
 
 export type BlockOutputs = InferOutputsType<typeof platforma>;
 export type Href = InferHrefType<typeof platforma>;

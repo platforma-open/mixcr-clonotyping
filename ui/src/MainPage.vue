@@ -40,17 +40,17 @@ const app = useApp();
 watchEffect(() => {
   const parts: string[] = [];
   // Add dataset name if available
-  if (app.model.args.input) {
-    const inputOption = app.model.outputs.inputOptions?.find((p) => app.model.args.input && plRefsEqual(p.ref, app.model.args.input));
+  if (app.model.data.input) {
+    const inputOption = app.model.outputs.inputOptions?.find((p) => app.model.data.input && plRefsEqual(p.ref, app.model.data.input));
     if (inputOption?.label) {
       parts.push(inputOption.label);
     }
   }
   // Add chains if available
-  if (app.model.args.chains && app.model.args.chains.length > 0) {
-    parts.push(app.model.args.chains.join(', '));
+  if (app.model.data.chains && app.model.data.chains.length > 0) {
+    parts.push(app.model.data.chains.join(', '));
   }
-  app.model.args.defaultBlockLabel = parts.filter(Boolean).join(' - ');
+  app.model.data.defaultBlockLabel = parts.filter(Boolean).join(' - ');
 });
 
 // @TODO
@@ -94,7 +94,7 @@ const fileExports = computed(() => {
 
 const exportSuggestedFileName = computed(() => {
   const date = new Date().toISOString().split('T')[0];
-  const title = app.model.args.title ?? 'Untitled';
+  const title = app.model.data.title ?? 'Untitled';
   return `${date}_ClonotypingResultsRaw_${title}.zip`;
 });
 

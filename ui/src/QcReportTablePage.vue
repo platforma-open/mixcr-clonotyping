@@ -20,7 +20,7 @@ const tableSettings = usePlDataTableSettingsV2({
       QC Report Table
     </template>
     <PlAgDataTableV2
-      v-model="app.model.ui.tableState"
+      v-model="app.model.data.tableState"
       :settings="tableSettings"
       show-columns-panel
       show-export-button
