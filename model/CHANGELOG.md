@@ -1,5 +1,13 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.25.0
+
+### Minor Changes
+
+- 9f6939b: Add Preview run mode to quickly validate settings on a fraction of reads before committing to a full analysis
+  Update BlockModel to BlockModelV3
+  Fix preset list not loading: args() now returns undefined instead of throwing when block is not yet configured, allowing the prerun to run independently of main args validation
+
 ## 1.24.1
 
 ### Patch Changes
