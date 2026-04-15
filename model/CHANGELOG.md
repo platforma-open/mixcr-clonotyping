@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.25.1
+
+### Patch Changes
+
+- 6383f7a: Fix issue with sample label loader animation
+
 ## 1.25.0
 
 ### Minor Changes
