@@ -5,8 +5,8 @@ import type {
 import {
   BlockModelV3,
   DataModelBuilder,
-  createPlDataTableV2,
   createPlDataTableStateV2,
+  createPlDataTableV2,
   isPColumn,
   isPColumnSpec,
   parseResourceMap,
@@ -135,7 +135,7 @@ export const platforma = BlockModelV3.create(dataModel)
 
   .output('started', (ctx) => ctx.outputs !== undefined)
 
-  .retentiveOutput('done', (ctx) => {
+  .output('done', (ctx) => {
     return ctx.outputs !== undefined
       ? parseResourceMap(ctx.outputs?.resolve('clns'), (_acc) => true, false).data.map(
           (e) => e.key[0] as string,
