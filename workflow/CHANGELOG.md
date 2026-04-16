@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.26.1
+
+### Patch Changes
+
+- 532cd70: Bump mixr version to 4.7.0-347-develop (switch back to default GC)
+
 ## 3.26.0
 
 ### Minor Changes
