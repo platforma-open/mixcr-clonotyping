@@ -163,6 +163,7 @@ export const platforma = BlockModelV3.create(dataModel)
           || domain['pl7.app/fileExtension'] === 'fasta.gz'
           || domain['pl7.app/fileExtension'] === 'fastq'
           || domain['pl7.app/fileExtension'] === 'fastq.gz')
+        && v.axesSpec.some((a) => a.name === 'pl7.app/sampleId')
       );
     });
   })
