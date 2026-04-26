@@ -4,7 +4,7 @@ import { SupportedPresetList } from '@platforma-open/milaboratories.mixcr-clonot
 import type { ImportFileHandle, PlRef } from '@platforma-sdk/model';
 import { getFilePathFromHandle } from '@platforma-sdk/model';
 import type { ListOption } from '@platforma-sdk/ui-vue';
-import { PlAccordionSection, PlBtnGroup, PlCheckbox, PlDropdown, PlDropdownMulti, PlDropdownRef, PlFileInput, PlNumberField, PlSectionSeparator, PlTextField, PlTooltip, ReactiveFileContent } from '@platforma-sdk/ui-vue';
+import { PlAccordionSection, PlAlert, PlBtnGroup, PlCheckbox, PlDropdown, PlDropdownMulti, PlDropdownRef, PlFileInput, PlNumberField, PlSectionSeparator, PlTextField, PlTooltip, ReactiveFileContent } from '@platforma-sdk/ui-vue';
 import { computed, reactive, watch } from 'vue';
 import { useApp } from './app';
 import { retentive } from './retentive';
@@ -37,6 +37,8 @@ const presetSourceOptions: ListOption<Preset['type']>[] = [
 ];
 
 const inputOptions = retentive(computed(() => app.model.outputs.inputOptions));
+const hasMultiplexedFastq = retentive(computed(() => app.model.outputs.hasMultiplexedFastq));
+const hasInputOptions = computed(() => (inputOptions.value?.length ?? 0) > 0);
 const presets = retentive(computed(() => {
   const rawContent = reactiveFileContent.getContentJson(app.model.outputs.presets?.handle)?.value;
   if (rawContent === undefined)
@@ -398,6 +400,13 @@ watch(stopCodonSelection, (selected) => {
 </script>
 
 <template>
+  <PlAlert v-if="!hasInputOptions && hasMultiplexedFastq" type="info" icon>
+    Multiplexed FASTQ detected. Add a <b>FASTQ Demultiplexing</b> block above this one to split by sample.
+  </PlAlert>
+  <PlAlert v-else-if="!hasInputOptions" type="info" icon>
+    Make sure you have an executed <b>Samples &amp; Data</b> block above this one.
+  </PlAlert>
+
   <PlDropdownRef
     :options="inputOptions" :model-value="app.model.data.input" label="Select dataset"
     clearable

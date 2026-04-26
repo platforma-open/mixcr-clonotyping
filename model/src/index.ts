@@ -168,6 +168,23 @@ export const platforma = BlockModelV3.create(dataModel)
     });
   })
 
+  .retentiveOutput('hasMultiplexedFastq', (ctx) => {
+    return ctx.resultPool.getOptions((v) => {
+      if (!isPColumnSpec(v)) return false;
+      const domain = v.domain;
+      return (
+        v.name === 'pl7.app/sequencing/data'
+        && (v.valueType as string) === 'File'
+        && domain !== undefined
+        && (domain['pl7.app/fileExtension'] === 'fasta'
+          || domain['pl7.app/fileExtension'] === 'fasta.gz'
+          || domain['pl7.app/fileExtension'] === 'fastq'
+          || domain['pl7.app/fileExtension'] === 'fastq.gz')
+        && v.axesSpec.some((a) => a.name === 'pl7.app/sampleGroupId')
+      );
+    }).length > 0;
+  })
+
   .output('sampleLabels', (ctx): Record<string, string> | undefined => {
     const inputRef = ctx.data.input;
     if (inputRef === undefined) return undefined;
