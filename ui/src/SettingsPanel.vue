@@ -400,10 +400,10 @@ watch(stopCodonSelection, (selected) => {
 </script>
 
 <template>
-  <PlAlert v-if="!hasInputOptions && hasMultiplexedFastq" type="info" icon>
+  <PlAlert v-if="!hasInputOptions && hasMultiplexedFastq" type="warn" icon>
     Multiplexed FASTQ detected. Add a <b>FASTQ Demultiplexing</b> block above this one to split by sample.
   </PlAlert>
-  <PlAlert v-else-if="!hasInputOptions" type="info" icon>
+  <PlAlert v-else-if="!hasInputOptions" type="warn" icon>
     Make sure you have an executed <b>Samples &amp; Data</b> block above this one.
   </PlAlert>
 
