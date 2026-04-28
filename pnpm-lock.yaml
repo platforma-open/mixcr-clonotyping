@@ -28,8 +28,8 @@ catalogs:
       specifier: 4.7.0-347-develop
       version: 4.7.0-347-develop
     '@platforma-sdk/block-tools':
-      specifier: 2.7.7
-      version: 2.7.7
+      specifier: 2.7.13
+      version: 2.7.13
     '@platforma-sdk/eslint-config':
       specifier: 1.2.0
       version: 1.2.0
@@ -100,7 +100,7 @@ importers:
         version: 2.29.8(@types/node@24.10.2)
       '@platforma-sdk/block-tools':
         specifier: 'catalog:'
-        version: 2.7.7
+        version: 2.7.13
       js-yaml:
         specifier: 'catalog:'
         version: 4.1.1
@@ -131,7 +131,7 @@ importers:
     devDependencies:
       '@platforma-sdk/block-tools':
         specifier: 'catalog:'
-        version: 2.7.7
+        version: 2.7.13
 
   model:
     dependencies:
@@ -150,7 +150,7 @@ importers:
         version: 1.2.3
       '@platforma-sdk/block-tools':
         specifier: 'catalog:'
-        version: 2.7.7
+        version: 2.7.13
       '@platforma-sdk/eslint-config':
         specifier: 'catalog:'
         version: 1.2.0(@eslint/js@9.39.1)(@stylistic/eslint-plugin@2.13.0(eslint@9.39.1)(typescript@5.6.3))(eslint-plugin-n@17.23.1(eslint@9.39.1)(typescript@5.6.3))(eslint-plugin-vue@9.33.0(eslint@9.39.1))(eslint@9.39.1)(globals@15.15.0)(typescript-eslint@8.49.0(eslint@9.39.1)(typescript@5.6.3))(typescript@5.6.3)
@@ -1066,8 +1066,8 @@ packages:
   '@milaboratories/pl-model-common@1.31.1':
     resolution: {integrity: sha512-MLQvhXXFOykABZr8aVgzt5x0htT7ye4cvvnVy0TgOITXpct+lEmWvaVj29zirK/0VFw7wnTXDGnLwusr77NZFA==}
 
-  '@milaboratories/pl-model-common@1.31.2':
-    resolution: {integrity: sha512-dnK0zXzylN7MAO1Nyx8EJargaqa94iDDEDwZW7d1/lRl1p50cR9zGP8pUnIy1I8UcI4lzH34f81RRQy6AbTuTw==}
+  '@milaboratories/pl-model-common@1.35.0':
+    resolution: {integrity: sha512-IQ/49eFUNl2hnI83Zj9WqxKhEYCmw9TZKwX4yVdzh+6zKY6oPWKo6T4Y/g7oPsy94WA+yJGcN7o8wN0M7y005Q==}
 
   '@milaboratories/pl-model-middle-layer@1.15.0':
     resolution: {integrity: sha512-uYb/H+rYWSY4IckYxKClQF6yLv+yOJMqtIfJusd7MuCn29HYeQLMruowNaf9A/O35bFx5gqAeiF7XDCn2iQHNA==}
@@ -1075,8 +1075,8 @@ packages:
   '@milaboratories/pl-model-middle-layer@1.16.3':
     resolution: {integrity: sha512-XLZEC3POgUMNNjXr3Pudh7gx2CXZygeskxuQCyPfj4c8Fi35+kAfH9VBpNZD1koiT2n+x5QZyS3RpzcAddQTnQ==}
 
-  '@milaboratories/pl-model-middle-layer@1.16.4':
-    resolution: {integrity: sha512-uFTZHEjRmfRvY97tRbBuTvNzQnTYIj58S8HBzyMsFkzxbUI8vTBPtvEqbTU2IbQ31IEGvv8T0BBl9b7/vdud0A==}
+  '@milaboratories/pl-model-middle-layer@1.18.4':
+    resolution: {integrity: sha512-wn4J8wELpI8nV2yzeeoiDvX5Riz4vnvE9/98m9dBvowDhYRmdBralInPYQkX1do8jGmqlwLMRx9KNV+X4ugQMw==}
 
   '@milaboratories/pl-tree@1.9.8':
     resolution: {integrity: sha512-gtXd72GEugEi9fBIHY9n6N3a5TpdLZFg+Q0OUBwE9/aREmYjeZifRtrZi8yIe67brdr5d0OojibRcw3VkH2umQ==}
@@ -1455,12 +1455,12 @@ packages:
   '@platforma-open/milaboratories.software-small-binaries@2.0.2':
     resolution: {integrity: sha512-/ViK6kJDjCL/0jBFuEqLwSrpLK4afnR4XiHFOvIlaiYgWHeRU4Gw3aCSMRo6lhG3r6YeeWBqZ9FCkGKKy3TPvg==}
 
-  '@platforma-sdk/block-tools@2.7.6':
-    resolution: {integrity: sha512-4dAN07/af5wwaFU9oN7LRJ19K3G7DWuVaLpkWpz68/QRvhiTiCm/5BnRYsaO8qQHckpTF+WPulNIQBgBmzzu+Q==}
+  '@platforma-sdk/block-tools@2.7.13':
+    resolution: {integrity: sha512-Gss2jM5UUGbm6fSpFUHqWm8u2bH7DYHIrmjS42gxgF0L+Eiori0W7LDqGnjMNZ+eH5+KEo6j+WuRBu6dIDGvyg==}
     hasBin: true
 
-  '@platforma-sdk/block-tools@2.7.7':
-    resolution: {integrity: sha512-pcepxZC9XpSRdKIzb5AarCwvzSqPcr38QJZFo34iQiZF4/fVyFtPLOxT/Lux5eYWGiE82dw0xok4xfO4s7AELA==}
+  '@platforma-sdk/block-tools@2.7.6':
+    resolution: {integrity: sha512-4dAN07/af5wwaFU9oN7LRJ19K3G7DWuVaLpkWpz68/QRvhiTiCm/5BnRYsaO8qQHckpTF+WPulNIQBgBmzzu+Q==}
     hasBin: true
 
   '@platforma-sdk/blocks-deps-updater@2.2.0':
@@ -6214,7 +6214,7 @@ snapshots:
       canonicalize: 2.1.0
       zod: 3.23.8
 
-  '@milaboratories/pl-model-common@1.31.2':
+  '@milaboratories/pl-model-common@1.35.0':
     dependencies:
       '@milaboratories/helpers': 1.14.1
       '@milaboratories/pl-error-like': 1.12.9
@@ -6237,10 +6237,10 @@ snapshots:
       utility-types: 3.11.0
       zod: 3.23.8
 
-  '@milaboratories/pl-model-middle-layer@1.16.4':
+  '@milaboratories/pl-model-middle-layer@1.18.4':
     dependencies:
       '@milaboratories/helpers': 1.14.1
-      '@milaboratories/pl-model-common': 1.31.2
+      '@milaboratories/pl-model-common': 1.35.0
       es-toolkit: 1.42.0
       utility-types: 3.11.0
       zod: 3.25.76
@@ -6688,6 +6688,27 @@ snapshots:
       '@platforma-open/milaboratories.software-small-binaries.mnz-client': 1.6.3
       '@platforma-open/milaboratories.software-small-binaries.table-converter': 1.3.3
 
+  '@platforma-sdk/block-tools@2.7.13':
+    dependencies:
+      '@aws-sdk/client-s3': 3.859.0
+      '@milaboratories/pl-http': 1.2.4
+      '@milaboratories/pl-model-common': 1.35.0
+      '@milaboratories/pl-model-middle-layer': 1.18.4
+      '@milaboratories/resolve-helper': 1.1.3
+      '@milaboratories/ts-helpers': 1.8.1
+      '@milaboratories/ts-helpers-oclif': 1.1.40
+      '@oclif/core': 4.8.0
+      '@platforma-sdk/blocks-deps-updater': 2.2.0
+      canonicalize: 2.1.0
+      lru-cache: 11.2.4
+      mime-types: 2.1.35
+      tar: 7.5.2
+      undici: 7.16.0
+      yaml: 2.8.2
+      zod: 3.25.76
+    transitivePeerDependencies:
+      - aws-crt
+
   '@platforma-sdk/block-tools@2.7.6':
     dependencies:
       '@aws-sdk/client-s3': 3.859.0
@@ -6706,27 +6727,6 @@ snapshots:
       undici: 7.16.0
       yaml: 2.8.2
       zod: 3.23.8
-    transitivePeerDependencies:
-      - aws-crt
-
-  '@platforma-sdk/block-tools@2.7.7':
-    dependencies:
-      '@aws-sdk/client-s3': 3.859.0
-      '@milaboratories/pl-http': 1.2.4
-      '@milaboratories/pl-model-common': 1.31.2
-      '@milaboratories/pl-model-middle-layer': 1.16.4
-      '@milaboratories/resolve-helper': 1.1.3
-      '@milaboratories/ts-helpers': 1.8.1
-      '@milaboratories/ts-helpers-oclif': 1.1.40
-      '@oclif/core': 4.8.0
-      '@platforma-sdk/blocks-deps-updater': 2.2.0
-      canonicalize: 2.1.0
-      lru-cache: 11.2.4
-      mime-types: 2.1.35
-      tar: 7.5.2
-      undici: 7.16.0
-      yaml: 2.8.2
-      zod: 3.25.76
     transitivePeerDependencies:
       - aws-crt
 
