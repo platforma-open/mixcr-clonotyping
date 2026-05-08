@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.26.2
+
+### Patch Changes
+
+- 2820448: Make axis label visible by default
+
 ## 3.26.1
 
 ### Patch Changes
