@@ -22,7 +22,16 @@
     "typescript": "catalog:"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["@milaboratories/pframes-rs-node"]
+    "onlyBuiltDependencies": ["@milaboratories/pframes-rs-node"],
+    "overrides": {
+      "@platforma-sdk/workflow-tengo": "file:../../core/platforma/sdk/workflow-tengo/package.tgz",
+      "@platforma-sdk/model": "file:../../core/platforma/sdk/model/package.tgz",
+      "@platforma-sdk/ui-vue": "file:../../core/platforma/sdk/ui-vue/package.tgz",
+      "@platforma-sdk/tengo-builder": "file:../../core/platforma/tools/tengo-builder/package.tgz",
+      "@platforma-sdk/test": "file:../../core/platforma/sdk/test/package.tgz",
+      "@milaboratories/pl-model-common": "file:../../core/platforma/lib/model/common/package.tgz",
+      "@platforma-open/milaboratories.software-ptabler": "file:../../core/platforma/lib/ptabler/software/package.tgz"
+    }
   },
   "packageManager": "pnpm@10.33.0",
   "--": {

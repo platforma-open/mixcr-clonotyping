@@ -120,6 +120,8 @@ blockTest(
           },
         },
       ],
+      h5adFilesToPreprocess: [],
+      seuratFilesToPreprocess: [],
     } satisfies SamplesAndDataBlockArgs);
     await project.runBlock(sndBlockId);
     await helpers.awaitBlockDone(sndBlockId, 8000);
@@ -314,6 +316,8 @@ blockTest(
           },
         },
       ],
+      h5adFilesToPreprocess: [],
+      seuratFilesToPreprocess: [],
     } satisfies SamplesAndDataBlockArgs);
     await project.runBlock(sndBlockId);
     await helpers.awaitBlockDone(sndBlockId, 8000);
