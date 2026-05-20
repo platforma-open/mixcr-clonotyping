@@ -17,12 +17,12 @@ catalog:
   '@platforma-sdk/eslint-config': 1.2.0
 
   '@platforma-sdk/test': 1.63.9
-  '@milaboratories/helpers': 1.14.1
+  '@milaboratories/helpers': 1.14.2
 
   '@platforma-open/milaboratories.software-mixcr': 4.7.0-347-develop
-  'vue': ^3.5.15
+  'vue': 3.5.24
 
-  'zod': ~3.23.8
+  'zod': 3.25.76
   'utility-types': ^3.11.0
 
   'typescript': ~5.6.3
@@ -44,5 +44,5 @@ catalog:
 
   # other blocks used in tests
 
-  '@platforma-open/milaboratories.samples-and-data': ^1.10.14
-  '@platforma-open/milaboratories.samples-and-data.model': ^1.11.2
+  '@platforma-open/milaboratories.samples-and-data': ^1.12.3
+  '@platforma-open/milaboratories.samples-and-data.model': ^2.4.1
