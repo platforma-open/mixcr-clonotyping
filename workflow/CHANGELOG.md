@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.26.3
+
+### Patch Changes
+
+- a825a2c: Fix workflow prepare logic
+
 ## 3.26.2
 
 ### Patch Changes
