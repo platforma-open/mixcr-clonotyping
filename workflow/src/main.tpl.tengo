@@ -16,11 +16,11 @@ exportReportTpl := assets.importTemplate(":export-report")
 wf.setPreRun(assets.importTemplate(":prerun"))
 
 wf.prepare(func(args){
-    prepared := {}
-    if !is_undefined(args.inputLibrary) {
-    		prepared.resolvedLibraryInput = wf.resolve(args.inputLibrary, { errIfMissing: false })
-    }
-    return prepared
+	prepared := {}
+	if !is_undefined(args.inputLibrary) {
+		prepared.resolvedLibraryInput = wf.resolve(args.inputLibrary, { errIfMissing: false })
+	}
+	return prepared
 })
 
 wf.body(func(args) {
