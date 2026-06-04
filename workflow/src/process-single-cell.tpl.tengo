@@ -1,4 +1,4 @@
-//tengo:hash_override AB9AC8BA-5FFC-40C5-B2F7-AC42181524F5
+//tengo:hash_override EFD29586-3707-4F2B-BC51-6D4844C6E5E2
 
 ll := import("@platforma-sdk/workflow-tengo:ll")
 self := import("@platforma-sdk/workflow-tengo:tpl.light")
@@ -76,7 +76,8 @@ self.body(func(inputs) {
 					{ column: mainAbundanceColumn, type: "Long" }, // Ensure mainAbundanceColumn is treated as Long
 					{ column: mainIsProductiveColumn, type: "String" } // Keep as String for direct comparison
 				],
-				inferSchema: false // Disable further inference so columns not defined in schema are interpreted as strings
+				inferSchema: false, // Disable further inference so columns not defined in schema are interpreted as strings
+				raiseIfEmpty: false // tolerate zero-byte upstream output; the declared schema is complete
 			}).withColumns(
 				pt.col("cellKey"), pt.col("clonotypeKey"), pt.col(mainAbundanceColumn), pt.col(mainIsProductiveColumn)
 			)

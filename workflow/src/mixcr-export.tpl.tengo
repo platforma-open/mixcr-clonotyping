@@ -1,4 +1,4 @@
-//tengo:hash_override E5C1AD4C-B44D-4DE1-BBF1-4CB42ED7579A
+//tengo:hash_override 7753AB87-9E0A-4053-BF2F-8F5BDACEA85E
 
 ll := import("@platforma-sdk/workflow-tengo:ll")
 self := import("@platforma-sdk/workflow-tengo:tpl.light")
@@ -133,12 +133,39 @@ self.body(func(inputs) {
 		mem(ptMemGB * units.GiB).
 		cpu(2)
 
+	// Same defence as the single-cell path below: declare every column
+	// referenced downstream so a zero-byte MiXCR output yields an empty
+	// typed frame rather than a polars NoDataError.
+	mainReadSchema := [ { column: "readCount", type: "Double" } ]
+	mainReadSeen := { readCount: true }
+	mainAddCol := func(name, ty) {
+		if is_undefined(name) || name == "" { return }
+		if !is_undefined(mainReadSeen[name]) { return }
+		mainReadSeen[name] = true
+		mainReadSchema = append(mainReadSchema, { column: name, type: ty })
+	}
+	if !is_undefined(mainIsProductiveColumn) { mainAddCol(mainIsProductiveColumn, "String") }
+	for c in clonotypeKeyColumns { mainAddCol(c, "String") }
+	if chains == "TRA" || chains == "TRD" { mainAddCol("topChains", "String") }
+	if !is_undefined(aminoAcidSeqColumns) {
+		for c in aminoAcidSeqColumns { mainAddCol(c, "String") }
+	}
+	if !is_undefined(cdr3SeqColumns) {
+		for c in cdr3SeqColumns { mainAddCol(c, "String") }
+	}
+	if !is_undefined(aminoAcidSeqColumnPairs) {
+		for pair in aminoAcidSeqColumnPairs {
+			mainAddCol(pair.nt, "String")
+			mainAddCol(pair.aa, "String")
+		}
+	}
+
 	frameInputMap := {
 		file: unprocessedTsv,
 		xsvType: "tsv",
-		schema: [ { column: "readCount", type: "Double" } ]
+		schema: mainReadSchema
 	}
-	dfMain := wfMain.frame(frameInputMap, { inferSchema: false, id: "input_table" })
+	dfMain := wfMain.frame(frameInputMap, { inferSchema: false, raiseIfEmpty: false, id: "input_table" })
 
     dfMain.addColumns(
         pt.col("readCount").round().cast("Long").alias("readCount")
@@ -206,13 +233,45 @@ self.body(func(inputs) {
 			mem(ptMemGB * units.GiB).
 			cpu(2)
 
-		frameLoadOps := {
-			xsvType: "tsv",
-			inferSchema: false
+		// Schema covers every column referenced downstream so that, when MiXCR
+		// produces a zero-byte file (rare upstream failure mode), ptabler can
+		// synthesise an empty typed frame instead of raising NoDataError.
+		// raiseIfEmpty: false activates that synthesis path.
+		scReadSchema := []
+		scReadSeen := {}
+		scAddCol := func(name, ty) {
+			if is_undefined(name) || name == "" { return }
+			if !is_undefined(scReadSeen[name]) { return }
+			scReadSeen[name] = true
+			scReadSchema = append(scReadSchema, { column: name, type: ty })
+		}
+		if mainAbundanceColumnIsReadCount {
+			scAddCol("readCount", "Double")
+		}
+		if !is_undefined(mainIsProductiveColumn) { scAddCol(mainIsProductiveColumn, "String") }
+		for c in clonotypeKeyColumns { scAddCol(c, "String") }
+		if !is_undefined(cellTagColumns) {
+			for c in cellTagColumns { scAddCol(c, "String") }
+		}
+		if chains == "TRA" || chains == "TRD" { scAddCol("topChains", "String") }
+		if !is_undefined(aminoAcidSeqColumns) {
+			for c in aminoAcidSeqColumns { scAddCol(c, "String") }
+		}
+		if !is_undefined(cdr3SeqColumns) {
+			for c in cdr3SeqColumns { scAddCol(c, "String") }
+		}
+		if !is_undefined(aminoAcidSeqColumnPairs) {
+			for pair in aminoAcidSeqColumnPairs {
+				scAddCol(pair.nt, "String")
+				scAddCol(pair.aa, "String")
+			}
 		}
 
-		if mainAbundanceColumnIsReadCount {
-			frameLoadOps.schema = [ { column: "readCount", type: "Double" } ]
+		frameLoadOps := {
+			xsvType: "tsv",
+			inferSchema: false,
+			raiseIfEmpty: false,
+			schema: scReadSchema
 		}
 
 		dfSingleCell := wfSingleCell.frame(unprocessedTsvForSingleCell, frameLoadOps)

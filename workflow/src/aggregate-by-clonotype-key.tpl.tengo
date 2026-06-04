@@ -1,4 +1,4 @@
-//tengo:hash_override 8B1CFC68-2542-4C81-8CD4-F927B75F3975
+//tengo:hash_override FDFA108D-FE6B-4773-8DD5-425AA35A0E1B
 
 ll := import("@platforma-sdk/workflow-tengo:ll")
 self := import("@platforma-sdk/workflow-tengo:tpl")
@@ -63,7 +63,8 @@ self.body(func(inputs) {
 			schema: baseSchemaForRead
 		}, {
 			id: dfId,
-			inferSchema: false
+			inferSchema: false,
+			raiseIfEmpty: false
 		})
 		dataFrames = append(dataFrames, df)
 	}
