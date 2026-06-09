@@ -87,34 +87,30 @@ self.body(func(inputs) {
 	}
 
 	// Memory limit per process.
-	// Was a static per-analysis-type tier (64/110/192 GiB). Now sized from the
-	// input reads: the analysis-type baseline as a floor (so we never
-	// under-provision vs the static tiers) + 4 bytes of RAM per byte of compressed
-	// FASTQ, clamped to 256 GiB. Adding to the baseline (rather than a bare
-	// clamp(size*k, floor, cap)) keeps the allocation responsive to input size for
-	// typical samples — mixcr's high floors would otherwise swallow the size term
-	// until the input is unusually large. An explicit "Advanced Settings" override
-	// still wins; on backends without getBlobSize the formula is skipped and the
-	// baseline is used as a static fallback.
+	// DEMO TUNING (resource-formulas): size RAM LINEARLY from the input reads'
+	// LINE COUNT (not byte size, which varies with compression). lineCount("reads")
+	// sums NEWLINES across the sample's R1+R2 FASTQ.gz; FASTQ is 4 lines/read and
+	// R1+R2 are paired, so metric = 8 x reads. Counted on the full files (a
+	// line-counter pre-exec), so it is INDEPENDENT of --limit-input.
+	//     mem = clamp( 4 GiB + 32 bytes/line * lineCount,  4 GiB,  256 GiB )
+	// On this dataset (R1+R2 line counts) that yields:
+	//     LN_CD8 488.8M -> ~18.6 GiB | SC_CD4 505.0M -> ~19.0 GiB
+	//     SC_CD8 573.8M -> ~21.1 GiB | LN_CD4 611.2M -> ~22.2 GiB
+	// Similar-sized samples get similar RAM — the honest, cliff-free behavior of a
+	// linear model. An explicit "Advanced Settings" memory override still wins; on
+	// backends that can't evaluate formulas the { fallback } is used.
     if !is_undefined(perProcessMemGB) {
         // memory per process was set in "Advanced Settings" block directly
 		mixcrCmdBuilder.mem(string(perProcessMemGB) + "GiB")
 	} else {
-		baseMemGiB := 64
-		if hasMiToolSteps {
-			// single-cell analysis with mitool pre-processing needs the most
-			baseMemGiB = 192
-		} else if hasAssembleContigs || hasAssembleCells {
-			// single-cell / contig assembly needs more
-			baseMemGiB = 110
-		}
 		f := exec.formula
+		readsLines := f.lineCount("reads")
 		mixcrCmdBuilder.memFormula(
 			f.clamp(
-				f.add(f.gib(baseMemGiB), f.mul(f.size("reads"), 4)),
-				f.gib(baseMemGiB),
+				f.add(f.gib(4), f.mul(readsLines, 32)),
+				f.gib(4),
 				f.gib(256)),
-			{ fallback: string(baseMemGiB) + "GiB" })
+			{ fallback: "16GiB" })
 	}
 
 	if !is_undefined(limitInput) {
