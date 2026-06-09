@@ -87,18 +87,16 @@ self.body(func(inputs) {
 	}
 
 	// Memory limit per process.
-	// DEMO TUNING (resource-formulas): size RAM LINEARLY from the input reads'
-	// LINE COUNT (not byte size, which varies with compression). lineCount("reads")
-	// sums NEWLINES across the sample's R1+R2 FASTQ.gz; FASTQ is 4 lines/read and
-	// R1+R2 are paired, so metric = 8 x reads. Counted on the full files (a
-	// line-counter pre-exec), so it is INDEPENDENT of --limit-input.
-	//     mem = clamp( 4 GiB + 32 bytes/line * lineCount,  4 GiB,  256 GiB )
-	// On this dataset (R1+R2 line counts) that yields:
-	//     LN_CD8 488.8M -> ~18.6 GiB | SC_CD4 505.0M -> ~19.0 GiB
-	//     SC_CD8 573.8M -> ~21.1 GiB | LN_CD4 611.2M -> ~22.2 GiB
-	// Similar-sized samples get similar RAM — the honest, cliff-free behavior of a
-	// linear model. An explicit "Advanced Settings" memory override still wins; on
-	// backends that can't evaluate formulas the { fallback } is used.
+	// Size analyze RAM from the input reads' line count. Line count tracks real read
+	// depth, while compressed byte size varies with the FASTQ compression ratio.
+	// lineCount("reads") sums newlines across the sample's R1+R2 FASTQ via a
+	// line-counter pre-exec, so it measures the full files and ignores --limit-input
+	// (FASTQ uses 4 lines per read).
+	//     mem = clamp(4 GiB + 32 bytes/line * lineCount, 4 GiB, 256 GiB)
+	// The 4 GiB floor covers small inputs, the linear term scales with depth, and the
+	// 256 GiB cap bounds the largest. An "Advanced Settings" memory override takes
+	// precedence; on backends that cannot evaluate resource formulas, memFormula
+	// falls back to the { fallback } value.
     if !is_undefined(perProcessMemGB) {
         // memory per process was set in "Advanced Settings" block directly
 		mixcrCmdBuilder.mem(string(perProcessMemGB) + "GiB")
