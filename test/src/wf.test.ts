@@ -10,14 +10,13 @@ import {
   // SupportedPresetList is used in commented-out prerun assertions below
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   SupportedPresetList,
-  uniquePlId,
 } from "@platforma-open/milaboratories.mixcr-clonotyping-2.model";
 import { awaitStableState, blockTest } from "@platforma-sdk/test";
 import { blockSpec as samplesAndDataBlockSpec } from "@platforma-open/milaboratories.samples-and-data";
-import type { BlockArgs as SamplesAndDataBlockArgs } from "@platforma-open/milaboratories.samples-and-data.model";
+import type { BlockData as SamplesAndDataBlockData } from "@platforma-open/milaboratories.samples-and-data.model";
 import { blockSpec as myBlockSpec } from "this-block";
 import type { InferBlockState } from "@platforma-sdk/model";
-import { createPlDataTableStateV2, wrapOutputs } from "@platforma-sdk/model";
+import { createPlDataTableStateV2, uniquePlId, wrapOutputs } from "@platforma-sdk/model";
 
 type AxisSpec = { name: string; domain?: Record<string, string> };
 type PColumnListEntry = { spec: { axesSpec: AxisSpec[] } };
@@ -92,39 +91,45 @@ blockTest(
     const r1Handle = await helpers.getLocalFileHandle("./assets/small_data_R1.fastq.gz");
     const r2Handle = await helpers.getLocalFileHandle("./assets/small_data_R2.fastq.gz");
 
-    await project.setBlockArgs(sndBlockId, {
-      metadata: [
-        {
-          id: metaColumn1Id,
-          label: "MetaColumn1",
-          global: false,
-          valueType: "Long",
-          data: {
-            [sample1Id]: 2345,
-          },
-        },
-      ],
-      sampleIds: [sample1Id],
-      sampleLabelColumnLabel: "Sample Name",
-      sampleLabels: { [sample1Id]: "Sample 1" },
-      datasets: [
-        {
-          id: dataset1Id,
-          label: "Dataset 1",
-          content: {
-            type: "Fastq",
-            readIndices: ["R1", "R2"],
-            gzipped: true,
+    await project.mutateBlockStorage(sndBlockId, {
+      operation: "update-block-data",
+      value: {
+        metadata: [
+          {
+            id: metaColumn1Id,
+            label: "MetaColumn1",
+            global: false,
+            valueType: "Long",
             data: {
-              [sample1Id]: {
-                R1: r1Handle,
-                R2: r2Handle,
+              [sample1Id]: 2345,
+            },
+          },
+        ],
+        sampleIds: [sample1Id],
+        sampleLabelColumnLabel: "Sample Name",
+        sampleLabels: { [sample1Id]: "Sample 1" },
+        datasets: [
+          {
+            id: dataset1Id,
+            label: "Dataset 1",
+            content: {
+              type: "Fastq",
+              readIndices: ["R1", "R2"],
+              gzipped: true,
+              data: {
+                [sample1Id]: {
+                  R1: r1Handle,
+                  R2: r2Handle,
+                },
               },
             },
           },
-        },
-      ],
-    } satisfies SamplesAndDataBlockArgs);
+        ],
+        h5adFilesToPreprocess: [],
+        seuratFilesToPreprocess: [],
+        suggestedImport: false,
+      } satisfies SamplesAndDataBlockData,
+    });
     await project.runBlock(sndBlockId);
     await helpers.awaitBlockDone(sndBlockId, 8000);
     const clonotypingBlockState = project.getBlockState(clonotypingBlockId);
@@ -282,43 +287,49 @@ blockTest(
     const s2r1Handle = await helpers.getLocalFileHandle("./assets/SRR11233625-sc_R1.fastq.gz");
     const s2r2Handle = await helpers.getLocalFileHandle("./assets/SRR11233625-sc_R2.fastq.gz");
 
-    await project.setBlockArgs(sndBlockId, {
-      metadata: [
-        {
-          id: metaColumn1Id,
-          label: "MetaColumn1",
-          global: false,
-          valueType: "Long",
-          data: {
-            [sample1Id]: 2345,
-          },
-        },
-      ],
-      sampleIds: [sample1Id],
-      sampleLabelColumnLabel: "Sample Name",
-      sampleLabels: { [sample1Id]: "Sample 1" },
-      datasets: [
-        {
-          id: dataset1Id,
-          label: "Dataset 1",
-          content: {
-            type: "Fastq",
-            readIndices: ["R1", "R2"],
-            gzipped: true,
+    await project.mutateBlockStorage(sndBlockId, {
+      operation: "update-block-data",
+      value: {
+        metadata: [
+          {
+            id: metaColumn1Id,
+            label: "MetaColumn1",
+            global: false,
+            valueType: "Long",
             data: {
-              [sample1Id]: {
-                R1: s1r1Handle,
-                R2: s1r2Handle,
-              },
-              [sample2Id]: {
-                R1: s2r1Handle,
-                R2: s2r2Handle,
+              [sample1Id]: 2345,
+            },
+          },
+        ],
+        sampleIds: [sample1Id],
+        sampleLabelColumnLabel: "Sample Name",
+        sampleLabels: { [sample1Id]: "Sample 1" },
+        datasets: [
+          {
+            id: dataset1Id,
+            label: "Dataset 1",
+            content: {
+              type: "Fastq",
+              readIndices: ["R1", "R2"],
+              gzipped: true,
+              data: {
+                [sample1Id]: {
+                  R1: s1r1Handle,
+                  R2: s1r2Handle,
+                },
+                [sample2Id]: {
+                  R1: s2r1Handle,
+                  R2: s2r2Handle,
+                },
               },
             },
           },
-        },
-      ],
-    } satisfies SamplesAndDataBlockArgs);
+        ],
+        h5adFilesToPreprocess: [],
+        seuratFilesToPreprocess: [],
+        suggestedImport: false,
+      } satisfies SamplesAndDataBlockData,
+    });
     await project.runBlock(sndBlockId);
     await helpers.awaitBlockDone(sndBlockId, 8000);
     const clonotypingBlockState = project.getBlockState(clonotypingBlockId);

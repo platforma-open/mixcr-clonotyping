@@ -303,7 +303,7 @@ export const platforma = BlockModelV3.create(dataModel)
 export type BlockOutputs = InferOutputsType<typeof platforma>;
 export type Href = InferHrefType<typeof platforma>;
 export * from "./args";
-export * from "./helpers";
+export type { PlId } from "@platforma-sdk/model";
 export * from "./preset";
 export * from "./progress";
 export * from "./qc";
