@@ -7,29 +7,31 @@
     "watch": "ts-builder build --target block-ui --watch",
     "build": "ts-builder build --target block-ui",
     "type-check": "ts-builder type-check --target block-ui",
-    "lint": "eslint .",
-    "do-pack": "shx rm -f *.tgz && pnpm pack && shx mv *.tgz package.tgz"
+    "do-pack": "shx rm -f *.tgz && pnpm pack && shx mv *.tgz package.tgz",
+    "fmt": "ts-builder format",
+    "check": "ts-builder check --target block-ui"
   },
   "dependencies": {
-    "ag-grid-enterprise": "catalog:",
-    "ag-grid-vue3": "catalog:",
     "@milaboratories/helpers": "catalog:",
     "@platforma-open/milaboratories.mixcr-clonotyping-2.model": "workspace:*",
     "@platforma-sdk/model": "catalog:",
     "@platforma-sdk/ui-vue": "catalog:",
+    "@vueuse/core": "catalog:",
+    "ag-grid-enterprise": "catalog:",
+    "ag-grid-vue3": "catalog:",
     "utility-types": "catalog:",
     "vue": "catalog:",
-    "@vueuse/core": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@zip.js/zip.js": "catalog:",
     "@milaboratories/ts-builder": "catalog:",
     "@milaboratories/ts-configs": "catalog:",
-    "@platforma-sdk/eslint-config": "catalog:",
-    "typescript": "catalog:",
-    "vitest": "catalog:",
-    "eslint": "catalog:",
-    "@types/wicg-file-system-access": "catalog:"
+    "@types/wicg-file-system-access": "catalog:",
+    "@zip.js/zip.js": "catalog:",
+    "eslint": "catalog:"
+  },
+  "peerDependencies": {
+    "@types/node": "*",
+    "typescript": "*"
   }
 }

@@ -1,14 +1,14 @@
-import { test } from 'vitest';
-import { AlignReport, AssembleReport } from './reports';
+import { test } from "vitest";
+import { AlignReport, AssembleReport } from "./reports";
 
-test('test parse simple align report', () => {
+test("test parse simple align report", () => {
   AlignReport.parse({
-    type: 'alignerReport',
+    type: "alignerReport",
     commandLine:
-      'align -f --report result.align.report.txt --json-report result.align.report.json --preset milab-human-dna-xcr-7genes-multiplex --save-output-file-names result.align.list.tsv ../small_data_R1.fastq.gz ../small_data_R2.fastq.gz result.alignments.vdjca',
-    inputFiles: ['../small_data_R1.fastq.gz', '../small_data_R2.fastq.gz'],
-    outputFiles: ['result.alignments.vdjca'],
-    version: '; built=Thu Jan 01 02:00:00 IST 1970; rev=3956c95420; lib=repseqio.v5.1',
+      "align -f --report result.align.report.txt --json-report result.align.report.json --preset milab-human-dna-xcr-7genes-multiplex --save-output-file-names result.align.list.tsv ../small_data_R1.fastq.gz ../small_data_R2.fastq.gz result.alignments.vdjca",
+    inputFiles: ["../small_data_R1.fastq.gz", "../small_data_R2.fastq.gz"],
+    outputFiles: ["result.alignments.vdjca"],
+    version: "; built=Thu Jan 01 02:00:00 IST 1970; rev=3956c95420; lib=repseqio.v5.1",
     totalReadsProcessed: 10,
     aligned: 9,
     notAligned: 1,
@@ -37,7 +37,7 @@ test('test parse simple align report', () => {
     realignedWithForcedNonFloatingRightBoundInLeftRead: 0,
     realignedWithForcedNonFloatingLeftBoundInRightRead: 0,
     chainUsage: {
-      type: 'chainUsage',
+      type: "chainUsage",
       chimeras: 0,
       total: 9,
       chains: { TRA: { total: 9, nonFunctional: 0, isOOF: 0, hasStops: 0 } },
@@ -57,14 +57,14 @@ test('test parse simple align report', () => {
   });
 });
 
-test('test parse simple assemble report', () => {
+test("test parse simple assemble report", () => {
   AssembleReport.parse({
-    type: 'assemblerReport',
+    type: "assemblerReport",
     commandLine:
-      'assemble -f --report result.assemble.report.txt --json-report result.assemble.report.json result.alignments.vdjca result.clns',
-    inputFiles: ['result.alignments.vdjca'],
-    outputFiles: ['result.clns'],
-    version: '; built=Thu Jan 01 02:00:00 IST 1970; rev=3956c95420; lib=repseqio.v5.1',
+      "assemble -f --report result.assemble.report.txt --json-report result.assemble.report.json result.alignments.vdjca result.clns",
+    inputFiles: ["result.alignments.vdjca"],
+    outputFiles: ["result.clns"],
+    version: "; built=Thu Jan 01 02:00:00 IST 1970; rev=3956c95420; lib=repseqio.v5.1",
     preCloneAssemblerReport: null,
     totalReadsProcessed: 10,
     totalAlignmentsProcessed: 9,
@@ -86,7 +86,7 @@ test('test parse simple assemble report', () => {
     readsInClonesBeforeClustering: 4,
     readsDroppedWithLowQualityClones: 0,
     clonalChainUsage: {
-      type: 'chainUsage',
+      type: "chainUsage",
       chimeras: 0,
       total: 4,
       chains: { TRA: { total: 4, nonFunctional: 0, isOOF: 0, hasStops: 0 } },

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { MiXCRResult } from './results';
-import AlignmentsChart from './charts/AlignmentsChart.vue';
-import ChainsChart from './charts/ChainsChart.vue';
+import type { MiXCRResult } from "./results";
+import AlignmentsChart from "./charts/AlignmentsChart.vue";
+import ChainsChart from "./charts/ChainsChart.vue";
 
 defineProps<{
   sampleData: MiXCRResult;

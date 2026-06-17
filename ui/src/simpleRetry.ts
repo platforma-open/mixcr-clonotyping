@@ -1,4 +1,4 @@
-import { ensureError, isAbortError } from '@platforma-sdk/model';
+import { ensureError, isAbortError } from "@platforma-sdk/model";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 

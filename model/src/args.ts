@@ -1,37 +1,42 @@
-import type { ImportFileHandle } from '@platforma-sdk/model';
-import { PlRef } from '@platforma-sdk/model';
-import { z } from 'zod';
+import type { ImportFileHandle } from "@platforma-sdk/model";
+import { PlRef } from "@platforma-sdk/model";
+import { z } from "zod";
 
 export const PresetName = z.object({
-  type: z.literal('name'),
+  type: z.literal("name"),
   name: z.string(),
 });
 export type PresetName = z.infer<typeof PresetName>;
 
 export const PresetFile = z.object({
-  type: z.literal('file'),
+  type: z.literal("file"),
   file: z.string().transform((v) => v as ImportFileHandle),
 });
 export type PresetFile = z.infer<typeof PresetFile>;
 
-export const Preset = z.discriminatedUnion('type', [PresetName, PresetFile]);
+export const Preset = z.discriminatedUnion("type", [PresetName, PresetFile]);
 export type Preset = z.infer<typeof Preset>;
 
-export const StopCodonType = z.enum(['amber', 'ochre', 'opal']);
+export const StopCodonType = z.enum(["amber", "ochre", "opal"]);
 export type StopCodonType = z.infer<typeof StopCodonType>;
 
-export const StopCodonReplacements = z.object({
-  amber: z.string().optional(),
-  ochre: z.string().optional(),
-  opal: z.string().optional(),
-}).optional();
+export const StopCodonReplacements = z
+  .object({
+    amber: z.string().optional(),
+    ochre: z.string().optional(),
+    opal: z.string().optional(),
+  })
+  .optional();
 
 const BlockArgsValidBase = z.object({
   defaultBlockLabel: z.string(),
   customBlockLabel: z.string(),
   input: PlRef,
   inputLibrary: PlRef.optional(),
-  libraryFile: z.string().transform((v) => v as ImportFileHandle).optional(),
+  libraryFile: z
+    .string()
+    .transform((v) => v as ImportFileHandle)
+    .optional(),
   isLibraryFileGzipped: z.boolean().optional(),
   preset: Preset,
   species: z.string().optional(),
@@ -42,9 +47,9 @@ const BlockArgsValidBase = z.object({
   tagPattern: z.string().optional(),
   assembleClonesBy: z.string().optional(),
   limitInput: z.number().int().optional(),
-  perProcessMemGB: z.number().int().gte(1, '1GB or more required').optional(),
-  perProcessCPUs: z.number().int().gte(1, '1 or more required').optional(),
-  cloneClusteringMode: z.enum(['relaxed', 'default', 'off']).optional(),
+  perProcessMemGB: z.number().int().gte(1, "1GB or more required").optional(),
+  perProcessCPUs: z.number().int().gte(1, "1 or more required").optional(),
+  cloneClusteringMode: z.enum(["relaxed", "default", "off"]).optional(),
   title: z.string().optional(),
   presetCommonName: z.string().optional(),
   isGenericPreset: z.boolean().optional(),

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import type { MiXCRResult } from './results';
-import QcSection from './components/QcSection.vue';
+import { computed } from "vue";
+import type { MiXCRResult } from "./results";
+import QcSection from "./components/QcSection.vue";
 
 const props = defineProps<{
   sampleData: MiXCRResult;

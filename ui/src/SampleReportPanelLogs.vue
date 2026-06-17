@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { PlLogView } from '@platforma-sdk/ui-vue';
-import type { MiXCRResult } from './results';
+import { PlLogView } from "@platforma-sdk/ui-vue";
+import type { MiXCRResult } from "./results";
 
 defineProps<{
   sampleData: MiXCRResult;
@@ -14,7 +14,7 @@ defineProps<{
 <style lang="css">
 /** Remove this fix when using ui-vue > v1.8.25 */
 .pl-log-view {
-    max-height: calc(100% - var(--contour-offset));
-    max-width: calc(100% - var(--contour-offset));
+  max-height: calc(100% - var(--contour-offset));
+  max-width: calc(100% - var(--contour-offset));
 }
 </style>

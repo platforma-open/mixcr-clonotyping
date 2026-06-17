@@ -2,16 +2,22 @@
   "name": "@platforma-open/milaboratories.mixcr-clonotyping-2.workflow",
   "version": "3.26.3",
   "description": "Tengo-based template",
+  "type": "module",
   "scripts": {
-    "build": "shx rm -rf dist && pl-tengo check && pl-tengo build",
-    "format": "/usr/bin/env emacs --script ./format.el",
-    "do-pack": "shx rm -f *.tgz && pnpm pack && shx mv *.tgz package.tgz"
+    "build": "shx rm -rf dist && pl-tengo build",
+    "format": "/usr/bin/env emacs --script ./format.el || echo 'No emacs.'",
+    "do-pack": "shx rm -f *.tgz && pnpm pack && shx mv *.tgz package.tgz",
+    "check": "pl-tengo check",
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@platforma-sdk/workflow-tengo": "catalog:",
-    "@platforma-open/milaboratories.software-mixcr": "catalog:"
+    "@platforma-open/milaboratories.software-mixcr": "catalog:",
+    "@platforma-sdk/workflow-tengo": "catalog:"
   },
   "devDependencies": {
-    "@platforma-sdk/tengo-builder": "catalog:"
+    "@platforma-sdk/tengo-builder": "catalog:",
+    "@platforma-sdk/test": "catalog:",
+    "shx": "catalog:",
+    "vitest": "catalog:"
   }
 }
