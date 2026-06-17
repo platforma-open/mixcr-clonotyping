@@ -1,29 +1,32 @@
 {
   "name": "@platforma-open/milaboratories.mixcr-clonotyping-2.test",
-  "private": true,
   "version": "1.14.2",
+  "private": true,
   "description": "Block tests",
-  "scripts": {
-    "test": "vitest --run --passWithNoTests",
-    "lint": "eslint .",
-    "type-check": "ts-builder type-check --target block-test"
-  },
-  "files": [],
   "keywords": [],
+  "files": [],
+  "type": "module",
+  "scripts": {
+    "test": "vitest run --passWithNoTests",
+    "type-check": "ts-builder type-check --target block-test",
+    "fmt": "ts-builder format",
+    "check": "ts-builder check --target block-test"
+  },
   "dependencies": {
-    "this-block": "workspace:@platforma-open/milaboratories.mixcr-clonotyping-2@*",
     "@platforma-open/milaboratories.mixcr-clonotyping-2.model": "workspace:*",
-    "@platforma-open/milaboratories.samples-and-data.model": "catalog:",
     "@platforma-open/milaboratories.samples-and-data": "catalog:",
-    "@platforma-sdk/model": "catalog:"
+    "@platforma-open/milaboratories.samples-and-data.model": "catalog:",
+    "@platforma-sdk/model": "catalog:",
+    "this-block": "workspace:@platforma-open/milaboratories.mixcr-clonotyping-2@*"
   },
   "devDependencies": {
     "@milaboratories/ts-builder": "catalog:",
     "@milaboratories/ts-configs": "catalog:",
-    "@platforma-sdk/eslint-config": "catalog:",
     "@platforma-sdk/test": "catalog:",
     "eslint": "catalog:",
-    "vitest": "catalog:",
-    "typescript": "catalog:"
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "typescript": "*"
   }
 }

@@ -1,7 +1,4 @@
-import type {
-  InferHrefType,
-  PlDataTableStateV2,
-} from '@platforma-sdk/model';
+import type { InferHrefType, PlDataTableStateV2 } from "@platforma-sdk/model";
 import {
   BlockModelV3,
   DataModelBuilder,
@@ -12,14 +9,14 @@ import {
   parseResourceMap,
   type ImportFileHandle,
   type InferOutputsType,
-} from '@platforma-sdk/model';
-import type { BlockArgs } from './args';
-import { BlockArgsValid } from './args';
-import { ProgressPrefix } from './progress';
+} from "@platforma-sdk/model";
+import type { BlockArgs } from "./args";
+import { BlockArgsValid } from "./args";
+import { ProgressPrefix } from "./progress";
 
 export type BlockData = BlockArgs & {
   tableState: PlDataTableStateV2;
-  runMode: 'dry' | 'full';
+  runMode: "dry" | "full";
 };
 
 type LegacyUiState = {
@@ -27,19 +24,19 @@ type LegacyUiState = {
 };
 
 const dataModel = new DataModelBuilder()
-  .from<BlockData>('v1')
+  .from<BlockData>("v1")
   .upgradeLegacy<BlockArgs, LegacyUiState>(({ args, uiState }) => ({
     ...args,
     tableState: uiState.tableState,
-    runMode: (args.limitInput ?? 0) > 0 ? 'dry' : 'full',
+    runMode: (args.limitInput ?? 0) > 0 ? "dry" : "full",
   }))
   .init(() => ({
-    defaultBlockLabel: '',
-    customBlockLabel: '',
-    chains: ['IG', 'TCRAB', 'TCRGD'],
-    cloneClusteringMode: 'default',
+    defaultBlockLabel: "",
+    customBlockLabel: "",
+    chains: ["IG", "TCRAB", "TCRGD"],
+    cloneClusteringMode: "default",
     tableState: createPlDataTableStateV2(),
-    runMode: 'full',
+    runMode: "full",
   }));
 
 export const platforma = BlockModelV3.create(dataModel)
@@ -54,14 +51,15 @@ export const platforma = BlockModelV3.create(dataModel)
   }))
 
   .args((data) => {
-    if (!data.input) throw new Error('Input dataset is required');
-    if (!data.preset) throw new Error('Preset is required');
-    if (!data.chains || data.chains.length === 0) throw new Error('Chains selection is required');
-    if (data.runMode === 'dry' && data.limitInput == null) throw new Error('Read limit is required for Preview mode');
+    if (!data.input) throw new Error("Input dataset is required");
+    if (!data.preset) throw new Error("Preset is required");
+    if (!data.chains || data.chains.length === 0) throw new Error("Chains selection is required");
+    if (data.runMode === "dry" && data.limitInput == null)
+      throw new Error("Read limit is required for Preview mode");
     if (!BlockArgsValid.safeParse(data).success) return undefined;
     return {
-      defaultBlockLabel: data.defaultBlockLabel ?? '',
-      customBlockLabel: data.customBlockLabel ?? '',
+      defaultBlockLabel: data.defaultBlockLabel ?? "",
+      customBlockLabel: data.customBlockLabel ?? "",
       input: data.input,
       preset: data.preset,
       chains: data.chains,
@@ -75,7 +73,7 @@ export const platforma = BlockModelV3.create(dataModel)
       rightAlignmentMode: data.rightAlignmentMode,
       tagPattern: data.tagPattern,
       assembleClonesBy: data.assembleClonesBy,
-      limitInput: data.runMode === 'dry' ? data.limitInput : undefined,
+      limitInput: data.runMode === "dry" ? data.limitInput : undefined,
       perProcessMemGB: data.perProcessMemGB,
       perProcessCPUs: data.perProcessCPUs,
       cloneClusteringMode: data.cloneClusteringMode,
@@ -87,105 +85,111 @@ export const platforma = BlockModelV3.create(dataModel)
     };
   })
 
-  .retentiveOutput('presets', (ctx) =>
-    ctx.prerun?.resolve({ field: 'presets', assertFieldType: 'Input', allowPermanentAbsence: true })?.getFileHandle(),
+  .retentiveOutput("presets", (ctx) =>
+    ctx.prerun
+      ?.resolve({ field: "presets", assertFieldType: "Input", allowPermanentAbsence: true })
+      ?.getFileHandle(),
   )
 
-  .retentiveOutput('preset', (ctx) =>
+  .retentiveOutput("preset", (ctx) =>
     ctx.prerun
-      ?.resolve({ field: 'preset', assertFieldType: 'Input', allowPermanentAbsence: true })
+      ?.resolve({ field: "preset", assertFieldType: "Input", allowPermanentAbsence: true })
       ?.getDataAsJson<string>(),
   )
 
-  .retentiveOutput('libraryOptions', (ctx) =>
-    ctx.resultPool.getOptions((spec) => spec.annotations?.['pl7.app/vdj/isLibrary'] === 'true',
-      { includeNativeLabel: true, addLabelAsSuffix: true }),
+  .retentiveOutput("libraryOptions", (ctx) =>
+    ctx.resultPool.getOptions((spec) => spec.annotations?.["pl7.app/vdj/isLibrary"] === "true", {
+      includeNativeLabel: true,
+      addLabelAsSuffix: true,
+    }),
   )
 
-  .output('datasetSpec', (ctx) => {
+  .output("datasetSpec", (ctx) => {
     if (ctx.data.inputLibrary) return ctx.resultPool.getSpecByRef(ctx.data.inputLibrary);
     else return undefined;
   })
 
-  .output('qc', (ctx) => {
-    const acc = ctx.outputs?.resolve('qc');
+  .output("qc", (ctx) => {
+    const acc = ctx.outputs?.resolve("qc");
     if (!acc || !acc.getInputsLocked()) return undefined;
     return parseResourceMap(acc, (acc) => acc.getFileHandle(), true);
   })
 
-  .output('reports', (ctx) =>
-    parseResourceMap(ctx.outputs?.resolve('reports'), (acc) => acc.getFileHandle(), false),
+  .output("reports", (ctx) =>
+    parseResourceMap(ctx.outputs?.resolve("reports"), (acc) => acc.getFileHandle(), false),
   )
 
-  .output('logs', (ctx) => {
+  .output("logs", (ctx) => {
     return ctx.outputs !== undefined
-      ? parseResourceMap(ctx.outputs?.resolve('logs'), (acc) => acc.getLogHandle(), false)
+      ? parseResourceMap(ctx.outputs?.resolve("logs"), (acc) => acc.getLogHandle(), false)
       : undefined;
   })
 
-  .output('progress', (ctx) => {
+  .output("progress", (ctx) => {
     return ctx.outputs !== undefined
       ? parseResourceMap(
-          ctx.outputs?.resolve('logs'),
+          ctx.outputs?.resolve("logs"),
           (acc) => acc.getProgressLog(ProgressPrefix),
           false,
         )
       : undefined;
   })
 
-  .output('started', (ctx) => ctx.outputs !== undefined)
+  .output("started", (ctx) => ctx.outputs !== undefined)
 
-  .output('done', (ctx) => {
+  .output("done", (ctx) => {
     return ctx.outputs !== undefined
-      ? parseResourceMap(ctx.outputs?.resolve('clns'), (_acc) => true, false).data.map(
+      ? parseResourceMap(ctx.outputs?.resolve("clns"), (_acc) => true, false).data.map(
           (e) => e.key[0] as string,
         )
       : undefined;
   })
 
-  .outputWithStatus('clones', (ctx) => {
-    const collection = ctx.outputs?.resolve('clonotypes')?.parsePObjectCollection();
+  .outputWithStatus("clones", (ctx) => {
+    const collection = ctx.outputs?.resolve("clonotypes")?.parsePObjectCollection();
     if (collection === undefined) return undefined;
     // if (collection === undefined || !collection.isComplete) return undefined;
     const pColumns = Object.values(collection).filter(isPColumn);
     return ctx.createPFrame(pColumns);
   })
 
-  .retentiveOutput('inputOptions', (ctx) => {
+  .retentiveOutput("inputOptions", (ctx) => {
     return ctx.resultPool.getOptions((v) => {
       if (!isPColumnSpec(v)) return false;
       const domain = v.domain;
       return (
-        v.name === 'pl7.app/sequencing/data'
-        && (v.valueType as string) === 'File'
-        && domain !== undefined
-        && (domain['pl7.app/fileExtension'] === 'fasta'
-          || domain['pl7.app/fileExtension'] === 'fasta.gz'
-          || domain['pl7.app/fileExtension'] === 'fastq'
-          || domain['pl7.app/fileExtension'] === 'fastq.gz')
-        && v.axesSpec.some((a) => a.name === 'pl7.app/sampleId')
+        v.name === "pl7.app/sequencing/data" &&
+        (v.valueType as string) === "File" &&
+        domain !== undefined &&
+        (domain["pl7.app/fileExtension"] === "fasta" ||
+          domain["pl7.app/fileExtension"] === "fasta.gz" ||
+          domain["pl7.app/fileExtension"] === "fastq" ||
+          domain["pl7.app/fileExtension"] === "fastq.gz") &&
+        v.axesSpec.some((a) => a.name === "pl7.app/sampleId")
       );
     });
   })
 
-  .retentiveOutput('hasMultiplexedFastq', (ctx) => {
-    return ctx.resultPool.getOptions((v) => {
-      if (!isPColumnSpec(v)) return false;
-      const domain = v.domain;
-      return (
-        v.name === 'pl7.app/sequencing/data'
-        && (v.valueType as string) === 'File'
-        && domain !== undefined
-        && (domain['pl7.app/fileExtension'] === 'fasta'
-          || domain['pl7.app/fileExtension'] === 'fasta.gz'
-          || domain['pl7.app/fileExtension'] === 'fastq'
-          || domain['pl7.app/fileExtension'] === 'fastq.gz')
-        && v.axesSpec.some((a) => a.name === 'pl7.app/sampleGroupId')
-      );
-    }).length > 0;
+  .retentiveOutput("hasMultiplexedFastq", (ctx) => {
+    return (
+      ctx.resultPool.getOptions((v) => {
+        if (!isPColumnSpec(v)) return false;
+        const domain = v.domain;
+        return (
+          v.name === "pl7.app/sequencing/data" &&
+          (v.valueType as string) === "File" &&
+          domain !== undefined &&
+          (domain["pl7.app/fileExtension"] === "fasta" ||
+            domain["pl7.app/fileExtension"] === "fasta.gz" ||
+            domain["pl7.app/fileExtension"] === "fastq" ||
+            domain["pl7.app/fileExtension"] === "fastq.gz") &&
+          v.axesSpec.some((a) => a.name === "pl7.app/sampleGroupId")
+        );
+      }).length > 0
+    );
   })
 
-  .output('sampleLabels', (ctx): Record<string, string> | undefined => {
+  .output("sampleLabels", (ctx): Record<string, string> | undefined => {
     const inputRef = ctx.data.input;
     if (inputRef === undefined) return undefined;
     const inputSpec = ctx.resultPool.getSpecByRef(inputRef);
@@ -196,7 +200,7 @@ export const platforma = BlockModelV3.create(dataModel)
     const sampleLabelsObj = ctx.resultPool.getData().entries.find((f) => {
       const spec = f.obj.spec;
       if (!isPColumnSpec(spec)) return false;
-      if (spec.name !== 'pl7.app/label' || spec.axesSpec.length !== 1) return false;
+      if (spec.name !== "pl7.app/label" || spec.axesSpec.length !== 1) return false;
       const axisSpec = spec.axesSpec[0];
       if (axisSpec.name !== sampleAxisSpec.name) return false;
       if (sampleAxisSpec.domain === undefined || Object.keys(sampleAxisSpec.domain).length === 0)
@@ -220,52 +224,52 @@ export const platforma = BlockModelV3.create(dataModel)
     ) as Record<string, string>;
   })
 
-  .outputWithStatus('pt', (ctx) => {
-    const pCols = ctx.outputs?.resolve({ field: 'qcReportTable', assertFieldType: 'Input', allowPermanentAbsence: true })?.getPColumns();
+  .outputWithStatus("pt", (ctx) => {
+    const pCols = ctx.outputs
+      ?.resolve({ field: "qcReportTable", assertFieldType: "Input", allowPermanentAbsence: true })
+      ?.getPColumns();
     if (pCols === undefined) {
       return undefined;
     }
-    return createPlDataTableV2(
-      ctx,
-      pCols,
-      ctx.data.tableState,
-    );
+    return createPlDataTableV2(ctx, pCols, ctx.data.tableState);
   })
 
-  .output('rawTsvs', (ctx) => {
-    if (ctx.outputs === undefined)
-      return undefined;
-    const pCols = ctx.outputs?.resolve('clonotypeTables')?.getPColumns();
+  .output("rawTsvs", (ctx) => {
+    if (ctx.outputs === undefined) return undefined;
+    const pCols = ctx.outputs?.resolve("clonotypeTables")?.getPColumns();
     if (pCols === undefined) {
       return undefined;
     }
-    return pCols.map((pCol) => {
-      return {
-        ...pCol,
-        id: (JSON.parse(pCol.id) as { name: string }).name,
-        data: parseResourceMap(pCol.data, (acc) => acc.getRemoteFileHandle(), false),
-      };
-    }).filter((pCol) => pCol.data.isComplete).map((pCol) => {
-      return {
-        ...pCol,
-        data: pCol.data.data,
-      };
-    });
+    return pCols
+      .map((pCol) => {
+        return {
+          ...pCol,
+          id: (JSON.parse(pCol.id) as { name: string }).name,
+          data: parseResourceMap(pCol.data, (acc) => acc.getRemoteFileHandle(), false),
+        };
+      })
+      .filter((pCol) => pCol.data.isComplete)
+      .map((pCol) => {
+        return {
+          ...pCol,
+          data: pCol.data.data,
+        };
+      });
   })
 
   .output(
-    'fileImports',
+    "fileImports",
     (ctx) => {
       const main = Object.fromEntries(
         ctx.outputs
-          ?.resolve({ field: 'fileImports', assertFieldType: 'Input', allowPermanentAbsence: true })
+          ?.resolve({ field: "fileImports", assertFieldType: "Input", allowPermanentAbsence: true })
           ?.mapFields((handle, acc) => [handle as ImportFileHandle, acc.getImportProgress()], {
             skipUnresolved: true,
           }) ?? [],
       );
       const prerun = Object.fromEntries(
         ctx.prerun
-          ?.resolve({ field: 'fileImports', assertFieldType: 'Input', allowPermanentAbsence: true })
+          ?.resolve({ field: "fileImports", assertFieldType: "Input", allowPermanentAbsence: true })
           ?.mapFields((handle, acc) => [handle as ImportFileHandle, acc.getImportProgress()], {
             skipUnresolved: true,
           }) ?? [],
@@ -275,27 +279,33 @@ export const platforma = BlockModelV3.create(dataModel)
     { isActive: true },
   )
   .output(
-    'libraryUploadProgress', (ctx) => ctx.outputs?.resolve({ field: 'libraryImportHandle', allowPermanentAbsence: true })?.getImportProgress(), { isActive: true })
+    "libraryUploadProgress",
+    (ctx) =>
+      ctx.outputs
+        ?.resolve({ field: "libraryImportHandle", allowPermanentAbsence: true })
+        ?.getImportProgress(),
+    { isActive: true },
+  )
 
   .sections((_ctx) => {
     return [
-      { type: 'link', href: '/', label: 'Main' },
-      { type: 'link', href: '/qc-report-table', label: 'QC Report Table' },
+      { type: "link", href: "/", label: "Main" },
+      { type: "link", href: "/qc-report-table", label: "QC Report Table" },
     ];
   })
 
-  .title(() => 'MiXCR Clonotyping')
+  .title(() => "MiXCR Clonotyping")
 
-  .subtitle((ctx) => ctx.data.customBlockLabel || ctx.data.defaultBlockLabel || '')
+  .subtitle((ctx) => ctx.data.customBlockLabel || ctx.data.defaultBlockLabel || "")
 
   .done();
 
 export type BlockOutputs = InferOutputsType<typeof platforma>;
 export type Href = InferHrefType<typeof platforma>;
-export * from './args';
-export * from './helpers';
-export * from './preset';
-export * from './progress';
-export * from './qc';
-export * from './reports';
+export * from "./args";
+export * from "./helpers";
+export * from "./preset";
+export * from "./progress";
+export * from "./qc";
+export * from "./reports";
 export { BlockArgs };

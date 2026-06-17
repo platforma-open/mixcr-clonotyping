@@ -1,8 +1,8 @@
-import { platforma } from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
-import { defineAppV3 } from '@platforma-sdk/ui-vue';
-import MainPageWrapper from './MainPageWrapper.vue';
-import QcReportTablePage from './QcReportTablePage.vue';
-import { watch } from 'vue';
+import { platforma } from "@platforma-open/milaboratories.mixcr-clonotyping-2.model";
+import { defineAppV3 } from "@platforma-sdk/ui-vue";
+import MainPageWrapper from "./MainPageWrapper.vue";
+import QcReportTablePage from "./QcReportTablePage.vue";
+import { watch } from "vue";
 
 export const sdkPlugin = defineAppV3(platforma, (app) => {
   return {
@@ -13,8 +13,8 @@ export const sdkPlugin = defineAppV3(platforma, (app) => {
       return done.length / qc.data.length;
     },
     routes: {
-      '/': () => MainPageWrapper,
-      '/qc-report-table': () => QcReportTablePage,
+      "/": () => MainPageWrapper,
+      "/qc-report-table": () => QcReportTablePage,
     },
   };
 });
@@ -25,7 +25,7 @@ export const useApp = sdkPlugin.useApp;
 const unwatch = watch(sdkPlugin, ({ loaded }) => {
   if (!loaded) return;
   const app = useApp();
-  app.model.data.customBlockLabel ??= '';
-  app.model.data.defaultBlockLabel ??= 'Select Clonotype Definition';
+  app.model.data.customBlockLabel ??= "";
+  app.model.data.defaultBlockLabel ??= "Select Clonotype Definition";
   unwatch();
 });

@@ -1,17 +1,17 @@
 <script lang="ts" setup>
-import { computed } from 'vue';
+import { computed } from "vue";
 
 const levelLabels = {
-  ALERT: 'Alert',
-  WARN: 'Warn',
-  OK: 'Ok',
+  ALERT: "Alert",
+  WARN: "Warn",
+  OK: "Ok",
 };
 
 const props = defineProps<{
   level: keyof typeof levelLabels | undefined;
 }>();
 
-const labelText = computed(() => (props.level ? levelLabels[props.level] : ''));
+const labelText = computed(() => (props.level ? levelLabels[props.level] : ""));
 </script>
 
 <template>

@@ -11,3 +11,5 @@ test-dry-run.json
 vite.config.*.timestamp-*
 .DS_Store
 /.idea
+software/**/*.tgz
+.vscode/sftp.json

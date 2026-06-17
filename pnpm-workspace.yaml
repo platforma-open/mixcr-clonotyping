@@ -1,9 +1,9 @@
 packages:
-  - workflow
-  - model
-  - ui
   - block
+  - model
   - test
+  - ui
+  - workflow
 
 catalog:
   '@milaboratories/ts-builder': 1.3.1
@@ -13,8 +13,7 @@ catalog:
   '@platforma-sdk/ui-vue': 1.63.8
   '@platforma-sdk/tengo-builder': 3.0.2
   '@platforma-sdk/package-builder': 3.12.0
-  '@platforma-sdk/block-tools': 2.8.2
-  '@platforma-sdk/eslint-config': 1.2.0
+  '@platforma-sdk/block-tools': 2.10.19
 
   '@platforma-sdk/test': 1.63.9
   '@milaboratories/helpers': 1.14.1

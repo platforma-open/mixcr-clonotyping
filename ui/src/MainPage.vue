@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { AgGridVue } from 'ag-grid-vue3';
+import { AgGridVue } from "ag-grid-vue3";
 
-import type { PlId, Qc } from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
-import { plRefsEqual, type ImportFileHandle } from '@platforma-sdk/model';
-import type { PlAgHeaderComponentParams } from '@platforma-sdk/ui-vue';
+import type { PlId, Qc } from "@platforma-open/milaboratories.mixcr-clonotyping-2.model";
+import { plRefsEqual, type ImportFileHandle } from "@platforma-sdk/model";
+import type { PlAgHeaderComponentParams } from "@platforma-sdk/ui-vue";
 import {
   AgGridTheme,
   PlAgCellStatusTag,
@@ -20,19 +20,19 @@ import {
   makeRowNumberColDef,
   PlBtnExportArchive,
   type FileExportEntry,
-} from '@platforma-sdk/ui-vue';
-import { refDebounced, whenever } from '@vueuse/core';
-import type { ColDef, GridApi, GridOptions, GridReadyEvent } from 'ag-grid-enterprise';
-import { ClientSideRowModelModule, ModuleRegistry } from 'ag-grid-enterprise';
-import { computed, reactive, shallowRef, watch, watchEffect } from 'vue';
-import { useApp } from './app';
-import { getAlignmentChartSettings } from './charts/alignmentChartSettings';
-import { getChainsChartSettings } from './charts/chainsChartSettings';
-import { parseProgressString } from './parseProgress';
-import type { MiXCRResult } from './results';
-import { MiXCRResultsFull } from './results';
-import SampleReportPanel from './SampleReportPanel.vue';
-import SettingsPanel from './SettingsPanel.vue';
+} from "@platforma-sdk/ui-vue";
+import { refDebounced, whenever } from "@vueuse/core";
+import type { ColDef, GridApi, GridOptions, GridReadyEvent } from "ag-grid-enterprise";
+import { ClientSideRowModelModule, ModuleRegistry } from "ag-grid-enterprise";
+import { computed, reactive, shallowRef, watch, watchEffect } from "vue";
+import { useApp } from "./app";
+import { getAlignmentChartSettings } from "./charts/alignmentChartSettings";
+import { getChainsChartSettings } from "./charts/chainsChartSettings";
+import { parseProgressString } from "./parseProgress";
+import type { MiXCRResult } from "./results";
+import { MiXCRResultsFull } from "./results";
+import SampleReportPanel from "./SampleReportPanel.vue";
+import SettingsPanel from "./SettingsPanel.vue";
 
 const app = useApp();
 
@@ -41,16 +41,18 @@ watchEffect(() => {
   const parts: string[] = [];
   // Add dataset name if available
   if (app.model.data.input) {
-    const inputOption = app.model.outputs.inputOptions?.find((p) => app.model.data.input && plRefsEqual(p.ref, app.model.data.input));
+    const inputOption = app.model.outputs.inputOptions?.find(
+      (p) => app.model.data.input && plRefsEqual(p.ref, app.model.data.input),
+    );
     if (inputOption?.label) {
       parts.push(inputOption.label);
     }
   }
   // Add chains if available
   if (app.model.data.chains && app.model.data.chains.length > 0) {
-    parts.push(app.model.data.chains.join(', '));
+    parts.push(app.model.data.chains.join(", "));
   }
-  app.model.data.defaultBlockLabel = parts.filter(Boolean).join(' - ');
+  app.model.data.defaultBlockLabel = parts.filter(Boolean).join(" - ");
 });
 
 // @TODO
@@ -60,9 +62,9 @@ const result = refDebounced(MiXCRResultsFull, 100, {
 
 const loadingOverlayParams = computed(() => {
   if (app.model.outputs.started) {
-    return { variant: 'running' as const, runningText: 'Loading Sample List' };
+    return { variant: "running" as const, runningText: "Loading Sample List" };
   }
-  return { variant: 'not-ready' as const };
+  return { variant: "not-ready" as const };
 });
 
 // Export archive configuration
@@ -93,8 +95,8 @@ const fileExports = computed(() => {
 });
 
 const exportSuggestedFileName = computed(() => {
-  const date = new Date().toISOString().split('T')[0];
-  const title = app.model.data.title ?? 'Untitled';
+  const date = new Date().toISOString().split("T")[0];
+  const title = app.model.data.title ?? "Untitled";
   return `${date}_ClonotypingResultsRaw_${title}.zip`;
 });
 
@@ -151,11 +153,11 @@ const defaultColumnDef: ColDef = {
 const columnDefs: ColDef<MiXCRResult>[] = [
   makeRowNumberColDef(),
   createAgGridColDef<MiXCRResult, string>({
-    colId: 'label',
-    field: 'label',
-    headerName: 'Sample',
-    headerComponentParams: { type: 'Text' } satisfies PlAgHeaderComponentParams,
-    pinned: 'left',
+    colId: "label",
+    field: "label",
+    headerName: "Sample",
+    headerComponentParams: { type: "Text" } satisfies PlAgHeaderComponentParams,
+    pinned: "left",
     lockPinned: true,
     sortable: true,
     cellRenderer: PlAgTextAndButtonCell,
@@ -164,54 +166,54 @@ const columnDefs: ColDef<MiXCRResult>[] = [
     },
   }),
   createAgGridColDef<MiXCRResult, string>({
-    colId: 'progress',
-    field: 'progress',
-    headerName: 'Progress',
-    headerComponentParams: { type: 'Progress' } satisfies PlAgHeaderComponentParams,
+    colId: "progress",
+    field: "progress",
+    headerName: "Progress",
+    headerComponentParams: { type: "Progress" } satisfies PlAgHeaderComponentParams,
     progress(cellData) {
       const parsed = parseProgressString(cellData);
 
-      if (parsed.stage === 'Queued') {
+      if (parsed.stage === "Queued") {
         return {
-          status: 'not_started',
+          status: "not_started",
           text: parsed.stage,
         };
       }
 
       return {
-        status: parsed.stage === 'Done' ? 'done' : 'running',
+        status: parsed.stage === "Done" ? "done" : "running",
         percent: parsed.percentage,
         text: parsed.stage,
-        suffix: parsed.etaLabel ?? '',
+        suffix: parsed.etaLabel ?? "",
       };
     },
   }),
   createAgGridColDef({
-    colId: 'qc',
-    field: 'qc',
+    colId: "qc",
+    field: "qc",
     width: 126,
     cellRendererSelector: (cellData) => {
-      const type = (cellData.data?.qc as MiXCRResult['qc'])?.reduce(
-        (result: Qc[number]['status'], item) =>
+      const type = (cellData.data?.qc as MiXCRResult["qc"])?.reduce(
+        (result: Qc[number]["status"], item) =>
           qcPriority[item.status] > qcPriority[result] ? item.status : result,
-        'OK',
+        "OK",
       );
       return {
         component: PlAgCellStatusTag,
         params: { type },
       };
     },
-    headerName: 'Quality',
-    headerComponentParams: { type: 'Text' } satisfies PlAgHeaderComponentParams,
+    headerName: "Quality",
+    headerComponentParams: { type: "Text" } satisfies PlAgHeaderComponentParams,
     noGutters: true, // this means "no padding" i. e. --ag-cell-horizontal-padding: 0px & --ag-cell-vertical-padding: 0px
   }),
   createAgGridColDef<MiXCRResult, string>({
-    colId: 'alignmentStats',
-    headerName: 'Alignments',
-    headerComponentParams: { type: 'Text' } satisfies PlAgHeaderComponentParams,
+    colId: "alignmentStats",
+    headerName: "Alignments",
+    headerComponentParams: { type: "Text" } satisfies PlAgHeaderComponentParams,
     flex: 1,
     cellStyle: {
-      '--ag-cell-horizontal-padding': '12px',
+      "--ag-cell-horizontal-padding": "12px",
     },
     cellRendererSelector: (cellData) => {
       const value = getAlignmentChartSettings(cellData.data?.alignReport);
@@ -222,12 +224,12 @@ const columnDefs: ColDef<MiXCRResult>[] = [
     },
   }),
   createAgGridColDef<MiXCRResult, string>({
-    colId: 'chainsStats',
-    headerName: 'Chains',
-    headerComponentParams: { type: 'Text' } satisfies PlAgHeaderComponentParams,
+    colId: "chainsStats",
+    headerName: "Chains",
+    headerComponentParams: { type: "Text" } satisfies PlAgHeaderComponentParams,
     flex: 1,
     cellStyle: {
-      '--ag-cell-horizontal-padding': '12px',
+      "--ag-cell-horizontal-padding": "12px",
       // '--ag-cell-horizontal-border': 'solid rgb(150, 150, 200);',
       // 'border-width': '0'
     },
@@ -254,18 +256,18 @@ const gridOptions: GridOptions<MiXCRResult> = {
 </script>
 
 <template>
-  <PlBlockPage
-    title="MiXCR Clonotyping"
-  >
+  <PlBlockPage title="MiXCR Clonotyping">
     <template #append>
       <PlBtnExportArchive
         :file-exports="fileExports"
         :suggested-file-name="exportSuggestedFileName"
         :disabled="exportDisabled"
-        :file-picker-types="[{
-          description: 'ZIP files',
-          accept: { 'application/zip': ['.zip'] }
-        }]"
+        :file-picker-types="[
+          {
+            description: 'ZIP files',
+            accept: { 'application/zip': ['.zip'] },
+          },
+        ]"
       >
         Export raw results
       </PlBtnExportArchive>
@@ -278,23 +280,37 @@ const gridOptions: GridOptions<MiXCRResult> = {
     </template>
     <div :style="{ flex: 1 }">
       <AgGridVue
-        :theme="AgGridTheme" :style="{ height: '100%' }" :rowData="result" :defaultColDef="defaultColumnDef"
-        :columnDefs="columnDefs" :grid-options="gridOptions" :loadingOverlayComponentParams="loadingOverlayParams"
-        :loadingOverlayComponent="PlAgOverlayLoading" :noRowsOverlayComponent="PlAgOverlayNoRows"
+        :theme="AgGridTheme"
+        :style="{ height: '100%' }"
+        :rowData="result"
+        :defaultColDef="defaultColumnDef"
+        :columnDefs="columnDefs"
+        :grid-options="gridOptions"
+        :loadingOverlayComponentParams="loadingOverlayParams"
+        :loadingOverlayComponent="PlAgOverlayLoading"
+        :noRowsOverlayComponent="PlAgOverlayNoRows"
         @grid-ready="onGridReady"
       />
     </div>
   </PlBlockPage>
-  <PlSlideModal v-model="data.settingsOpen" :shadow="true" :close-on-outside-click="app.model.outputs.started">
+  <PlSlideModal
+    v-model="data.settingsOpen"
+    :shadow="true"
+    :close-on-outside-click="app.model.outputs.started"
+  >
     <template #title>Settings</template>
     <SettingsPanel />
   </PlSlideModal>
-  <PlSlideModal v-model="data.sampleReportOpen" :close-on-outside-click="app.model.outputs.started" width="80%">
+  <PlSlideModal
+    v-model="data.sampleReportOpen"
+    :close-on-outside-click="app.model.outputs.started"
+    width="80%"
+  >
     <template #title>
       Results for
       {{
         (data.selectedSample ? app.model.outputs.sampleLabels?.[data.selectedSample] : undefined) ??
-          '...'
+        "..."
       }}
     </template>
     <SampleReportPanel v-model="data.selectedSample" />
