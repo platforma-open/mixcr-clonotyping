@@ -1,3 +1,5 @@
+//tengo:hash_override 9CA47368-4ECF-4CB7-91DF-9AAB5A33DCA8
+
 self := import("@platforma-sdk/workflow-tengo:tpl")
 smart := import("@platforma-sdk/workflow-tengo:smart")
 ll := import("@platforma-sdk/workflow-tengo:ll")
@@ -8,15 +10,14 @@ times := import("times")
 text := import("text")
 maps := import("@platforma-sdk/workflow-tengo:maps")
 pframes := import("@platforma-sdk/workflow-tengo:pframes")
-xsv := import("@platforma-sdk/workflow-tengo:pframes.xsv")
 slices := import("@platforma-sdk/workflow-tengo:slices")
 pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 pt := import("@platforma-sdk/workflow-tengo:pt")
-qcReportColumns := import(":qc-report-columns")
 
+math := import("math")
 json := import("json")
 
-self.defineOutputs("qcReportTable")
+self.defineOutputs("rawTsv")
 
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:main")
 ptablerSw := assets.importSoftware("@platforma-open/milaboratories.software-ptabler:main")
@@ -43,6 +44,17 @@ self.body(func(inputs) {
         }
     }
     singleCellChainTsvsData := inputs.singleCellChainTsvsData
+	perProcessMemGB := inputs.perProcessMemGB
+
+	// Memory for downstream operations, linked to user override with hardcoded floors
+	baseMemGB := 64
+	if !is_undefined(perProcessMemGB) {
+		baseMemGB = perProcessMemGB
+	}
+	memGB := func(floorGB, divisor) {
+		return string(int(math.max(floorGB, baseMemGB / divisor))) + "GiB"
+	}
+
 	useStopCodonReplacement := !is_undefined(stopCodonTypes) && is_array(stopCodonTypes) && len(stopCodonTypes) > 0
 	if is_undefined(stopCodonReplacements) || !is_map(stopCodonReplacements) {
 		stopCodonReplacements = {}
@@ -208,7 +220,7 @@ self.body(func(inputs) {
         sampleId := json.decode(key)[0]
         exportFiltersCmd := exec.builder().
             inMediumQueue().
-            mem("16GiB").
+            mem(memGB(16, 2)).
             cpu(2).
             software(mixcrSw).
             env("MI_USE_SYSTEM_CA", "true").
@@ -279,7 +291,7 @@ self.body(func(inputs) {
                 sampleId := json.decode(key)[0]
                 exportChainFiltersCmd := exec.builder().
                     inMediumQueue().
-                    mem("16GiB").
+                    mem(memGB(16, 2)).
                     cpu(2).
                     software(mixcrSw).
                     env("MI_USE_SYSTEM_CA", "true").
@@ -500,18 +512,7 @@ self.body(func(inputs) {
     
     tsvFile := wfResult.getFile("qc-report-processed.tsv")
 
-    qcReportColumns := qcReportColumns(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellTags, umiTags, hasAssembleCells)
-    reportColumnsSpec := qcReportColumns.reportColumnsSpec
-
-    qcReportTable := xsv.importFile(
-		tsvFile,
-		"tsv",
-		reportColumnsSpec,
-		{ cpu: 1, mem: "16GiB" }
-	)
-
-    
     return {
-        qcReportTable: qcReportTable
+        rawTsv: tsvFile
     }
 })
