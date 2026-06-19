@@ -573,6 +573,26 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId, expor
 	imputedFeatures := imputeGermline ? imputedFlankFeatures(assembleClonesBy) : []
 	doImpute := len(imputedFeatures) > 0
 
+	// Keep the imputed and non-imputed feature sets disjoint (as mixcr-amplicon-alignment does).
+	// A flank feature (e.g. FR1) lives in the fixed non-imputed `features` list AND in the imputed
+	// set; emitting both yields two columns with identical PColumn identity (name + domain - the
+	// `imputed` flag is annotation-only, so it does not disambiguate). The empty non-imputed column
+	// (region_not_covered) then shadows the populated germline-imputed one. So when imputing, drop
+	// those features from the non-imputed list - only the imputed column remains for the flanks.
+	if doImpute {
+		imputedSet := {}
+		for f in imputedFeatures {
+			imputedSet[f] = true
+		}
+		nonImputedFeatures := []
+		for f in features {
+			if is_undefined(imputedSet[f]) {
+				nonImputedFeatures = append(nonImputedFeatures, f)
+			}
+		}
+		features = nonImputedFeatures
+	}
+
 	for isImputed in ( doImpute ? [false, true] : [false] ) {
 		imputedU := isImputed ? "Imputed" : ""
 		imputedL := text.to_lower(imputedU)
