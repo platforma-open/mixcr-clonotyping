@@ -105,6 +105,71 @@ formatId := func(input) {
     return result
 }
 
+// Gene-feature regions in 5'->3' order, used to derive which regions fall outside an
+// assembled span.
+germlineRegionOrder := ["FR1", "CDR1", "FR2", "CDR2", "FR3", "CDR3", "FR4"]
+
+germlineRegionIndex := func(region) {
+	for i, r in germlineRegionOrder {
+		if r == region {
+			return i
+		}
+	}
+	return -1
+}
+
+// Derives the gene-feature regions lying OUTSIDE the assembled span (5' and 3' flanks),
+// plus the full VDJRegion, for germline imputation. Mirrors the mixcr-amplicon-alignment
+// block's parseAssemblingFeature, adapted to the "Assemble clones by" value formats:
+//   CDR3, VDJRegion    -> nothing to impute (minimal / full feature)
+//   <X>_TO_<Y>         -> span X..Y (e.g. CDR1_TO_FR4)
+//   {<X>Begin:<Y>End}  -> span X..Y (e.g. {FR1Begin:CDR3End})
+// The assembled span itself is observed, not imputed, so it never gets a duplicate
+// imputed column. Returns [] when there is nothing to impute or the value is unrecognised.
+imputedFlankFeatures := func(assembleClonesBy) {
+	if is_undefined(assembleClonesBy) || assembleClonesBy == "CDR3" || assembleClonesBy == "VDJRegion" {
+		return []
+	}
+
+	begin := undefined
+	end := undefined
+
+	toParts := text.split(assembleClonesBy, "_TO_")
+	if len(toParts) == 2 {
+		begin = toParts[0]
+		end = toParts[1]
+	} else if text.has_prefix(assembleClonesBy, "{") && text.has_suffix(assembleClonesBy, "}") {
+		inner := assembleClonesBy[1:len(assembleClonesBy) - 1]
+		colonParts := text.split(inner, ":")
+		if len(colonParts) != 2 {
+			return []
+		}
+		begin = text.replace(colonParts[0], "Begin", "", -1)
+		end = text.replace(colonParts[1], "End", "", -1)
+	} else {
+		return []
+	}
+
+	iBegin := germlineRegionIndex(begin)
+	iEnd := germlineRegionIndex(end)
+	if iBegin == -1 || iEnd == -1 || iBegin > iEnd {
+		return []
+	}
+
+	imputed := []
+	for i := 0; i < iBegin; i++ {
+		imputed = append(imputed, germlineRegionOrder[i])
+	}
+	for i := iEnd + 1; i < len(germlineRegionOrder); i++ {
+		imputed = append(imputed, germlineRegionOrder[i])
+	}
+	// VDJRegion is the full FR1..FR4; impute it unless the span already covers everything.
+	if !(begin == "FR1" && end == "FR4") {
+		imputed = append(imputed, "VDJRegion")
+	}
+	return imputed
+}
+
 exportSpecOpsFromPreset := func(presetSpecForBack) {
 	assemblingFeature := undefined
 	if !is_undefined(presetSpecForBack.assemblingFeature) {
@@ -129,7 +194,7 @@ addSpec := func(columns, additionalSpec) {
 // Ordering rules
 //   AA Sequences
 
-calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId, exportMinQuality) {
+calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId, exportMinQuality, imputeGermline, assembleClonesBy) {
 	ops := exportSpecOpsFromPreset(presetSpecForBack)
 
 	assemblingFeature := ops.assemblingFeature
@@ -137,10 +202,13 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId, expor
 	cellTags := ops.cellTags
 	hasUmi := ops.hasUmi
 	splitByC := ops.splitByC
-	
+
 	// Default to false if not provided
 	if is_undefined(exportMinQuality) {
 		exportMinQuality = false
+	}
+	if is_undefined(imputeGermline) {
+		imputeGermline = false
 	}
 
 	isSingleCell := !is_undefined(cellTags) && len(cellTags) > 0
@@ -496,10 +564,20 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId, expor
 	// aaAnnotationOfSegmentsForVDJRegionInFrame
 	annotationTypes := assemblingFeature == "CDR3" ? ["Segments"] : ["CDRs", "Segments"]
 
-	for isImputed in ( is_undefined(assemblingFeature) ? [false, true] : [false] ) {
+	// Germline imputation (generic amplicon presets only): when enabled, emit additional
+	// germline-imputed sequence columns for the gene-feature regions OUTSIDE the assembled
+	// span (plus the full VDJRegion). imputedFlankFeatures returns [] for non-generic presets
+	// (assembleClonesBy undefined) and for full/minimal spans, so this never fires outside the
+	// intended scope. The clonotype key, built from the non-imputed assembling feature, is
+	// unaffected.
+	imputedFeatures := imputeGermline ? imputedFlankFeatures(assembleClonesBy) : []
+	doImpute := len(imputedFeatures) > 0
+
+	for isImputed in ( doImpute ? [false, true] : [false] ) {
 		imputedU := isImputed ? "Imputed" : ""
 		imputedL := text.to_lower(imputedU)
-		for featureU in features {
+		featuresList := isImputed ? imputedFeatures : features
+		for featureU in featuresList {
 			featureL := text.to_lower(formatId(featureU))
 			for isAminoAcid in [true, false] {
 				featureInFrameU := isAminoAcid ? inFrameFeatures[featureU] : featureU

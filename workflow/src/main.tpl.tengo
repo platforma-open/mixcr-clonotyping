@@ -134,6 +134,7 @@ wf.body(func(args) {
 				materialType: args.materialType,
 				tagPattern: args.tagPattern,
 				assembleClonesBy: args.assembleClonesBy,
+				imputeGermline: args.imputeGermline,
 				exportMinQuality: args.exportMinQuality,
 				stopCodonTypes: args.stopCodonTypes,
 				stopCodonReplacements: args.stopCodonReplacements
