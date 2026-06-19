@@ -16,7 +16,7 @@ catalog:
   '@platforma-sdk/block-tools': 2.11.0
   '@platforma-sdk/eslint-config': 1.2.0
 
-  '@platforma-sdk/test': 1.63.9
+  '@platforma-sdk/test': 1.79.10
   '@milaboratories/helpers': 1.14.1
 
   '@platforma-open/milaboratories.software-mixcr': 4.7.0-347-develop
