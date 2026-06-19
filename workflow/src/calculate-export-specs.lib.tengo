@@ -617,7 +617,7 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId, expor
 								"pl7.app/vdj/isMainSequence": featureU == anchorFeature ? "true" : "false",
 								"pl7.app/vdj/imputed": string(isImputed),
 								"pl7.app/table/fontFamily": "monospace",
-								"pl7.app/label": featureInFrameU + " " + alphabetShort
+								"pl7.app/label": (isImputed ? "Imputed " : "") + featureInFrameU + " " + alphabetShort
 							})
 						}
 					} ]
