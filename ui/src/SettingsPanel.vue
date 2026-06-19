@@ -332,6 +332,13 @@ const exportMinQuality = computed({
   },
 });
 
+const imputeGermline = computed({
+  get: () => app.model.data.imputeGermline ?? false,
+  set: (value: boolean) => {
+    app.model.data.imputeGermline = value;
+  },
+});
+
 const stopCodonOptions: ListOption<StopCodonType>[] = [
   { label: 'Amber (TAG)', value: 'amber' },
   { label: 'Ochre (TAA)', value: 'ochre' },
@@ -518,6 +525,16 @@ watch(stopCodonSelection, (selected) => {
       Feature span used to group reads into clonotypes
     </template>
   </PlDropdown>
+
+  <PlCheckbox
+    v-if="needAssembleClonesBy"
+    v-model="imputeGermline"
+  >
+    Impute non-covered parts from germline
+    <PlTooltip class="info" position="top">
+      <template #tooltip>Export additional sequence columns for the gene-feature regions outside the assembling feature span (and the full VDJRegion), reconstructing the non-covered parts from the germline reference of the assigned V/J gene. Imputed bases are not observed in the reads; they are not used for clonotype assembly.</template>
+    </PlTooltip>
+  </PlCheckbox>
 
   <PlBtnGroup v-model="app.model.data.runMode" :options="runModeOptions" label="Run mode">
     <template #tooltip>
