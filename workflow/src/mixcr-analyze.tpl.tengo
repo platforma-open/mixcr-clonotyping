@@ -87,17 +87,16 @@ self.body(func(inputs) {
 	}
 
 	// Memory limit per process.
-	// Size analyze RAM from the input reads' line count, on top of a per-analysis
-	// floor. Line count tracks real read depth, while compressed byte size varies
-	// with the FASTQ compression ratio. lineCount("reads") sums newlines across the
-	// sample's R1+R2 FASTQ via a line-counter pre-exec, so it measures the full files
-	// and ignores --limit-input (FASTQ uses 4 lines per read).
-	//     mem = clamp(baseMemGiB + 32 bytes/line * lineCount, baseMemGiB, 256 GiB)
+	// Size analyze RAM from the input reads' file size, on top of a per-analysis
+	// floor. size("reads") sums the stored (compressed) blob size of the sample's
+	// R1+R2 FASTQ via getBlobSize — a metadata read, no pre-exec — so it tracks
+	// total input volume (read count and read length) without decompressing.
+	//     mem = clamp(baseMemGiB + 4 bytes/byte * size, baseMemGiB, 256 GiB)
 	// baseMemGiB is the per-analysis floor (64, or 110/192 for contig/cell and
-	// single-cell+MiTool pipelines, which need that headroom regardless of depth);
-	// the linear term scales with depth; the 256 GiB cap bounds the largest. An
-	// "Advanced Settings" memory override takes precedence; on backends that cannot
-	// evaluate resource formulas, memFormula falls back to the baseline.
+	// single-cell+MiTool pipelines, which need that headroom regardless of size);
+	// the linear term scales with input volume; the 256 GiB cap bounds the largest.
+	// An "Advanced Settings" memory override takes precedence; on backends that
+	// cannot evaluate resource formulas, memFormula falls back to the baseline.
     if !is_undefined(perProcessMemGB) {
         // memory per process was set in "Advanced Settings" block directly
 		mixcrCmdBuilder.mem(string(perProcessMemGB) + "GiB")
@@ -109,10 +108,9 @@ self.body(func(inputs) {
 			baseMemGiB = 110
 		}
 		f := exec.formula
-		readsLines := f.lineCount("reads")
 		mixcrCmdBuilder.memFormula(
 			f.clamp(
-				f.add(f.gib(baseMemGiB), f.mul(readsLines, 32)),
+				f.add(f.gib(baseMemGiB), f.mul(f.size("reads"), 4)),
 				f.gib(baseMemGiB),
 				f.gib(256)),
 			{ fallback: string(baseMemGiB) + "GiB" })
