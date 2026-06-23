@@ -41,6 +41,7 @@ const BlockArgsValidBase = z.object({
   rightAlignmentMode: z.string().optional(),
   tagPattern: z.string().optional(),
   assembleClonesBy: z.string().optional(),
+  imputeGermline: z.boolean().optional(),
   limitInput: z.number().int().optional(),
   perProcessMemGB: z.number().int().gte(1, '1GB or more required').optional(),
   perProcessCPUs: z.number().int().gte(1, '1 or more required').optional(),

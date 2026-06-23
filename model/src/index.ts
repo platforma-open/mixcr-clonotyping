@@ -75,6 +75,7 @@ export const platforma = BlockModelV3.create(dataModel)
       rightAlignmentMode: data.rightAlignmentMode,
       tagPattern: data.tagPattern,
       assembleClonesBy: data.assembleClonesBy,
+      imputeGermline: data.assembleClonesBy !== undefined ? data.imputeGermline : undefined,
       limitInput: data.runMode === 'dry' ? data.limitInput : undefined,
       perProcessMemGB: data.perProcessMemGB,
       perProcessCPUs: data.perProcessCPUs,
