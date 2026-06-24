@@ -1,4 +1,8 @@
-import type { BlockData, BlockOutputs, platforma } from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
+import type {
+  BlockData,
+  BlockOutputs,
+  platforma,
+} from "@platforma-open/milaboratories.mixcr-clonotyping-2.model";
 import {
   AlignReport,
   AssembleReport,
@@ -7,13 +11,13 @@ import {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   SupportedPresetList,
   uniquePlId,
-} from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
-import { awaitStableState, blockTest } from '@platforma-sdk/test';
-import { blockSpec as samplesAndDataBlockSpec } from '@platforma-open/milaboratories.samples-and-data';
-import type { BlockArgs as SamplesAndDataBlockArgs } from '@platforma-open/milaboratories.samples-and-data.model';
-import { blockSpec as myBlockSpec } from 'this-block';
-import type { InferBlockState } from '@platforma-sdk/model';
-import { createPlDataTableStateV2, wrapOutputs } from '@platforma-sdk/model';
+} from "@platforma-open/milaboratories.mixcr-clonotyping-2.model";
+import { awaitStableState, blockTest } from "@platforma-sdk/test";
+import { blockSpec as samplesAndDataBlockSpec } from "@platforma-open/milaboratories.samples-and-data";
+import type { BlockArgs as SamplesAndDataBlockArgs } from "@platforma-open/milaboratories.samples-and-data.model";
+import { MixcrClonotyping2BlockPointer as myBlockSpec } from "this-block";
+import type { InferBlockState } from "@platforma-sdk/model";
+import { createPlDataTableStateV2, wrapOutputs } from "@platforma-sdk/model";
 
 type AxisSpec = { name: string; domain?: Record<string, string> };
 type PColumnListEntry = { spec: { axesSpec: AxisSpec[] } };
@@ -25,8 +29,8 @@ type PColumnListEntry = { spec: { axesSpec: AxisSpec[] } };
 // and awaitStableState returns immediately without waiting for prerun to complete.
 // Re-enable these assertions when the test framework adds prerun/staging support.
 
-blockTest('empty inputs', { timeout: 20000 }, async ({ rawPrj: project, ml: _ml, expect }) => {
-  const blockId = await project.addBlock('Block', myBlockSpec);
+blockTest("empty inputs", { timeout: 20000 }, async ({ rawPrj: project, ml: _ml, expect }) => {
+  const blockId = await project.addBlock("Block", myBlockSpec);
   const stableState = (await awaitStableState(
     project.getBlockState(blockId),
     25000,
@@ -75,41 +79,41 @@ blockTest('empty inputs', { timeout: 20000 }, async ({ rawPrj: project, ml: _ml,
 // );
 
 blockTest(
-  'simple project',
+  "simple project",
   { timeout: 150000 },
   async ({ rawPrj: project, ml, helpers, expect }) => {
-    const sndBlockId = await project.addBlock('Samples & Data', samplesAndDataBlockSpec);
-    const clonotypingBlockId = await project.addBlock('MiXCR Clonotyping', myBlockSpec);
+    const sndBlockId = await project.addBlock("Samples & Data", samplesAndDataBlockSpec);
+    const clonotypingBlockId = await project.addBlock("MiXCR Clonotyping", myBlockSpec);
 
     const sample1Id = uniquePlId();
     const metaColumn1Id = uniquePlId();
     const dataset1Id = uniquePlId();
 
-    const r1Handle = await helpers.getLocalFileHandle('./assets/small_data_R1.fastq.gz');
-    const r2Handle = await helpers.getLocalFileHandle('./assets/small_data_R2.fastq.gz');
+    const r1Handle = await helpers.getLocalFileHandle("./assets/small_data_R1.fastq.gz");
+    const r2Handle = await helpers.getLocalFileHandle("./assets/small_data_R2.fastq.gz");
 
     await project.setBlockArgs(sndBlockId, {
       metadata: [
         {
           id: metaColumn1Id,
-          label: 'MetaColumn1',
+          label: "MetaColumn1",
           global: false,
-          valueType: 'Long',
+          valueType: "Long",
           data: {
             [sample1Id]: 2345,
           },
         },
       ],
       sampleIds: [sample1Id],
-      sampleLabelColumnLabel: 'Sample Name',
-      sampleLabels: { [sample1Id]: 'Sample 1' },
+      sampleLabelColumnLabel: "Sample Name",
+      sampleLabels: { [sample1Id]: "Sample 1" },
       datasets: [
         {
           id: dataset1Id,
-          label: 'Dataset 1',
+          label: "Dataset 1",
           content: {
-            type: 'Fastq',
-            readIndices: ['R1', 'R2'],
+            type: "Fastq",
+            readIndices: ["R1", "R2"],
             gzipped: true,
             data: {
               [sample1Id]: {
@@ -140,7 +144,7 @@ blockTest(
         ok: true,
         value: [
           {
-            label: 'Dataset 1',
+            label: "Dataset 1",
           },
         ],
       },
@@ -159,15 +163,15 @@ blockTest(
     const clonotypingStableState1Outputs = wrapOutputs(clonotypingStableState1.outputs);
 
     await project.mutateBlockStorage(clonotypingBlockId, {
-      operation: 'update-block-data',
+      operation: "update-block-data",
       value: {
-        defaultBlockLabel: '',
-        customBlockLabel: '',
+        defaultBlockLabel: "",
+        customBlockLabel: "",
         input: clonotypingStableState1Outputs.inputOptions[0].ref,
-        preset: { type: 'name', name: 'milab-human-dna-xcr-7genes-multiplex' },
-        chains: ['IGHeavy', 'IGLight'],
-        cloneClusteringMode: 'default',
-        runMode: 'full',
+        preset: { type: "name", name: "milab-human-dna-xcr-7genes-multiplex" },
+        chains: ["IGHeavy", "IGLight"],
+        cloneClusteringMode: "default",
+        runMode: "full",
         tableState: createPlDataTableStateV2(),
       } satisfies BlockData,
     });
@@ -196,10 +200,10 @@ blockTest(
 
     const reportEntries = outputs3.reports.data;
     const alignJsonReportEntry = reportEntries.find(
-      (entry) => entry.key[1] === 'align' && entry.key[2] === 'json',
+      (entry) => entry.key[1] === "align" && entry.key[2] === "json",
     );
     const assembleJsonReportEntry = reportEntries.find(
-      (entry) => entry.key[1] === 'assemble' && entry.key[2] === 'json',
+      (entry) => entry.key[1] === "assemble" && entry.key[2] === "json",
     );
 
     expect(alignJsonReportEntry).toBeDefined();
@@ -213,7 +217,7 @@ blockTest(
               typeof ml.driverKit.blobDriver.getContent
             >[0],
           ),
-        ).toString('utf8'),
+        ).toString("utf8"),
       ),
     );
     const assembledReport = AssembleReport.parse(
@@ -224,7 +228,7 @@ blockTest(
               typeof ml.driverKit.blobDriver.getContent
             >[0],
           ),
-        ).toString('utf8'),
+        ).toString("utf8"),
       ),
     );
 
@@ -234,7 +238,7 @@ blockTest(
           await ml.driverKit.blobDriver.getContent(
             qcEntry.value!.handle as Parameters<typeof ml.driverKit.blobDriver.getContent>[0],
           ),
-        ).toString('utf8'),
+        ).toString("utf8"),
       ),
     );
 
@@ -252,54 +256,54 @@ blockTest(
 
     expect(
       clonesPfColumnList
-        .map((c) => c.spec.axesSpec.find((s) => s.name === 'pl7.app/vdj/clonotypeKey'))
+        .map((c) => c.spec.axesSpec.find((s) => s.name === "pl7.app/vdj/clonotypeKey"))
         .find(Boolean)?.domain,
-    ).toHaveProperty('pl7.app/vdj/clonotypeKey/structure');
+    ).toHaveProperty("pl7.app/vdj/clonotypeKey/structure");
 
     expect(clonesPfColumnList).length.to.greaterThanOrEqual(7);
   },
 );
 
 blockTest(
-  'simple sc project',
+  "simple sc project",
   { timeout: 400000 },
   async ({ rawPrj: project, ml, helpers, expect }) => {
-    const sndBlockId = await project.addBlock('Samples & Data', samplesAndDataBlockSpec);
-    const clonotypingBlockId = await project.addBlock('MiXCR Clonotyping', myBlockSpec);
+    const sndBlockId = await project.addBlock("Samples & Data", samplesAndDataBlockSpec);
+    const clonotypingBlockId = await project.addBlock("MiXCR Clonotyping", myBlockSpec);
 
     const sample1Id = uniquePlId();
     const sample2Id = uniquePlId();
     const metaColumn1Id = uniquePlId();
     const dataset1Id = uniquePlId();
 
-    const s1r1Handle = await helpers.getLocalFileHandle('./assets/SRR11233623-sc_R1.fastq.gz');
-    const s1r2Handle = await helpers.getLocalFileHandle('./assets/SRR11233623-sc_R2.fastq.gz');
+    const s1r1Handle = await helpers.getLocalFileHandle("./assets/SRR11233623-sc_R1.fastq.gz");
+    const s1r2Handle = await helpers.getLocalFileHandle("./assets/SRR11233623-sc_R2.fastq.gz");
 
-    const s2r1Handle = await helpers.getLocalFileHandle('./assets/SRR11233625-sc_R1.fastq.gz');
-    const s2r2Handle = await helpers.getLocalFileHandle('./assets/SRR11233625-sc_R2.fastq.gz');
+    const s2r1Handle = await helpers.getLocalFileHandle("./assets/SRR11233625-sc_R1.fastq.gz");
+    const s2r2Handle = await helpers.getLocalFileHandle("./assets/SRR11233625-sc_R2.fastq.gz");
 
     await project.setBlockArgs(sndBlockId, {
       metadata: [
         {
           id: metaColumn1Id,
-          label: 'MetaColumn1',
+          label: "MetaColumn1",
           global: false,
-          valueType: 'Long',
+          valueType: "Long",
           data: {
             [sample1Id]: 2345,
           },
         },
       ],
       sampleIds: [sample1Id],
-      sampleLabelColumnLabel: 'Sample Name',
-      sampleLabels: { [sample1Id]: 'Sample 1' },
+      sampleLabelColumnLabel: "Sample Name",
+      sampleLabels: { [sample1Id]: "Sample 1" },
       datasets: [
         {
           id: dataset1Id,
-          label: 'Dataset 1',
+          label: "Dataset 1",
           content: {
-            type: 'Fastq',
-            readIndices: ['R1', 'R2'],
+            type: "Fastq",
+            readIndices: ["R1", "R2"],
             gzipped: true,
             data: {
               [sample1Id]: {
@@ -321,7 +325,15 @@ blockTest(
 
     const sdnStableState1 = await helpers.awaitBlockDoneAndGetStableBlockState(sndBlockId, 8000);
     expect(sdnStableState1.outputs).toMatchObject({
-      fileImports: { ok: true, value: { [s1r1Handle]: { done: true }, [s1r2Handle]: { done: true }, [s2r1Handle]: { done: true }, [s2r2Handle]: { done: true } } },
+      fileImports: {
+        ok: true,
+        value: {
+          [s1r1Handle]: { done: true },
+          [s1r2Handle]: { done: true },
+          [s2r1Handle]: { done: true },
+          [s2r2Handle]: { done: true },
+        },
+      },
     });
 
     const clonotypingStableState1 = (await awaitStableState(
@@ -334,7 +346,7 @@ blockTest(
         ok: true,
         value: [
           {
-            label: 'Dataset 1',
+            label: "Dataset 1",
           },
         ],
       },
@@ -353,16 +365,16 @@ blockTest(
     const clonotypingStableState1Outputs = wrapOutputs(clonotypingStableState1.outputs);
 
     await project.mutateBlockStorage(clonotypingBlockId, {
-      operation: 'update-block-data',
+      operation: "update-block-data",
       value: {
-        defaultBlockLabel: '',
-        customBlockLabel: '',
+        defaultBlockLabel: "",
+        customBlockLabel: "",
         input: clonotypingStableState1Outputs.inputOptions[0].ref,
-        preset: { type: 'name', name: '10x-sc-xcr-vdj' },
-        species: 'human',
-        chains: ['IG'],
-        cloneClusteringMode: 'default',
-        runMode: 'full',
+        preset: { type: "name", name: "10x-sc-xcr-vdj" },
+        species: "human",
+        chains: ["IG"],
+        cloneClusteringMode: "default",
+        runMode: "full",
         tableState: createPlDataTableStateV2(),
       } satisfies BlockData,
     });
@@ -391,10 +403,10 @@ blockTest(
 
     const reportEntries = outputs3.reports.data;
     const alignJsonReportEntry = reportEntries.find(
-      (entry) => entry.key[1] === 'align' && entry.key[2] === 'json',
+      (entry) => entry.key[1] === "align" && entry.key[2] === "json",
     );
     const assembleJsonReportEntry = reportEntries.find(
-      (entry) => entry.key[1] === 'assemble' && entry.key[2] === 'json',
+      (entry) => entry.key[1] === "assemble" && entry.key[2] === "json",
     );
 
     expect(alignJsonReportEntry).toBeDefined();
@@ -408,7 +420,7 @@ blockTest(
               typeof ml.driverKit.blobDriver.getContent
             >[0],
           ),
-        ).toString('utf8'),
+        ).toString("utf8"),
       ),
     );
     const assembledReport = AssembleReport.parse(
@@ -419,7 +431,7 @@ blockTest(
               typeof ml.driverKit.blobDriver.getContent
             >[0],
           ),
-        ).toString('utf8'),
+        ).toString("utf8"),
       ),
     );
 
@@ -429,7 +441,7 @@ blockTest(
           await ml.driverKit.blobDriver.getContent(
             qcEntry.value!.handle as Parameters<typeof ml.driverKit.blobDriver.getContent>[0],
           ),
-        ).toString('utf8'),
+        ).toString("utf8"),
       ),
     );
 
@@ -447,14 +459,15 @@ blockTest(
 
     expect(
       clonesPfColumnList
-        .map((c) => c.spec.axesSpec.find((s) => s.name === 'pl7.app/vdj/scClonotypeKey'))
+        .map((c) => c.spec.axesSpec.find((s) => s.name === "pl7.app/vdj/scClonotypeKey"))
         .find(Boolean)?.domain,
-    ).toHaveProperty('pl7.app/vdj/scClonotypeKey/structure');
+    ).toHaveProperty("pl7.app/vdj/scClonotypeKey/structure");
 
     expect(
-      clonesPfColumnList.some((c) =>
-        c.spec.axesSpec.find((s) => s.name === 'pl7.app/vdj/scClonotypeKey')
-        && c.spec.axesSpec.find((s) => s.name === 'pl7.app/sampleId'),
+      clonesPfColumnList.some(
+        (c) =>
+          c.spec.axesSpec.find((s) => s.name === "pl7.app/vdj/scClonotypeKey") &&
+          c.spec.axesSpec.find((s) => s.name === "pl7.app/sampleId"),
       ),
     ).toEqual(true);
 
