@@ -86,18 +86,34 @@ self.body(func(inputs) {
 	    mixcrCmdBuilder.cpu(16)     // default CPUs number per sample
 	}
 
-	// Memory limit per process
+	// Memory limit per process.
+	// Size analyze RAM from the input reads' file size, on top of a per-analysis
+	// floor. size("reads") sums the stored (compressed) blob size of the sample's
+	// R1+R2 FASTQ via getBlobSize — a metadata read, no pre-exec — so it tracks
+	// total input volume (read count and read length) without decompressing.
+	//     mem = clamp(baseMemGiB + 4 bytes/byte * size, baseMemGiB, 256 GiB)
+	// baseMemGiB is the per-analysis floor (64, or 110/192 for contig/cell and
+	// single-cell+MiTool pipelines, which need that headroom regardless of size);
+	// the linear term scales with input volume; the 256 GiB cap bounds the largest.
+	// An "Advanced Settings" memory override takes precedence; on backends that
+	// cannot evaluate resource formulas, memFormula falls back to the baseline.
     if !is_undefined(perProcessMemGB) {
         // memory per process was set in "Advanced Settings" block directly
 		mixcrCmdBuilder.mem(string(perProcessMemGB) + "GiB")
-	} else if hasMiToolSteps {
-		// allow to use more memory for single cell analysis with mitool pre-
-		mixcrCmdBuilder.mem("192GiB")
-	} else if hasAssembleContigs || hasAssembleCells {
-		// allow to use more memory for single cell analysis
-		mixcrCmdBuilder.mem("110GiB")
 	} else {
-		mixcrCmdBuilder.mem("64GiB")
+		baseMemGiB := 64
+		if hasMiToolSteps {
+			baseMemGiB = 192
+		} else if hasAssembleContigs || hasAssembleCells {
+			baseMemGiB = 110
+		}
+		f := exec.formula
+		mixcrCmdBuilder.memFormula(
+			f.clamp(
+				f.add(f.gib(baseMemGiB), f.mul(f.size("reads"), 4)),
+				f.gib(baseMemGiB),
+				f.gib(256)),
+			{ fallback: string(baseMemGiB) + "GiB" })
 	}
 
 	if !is_undefined(limitInput) {
@@ -166,7 +182,7 @@ self.body(func(inputs) {
 		inputFile := inputMap["[]"]
 		ll.assert(!is_undefined(inputFile), "unexpected agg group structure")
 		inputFileName := "input." + fileExtension
-		mixcrCmdBuilder.addFile(inputFileName, inputFile)
+		mixcrCmdBuilder.addFile(inputFileName, inputFile, { tag: "reads" })
 		mixcrCmdBuilder.arg(inputFileName)
 	} else if inputDataMeta.keyLength == 1 {
 		ll.assert(aggregationAxesNames == ["pl7.app/sequencing/readIndex"], "unexpected aggregation axes names")
@@ -180,7 +196,7 @@ self.body(func(inputs) {
 			if (r[0] != 'R' && r[0] != "I") || (r[1] != '1' && r[1] != '2') || len(r) != 2 {
 				ll.panic("malformed read index: %v", r)
 			}
-			mixcrCmdBuilder.addFile("input_" + r + "." + fileExtension, inputFile)
+			mixcrCmdBuilder.addFile("input_" + r + "." + fileExtension, inputFile, { tag: "reads" })
 		}
 		mixcrCmdBuilder.arg("input_{{R}}." + fileExtension)
 	} else if inputDataMeta.keyLength == 2 {
@@ -199,7 +215,7 @@ self.body(func(inputs) {
 			if is_undefined(int(lane)) {
 				ll.panic("malformed lane: %v", lane)
 			}
-			mixcrCmdBuilder.addFile("input_L" + lane + "_" + r + "." + fileExtension, inputFile)
+			mixcrCmdBuilder.addFile("input_L" + lane + "_" + r + "." + fileExtension, inputFile, { tag: "reads" })
 		}
 		mixcrCmdBuilder.arg("input_L{{n}}_{{R}}." + fileExtension)
 	} else {
