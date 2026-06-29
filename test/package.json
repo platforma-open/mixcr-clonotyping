@@ -15,7 +15,6 @@
   "dependencies": {
     "@platforma-open/milaboratories.mixcr-clonotyping-2.model": "workspace:*",
     "@platforma-open/milaboratories.samples-and-data": "catalog:",
-    "@platforma-open/milaboratories.samples-and-data.model": "catalog:",
     "@platforma-sdk/model": "catalog:",
     "this-block": "workspace:@platforma-open/milaboratories.mixcr-clonotyping-2@*"
   },

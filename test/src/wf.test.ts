@@ -13,8 +13,7 @@ import {
   uniquePlId,
 } from "@platforma-open/milaboratories.mixcr-clonotyping-2.model";
 import { awaitStableState, blockTest } from "@platforma-sdk/test";
-import { blockSpec as samplesAndDataBlockSpec } from "@platforma-open/milaboratories.samples-and-data";
-import type { BlockArgs as SamplesAndDataBlockArgs } from "@platforma-open/milaboratories.samples-and-data.model";
+import { SamplesAndDataBlockPointer } from "@platforma-open/milaboratories.samples-and-data";
 import { MixcrClonotyping2BlockPointer as myBlockSpec } from "this-block";
 import type { InferBlockState } from "@platforma-sdk/model";
 import { createPlDataTableStateV2, wrapOutputs } from "@platforma-sdk/model";
@@ -82,7 +81,7 @@ blockTest(
   "simple project",
   { timeout: 150000 },
   async ({ rawPrj: project, ml, helpers, expect }) => {
-    const sndBlockId = await project.addBlock("Samples & Data", samplesAndDataBlockSpec);
+    const sndBlockId = await project.addBlock("Samples & Data", SamplesAndDataBlockPointer);
     const clonotypingBlockId = await project.addBlock("MiXCR Clonotyping", myBlockSpec);
 
     const sample1Id = uniquePlId();
@@ -92,39 +91,48 @@ blockTest(
     const r1Handle = await helpers.getLocalFileHandle("./assets/small_data_R1.fastq.gz");
     const r2Handle = await helpers.getLocalFileHandle("./assets/small_data_R2.fastq.gz");
 
-    await project.setBlockArgs(sndBlockId, {
-      metadata: [
-        {
-          id: metaColumn1Id,
-          label: "MetaColumn1",
-          global: false,
-          valueType: "Long",
-          data: {
-            [sample1Id]: 2345,
-          },
-        },
-      ],
-      sampleIds: [sample1Id],
-      sampleLabelColumnLabel: "Sample Name",
-      sampleLabels: { [sample1Id]: "Sample 1" },
-      datasets: [
-        {
-          id: dataset1Id,
-          label: "Dataset 1",
-          content: {
-            type: "Fastq",
-            readIndices: ["R1", "R2"],
-            gzipped: true,
+    await project.mutateBlockStorage(sndBlockId, {
+      operation: "update-block-data",
+      value: {
+        metadata: [
+          {
+            id: metaColumn1Id,
+            label: "MetaColumn1",
+            global: false,
+            valueType: "Long",
             data: {
-              [sample1Id]: {
-                R1: r1Handle,
-                R2: r2Handle,
+              [sample1Id]: 2345,
+            },
+          },
+        ],
+        sampleIds: [sample1Id],
+        sampleLabelColumnLabel: "Sample Name",
+        sampleLabels: { [sample1Id]: "Sample 1" },
+        datasets: [
+          {
+            id: dataset1Id,
+            label: "Dataset 1",
+            content: {
+              type: "Fastq",
+              readIndices: ["R1", "R2"],
+              gzipped: true,
+              data: {
+                [sample1Id]: {
+                  R1: r1Handle,
+                  R2: r2Handle,
+                },
               },
             },
           },
-        },
-      ],
-    } satisfies SamplesAndDataBlockArgs);
+        ],
+        h5adFilesToPreprocess: [],
+        seuratFilesToPreprocess: [],
+        suggestedImport: false,
+        // The facade bundles PlId's brand under its own zod symbol, so it can't
+        // unify with this block's PlId; mutateBlockStorage value is `unknown` and
+        // the brand is runtime-erased, so no satisfies assertion is possible here.
+      },
+    });
     await project.runBlock(sndBlockId);
     await helpers.awaitBlockDone(sndBlockId, 8000);
     const clonotypingBlockState = project.getBlockState(clonotypingBlockId);
@@ -268,7 +276,7 @@ blockTest(
   "simple sc project",
   { timeout: 400000 },
   async ({ rawPrj: project, ml, helpers, expect }) => {
-    const sndBlockId = await project.addBlock("Samples & Data", samplesAndDataBlockSpec);
+    const sndBlockId = await project.addBlock("Samples & Data", SamplesAndDataBlockPointer);
     const clonotypingBlockId = await project.addBlock("MiXCR Clonotyping", myBlockSpec);
 
     const sample1Id = uniquePlId();
@@ -282,43 +290,52 @@ blockTest(
     const s2r1Handle = await helpers.getLocalFileHandle("./assets/SRR11233625-sc_R1.fastq.gz");
     const s2r2Handle = await helpers.getLocalFileHandle("./assets/SRR11233625-sc_R2.fastq.gz");
 
-    await project.setBlockArgs(sndBlockId, {
-      metadata: [
-        {
-          id: metaColumn1Id,
-          label: "MetaColumn1",
-          global: false,
-          valueType: "Long",
-          data: {
-            [sample1Id]: 2345,
-          },
-        },
-      ],
-      sampleIds: [sample1Id],
-      sampleLabelColumnLabel: "Sample Name",
-      sampleLabels: { [sample1Id]: "Sample 1" },
-      datasets: [
-        {
-          id: dataset1Id,
-          label: "Dataset 1",
-          content: {
-            type: "Fastq",
-            readIndices: ["R1", "R2"],
-            gzipped: true,
+    await project.mutateBlockStorage(sndBlockId, {
+      operation: "update-block-data",
+      value: {
+        metadata: [
+          {
+            id: metaColumn1Id,
+            label: "MetaColumn1",
+            global: false,
+            valueType: "Long",
             data: {
-              [sample1Id]: {
-                R1: s1r1Handle,
-                R2: s1r2Handle,
-              },
-              [sample2Id]: {
-                R1: s2r1Handle,
-                R2: s2r2Handle,
+              [sample1Id]: 2345,
+            },
+          },
+        ],
+        sampleIds: [sample1Id],
+        sampleLabelColumnLabel: "Sample Name",
+        sampleLabels: { [sample1Id]: "Sample 1" },
+        datasets: [
+          {
+            id: dataset1Id,
+            label: "Dataset 1",
+            content: {
+              type: "Fastq",
+              readIndices: ["R1", "R2"],
+              gzipped: true,
+              data: {
+                [sample1Id]: {
+                  R1: s1r1Handle,
+                  R2: s1r2Handle,
+                },
+                [sample2Id]: {
+                  R1: s2r1Handle,
+                  R2: s2r2Handle,
+                },
               },
             },
           },
-        },
-      ],
-    } satisfies SamplesAndDataBlockArgs);
+        ],
+        h5adFilesToPreprocess: [],
+        seuratFilesToPreprocess: [],
+        suggestedImport: false,
+        // The facade bundles PlId's brand under its own zod symbol, so it can't
+        // unify with this block's PlId; mutateBlockStorage value is `unknown` and
+        // the brand is runtime-erased, so no satisfies assertion is possible here.
+      },
+    });
     await project.runBlock(sndBlockId);
     await helpers.awaitBlockDone(sndBlockId, 8000);
     const clonotypingBlockState = project.getBlockState(clonotypingBlockId);
