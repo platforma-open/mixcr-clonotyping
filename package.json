@@ -11,35 +11,23 @@
     "watch": "turbo watch build",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "update-sdk": "block-tools update-deps"
+    "update-sdk": "block-tools structure refresh --update-deps-only",
+    "fmt": "turbo run fmt",
+    "check": "turbo run check",
+    "upgrade-sdk": "block-tools structure refresh --update-deps-only && pnpm i && block-tools structure refresh && pnpm i && pnpm fmt"
   },
   "devDependencies": {
     "@changesets/cli": "catalog:",
+    "@milaboratories/ts-builder": "catalog:",
     "@platforma-sdk/block-tools": "catalog:",
     "js-yaml": "catalog:",
     "shx": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:"
   },
-  "pnpm": {
-    "onlyBuiltDependencies": ["@milaboratories/pframes-rs-node"]
+  "peerDependencies": {
+    "oxfmt": "*",
+    "oxlint": "*"
   },
-  "packageManager": "pnpm@10.33.0",
-  "--": {
-    "overrides": {
-      "@platforma-sdk/package-builder": "file:/Users/popoffvg/Documents/git/mil/platforma/tools/package-builder/package.tgz",
-      "@platforma-sdk/workflow-tengo": "file:/Users/popoffvg/Documents/git/mil/platforma/sdk/workflow-tengo/package.tgz"
-    }
-  },
-  "///": {
-    "pnpm": {
-      "overrides": {
-        "@milaboratories/pl-model-common": "file:/Users/poslavskysv/Projects/milab/platforma/platforma-sdk/lib/model/common/package.tgz",
-        "@platforma-sdk/model": "file:/Users/poslavskysv/Projects/milab/platforma/platforma-sdk/sdk/model/package.tgz",
-        "@platforma-sdk/ui-vue": "file:/Users/poslavskysv/Projects/milab/platforma/platforma-sdk/sdk/ui-vue/package.tgz",
-        "@platforma-sdk/workflow-tengo": "file:/Users/poslavskysv/Projects/milab/platforma/platforma-sdk/sdk/workflow-tengo/package.tgz",
-        "@milaboratories/uikit": "file:/Users/poslavskysv/Projects/milab/platforma/platforma-sdk/lib/ui/uikit/package.tgz"
-      }
-    }
-  }
+  "packageManager": "pnpm@9.12.0"
 }

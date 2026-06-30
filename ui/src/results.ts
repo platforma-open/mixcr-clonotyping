@@ -1,15 +1,14 @@
-import type {
-  PlId } from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
+import type { PlId } from "@platforma-open/milaboratories.mixcr-clonotyping-2.model";
 import {
   AlignReport,
   AssembleReport,
   ProgressPrefix,
   Qc,
-} from '@platforma-open/milaboratories.mixcr-clonotyping-2.model';
-import type { AnyLogHandle } from '@platforma-sdk/model';
-import { ReactiveFileContent } from '@platforma-sdk/ui-vue';
-import { computed } from 'vue';
-import { useApp } from './app';
+} from "@platforma-open/milaboratories.mixcr-clonotyping-2.model";
+import type { AnyLogHandle } from "@platforma-sdk/model";
+import { ReactiveFileContent } from "@platforma-sdk/ui-vue";
+import { computed } from "vue";
+import { useApp } from "./app";
 
 const reactiveFileContent = ReactiveFileContent.useGlobal();
 
@@ -45,7 +44,7 @@ export const MiXCRResultsMap = computed(() => {
     const sampleId = qcData.key[0] as string;
     const result: MiXCRResult = {
       sampleId: sampleId as PlId,
-      progress: 'Queued',
+      progress: "Queued",
       label: sampleLabels?.[sampleId] ?? `<no label / ${sampleId}>`,
     };
     resultMap.set(sampleId, result);
@@ -67,17 +66,17 @@ export const MiXCRResultsMap = computed(() => {
     for (const report of reports.data) {
       const sampleId = report.key[0] as string;
       const reportId = report.key[1] as string;
-      if (report.key[2] !== 'json' || report.value === undefined) continue;
+      if (report.key[2] !== "json" || report.value === undefined) continue;
       if (resultMap.get(sampleId))
         switch (reportId) {
-          case 'align':
+          case "align":
             // globally cached
             resultMap.get(sampleId)!.alignReport = reactiveFileContent.getContentJson(
               report.value.handle,
               AlignReport,
             )?.value;
             break;
-          case 'assemble':
+          case "assemble":
             // globally cached
             resultMap.get(sampleId)!.assembleReport = reactiveFileContent.getContentJson(
               report.value.handle,
@@ -113,8 +112,8 @@ export const MiXCRResultsFull = computed<MiXCRResult[] | undefined>(() => {
     if (resultMap.get(sampleId))
       if (p?.value)
         resultMap.get(sampleId)!.progress = done.has(sampleId)
-          ? 'Done'
-          : p.value?.replace(ProgressPrefix, '') ?? 'Not started';
+          ? "Done"
+          : (p.value?.replace(ProgressPrefix, "") ?? "Not started");
   }
 
   return [...resultMap.values()];

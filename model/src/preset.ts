@@ -1,35 +1,35 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 const MiXCRStage = z.union([
-  z.literal('mitool-parse'),
-  z.literal('mitool-refine-tags'),
-  z.literal('mitool-consensus'),
-  z.literal('parse'),
-  z.literal('refineTags'),
-  z.literal('consensus'),
-  z.literal('align'),
-  z.literal('refineTagsAndSort'),
-  z.literal('exportAlignments'),
-  z.literal('assemblePartial'),
-  z.literal('extend'),
-  z.literal('assemble'),
-  z.literal('assembleContigs'),
-  z.literal('assembleCells'),
-  z.literal('exportClones'),
-  z.literal('exportCloneGroups'),
-  z.literal('qc'),
-  z.literal('findAlleles'),
-  z.literal('findShmTrees'),
+  z.literal("mitool-parse"),
+  z.literal("mitool-refine-tags"),
+  z.literal("mitool-consensus"),
+  z.literal("parse"),
+  z.literal("refineTags"),
+  z.literal("consensus"),
+  z.literal("align"),
+  z.literal("refineTagsAndSort"),
+  z.literal("exportAlignments"),
+  z.literal("assemblePartial"),
+  z.literal("extend"),
+  z.literal("assemble"),
+  z.literal("assembleContigs"),
+  z.literal("assembleCells"),
+  z.literal("exportClones"),
+  z.literal("exportCloneGroups"),
+  z.literal("qc"),
+  z.literal("findAlleles"),
+  z.literal("findShmTrees"),
 ]);
 type MiXCRStage = z.infer<typeof MiXCRStage>;
 
 const SupportedMiXCRFlags = z.union([
-  z.literal('species'),
-  z.literal('materialType'),
-  z.literal('leftAlignmentMode'),
-  z.literal('rightAlignmentMode'),
-  z.literal('tagPattern'),
-  z.literal('assembleClonesBy'),
+  z.literal("species"),
+  z.literal("materialType"),
+  z.literal("leftAlignmentMode"),
+  z.literal("rightAlignmentMode"),
+  z.literal("tagPattern"),
+  z.literal("assembleClonesBy"),
 ]);
 type SupportedMiXCRFlags = z.infer<typeof SupportedMiXCRFlags>;
 

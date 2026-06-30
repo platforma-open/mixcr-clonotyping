@@ -1,132 +1,132 @@
-import { test } from 'vitest';
-import { Qc } from './qc';
+import { test } from "vitest";
+import { Qc } from "./qc";
 
-test('test simple qc parsing', () => {
+test("test simple qc parsing", () => {
   const qc: unknown = [
     {
-      step: 'align',
-      status: 'OK',
+      step: "align",
+      status: "OK",
       check: {
-        type: 'SuccessfullyAlignedReads',
+        type: "SuccessfullyAlignedReads",
         upper: 0.85,
         middle: 0.7,
-        label: 'Successfully aligned reads',
+        label: "Successfully aligned reads",
       },
       payload: {
-        printedValue: '90.0%',
+        printedValue: "90.0%",
         value: 0.9,
       },
     },
     {
-      step: 'align',
-      status: 'OK',
+      step: "align",
+      status: "OK",
       check: {
-        type: 'OffTargetReads',
+        type: "OffTargetReads",
         upper: 0.2,
         middle: 0.1,
-        label: 'Off target (non TCR/IG) reads',
+        label: "Off target (non TCR/IG) reads",
       },
       payload: {
-        printedValue: '0.0%',
+        printedValue: "0.0%",
         value: 0.0,
       },
     },
     {
-      step: 'align',
-      status: 'OK',
+      step: "align",
+      status: "OK",
       check: {
-        type: 'ReadsWithNoVOrJHits',
+        type: "ReadsWithNoVOrJHits",
         upper: 0.2,
         middle: 0.1,
-        label: 'Reads with no V or J hits',
+        label: "Reads with no V or J hits",
       },
       payload: {
-        printedValue: '10.0%',
+        printedValue: "10.0%",
         value: 0.1,
       },
     },
     {
-      step: 'assemble',
-      status: 'ALERT',
+      step: "assemble",
+      status: "ALERT",
       check: {
-        type: 'ReadsUsedInClonotypes',
+        type: "ReadsUsedInClonotypes",
         upper: 0.9,
         middle: 0.7,
-        label: 'Reads used in clonotypes',
+        label: "Reads used in clonotypes",
       },
       payload: {
-        printedValue: '40.0%',
+        printedValue: "40.0%",
         value: 0.4,
       },
     },
     {
-      step: 'assemble',
-      status: 'OK',
+      step: "assemble",
+      status: "OK",
       check: {
-        type: 'AlignmentsWithNoAssemblingFeature',
+        type: "AlignmentsWithNoAssemblingFeature",
         upper: 0.15,
         middle: 0.05,
-        label: 'Alignments without assembling feature',
+        label: "Alignments without assembling feature",
       },
       payload: {
-        labelOverride: 'Alignments that do not cover CDR3',
-        printedValue: '0.0%',
+        labelOverride: "Alignments that do not cover CDR3",
+        printedValue: "0.0%",
         value: 0.0,
       },
     },
     {
-      step: 'assemble',
-      status: 'OK',
+      step: "assemble",
+      status: "OK",
       check: {
-        type: 'AlignmentsDroppedLowQuality',
+        type: "AlignmentsDroppedLowQuality",
         upper: 0.05,
         middle: 0.01,
-        label: 'Alignments dropped due to low sequence quality',
+        label: "Alignments dropped due to low sequence quality",
       },
       payload: {
-        printedValue: '0.0%',
+        printedValue: "0.0%",
         value: 0.0,
       },
     },
     {
-      step: 'assemble',
-      status: 'OK',
+      step: "assemble",
+      status: "OK",
       check: {
-        type: 'ClonesDroppedInPostFiltering',
+        type: "ClonesDroppedInPostFiltering",
         upper: 0.05,
         middle: 0.01,
-        label: 'Clones dropped in post-filtering',
+        label: "Clones dropped in post-filtering",
       },
       payload: {
-        printedValue: '0.0%',
+        printedValue: "0.0%",
         value: 0.0,
       },
     },
     {
-      step: 'assemble',
-      status: 'OK',
+      step: "assemble",
+      status: "OK",
       check: {
-        type: 'AlignmentsDroppedInPostFiltering',
+        type: "AlignmentsDroppedInPostFiltering",
         upper: 0.05,
         middle: 0.01,
-        label: 'Alignments dropped in clones post-filtering',
+        label: "Alignments dropped in clones post-filtering",
       },
       payload: {
-        printedValue: '0.0%',
+        printedValue: "0.0%",
         value: 0.0,
       },
     },
     {
-      step: 'align',
-      status: 'ALERT',
+      step: "align",
+      status: "ALERT",
       check: {
-        type: 'OverlappedReadsMoreBetter',
+        type: "OverlappedReadsMoreBetter",
         upper: 0.9,
         middle: 0.8,
-        label: 'Overlapped paired-end reads',
+        label: "Overlapped paired-end reads",
       },
       payload: {
-        printedValue: '10.0%',
+        printedValue: "10.0%",
         value: 0.1,
       },
     },
