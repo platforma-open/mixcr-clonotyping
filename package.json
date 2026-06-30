@@ -29,10 +29,5 @@
     "oxfmt": "*",
     "oxlint": "*"
   },
-  "packageManager": "pnpm@9.12.0",
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@milaboratories/pframes-rs-node"
-    ]
-  }
+  "packageManager": "pnpm@9.12.0"
 }
