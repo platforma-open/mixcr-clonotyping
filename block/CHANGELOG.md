@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.20.0
+
+### Minor Changes
+
+- f3f4b14: Adopt the slim facade: the block is published via the `block/` package with a from-pack-v2 BlockPointer and zero `@platforma-sdk/*` runtime dependencies. Tests consume `samples-and-data` through its published facade only.
+
 ## 2.19.1
 
 ### Patch Changes
