@@ -1,0 +1,70 @@
+self := import("@platforma-sdk/workflow-tengo:tpl")
+smart := import("@platforma-sdk/workflow-tengo:smart")
+pt := import("@platforma-sdk/workflow-tengo:pt")
+maps := import("@platforma-sdk/workflow-tengo:maps")
+
+self.defineOutputs("deanonimizedTsv")
+
+self.awaitState("clusteringResult", "ResourceReady")
+self.awaitState("mapping", "ResourceReady")
+
+/**
+ * Builds a when/then/otherwise expression to replace values in a column based on a mapping.
+ * @param colExpr - pt column expression
+ * @param mapping - map from anonymized values (oldVal) to original values (newVal)
+ * @returns pt expression with value replacements
+ */
+buildReplaceExpression := func(colExpr, mapping) {
+	if len(mapping) == 0 {
+		return colExpr
+	}
+
+	whenExpr := undefined
+	maps.forEach(mapping, func(oldVal, newVal) {
+		condition := colExpr.eq(pt.lit(oldVal))
+		if is_undefined(whenExpr) {
+			whenExpr = pt.when(condition).then(pt.lit(newVal))
+		} else {
+			whenExpr = whenExpr.when(condition).then(pt.lit(newVal))
+		}
+	})
+
+	return whenExpr.otherwise(colExpr)
+}
+
+self.body(func(args) {
+	// Get mapping JSON
+	mappingJson := undefined
+	if smart.isResource(args.mapping) {
+		mappingJson = args.mapping.getDataAsJson()
+	} else if is_map(args.mapping) {
+		mappingJson = args.mapping
+	} else {
+		mappingResource := smart.resource(args.mapping)
+		mappingJson = mappingResource.getDataAsJson()
+	}
+
+	// Process TSV file
+	deanonimizedTsv := args.clusteringResult
+	if !is_undefined(deanonimizedTsv) {
+		wf := pt.workflow().mem("8GiB").cpu(2)
+
+		df := wf.frame(deanonimizedTsv, {
+			xsvType: "tsv",
+			inferSchema: false
+		})
+
+		// Replace anonymized sampleId values with real ones
+		df = df.withColumns(
+			buildReplaceExpression(pt.col("sampleId"), mappingJson).alias("sampleId")
+		)
+
+		df.save("result.tsv")
+		ptResult := wf.run()
+		deanonimizedTsv = ptResult.getFile("result.tsv")
+	}
+
+	return {
+		deanonimizedTsv: deanonimizedTsv
+	}
+})

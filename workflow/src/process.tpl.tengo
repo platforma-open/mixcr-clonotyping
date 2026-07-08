@@ -9,8 +9,10 @@ slices := import("@platforma-sdk/workflow-tengo:slices")
 maps := import("@platforma-sdk/workflow-tengo:maps")
 sets := import("@platforma-sdk/workflow-tengo:sets")
 anonymize := import("@platforma-sdk/workflow-tengo:anonymize")
+xsv := import("@platforma-sdk/workflow-tengo:pframes.xsv")
 
 calculateExportSpecs := import(":calculate-export-specs")
+qcReportColumnsLib := import(":qc-report-columns")
 
 json := import("json")
 text := import("text")
@@ -21,6 +23,7 @@ mixcrExportTpl := assets.importTemplate(":mixcr-export")
 aggregateByClonotypeKeyTpl := assets.importTemplate(":aggregate-by-clonotype-key")
 exportReportTpl := assets.importTemplate(":export-report")
 processSingleCellTpl := assets.importTemplate(":process-single-cell")
+deanonymizationTpl := assets.importTemplate(":deanonymization")
 
 self.awaitState("InputsLocked")
 self.awaitState("params", "ResourceReady")
@@ -842,6 +845,9 @@ self.body(func(inputs) {
 							schemaPerClonotypeNoAggregates: columnsToSchema(columnsSpecPerClonotypeNoAggregates),
 							shmMapping: shmMapping
 						}
+					},
+					metaExtra: {
+						perProcessMemGB: perProcessMemGB
 					}
 				}
 			)
@@ -879,19 +885,75 @@ self.body(func(inputs) {
 		}
 	}
 
-    qcReportTable := render.create(exportReportTpl, {
-		clnsData: mixcrResults.outputData("clns"),
+	// Anonymize sample-keyed ResourceMaps for QC report dedup across projects
+	anonInputs := {
+		clnsData: mixcrResults.outputData("clns")
+	}
+	for chain in chains {
+		if !is_undefined(clonotypeTablesData[chain]) {
+			anonInputs["clonotypeTablesData_" + chain] = clonotypeTablesData[chain]
+		}
+	}
+	if isSingleCell {
+		for chain in chains {
+			if !is_undefined(singleCellChainTsvs[chain]) {
+				anonInputs["singleCellChainTsvs_" + chain] = singleCellChainTsvs[chain]
+			}
+		}
+	}
+	anonResult := anonymize.anonymizePKeys(anonInputs, [0])
+
+	// Reconstruct anonymized maps
+	anonClonotypeTablesData := {}
+	for chain in chains {
+		key := "clonotypeTablesData_" + chain
+		if !is_undefined(anonResult.result[key]) {
+			anonClonotypeTablesData[chain] = anonResult.result[key]
+		}
+	}
+	anonSingleCellChainTsvs := {}
+	if isSingleCell {
+		for chain in chains {
+			key := "singleCellChainTsvs_" + chain
+			if !is_undefined(anonResult.result[key]) {
+				anonSingleCellChainTsvs[chain] = anonResult.result[key]
+			}
+		}
+	}
+
+	// Structural render with perProcessMemGB as meta input
+	qcReportRender := render.create(exportReportTpl, {
+		clnsData: anonResult.result["clnsData"],
 		presetSpecForBack: presetSpecForBack,
 		sampleIdAxisSpec: sampleIdAxisSpec,
-        chains: chains,
+		chains: chains,
 		library: library,
 		isLibraryFileGzipped: isLibraryFileGzipped,
-        clonotypeTablesData: clonotypeTablesData,
+		clonotypeTablesData: anonClonotypeTablesData,
 		productiveFeature: productiveFeature,
 		stopCodonTypes: params.stopCodonTypes,
 		stopCodonReplacements: params.stopCodonReplacements,
-		singleCellChainTsvsData: singleCellChainTsvs
+		singleCellChainTsvsData: anonSingleCellChainTsvs
+	}, {
+		metaInputs: {
+			perProcessMemGB: perProcessMemGB
+		}
 	})
+
+	// Deanonymize QC report raw TSV (restore real sampleIds via PTabler replacement)
+	deanonResult := render.createEphemeral(deanonymizationTpl, {
+		mapping: anonResult.mapping,
+		clusteringResult: qcReportRender.output("rawTsv")
+	})
+
+	// Import deanonymized TSV into PFrame
+	qcReportColumns := qcReportColumnsLib(hasUmi, isSingleCell, sampleIdAxisSpec, chains, presetSpecForBack.cellTags, presetSpecForBack.umiTags, hasAssembleCells)
+	qcReportTable := xsv.importFile(
+		deanonResult.output("deanonimizedTsv"),
+		"tsv",
+		qcReportColumns.reportColumnsSpec,
+		{ cpu: 1, mem: "16GiB" }
+	)
 
 	return {
 		"qc.spec": mixcrResults.outputSpec("qc"),
@@ -911,6 +973,6 @@ self.body(func(inputs) {
 		clonotypeTables: clonotypeTables.build(),
 
 		clonotypes: clonotypes.build(),
-		qcReportTable: qcReportTable.output("qcReportTable")
+		qcReportTable: qcReportTable
 	}
 })
