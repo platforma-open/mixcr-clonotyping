@@ -82,7 +82,6 @@ self.body(func(inputs) {
 	// CPUs number per process. cpuReq is reused below by resources({ onCPU }),
 	// which requires a cpu request alongside a RAM formula.
 	cpuReq := is_undefined(perProcessCPUs) ? 16 : perProcessCPUs // 16 = default CPUs per sample
-	mixcrCmdBuilder.cpu(cpuReq)
 
 	// Memory limit per process.
 	// Size analyze RAM from the input reads' file size, on top of a per-analysis
@@ -94,28 +93,33 @@ self.body(func(inputs) {
 	// single-cell+MiTool pipelines, which need that headroom regardless of size);
 	// the linear term scales with input volume; the 256 GiB cap bounds the largest.
 	// An "Advanced Settings" memory override takes precedence; on backends that
-	// cannot evaluate resource formulas, memFormula falls back to the baseline.
-    if !is_undefined(perProcessMemGB) {
-        // memory per process was set in "Advanced Settings" block directly
-		mixcrCmdBuilder.mem(string(perProcessMemGB) + "GiB")
+	// cannot evaluate resource formulas, the ram formula falls back to the baseline.
+
+	f := exec.formula
+	baseMemGiB := 64
+	ram := undefined
+	if !is_undefined(perProcessMemGB) {
+		// explicit "Advanced Settings" override — a static request, not a formula
+		ram = string(perProcessMemGB) + "GiB"
 	} else {
-		baseMemGiB := 64
 		if hasMiToolSteps {
 			baseMemGiB = 192
 		} else if hasAssembleContigs || hasAssembleCells {
 			baseMemGiB = 110
 		}
-		f := exec.formula
-		// mem = clamp(baseMemGiB + 4 * size("reads"), baseMemGiB, 256 GiB). The new API
-		// bundles cpu + ram; on backends without getBlobSize the ram formula falls back
-		// to the baseMemGiB floor.
-		mixcrCmdBuilder.resources({
-			onCPU: {
-				cpu: cpuReq,
-				ram: f.size("reads").times(4).plus(f.gib(baseMemGiB)).between(f.gib(baseMemGiB), f.gib(256)).staticFallback(string(baseMemGiB) + "GiB")
-			}
-		})
+		// mem = clamp(baseMemGiB + 4 * size("reads"), baseMemGiB, 256 GiB)
+		ram = f.size("reads").times(4).plus(f.gib(baseMemGiB)).between(f.gib(baseMemGiB), f.gib(256)).staticFallback(string(baseMemGiB) + "GiB")
 	}
+
+	// cpu is a plain constant and ram is either a static override or a formula carrying a
+	// .staticFallback — so this resolves on backends without getBlobSize too: the formula
+	// falls back to the baseMemGiB floor, and constant/static values are used as-is.
+	mixcrCmdBuilder.resources({
+		onCPU: {
+			cpu: cpuReq,
+			ram: ram
+		}
+	})
 
 	if !is_undefined(limitInput) {
 		mixcrCmdBuilder.arg("--limit-input").arg(string(limitInput))
