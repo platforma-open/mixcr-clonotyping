@@ -79,10 +79,6 @@ self.body(func(inputs) {
 		env("MI_LICENSE_DEBUG", "MI_LICENSE_DEBUG").
 		arg("analyze").arg("--use-local-temp")
 
-	// CPUs number per process. cpuReq is reused below by resources({ onCPU }),
-	// which requires a cpu request alongside a RAM formula.
-	cpuReq := is_undefined(perProcessCPUs) ? 16 : perProcessCPUs // 16 = default CPUs per sample
-
 	// Memory limit per process.
 	// Size analyze RAM from the input reads' file size, on top of a per-analysis
 	// floor. size("reads") sums the stored (compressed) blob size of the sample's
@@ -96,19 +92,21 @@ self.body(func(inputs) {
 	// cannot evaluate resource formulas, the ram formula falls back to the baseline.
 
 	f := exec.formula
-	baseMemGiB := 64
 	ram := undefined
 	if !is_undefined(perProcessMemGB) {
 		// explicit "Advanced Settings" override — a static request, not a formula
 		ram = string(perProcessMemGB) + "GiB"
 	} else {
+		baseMemGiB := 64
 		if hasMiToolSteps {
 			baseMemGiB = 192
 		} else if hasAssembleContigs || hasAssembleCells {
 			baseMemGiB = 110
 		}
-		// mem = clamp(baseMemGiB + 4 * size("reads"), baseMemGiB, 256 GiB)
-		ram = f.size("reads").times(4).plus(f.gib(baseMemGiB)).between(f.gib(baseMemGiB), f.gib(256)).staticFallback(string(baseMemGiB) + "GiB")
+		// ram = between(baseMemGiB + 4 * size("reads"), baseMemGiB, 256 GiB)
+		ram = f.size("reads").times(4).plus(f.gib(baseMemGiB))
+			.between(f.gib(baseMemGiB), f.gib(256))
+			.staticFallback(string(baseMemGiB) + "GiB")
 	}
 
 	// cpu is a plain constant and ram is either a static override or a formula carrying a
@@ -116,7 +114,7 @@ self.body(func(inputs) {
 	// falls back to the baseMemGiB floor, and constant/static values are used as-is.
 	mixcrCmdBuilder.resources({
 		onCPU: {
-			cpu: cpuReq,
+			cpu: is_undefined(perProcessCPUs) ? 16 : perProcessCPUs, // 16 = default CPUs per sample,
 			ram: ram
 		}
 	})
