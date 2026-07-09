@@ -79,12 +79,10 @@ self.body(func(inputs) {
 		env("MI_LICENSE_DEBUG", "MI_LICENSE_DEBUG").
 		arg("analyze").arg("--use-local-temp")
 
-	// CPUs number per process
-	if !is_undefined(perProcessCPUs) {
-	    mixcrCmdBuilder.cpu(perProcessCPUs)
-	} else {
-	    mixcrCmdBuilder.cpu(16)     // default CPUs number per sample
-	}
+	// CPUs number per process. cpuReq is reused below by resources({ onCPU }),
+	// which requires a cpu request alongside a RAM formula.
+	cpuReq := is_undefined(perProcessCPUs) ? 16 : perProcessCPUs // 16 = default CPUs per sample
+	mixcrCmdBuilder.cpu(cpuReq)
 
 	// Memory limit per process.
 	// Size analyze RAM from the input reads' file size, on top of a per-analysis
@@ -108,12 +106,15 @@ self.body(func(inputs) {
 			baseMemGiB = 110
 		}
 		f := exec.formula
-		mixcrCmdBuilder.memFormula(
-			f.clamp(
-				f.add(f.gib(baseMemGiB), f.mul(f.size("reads"), 4)),
-				f.gib(baseMemGiB),
-				f.gib(256)),
-			{ fallback: string(baseMemGiB) + "GiB" })
+		// mem = clamp(baseMemGiB + 4 * size("reads"), baseMemGiB, 256 GiB). The new API
+		// bundles cpu + ram; on backends without getBlobSize the ram formula falls back
+		// to the baseMemGiB floor.
+		mixcrCmdBuilder.resources({
+			onCPU: {
+				cpu: cpuReq,
+				ram: f.size("reads").times(4).plus(f.gib(baseMemGiB)).between(f.gib(baseMemGiB), f.gib(256)).staticFallback(string(baseMemGiB) + "GiB")
+			}
+		})
 	}
 
 	if !is_undefined(limitInput) {
