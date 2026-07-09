@@ -104,9 +104,9 @@ self.body(func(inputs) {
 			baseMemGiB = 110
 		}
 		// ram = between(baseMemGiB + 4 * size("reads"), baseMemGiB, 256 GiB)
-		ram = f.size("reads").times(4).plus(f.gib(baseMemGiB))
-			.between(f.gib(baseMemGiB), f.gib(256))
-			.staticFallback(string(baseMemGiB) + "GiB")
+		ram = f.size("reads").times(4).plus(f.gib(baseMemGiB)).
+			between(f.gib(baseMemGiB), f.gib(256)).
+			staticFallback(string(baseMemGiB) + "GiB")
 	}
 
 	// cpu is a plain constant and ram is either a static override or a formula carrying a
