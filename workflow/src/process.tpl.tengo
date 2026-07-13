@@ -70,6 +70,7 @@ self.body(func(inputs) {
 	libraryId := params.libraryId
 	presetCommonName := params.presetCommonName
 	isLibraryFileGzipped := params.isLibraryFileGzipped
+	scHeavyOnly := params.scHeavyOnly
 
 	sampleIdAxisSpec := inputSpec.axesSpec[0]
 
@@ -301,10 +302,19 @@ self.body(func(inputs) {
 	chains := []
 	receptors := []
 
+	// Effective chains for a receptor. In heavy-chain-only (VHH) mode the IG receptor
+	// contributes only its heavy chain, so no light chain is exported or paired.
+	effectiveReceptorChains := func(receptor) {
+		if scHeavyOnly && isSingleCell && receptor == "IG" {
+			return ["IGHeavy"]
+		}
+		return receptorInfos[receptor].chains
+	}
+
 	for chainOrReceptor in receptorsOrChains {
 		if receptorInfos[chainOrReceptor] != undefined {
 			receptors += [chainOrReceptor]
-			chains += receptorInfos[chainOrReceptor].chains
+			chains += effectiveReceptorChains(chainOrReceptor)
 		} else {
 			if is_undefined(chainInfos[chainOrReceptor]) {
 				ll.panic("chainInfo not found for %v", chainOrReceptor)
@@ -641,6 +651,9 @@ self.body(func(inputs) {
 
 		for receptor in receptors {
 			receptorInfo := receptorInfos[receptor]
+			// In heavy-chain-only (VHH) mode a receptor may have a single chain (A only).
+			effectiveChains := effectiveReceptorChains(receptor)
+			hasChainB := len(effectiveChains) > 1
 
 			singleCellOutputs := [ {
 				type: "Resource",
@@ -691,10 +704,9 @@ self.body(func(inputs) {
 					columnsSpecPerClonotypeSecondary += [ col ]
 				}
 			}
-			for chainIdx in [0, 1] {
+			for chainIdx, chain in effectiveChains {
 				// "A" chain is always the one that is more diverse
 				chainLetterU := ["A", "B"][chainIdx]
-				chain := receptorInfo.chains[chainIdx]
 				chainNameU := chainInfos[chain].shortName
 				chainNameL := text.to_lower(chainNameU)
 
@@ -811,19 +823,35 @@ self.body(func(inputs) {
 				} ]
 			}
 
-			chainA := receptorInfo.chains[0]
-			chainB := receptorInfo.chains[1]
+			chainA := effectiveChains[0]
+			chainB := hasChainB ? effectiveChains[1] : undefined
 
 			// Using A chain files as main PColumn for xsv conversion through pframes.processColumn.
 			// Since we aggregate by sample, this is just a single pass through the data.
 
-			// manual data anonymization
-			anonymizationResult := anonymize.anonymizePKeys({
-				byCellTagAData: perChainResults[chainA].tsvForSingleCell.data,
-				byCellTagBData: perChainResults[chainB].tsvForSingleCell.data
-			}, [0])
+			// manual data anonymization (chain B only present for paired receptors)
+			anonymizeInput := {
+				byCellTagAData: perChainResults[chainA].tsvForSingleCell.data
+			}
+			if hasChainB {
+				anonymizeInput["byCellTagBData"] = perChainResults[chainB].tsvForSingleCell.data
+			}
+			anonymizationResult := anonymize.anonymizePKeys(anonymizeInput, [0])
 			byCellTagAData := anonymizationResult.result.byCellTagAData
-			byCellTagBData := anonymizationResult.result.byCellTagBData
+
+			scExtra := {
+				propertiesA: perChainResults[chainA].clonotypeProperties.data,
+				params: {
+					mainAbundanceColumn: mainAbundanceColumnUnnormalized,
+					mainIsProductiveColumn: mainIsProductiveColumn,
+					schemaPerClonotypeNoAggregates: columnsToSchema(columnsSpecPerClonotypeNoAggregates),
+					shmMapping: shmMapping
+				}
+			}
+			if hasChainB {
+				scExtra["byCellTagB"] = anonymizationResult.result.byCellTagBData
+				scExtra["propertiesB"] = perChainResults[chainB].clonotypeProperties.data
+			}
 
 			singleCellResult := pframes.processColumn(
 				{ spec: perChainResults[chainA].tsvForSingleCell.spec, data: byCellTagAData },
@@ -832,17 +860,7 @@ self.body(func(inputs) {
 				{
 					aggregate: ["pl7.app/sampleId"],
 					traceSteps: [{type: "milaboratories.mixcr-clonotyping.processSingleCell", id: blockId + "." + receptor, importance: 80, label: receptorInfo.name}],
-					extra: {
-						byCellTagB: byCellTagBData,
-						propertiesA: perChainResults[chainA].clonotypeProperties.data,
-						propertiesB: perChainResults[chainB].clonotypeProperties.data,
-						params: {
-							mainAbundanceColumn: mainAbundanceColumnUnnormalized,
-							mainIsProductiveColumn: mainIsProductiveColumn,
-							schemaPerClonotypeNoAggregates: columnsToSchema(columnsSpecPerClonotypeNoAggregates),
-							shmMapping: shmMapping
-						}
-					}
+					extra: scExtra
 				}
 			)
 
@@ -860,8 +878,10 @@ self.body(func(inputs) {
 
 			singleCellResult.addXsvOutputToBuilder(clonotypes, "propertiesAPrimary", "clonotypeProperties/" + receptor + "/aPrimary/")
 			singleCellResult.addXsvOutputToBuilder(clonotypes, "propertiesASecondary", "clonotypeProperties/" + receptor + "/aSecondary/")
-			singleCellResult.addXsvOutputToBuilder(clonotypes, "propertiesBPrimary", "clonotypeProperties/" + receptor + "/bPrimary/")
-			singleCellResult.addXsvOutputToBuilder(clonotypes, "propertiesBSecondary", "clonotypeProperties/" + receptor + "/bSecondary/")
+			if hasChainB {
+				singleCellResult.addXsvOutputToBuilder(clonotypes, "propertiesBPrimary", "clonotypeProperties/" + receptor + "/bPrimary/")
+				singleCellResult.addXsvOutputToBuilder(clonotypes, "propertiesBSecondary", "clonotypeProperties/" + receptor + "/bSecondary/")
+			}
 
 			if hasShm {
 				singleCellResult.addXsvOutputToBuilder(clonotypes, "shmCombined", "clonotypeProperties/" + receptor + "/shmCombined/")
@@ -890,7 +910,8 @@ self.body(func(inputs) {
 		productiveFeature: productiveFeature,
 		stopCodonTypes: params.stopCodonTypes,
 		stopCodonReplacements: params.stopCodonReplacements,
-		singleCellChainTsvsData: singleCellChainTsvs
+		singleCellChainTsvsData: singleCellChainTsvs,
+		scHeavyOnly: scHeavyOnly
 	})
 
 	return {

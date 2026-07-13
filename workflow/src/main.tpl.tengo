@@ -137,7 +137,8 @@ wf.body(func(args) {
 				imputeGermline: args.imputeGermline,
 				exportMinQuality: args.exportMinQuality,
 				stopCodonTypes: args.stopCodonTypes,
-				stopCodonReplacements: args.stopCodonReplacements
+				stopCodonReplacements: args.stopCodonReplacements,
+				scHeavyOnly: args.scHeavyOnly
 		})
 	})
 

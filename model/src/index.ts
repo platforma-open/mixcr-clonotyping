@@ -54,6 +54,8 @@ export const platforma = BlockModelV3.create(dataModel)
     if (!data.input) throw new Error("Input dataset is required");
     if (!data.preset) throw new Error("Preset is required");
     if (!data.chains || data.chains.length === 0) throw new Error("Chains selection is required");
+    if (data.scHeavyOnly && !(data.chains.length === 1 && data.chains[0] === "IG"))
+      throw new Error("Heavy-chain only (VHH) mode requires selecting only the IG receptor");
     if (data.runMode === "dry" && data.limitInput == null)
       throw new Error("Read limit is required for Preview mode");
     if (!BlockArgsValid.safeParse(data).success) return undefined;
@@ -63,6 +65,7 @@ export const platforma = BlockModelV3.create(dataModel)
       input: data.input,
       preset: data.preset,
       chains: data.chains,
+      scHeavyOnly: data.scHeavyOnly,
       inputLibrary: data.inputLibrary,
       libraryFile: data.libraryFile,
       isLibraryFileGzipped: data.isLibraryFileGzipped,

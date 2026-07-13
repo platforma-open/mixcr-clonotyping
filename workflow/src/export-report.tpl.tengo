@@ -43,6 +43,7 @@ self.body(func(inputs) {
         }
     }
     singleCellChainTsvsData := inputs.singleCellChainTsvsData
+    scHeavyOnly := inputs.scHeavyOnly == true
 	useStopCodonReplacement := !is_undefined(stopCodonTypes) && is_array(stopCodonTypes) && len(stopCodonTypes) > 0
 	if is_undefined(stopCodonReplacements) || !is_map(stopCodonReplacements) {
 		stopCodonReplacements = {}
@@ -396,10 +397,13 @@ self.body(func(inputs) {
             // Count cells per sample across all chains (unique cellKey)
             cellsPerSample := scAll.groupBy("sampleId").agg(pt.col("cellKey").nUnique().alias("scCellsTotal"))
 
-            // Cells paired across different chains: cellKey appears in >1 distinct chain
+            // A cell is "valid" when it has at least the required number of distinct chains:
+            // 2 for paired receptors, 1 for heavy-chain-only (VHH). Encoded as an exclusive
+            // lower bound so the existing ">" comparison is reused.
+            pairMinExclusive := scHeavyOnly ? 0 : 1
             cellsPerSampleChainCounts := scAll.groupBy("sampleId", "cellKey").agg(pt.col("chain").nUnique().alias("_numChains"))
-            bothChainCells := cellsPerSampleChainCounts.filter(pt.col("_numChains").gt(1)).groupBy("sampleId").agg(pt.col("cellKey").count().alias("scCellsBothChains"))
-            pairedKeys := cellsPerSampleChainCounts.filter(pt.col("_numChains").gt(1)).select(pt.col("sampleId"), pt.col("cellKey"))
+            bothChainCells := cellsPerSampleChainCounts.filter(pt.col("_numChains").gt(pairMinExclusive)).groupBy("sampleId").agg(pt.col("cellKey").count().alias("scCellsBothChains"))
+            pairedKeys := cellsPerSampleChainCounts.filter(pt.col("_numChains").gt(pairMinExclusive)).select(pt.col("sampleId"), pt.col("cellKey"))
 
             perChainJoined = perChainJoined.join(cellsPerSample, { how: "left", on: ["sampleId"] })
             perChainJoined = perChainJoined.join(bothChainCells, { how: "left", on: ["sampleId"] })
@@ -447,9 +451,15 @@ self.body(func(inputs) {
         }
         finalDf = finalDf.withColumns(
             pt.col("exportedClonotypesPaired").fillNull(0).cast("Long").alias("totalClonotypes"),
-            pt.col("readsUsedInClonotypesNew").fillNull(0).cast("Long").alias("readsUsedInClonotypes"),
-            pt.col("exportedClonotypes").fillNull(0).cast("Long").minus(pt.col("exportedClonotypesPaired").fillNull(0).cast("Long")).alias("clonotypesDroppedUnpaired")
+            pt.col("readsUsedInClonotypesNew").fillNull(0).cast("Long").alias("readsUsedInClonotypes")
         )
+        if !scHeavyOnly {
+            // Clonotypes dropped because their cell lacked a paired chain.
+            // Not applicable in heavy-chain-only (VHH) mode (column omitted from spec).
+            finalDf = finalDf.withColumns(
+                pt.col("exportedClonotypes").fillNull(0).cast("Long").minus(pt.col("exportedClonotypesPaired").fillNull(0).cast("Long")).alias("clonotypesDroppedUnpaired")
+            )
+        }
     } else {
         finalDf = finalDf.withColumns(
             pt.col("exportedClonotypes").fillNull(0).cast("Long").alias("totalClonotypes"),
@@ -484,9 +494,10 @@ self.body(func(inputs) {
     }
 
     if isSingleCell {
-        // Keep only paired cells count and name it scCellsTotal
+        // scCellsTotal: paired mode reports cells with both chains; heavy-only (VHH) mode
+        // reports all cells carrying the single chain (the genuine unique-cell count).
         finalDf = finalDf.withColumns(
-            pt.col("scCellsBothChains").fillNull(0).cast("Long").alias("scCellsTotal")
+            (scHeavyOnly ? pt.col("scCellsTotal") : pt.col("scCellsBothChains")).fillNull(0).cast("Long").alias("scCellsTotal")
         )
     }
     
@@ -500,7 +511,7 @@ self.body(func(inputs) {
     
     tsvFile := wfResult.getFile("qc-report-processed.tsv")
 
-    qcReportColumns := qcReportColumns(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellTags, umiTags, hasAssembleCells)
+    qcReportColumns := qcReportColumns(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellTags, umiTags, hasAssembleCells, scHeavyOnly)
     reportColumnsSpec := qcReportColumns.reportColumnsSpec
 
     qcReportTable := xsv.importFile(

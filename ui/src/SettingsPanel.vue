@@ -275,6 +275,10 @@ watch(isSingleCell, () => {
   if (app.model.data.runMode === "dry") {
     app.model.data.limitInput = isSingleCell.value ? DRY_RUN_READS_SC : DRY_RUN_READS_BULK;
   }
+  // Heavy-chain only (VHH) is single-cell only; clear it when leaving single-cell mode.
+  if (!isSingleCell.value && app.model.data.scHeavyOnly) {
+    app.model.data.scHeavyOnly = undefined;
+  }
 });
 
 type LocalState = {
@@ -385,6 +389,22 @@ const imputeGermline = computed({
     app.model.data.imputeGermline = value;
   },
 });
+
+const scHeavyOnly = computed({
+  get: () => app.model.data.scHeavyOnly ?? false,
+  set: (value: boolean) => {
+    app.model.data.scHeavyOnly = value;
+  },
+});
+
+// Heavy-chain only (VHH) mode only supports the IG receptor. Warn (and block via model
+// validation) if it is enabled while any non-IG receptor is selected.
+const scHeavyOnlyReceptorConflict = computed(
+  () =>
+    isSingleCell.value &&
+    scHeavyOnly.value &&
+    (app.model.data.chains ?? []).some((c) => c !== "IG"),
+);
 
 const stopCodonOptions: ListOption<StopCodonType>[] = [
   { label: "Amber (TAG)", value: "amber" },
@@ -652,6 +672,20 @@ watch(stopCodonSelection, (selected) => {
   </template>
 
   <PlAccordionSection label="Advanced Settings">
+    <PlCheckbox v-if="isSingleCell" v-model="scHeavyOnly">
+      Heavy-chain only (VHH)
+      <PlTooltip class="info" position="top">
+        <template #tooltip
+          >Enable for single-cell heavy-chain-only data (e.g. VHH / nanobodies) with no light chain.
+          Clonotypes are built from the heavy chain alone and cells are not required to have a
+          paired light chain. Requires selecting only the IG receptor.</template
+        >
+      </PlTooltip>
+    </PlCheckbox>
+    <PlAlert v-if="scHeavyOnlyReceptorConflict" type="warn">
+      Heavy-chain only (VHH) mode supports only the IG receptor. Remove the other selected receptors
+      to run.
+    </PlAlert>
     <PlSectionSeparator>MiXCR Settings</PlSectionSeparator>
     <PlDropdown
       v-model="cloneClusteringMode"
