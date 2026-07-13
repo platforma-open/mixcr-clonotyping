@@ -18,7 +18,7 @@ catalog:
   '@platforma-sdk/test': 1.79.22
   '@milaboratories/helpers': 1.14.2
 
-  '@platforma-open/milaboratories.software-mixcr': 4.7.0-347-develop
+  '@platforma-open/milaboratories.software-mixcr': 4.7.0-365-develop
   'vue': 3.5.24
 
   'zod': ~3.25.76
