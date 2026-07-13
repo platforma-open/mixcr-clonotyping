@@ -402,11 +402,15 @@ self.body(func(inputs) {
             // lower bound so the existing ">" comparison is reused.
             pairMinExclusive := scHeavyOnly ? 0 : 1
             cellsPerSampleChainCounts := scAll.groupBy("sampleId", "cellKey").agg(pt.col("chain").nUnique().alias("_numChains"))
-            bothChainCells := cellsPerSampleChainCounts.filter(pt.col("_numChains").gt(pairMinExclusive)).groupBy("sampleId").agg(pt.col("cellKey").count().alias("scCellsBothChains"))
             pairedKeys := cellsPerSampleChainCounts.filter(pt.col("_numChains").gt(pairMinExclusive)).select(pt.col("sampleId"), pt.col("cellKey"))
 
             perChainJoined = perChainJoined.join(cellsPerSample, { how: "left", on: ["sampleId"] })
-            perChainJoined = perChainJoined.join(bothChainCells, { how: "left", on: ["sampleId"] })
+            // scCellsBothChains (cells with >=2 distinct chains) feeds only the paired scCellsTotal;
+            // in heavy-only mode scCellsTotal comes from cellsPerSample, so skip this aggregation/join.
+            if !scHeavyOnly {
+                bothChainCells := cellsPerSampleChainCounts.filter(pt.col("_numChains").gt(pairMinExclusive)).groupBy("sampleId").agg(pt.col("cellKey").count().alias("scCellsBothChains"))
+                perChainJoined = perChainJoined.join(bothChainCells, { how: "left", on: ["sampleId"] })
+            }
 
             // Filter to paired cells only
             scPaired := scAll.join(pairedKeys, { how: "inner", on: ["sampleId", "cellKey"] })

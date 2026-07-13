@@ -683,8 +683,8 @@ watch(stopCodonSelection, (selected) => {
       </PlTooltip>
     </PlCheckbox>
     <PlAlert v-if="scHeavyOnlyReceptorConflict" type="warn">
-      Heavy-chain only (VHH) mode supports only the IG receptor. Remove the other selected receptors
-      to run.
+      Heavy-chain-only (VHH) mode is specific to immunoglobulins (IG) — please deselect any other
+      receptors (e.g. TCR) to run the block.
     </PlAlert>
     <PlSectionSeparator>MiXCR Settings</PlSectionSeparator>
     <PlDropdown
