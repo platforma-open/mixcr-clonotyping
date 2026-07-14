@@ -29,8 +29,8 @@ export const StopCodonReplacements = z
   .optional();
 
 const BlockArgsValidBase = z.object({
-  defaultBlockLabel: z.string(),
-  customBlockLabel: z.string(),
+  defaultBlockLabel: z.string().optional(),
+  customBlockLabel: z.string().optional(),
   input: PlRef,
   inputLibrary: PlRef.optional(),
   libraryFile: z
