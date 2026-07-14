@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.28.0
+
+### Minor Changes
+
+- 6e46692: Allow single-cell VHH data analysis
+
 ## 3.27.1
 
 ### Patch Changes

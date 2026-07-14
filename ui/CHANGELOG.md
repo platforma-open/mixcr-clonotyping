@@ -1,5 +1,16 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.27.0
+
+### Minor Changes
+
+- 6e46692: Allow single-cell VHH data analysis
+
+### Patch Changes
+
+- Updated dependencies [6e46692]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.27.0
+
 ## 1.26.0
 
 ### Minor Changes
