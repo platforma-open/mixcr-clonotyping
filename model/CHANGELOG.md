@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.27.1
+
+### Patch Changes
+
+- e0d7d85: fix: label fields made optional
+
 ## 1.27.0
 
 ### Minor Changes
