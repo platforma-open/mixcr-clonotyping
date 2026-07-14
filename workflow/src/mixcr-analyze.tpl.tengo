@@ -80,11 +80,7 @@ self.body(func(inputs) {
 		arg("analyze").arg("--use-local-temp")
 
 	// CPUs number per process
-	if !is_undefined(perProcessCPUs) {
-	    mixcrCmdBuilder.cpu(perProcessCPUs)
-	} else {
-	    mixcrCmdBuilder.cpu(16)     // default CPUs number per sample
-	}
+	perProcessCPUsResolved := is_undefined(perProcessCPUs) ? 16 : perProcessCPUs
 
 	// Memory limit per process.
 	// Size analyze RAM from the input reads' file size, on top of a per-analysis
@@ -96,10 +92,10 @@ self.body(func(inputs) {
 	// single-cell+MiTool pipelines, which need that headroom regardless of size);
 	// the linear term scales with input volume; the 256 GiB cap bounds the largest.
 	// An "Advanced Settings" memory override takes precedence; on backends that
-	// cannot evaluate resource formulas, memFormula falls back to the baseline.
+	// cannot evaluate resource formulas, the formula's static fallback is the baseline.
     if !is_undefined(perProcessMemGB) {
         // memory per process was set in "Advanced Settings" block directly
-		mixcrCmdBuilder.mem(string(perProcessMemGB) + "GiB")
+		mixcrCmdBuilder.cpu(perProcessCPUsResolved).mem(string(perProcessMemGB) + "GiB")
 	} else {
 		baseMemGiB := 64
 		if hasMiToolSteps {
@@ -107,13 +103,13 @@ self.body(func(inputs) {
 		} else if hasAssembleContigs || hasAssembleCells {
 			baseMemGiB = 110
 		}
-		f := exec.formula
-		mixcrCmdBuilder.memFormula(
-			f.clamp(
-				f.add(f.gib(baseMemGiB), f.mul(f.size("reads"), 4)),
-				f.gib(baseMemGiB),
-				f.gib(256)),
-			{ fallback: string(baseMemGiB) + "GiB" })
+		// workflow-tengo 6.7 fluent formula API fed via .resources({ onCPU: { cpu, ram } }).
+		formula := exec.formula
+		memFormula := formula.gib(baseMemGiB).
+			plus(formula.size("reads").times(4)).
+			between(formula.gib(baseMemGiB), formula.gib(256)).
+			staticFallback(formula.gib(baseMemGiB))
+		mixcrCmdBuilder.resources({ onCPU: { cpu: perProcessCPUsResolved, ram: memFormula } })
 	}
 
 	if !is_undefined(limitInput) {

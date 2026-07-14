@@ -55,6 +55,9 @@ const BlockArgsValidBase = z.object({
   presetCommonName: z.string().optional(),
   isGenericPreset: z.boolean().optional(),
   chains: z.array(z.string()).optional(),
+  // When true, single-cell IG data is treated as heavy-chain-only (VHH / nanobody):
+  // the light chain is not computed and clonotypes are not required to be paired.
+  scHeavyOnly: z.boolean().optional(),
   exportMinQuality: z.boolean().optional(),
   stopCodonTypes: z.array(StopCodonType).optional(),
   stopCodonReplacements: StopCodonReplacements,

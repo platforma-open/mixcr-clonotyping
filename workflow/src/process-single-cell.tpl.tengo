@@ -2,6 +2,7 @@
 
 ll := import("@platforma-sdk/workflow-tengo:ll")
 self := import("@platforma-sdk/workflow-tengo:tpl.light")
+smart := import("@platforma-sdk/workflow-tengo:smart")
 pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 exec := import("@platforma-sdk/workflow-tengo:exec")
@@ -29,6 +30,8 @@ self.body(func(inputs) {
 	ll.assert(inputDataMeta.keyLength == 1, "unexpected number of aggregation axes")
 
 	byCellTagB := inputs.byCellTagB
+	// Chain B (light chain) is absent in heavy-chain-only (VHH) single-cell mode.
+	hasChainB := !is_undefined(byCellTagB)
 	propertiesA := inputs.propertiesA
 	propertiesB := inputs.propertiesB
 
@@ -138,7 +141,7 @@ self.body(func(inputs) {
 	}
 
 	chainAOutput := preprocessByCell(byCellTagA)
-	chainBOutput := preprocessByCell(byCellTagB)
+	chainBOutput := hasChainB ? preprocessByCell(byCellTagB) : undefined
 
 	//
 	// Cell grouping - Reimplemented with PTabler pt API
@@ -146,17 +149,11 @@ self.body(func(inputs) {
 	cellGroupingWf := pt.workflow()
 
 	chainATableDf := cellGroupingWf.frame(chainAOutput, {xsvType: "tsv"})
-	chainBTableDf := cellGroupingWf.frame(chainBOutput, {xsvType: "tsv"})
 
-	// Dynamically generate filter steps for chains A and B, ranks 1 and 2
-	// Store resulting DataFrames in a map for easier access
+	// Filter steps for chain A (and chain B when present), ranks 1 and 2
 	rankedDfs := {}
-	for chainData in [{prefix: "a", df: chainATableDf}, {prefix: "b", df: chainBTableDf}] {
-		for rankVal in [1, 2] {
-			dfKey := "chain_" + chainData.prefix + "_rank" + string(rankVal) + "_df"
-			rankedDfs[dfKey] = chainData.df.filter(pt.col("chainRank").eq(rankVal))
-		}
-	}
+	rankedDfs["chain_a_rank1_df"] = chainATableDf.filter(pt.col("chainRank").eq(1))
+	rankedDfs["chain_a_rank2_df"] = chainATableDf.filter(pt.col("chainRank").eq(2))
 
 	chainAMergedDf := rankedDfs["chain_a_rank1_df"].join(rankedDfs["chain_a_rank2_df"], {
 		how: "full",
@@ -166,45 +163,60 @@ self.body(func(inputs) {
 		rightColumns: [{ column: "clonotypeKey", rename: "clonotypeKeyA2" }]
 	})
 
-	chainBMergedDf := rankedDfs["chain_b_rank1_df"].join(rankedDfs["chain_b_rank2_df"], {
-		how: "full",
-		on: ["sampleId", "cellKey"],
-		coalesce: true,
-		leftColumns: [{ column: "clonotypeKey", rename: "clonotypeKeyB1" }],
-		rightColumns: [{ column: "clonotypeKey", rename: "clonotypeKeyB2" }]
-	})
+	// scClonotypeKey composition and per-cell filter adapt to the number of chains:
+	//   paired     -> hash(A1,A2,B1,B2), keep cells with both primary chains
+	//   heavy-only -> hash(A1,A2),       keep cells with the (heavy) primary chain
+	scKeyParts := [
+		pt.col("clonotypeKeyA1").fillNull("NA"),
+		pt.col("clonotypeKeyA2").fillNull("NA")
+	]
+	filterCondition := pt.col("clonotypeKeyA1").isNotNull()
+	groupByCols := ["scClonotypeKey", "clonotypeKeyA1", "clonotypeKeyA2"]
 
-	allChainsMergedDf := chainAMergedDf.join(chainBMergedDf, {
-		how: "full",
-		on: ["sampleId", "cellKey"],
-		coalesce: true
-	})
+	allChainsMergedDf := chainAMergedDf
+	if hasChainB {
+		chainBTableDf := cellGroupingWf.frame(chainBOutput, {xsvType: "tsv"})
+		rankedDfs["chain_b_rank1_df"] = chainBTableDf.filter(pt.col("chainRank").eq(1))
+		rankedDfs["chain_b_rank2_df"] = chainBTableDf.filter(pt.col("chainRank").eq(2))
+
+		chainBMergedDf := rankedDfs["chain_b_rank1_df"].join(rankedDfs["chain_b_rank2_df"], {
+			how: "full",
+			on: ["sampleId", "cellKey"],
+			coalesce: true,
+			leftColumns: [{ column: "clonotypeKey", rename: "clonotypeKeyB1" }],
+			rightColumns: [{ column: "clonotypeKey", rename: "clonotypeKeyB2" }]
+		})
+
+		allChainsMergedDf = chainAMergedDf.join(chainBMergedDf, {
+			how: "full",
+			on: ["sampleId", "cellKey"],
+			coalesce: true
+		})
+
+		scKeyParts = append(scKeyParts,
+			pt.col("clonotypeKeyB1").fillNull("NA"),
+			pt.col("clonotypeKeyB2").fillNull("NA"))
+		filterCondition = pt.and(
+			pt.col("clonotypeKeyA1").isNotNull(),
+			pt.col("clonotypeKeyB1").isNotNull()
+		)
+		groupByCols = ["scClonotypeKey", "clonotypeKeyA1", "clonotypeKeyA2", "clonotypeKeyB1", "clonotypeKeyB2"]
+	}
 
 	scClonotypeKeyExpr := pt.concatStr(
-		[
-			pt.col("clonotypeKeyA1").fillNull("NA"),
-			pt.col("clonotypeKeyA2").fillNull("NA"),
-			pt.col("clonotypeKeyB1").fillNull("NA"),
-			pt.col("clonotypeKeyB2").fillNull("NA")
-		],
+		scKeyParts,
 		{delimiter: "#"}
 	).hash("sha256", "base64_alphanumeric", 120).alias("scClonotypeKey")
 
 	allChainsMergedWithScKeyDf := allChainsMergedDf.withColumns(scClonotypeKeyExpr)
 
-	filterCondition := pt.and(
-		pt.col("clonotypeKeyA1").isNotNull(),
-		pt.col("clonotypeKeyB1").isNotNull()
-	)
 	allChainsFilteredDf := allChainsMergedWithScKeyDf.filter(filterCondition)
 
 	allChainsFilteredDf.
 		withColumns(pt.lit(1).alias("1")).
 		save("cells.tsv", {columns: ["sampleId", "cellKey", "scClonotypeKey", "1"]})
 
-	clonotypeTableDf := allChainsFilteredDf.groupBy(
-		"scClonotypeKey", "clonotypeKeyA1", "clonotypeKeyA2", "clonotypeKeyB1", "clonotypeKeyB2"
-	).agg(
+	clonotypeTableDf := allChainsFilteredDf.groupBy(groupByCols...).agg(
 		pt.col("sampleId").nUnique().alias("sampleCount"),
 		pt.col("cellKey").count().alias("uniqueCellCountTotal")
 	)
@@ -236,17 +248,22 @@ self.body(func(inputs) {
 	//
 
 	propertiesAFile := propertiesA.inputs()["[]"]
-	propertiesBFile := propertiesB.inputs()["[]"]
 
 	outputProcessingWf := pt.workflow()
 
-	// Schema for clonotype.tsv (main_clonotypes table)
+	// Schema for clonotype.tsv (main_clonotypes table). Chain B columns only exist when paired.
 	clonotypeTableSchema := [
 		{ column: "scClonotypeKey", type: "String" },
 		{ column: "clonotypeKeyA1", type: "String" },
-		{ column: "clonotypeKeyA2", type: "String" },
-		{ column: "clonotypeKeyB1", type: "String" },
-		{ column: "clonotypeKeyB2", type: "String" },
+		{ column: "clonotypeKeyA2", type: "String" }
+	]
+	if hasChainB {
+		clonotypeTableSchema = clonotypeTableSchema + [
+			{ column: "clonotypeKeyB1", type: "String" },
+			{ column: "clonotypeKeyB2", type: "String" }
+		]
+	}
+	clonotypeTableSchema = clonotypeTableSchema + [
 		{ column: "sampleCount", type: "Int" },
 		{ column: "uniqueCellCountTotal", type: "Long" }
 	]
@@ -264,15 +281,6 @@ self.body(func(inputs) {
 		inferSchema: false
 	})
 
-	propsBSchema := [{ column: "clonotypeKey", type: "String" }]
-	propsBDf := outputProcessingWf.frame(propertiesBFile, {
-		xsvType: "tsv",
-		id: "props_b",
-		schema: propsBSchema,
-		inferSchema: false
-	})
-
-
 	clonotypeColumnNames := []
 	for cc in schemaPerClonotypeNoAggregates {
 		clonotypeColumnNames = append(clonotypeColumnNames, cc.column)
@@ -280,17 +288,30 @@ self.body(func(inputs) {
 
 	finalOutputColumns := ["scClonotypeKey", "clonotypeKey"] + clonotypeColumnNames
 
-
+	// Chain A positions always produced; chain B positions only for paired receptors.
 	chainMappings := [
 		{ chainKeyCol: "clonotypeKeyA1", propsTable: "props_a", internalOutTable: "props_a1_joined", finalOutFile: "properties_a_primary.tsv" },
-		{ chainKeyCol: "clonotypeKeyA2", propsTable: "props_a", internalOutTable: "props_a2_joined", finalOutFile: "properties_a_secondary.tsv" },
-		{ chainKeyCol: "clonotypeKeyB1", propsTable: "props_b", internalOutTable: "props_b1_joined", finalOutFile: "properties_b_primary.tsv" },
-		{ chainKeyCol: "clonotypeKeyB2", propsTable: "props_b", internalOutTable: "props_b2_joined", finalOutFile: "properties_b_secondary.tsv" }
+		{ chainKeyCol: "clonotypeKeyA2", propsTable: "props_a", internalOutTable: "props_a2_joined", finalOutFile: "properties_a_secondary.tsv" }
 	]
 
 	propsMapDfs := {
-		"props_a": propsADf,
-		"props_b": propsBDf
+		"props_a": propsADf
+	}
+
+	if hasChainB {
+		propertiesBFile := propertiesB.inputs()["[]"]
+		propsBSchema := [{ column: "clonotypeKey", type: "String" }]
+		propsBDf := outputProcessingWf.frame(propertiesBFile, {
+			xsvType: "tsv",
+			id: "props_b",
+			schema: propsBSchema,
+			inferSchema: false
+		})
+		propsMapDfs["props_b"] = propsBDf
+		chainMappings = chainMappings + [
+			{ chainKeyCol: "clonotypeKeyB1", propsTable: "props_b", internalOutTable: "props_b1_joined", finalOutFile: "properties_b_primary.tsv" },
+			{ chainKeyCol: "clonotypeKeyB2", propsTable: "props_b", internalOutTable: "props_b2_joined", finalOutFile: "properties_b_secondary.tsv" }
+		]
 	}
 
 	for mapping in chainMappings {
@@ -317,11 +338,21 @@ self.body(func(inputs) {
 
 	outputProcessingRunResult := outputProcessingWf.run()
 
-	propsAPrimaryFile := outputProcessingRunResult.getFile(chainMappings[0].finalOutFile)
-	propsBPrimaryFile := outputProcessingRunResult.getFile(chainMappings[2].finalOutFile)
+	propsAPrimaryFile := outputProcessingRunResult.getFile("properties_a_primary.tsv")
+	propsASecondaryFile := outputProcessingRunResult.getFile("properties_a_secondary.tsv")
+	// Chain B outputs must still be assigned (defineOutputs fields cannot be undefined);
+	// in heavy-chain-only mode they are null resources and are not collected by the caller.
+	propsBPrimaryFile := smart.createNullResource()
+	propsBSecondaryFile := smart.createNullResource()
+	if hasChainB {
+		propsBPrimaryFile = outputProcessingRunResult.getFile("properties_b_primary.tsv")
+		propsBSecondaryFile = outputProcessingRunResult.getFile("properties_b_secondary.tsv")
+	}
 
-	// Sum SHM mutation columns across primary A+B chains
-	shmTsv := undefined
+	// Sum SHM mutation columns across primary chains (A only when heavy-only, A+B when paired).
+	// Default to a null resource (not undefined): tpl assigns every declared output and panics
+	// on undefined. shmMapping is empty for non-VDJRegion assembling features.
+	shmTsv := smart.createNullResource()
 	if len(shmMapping) > 0 {
 		shmSchema := [{ column: "scClonotypeKey", type: "String" }]
 		for m in shmMapping {
@@ -335,13 +366,6 @@ self.body(func(inputs) {
 			schema: shmSchema,
 			inferSchema: false
 		})
-		propsBShmDf := shmWf.frame(propsBPrimaryFile, {
-			xsvType: "tsv",
-			schema: shmSchema,
-			inferSchema: false,
-			id: "props_b_shm"
-		})
-
 		// Cast "region_not_covered" to null, then to Int
 		castExprs := []
 		for m in shmMapping {
@@ -354,30 +378,48 @@ self.body(func(inputs) {
 			)
 		}
 		propsAShmDf = propsAShmDf.withColumns(castExprs...)
-		propsBShmDf = propsBShmDf.withColumns(castExprs...)
 
-		//Join A and B chains
-		leftCols := []
-		rightCols := []
-		for m in shmMapping {
-			leftCols = append(leftCols, { column: m.tsvColumn, rename: m.outputColumn + "_A" })
-			rightCols = append(rightCols, { column: m.tsvColumn, rename: m.outputColumn + "_B" })
-		}
+		shmCombinedDf := undefined
+		if hasChainB {
+			propsBShmDf := shmWf.frame(propsBPrimaryFile, {
+				xsvType: "tsv",
+				schema: shmSchema,
+				inferSchema: false,
+				id: "props_b_shm"
+			})
+			propsBShmDf = propsBShmDf.withColumns(castExprs...)
 
-		shmCombinedDf := propsAShmDf.join(propsBShmDf, {
-			how: "full",
-			on: ["scClonotypeKey"],
-			coalesce: true,
-			leftColumns: leftCols,
-			rightColumns: rightCols
-		})
+			//Join A and B chains
+			leftCols := []
+			rightCols := []
+			for m in shmMapping {
+				leftCols = append(leftCols, { column: m.tsvColumn, rename: m.outputColumn + "_A" })
+				rightCols = append(rightCols, { column: m.tsvColumn, rename: m.outputColumn + "_B" })
+			}
 
-		// Sum SHM mutation columns across primary A+B chains
-		for m in shmMapping {
-			shmCombinedDf = shmCombinedDf.withColumns(
-				pt.col(m.outputColumn + "_A").plus(pt.col(m.outputColumn + "_B")).
-					alias(m.outputColumn)
-			)
+			shmCombinedDf = propsAShmDf.join(propsBShmDf, {
+				how: "full",
+				on: ["scClonotypeKey"],
+				coalesce: true,
+				leftColumns: leftCols,
+				rightColumns: rightCols
+			})
+
+			// Sum SHM mutation columns across primary A+B chains
+			for m in shmMapping {
+				shmCombinedDf = shmCombinedDf.withColumns(
+					pt.col(m.outputColumn + "_A").plus(pt.col(m.outputColumn + "_B")).
+						alias(m.outputColumn)
+				)
+			}
+		} else {
+			// Heavy-only: mutation counts come from the single heavy chain directly
+			shmCombinedDf = propsAShmDf
+			for m in shmMapping {
+				shmCombinedDf = shmCombinedDf.withColumns(
+					pt.col(m.tsvColumn).alias(m.outputColumn)
+				)
+			}
 		}
 
 		// Calculate CDR mutation fraction
@@ -417,11 +459,13 @@ self.body(func(inputs) {
 		// used to build cell <-> clonotype linker column
 		cellsTsv: cellsTsv,
 
-		// must have scClonotypeKey columns
+		// must have scClonotypeKey columns.
+		// Chain B outputs are undefined in heavy-chain-only (VHH) mode and are not
+		// collected by the caller (they are absent from singleCellOutputs).
 		propertiesAPrimaryTsv: propsAPrimaryFile,
-		propertiesASecondaryTsv: outputProcessingRunResult.getFile(chainMappings[1].finalOutFile),
+		propertiesASecondaryTsv: propsASecondaryFile,
 		propertiesBPrimaryTsv: propsBPrimaryFile,
-		propertiesBSecondaryTsv: outputProcessingRunResult.getFile(chainMappings[3].finalOutFile),
+		propertiesBSecondaryTsv: propsBSecondaryFile,
 
 		shmTsv: shmTsv
 	}
