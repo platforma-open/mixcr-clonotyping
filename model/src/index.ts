@@ -1,10 +1,10 @@
 import type { InferHrefType, PlDataTableStateV2 } from "@platforma-sdk/model";
 import {
   BlockModelV3,
+  ColumnLazy,
   DataModelBuilder,
   createPlDataTableStateV2,
-  createPlDataTableV2,
-  isPColumn,
+  createPlDataTableV3,
   isPColumnSpec,
   parseResourceMap,
   type ImportFileHandle,
@@ -150,10 +150,8 @@ export const platforma = BlockModelV3.create(dataModel)
   })
 
   .outputWithStatus("clones", (ctx) => {
-    const collection = ctx.outputs?.resolve("clonotypes")?.parsePObjectCollection();
-    if (collection === undefined) return undefined;
-    // if (collection === undefined || !collection.isComplete) return undefined;
-    const pColumns = Object.values(collection).filter(isPColumn);
+    const pColumns = ctx.outputs?.resolve("clonotypes")?.getPColumns();
+    if (pColumns === undefined) return undefined;
     return ctx.createPFrame(pColumns);
   })
 
@@ -232,10 +230,15 @@ export const platforma = BlockModelV3.create(dataModel)
     const pCols = ctx.outputs
       ?.resolve({ field: "qcReportTable", assertFieldType: "Input", allowPermanentAbsence: true })
       ?.getPColumns();
-    if (pCols === undefined) {
+    if (pCols === undefined || pCols.length === 0) {
       return undefined;
     }
-    return createPlDataTableV2(ctx, pCols, ctx.data.tableState);
+    // Single primary column avoids V3's per-primary label-discovery collision on same-axis columns.
+    return createPlDataTableV3(ctx, {
+      primaryColumns: [ColumnLazy.fromColumn(pCols[0])],
+      columns: pCols.slice(1).map((c) => ColumnLazy.fromColumn(c)),
+      tableState: ctx.data.tableState,
+    });
   })
 
   .output("rawTsvs", (ctx) => {
