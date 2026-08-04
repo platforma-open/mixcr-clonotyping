@@ -30,25 +30,26 @@ TestBaseMemGiBSelection := func() {
 	test.isEqual(192, mf.baseMemGiB(true, true, true))
 }
 
-TestMemFormulaToday := func() {
-	// CHARACTERIZATION: locks in today's additive behaviour,
-	//   mem = clamp(base + 4 x size, base, 256 GiB)
-	// Task 2 changes these numbers deliberately. The diff is the ledger.
+TestMemFormula := func() {
+	// mem = clamp(4 x size, base, 256 GiB) — the floor is a TOTAL, not a base to add to.
 
-	// Reference input: 110 GiB floor + 127 GiB data term = 237 GiB.
-	test.isEqual(_gib(237), _eval(mf.memFormula(110), _READS_31_75_GIB))
+	// Reference input: 4 x 31.75 GiB = 127 GiB, above the 110 GiB floor.
+	// Was 237 GiB before the double-count was removed.
+	test.isEqual(_gib(127), _eval(mf.memFormula(110), _READS_31_75_GIB))
 
-	// Empty input still pays the full floor.
+	// Empty input falls to the floor, unchanged.
 	test.isEqual(_gib(64),  _eval(mf.memFormula(64),  0))
 	test.isEqual(_gib(110), _eval(mf.memFormula(110), 0))
 	test.isEqual(_gib(192), _eval(mf.memFormula(192), 0))
 
-	// 32 GiB of reads: the data term is 128 GiB and is ADDED to the floor.
-	test.isEqual(_gib(192), _eval(mf.memFormula(64),  _gib(32)))
-	test.isEqual(_gib(238), _eval(mf.memFormula(110), _gib(32)))
-	// 192 + 128 = 320, clamped down to the 256 GiB ceiling.
-	test.isEqual(_gib(256), _eval(mf.memFormula(192), _gib(32)))
+	// 32 GiB of reads: the data term is 128 GiB and now STANDS ALONE.
+	test.isEqual(_gib(128), _eval(mf.memFormula(64),  _gib(32)))  // was 192
+	test.isEqual(_gib(128), _eval(mf.memFormula(110), _gib(32)))  // was 238
+	test.isEqual(_gib(192), _eval(mf.memFormula(192), _gib(32)))  // was 256 — floor now binds
 
-	// The static fallback is the floor, for backends without blob-size metadata.
+	// The ceiling still binds: 4 x 96 GiB = 384 GiB, clamped to 256.
+	test.isEqual(_gib(256), _eval(mf.memFormula(64), _gib(96)))
+
+	// The static fallback is unchanged.
 	test.isEqual(_gib(110), f.fallbackOf(mf.memFormula(110)))
 }

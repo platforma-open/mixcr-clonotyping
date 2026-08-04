@@ -1,4 +1,4 @@
-//tengo:hash_override D70EDB25-6FF6-4615-966D-B79B04B5751C
+//tengo:hash_override AD2092AB-97D5-4758-873E-EEB932A856EA
 
 self := import("@platforma-sdk/workflow-tengo:tpl")
 smart := import("@platforma-sdk/workflow-tengo:smart")
@@ -84,14 +84,16 @@ self.body(func(inputs) {
 	perProcessCPUsResolved := is_undefined(perProcessCPUs) ? 16 : perProcessCPUs
 
 	// Memory limit per process.
-	// Size analyze RAM from the input reads' file size, on top of a per-analysis
-	// floor. size("reads") sums the stored (compressed) blob size of the sample's
-	// R1+R2 FASTQ via getBlobSize — a metadata read, no pre-exec — so it tracks
-	// total input volume (read count and read length) without decompressing.
-	//     mem = clamp(baseMemGiB + 4 bytes/byte * size, baseMemGiB, 256 GiB)
-	// baseMemGiB is the per-analysis floor (64, or 110/192 for contig/cell and
-	// single-cell+MiTool pipelines, which need that headroom regardless of size);
-	// the linear term scales with input volume; the 256 GiB cap bounds the largest.
+	// Size analyze RAM from the input reads' file size. size("reads") sums the
+	// stored (compressed) blob size of the sample's R1+R2 FASTQ via getBlobSize —
+	// a metadata read, no pre-exec — so it tracks total input volume (read count
+	// and read length) without decompressing.
+	//     mem = clamp(4 bytes/byte * size, baseMemGiB, 256 GiB)
+	// baseMemGiB is a TOTAL-memory floor for the analysis, not a base to add data on
+	// top of — adding a data term to it double-counted the input. The floor is 64, or
+	// 110/192 for contig/cell and single-cell+MiTool pipelines, which need that
+	// headroom regardless of input size; the linear term scales with input volume;
+	// the 256 GiB cap bounds the largest.
 	// An "Advanced Settings" memory override takes precedence; on backends that
 	// cannot evaluate resource formulas, the formula's static fallback is the baseline.
     if !is_undefined(perProcessMemGB) {

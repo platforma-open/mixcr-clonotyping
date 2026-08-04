@@ -5,7 +5,7 @@
 // FASTQs — metadata only, no pre-exec pass — so the formula resolves on backends
 // that expose blob size, and falls back to the bare floor on those that do not.
 //
-//     mem = clamp(baseMemGiB + 4 bytes/byte x size, baseMemGiB, 256 GiB)
+//     mem = clamp(4 bytes/byte x size, baseMemGiB, 256 GiB)
 
 exec := import("@platforma-sdk/workflow-tengo:exec")
 
@@ -24,9 +24,9 @@ baseMemGiB := func(hasMiToolSteps, hasAssembleContigs, hasAssembleCells) {
 }
 
 // memFormula builds the fluent exec.formula node for `.resources({onCPU:{ram}})`.
+// between() supplies `base` as the lower bound, so no explicit max() is needed.
 memFormula := func(base) {
-	return f.gib(base).
-		plus(f.size("reads").times(4)).
+	return f.size("reads").times(4).
 		between(f.gib(base), f.gib(256)).
 		staticFallback(f.gib(base))
 }
