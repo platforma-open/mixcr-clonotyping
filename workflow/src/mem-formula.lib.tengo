@@ -1,0 +1,37 @@
+// Single source of truth for the `mixcr analyze` memory request.
+//
+// The floor is a TOTAL-memory value for the analysis, chosen by which steps the
+// preset runs. size("reads") is the stored (compressed) blob size of the sample's
+// FASTQs — metadata only, no pre-exec pass — so the formula resolves on backends
+// that expose blob size, and falls back to the bare floor on those that do not.
+//
+//     mem = clamp(baseMemGiB + 4 bytes/byte x size, baseMemGiB, 256 GiB)
+
+exec := import("@platforma-sdk/workflow-tengo:exec")
+
+f := exec.formula
+
+// baseMemGiB picks the per-analysis memory floor from the preset's step set.
+// mitool steps dominate; contig or cell assembly is the middle tier.
+baseMemGiB := func(hasMiToolSteps, hasAssembleContigs, hasAssembleCells) {
+	if hasMiToolSteps {
+		return 192
+	}
+	if hasAssembleContigs || hasAssembleCells {
+		return 110
+	}
+	return 64
+}
+
+// memFormula builds the fluent exec.formula node for `.resources({onCPU:{ram}})`.
+memFormula := func(base) {
+	return f.gib(base).
+		plus(f.size("reads").times(4)).
+		between(f.gib(base), f.gib(256)).
+		staticFallback(f.gib(base))
+}
+
+export {
+	baseMemGiB: baseMemGiB,
+	memFormula: memFormula
+}

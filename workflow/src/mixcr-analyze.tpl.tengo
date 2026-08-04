@@ -10,6 +10,7 @@ pcolumn := import("@platforma-sdk/workflow-tengo:pframes.pcolumn")
 times := import("times")
 text := import("text")
 maps := import("@platforma-sdk/workflow-tengo:maps")
+memf := import(":mem-formula")
 
 json := import("json")
 
@@ -97,19 +98,10 @@ self.body(func(inputs) {
         // memory per process was set in "Advanced Settings" block directly
 		mixcrCmdBuilder.cpu(perProcessCPUsResolved).mem(string(perProcessMemGB) + "GiB")
 	} else {
-		baseMemGiB := 64
-		if hasMiToolSteps {
-			baseMemGiB = 192
-		} else if hasAssembleContigs || hasAssembleCells {
-			baseMemGiB = 110
-		}
-		// workflow-tengo 6.7 fluent formula API fed via .resources({ onCPU: { cpu, ram } }).
-		formula := exec.formula
-		memFormula := formula.gib(baseMemGiB).
-			plus(formula.size("reads").times(4)).
-			between(formula.gib(baseMemGiB), formula.gib(256)).
-			staticFallback(formula.gib(baseMemGiB))
-		mixcrCmdBuilder.resources({ onCPU: { cpu: perProcessCPUsResolved, ram: memFormula } })
+		base := memf.baseMemGiB(hasMiToolSteps, hasAssembleContigs, hasAssembleCells)
+		mixcrCmdBuilder.resources({
+			onCPU: { cpu: perProcessCPUsResolved, ram: memf.memFormula(base) }
+		})
 	}
 
 	if !is_undefined(limitInput) {
