@@ -1,0 +1,53 @@
+test := import("@platforma-sdk/workflow-tengo:test")
+exec := import("@platforma-sdk/workflow-tengo:exec")
+mf := import(":mem-formula")
+
+f := exec.formula
+
+_gib := func(n) { return n * 1073741824 }
+
+// Evaluate a resource formula against a fake "reads" input of sizeBytes.
+_eval := func(node, sizeBytes) {
+	fileName := "input.fastq.gz"
+	resolved := f.resolveAst(node, { "reads": [fileName] }, [fileName])
+	resolver := {
+		size:      func(files) { return sizeBytes },
+		lineCount: func(files) { return 0 }
+	}
+	return f.evaluateResource(resolved, resolver, "test")
+}
+
+// A large real input: the assemble-contigs floor (110 GiB) with 31.75 GiB of
+// reads, so the data term 4 x size is exactly 127 GiB.
+_READS_31_75_GIB := 34091302912
+
+TestBaseMemGiBSelection := func() {
+	test.isEqual(64,  mf.baseMemGiB(false, false, false))
+	test.isEqual(110, mf.baseMemGiB(false, true, false))
+	test.isEqual(110, mf.baseMemGiB(false, false, true))
+	test.isEqual(192, mf.baseMemGiB(true, false, false))
+	// mitool steps win over contigs/cells
+	test.isEqual(192, mf.baseMemGiB(true, true, true))
+}
+
+TestMemFormula := func() {
+	// mem = clamp(4 x size, base, 256 GiB). base is the lower bound, not a base to add to.
+
+	// Reference input: 4 x 31.75 GiB = 127 GiB, above the 110 GiB floor.
+	test.isEqual(_gib(127), _eval(mf.memFormula(110), _READS_31_75_GIB))
+
+	// Empty input falls to the floor.
+	test.isEqual(_gib(64),  _eval(mf.memFormula(64),  0))
+	test.isEqual(_gib(110), _eval(mf.memFormula(110), 0))
+	test.isEqual(_gib(192), _eval(mf.memFormula(192), 0))
+
+	// 32 GiB of reads: the data term is 128 GiB and stands alone.
+	test.isEqual(_gib(128), _eval(mf.memFormula(64),  _gib(32)))
+	test.isEqual(_gib(128), _eval(mf.memFormula(110), _gib(32)))
+	test.isEqual(_gib(192), _eval(mf.memFormula(192), _gib(32)))  // floor binds
+
+	// The ceiling binds: 4 x 96 GiB = 384 GiB, clamped to 256.
+	test.isEqual(_gib(256), _eval(mf.memFormula(64), _gib(96)))
+
+	test.isEqual(_gib(110), f.fallbackOf(mf.memFormula(110)))
+}
