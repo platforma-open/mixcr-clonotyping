@@ -58,7 +58,7 @@ self.body(func(inputs) {
 	//
 	// A flat 12 GiB failed on a 10.7k-cell / 26.7k-clone 10x BCR sample. The mixcr
 	// entrypoint turns a container grant R into
-	//     -Xmx = max(min(0.85*R, R - 3500 MiB), 0.5*R)
+	//     -Xmx = max(min(0.85*R, R - 3500 MiB), 0.5*R)   and   -Xms = 0.5*R
 	// so the flat non-heap reserve costs small grants disproportionately: 12 GiB yields
 	// 8788 MiB of heap, which OOM'd.
 	//
@@ -69,6 +69,12 @@ self.body(func(inputs) {
 	// blob size via getBlobSize -- metadata only, no pre-exec. An Advanced Settings
 	// override replaces the formula outright, matching the analyze step; where a backend
 	// cannot evaluate formulas, the static fallback is the floor.
+	//
+	// Keep the floors tight. -Xms is half the grant, so the request is a hard
+	// pre-allocation, not just a ceiling -- and a sample runs one bulk plus one
+	// single-cell export per chain group, so the floors are paid several times over
+	// concurrently. An over-estimate here does not merely waste the reservation, it
+	// pre-touches it. 24 GiB yields 20889 MiB of heap, 2.4x the ceiling that failed.
 	formula := exec.formula
 	exportRamCapGiB := 128
 	exportRam := func(floorGiB, perByte) {
@@ -218,7 +224,7 @@ self.body(func(inputs) {
 					mixcrCmdBuilder.arg(arg)
 				}
 			}
-		}, exportRam(32, 32))
+		}, exportRam(24, 32))
 
 		unprocessedTsvForSingleCell := mixcrForSingleCell.getFile("clones.tsv")
 

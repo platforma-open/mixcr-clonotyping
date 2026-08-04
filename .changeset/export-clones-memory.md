@@ -18,8 +18,10 @@ sample exhausted it: `exportClones` died with `OutOfMemoryError`, taking the
 `clonotypes`, `clonotypeTables` and `qcReportTable` outputs with it.
 
 - RAM is now `clamp(perByte × size(clns), floor, 128 GiB)` — 16 GiB and 16× for the
-  bulk export, 32 GiB and 32× for the single-cell export, which pays the per-cell
-  expansion.
+  bulk export, 24 GiB and 32× for the single-cell export, which pays the per-cell
+  expansion. 24 GiB yields 20889 MiB of heap, 2.4× the ceiling that failed. The floors
+  are kept tight because `-Xms` is half the grant: the request is a hard pre-allocation,
+  and a sample runs one bulk plus one single-cell export per chain group.
 - An Advanced Settings memory override now applies as-is rather than quartered,
   matching how the analyze step treats the same setting. Projects that set it will
   request 4× more for the export step than before.
