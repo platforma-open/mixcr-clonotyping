@@ -13,14 +13,14 @@ jobs:
   init:
     runs-on: hz-ubuntu-dind
     steps:
-      - uses: milaboratory/github-ci/actions/context/init@v4
+      - uses: milaboratory/github-ci/actions/context/init@v4-beta
         with:
           version-canonize: false
           branch-versioning: main
   run:
     needs:
       - init
-    uses: milaboratory/github-ci/.github/workflows/node-simple-pnpm.yaml@v4
+    uses: milaboratory/github-ci/.github/workflows/node-simple-pnpm.yaml@v4-beta
     with:
       app-name: 'Block: Mixcr Clonotyping 2'
       app-name-slug: 'block-mixcr-clonotyping-2'
@@ -38,6 +38,7 @@ jobs:
       publish-to-public: 'true'
       package-path: 'block'
       create-tag: 'true'
+      require-package-path-bump: true
 
       npmrc-config: |
         {
