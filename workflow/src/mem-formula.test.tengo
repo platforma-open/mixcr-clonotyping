@@ -31,25 +31,23 @@ TestBaseMemGiBSelection := func() {
 }
 
 TestMemFormula := func() {
-	// mem = clamp(4 x size, base, 256 GiB) — the floor is a TOTAL, not a base to add to.
+	// mem = clamp(4 x size, base, 256 GiB). base is the lower bound, not a base to add to.
 
 	// Reference input: 4 x 31.75 GiB = 127 GiB, above the 110 GiB floor.
-	// Was 237 GiB before the double-count was removed.
 	test.isEqual(_gib(127), _eval(mf.memFormula(110), _READS_31_75_GIB))
 
-	// Empty input falls to the floor, unchanged.
+	// Empty input falls to the floor.
 	test.isEqual(_gib(64),  _eval(mf.memFormula(64),  0))
 	test.isEqual(_gib(110), _eval(mf.memFormula(110), 0))
 	test.isEqual(_gib(192), _eval(mf.memFormula(192), 0))
 
-	// 32 GiB of reads: the data term is 128 GiB and now STANDS ALONE.
-	test.isEqual(_gib(128), _eval(mf.memFormula(64),  _gib(32)))  // was 192
-	test.isEqual(_gib(128), _eval(mf.memFormula(110), _gib(32)))  // was 238
-	test.isEqual(_gib(192), _eval(mf.memFormula(192), _gib(32)))  // was 256 — floor now binds
+	// 32 GiB of reads: the data term is 128 GiB and stands alone.
+	test.isEqual(_gib(128), _eval(mf.memFormula(64),  _gib(32)))
+	test.isEqual(_gib(128), _eval(mf.memFormula(110), _gib(32)))
+	test.isEqual(_gib(192), _eval(mf.memFormula(192), _gib(32)))  // floor binds
 
-	// The ceiling still binds: 4 x 96 GiB = 384 GiB, clamped to 256.
+	// The ceiling binds: 4 x 96 GiB = 384 GiB, clamped to 256.
 	test.isEqual(_gib(256), _eval(mf.memFormula(64), _gib(96)))
 
-	// The static fallback is unchanged.
 	test.isEqual(_gib(110), f.fallbackOf(mf.memFormula(110)))
 }

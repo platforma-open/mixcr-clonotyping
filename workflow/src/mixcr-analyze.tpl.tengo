@@ -84,18 +84,17 @@ self.body(func(inputs) {
 	perProcessCPUsResolved := is_undefined(perProcessCPUs) ? 16 : perProcessCPUs
 
 	// Memory limit per process.
-	// Size analyze RAM from the input reads' file size. size("reads") sums the
-	// stored (compressed) blob size of the sample's R1+R2 FASTQ via getBlobSize —
-	// a metadata read, no pre-exec — so it tracks total input volume (read count
-	// and read length) without decompressing.
-	//     mem = clamp(4 bytes/byte * size, baseMemGiB, 256 GiB)
-	// baseMemGiB is a TOTAL-memory floor for the analysis, not a base to add data on
-	// top of — adding a data term to it double-counted the input. The floor is 64, or
-	// 110/192 for contig/cell and single-cell+MiTool pipelines, which need that
-	// headroom regardless of input size; the linear term scales with input volume;
-	// the 256 GiB cap bounds the largest.
-	// An "Advanced Settings" memory override takes precedence; on backends that
-	// cannot evaluate resource formulas, the formula's static fallback is the baseline.
+	//     mem = clamp(4 * size("reads"), baseMemGiB, 256 GiB)
+	// size("reads") sums the stored (compressed) blob size of the sample's R1+R2 FASTQ
+	// via getBlobSize — a metadata read, no pre-exec — so it tracks total input volume
+	// (read count and read length) without decompressing.
+	// baseMemGiB is a TOTAL-memory floor for the analysis, so it acts as the lower bound
+	// rather than a base to add data on top of. It is 64 GiB, rising to 110 or 192 for
+	// contig/cell and single-cell+MiTool pipelines, which need that headroom whatever the
+	// input size. The linear term scales with input volume, and the 256 GiB cap bounds
+	// the largest runs.
+	// An "Advanced Settings" memory override takes precedence. On backends that cannot
+	// evaluate resource formulas, the formula's static fallback is the baseline.
     if !is_undefined(perProcessMemGB) {
         // memory per process was set in "Advanced Settings" block directly
 		mixcrCmdBuilder.cpu(perProcessCPUsResolved).mem(string(perProcessMemGB) + "GiB")
