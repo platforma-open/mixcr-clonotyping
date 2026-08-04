@@ -9,7 +9,7 @@
     "format": "/usr/bin/env emacs --script ./format.el || echo 'No emacs.'",
     "do-pack": "shx rm -f *.tgz && pnpm pack && shx mv *.tgz package.tgz",
     "check": "pl-tengo check",
-    "test": "vitest run --passWithNoTests"
+    "test": "pl-tengo test && vitest run --passWithNoTests"
   },
   "dependencies": {
     "@platforma-open/milaboratories.software-mixcr": "catalog:",
