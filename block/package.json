@@ -26,6 +26,7 @@
   "devDependencies": {
     "@milaboratories/ts-builder": "catalog:",
     "@milaboratories/ts-configs": "catalog:",
+    "@platforma-open/milaboratories.mixcr-clonotyping-2.kind": "workspace:*",
     "@platforma-open/milaboratories.mixcr-clonotyping-2.model": "workspace:*",
     "@platforma-open/milaboratories.mixcr-clonotyping-2.ui": "workspace:*",
     "@platforma-open/milaboratories.mixcr-clonotyping-2.workflow": "workspace:*",
