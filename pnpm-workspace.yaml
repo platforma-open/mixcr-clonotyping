@@ -14,10 +14,10 @@ catalog:
   "@platforma-sdk/ui-vue": 1.82.1
   "@platforma-sdk/tengo-builder": 4.0.23
   "@platforma-sdk/package-builder": 3.15.0
-  "@platforma-sdk/block-tools": 2.14.0
+  "@platforma-sdk/block-tools": 2.14.2
   "@platforma-sdk/block-kind": 1.1.0
 
-  "@platforma-sdk/test": 1.82.0
+  "@platforma-sdk/test": 1.82.3
   "@milaboratories/helpers": 1.14.5
 
   "@platforma-open/milaboratories.software-mixcr": 4.7.0-347-develop
