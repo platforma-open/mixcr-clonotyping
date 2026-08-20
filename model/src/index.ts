@@ -1,15 +1,23 @@
 import type { InferHrefType, PlDataTableStateV2 } from "@platforma-sdk/model";
 import {
   BlockModelV3,
-  ColumnLazy,
+  Column,
+  ColumnsCollection,
+  TreeNodeAccessor,
   DataModelBuilder,
   createPlDataTableStateV2,
   createPlDataTableV3,
+  isDataColumn,
+  isImportFileHandleIndex,
   isPColumnSpec,
   parseResourceMap,
+  type ColumnData,
   type ImportFileHandle,
+  type ImportFileHandleIndex,
   type InferOutputsType,
 } from "@platforma-sdk/model";
+import type { BlockParams as KindBlockParams } from "@platforma-open/milaboratories.mixcr-clonotyping-2.kind";
+import { kind } from "@platforma-open/milaboratories.mixcr-clonotyping-2.kind";
 import type { BlockArgs } from "./args";
 import { BlockArgsValid } from "./args";
 import { ProgressPrefix } from "./progress";
@@ -23,23 +31,64 @@ type LegacyUiState = {
   tableState: PlDataTableStateV2;
 };
 
-const dataModel = new DataModelBuilder()
+const dataModel = new DataModelBuilder({ kind })
   .from<BlockData>("v1")
   .upgradeLegacy<BlockArgs, LegacyUiState>(({ args, uiState }) => ({
     ...args,
     tableState: uiState.tableState,
     runMode: (args.limitInput ?? 0) > 0 ? "dry" : "full",
   }))
-  .init(() => ({
-    defaultBlockLabel: "",
-    customBlockLabel: "",
-    chains: ["IG", "TCRAB", "TCRGD"],
-    cloneClusteringMode: "default",
+  // `params` is absent when a block is created by hand rather than from a
+  // template, so every field the contract carries keeps its own default.
+  .init(({ params }) => ({
+    ...params,
+    defaultBlockLabel: params?.defaultBlockLabel ?? "",
+    customBlockLabel: params?.customBlockLabel ?? "",
+    chains: params?.chains ?? ["IG", "TCRAB", "TCRGD"],
+    cloneClusteringMode: params?.cloneClusteringMode ?? "default",
     tableState: createPlDataTableStateV2(),
-    runMode: "full",
+    runMode: params?.runMode ?? "full",
   }));
 
-export const platforma = BlockModelV3.create(dataModel)
+export const platforma = BlockModelV3.create({ dataModel, kind })
+
+  // Inverse of `init` — the same fields, projected back out for template export.
+  // `tableState` is view state and never crosses the boundary. File-valued
+  // fields are dropped unless they are `index://` handles: an `upload://` handle
+  // names an import local to this machine and would resolve nowhere else.
+  .templateParams((data) => ({
+    input: data.input,
+    inputLibrary: data.inputLibrary,
+    libraryFile: portableHandle(data.libraryFile),
+    isLibraryFileGzipped: data.isLibraryFileGzipped,
+
+    preset: portablePreset(data.preset),
+    presetCommonName: data.presetCommonName,
+    isGenericPreset: data.isGenericPreset,
+    species: data.species,
+    customSpecies: data.customSpecies,
+    materialType: data.materialType,
+    leftAlignmentMode: data.leftAlignmentMode,
+    rightAlignmentMode: data.rightAlignmentMode,
+    tagPattern: data.tagPattern,
+    assembleClonesBy: data.assembleClonesBy,
+    imputeGermline: data.imputeGermline,
+    chains: data.chains,
+    scHeavyOnly: data.scHeavyOnly,
+    cloneClusteringMode: data.cloneClusteringMode,
+    exportMinQuality: data.exportMinQuality,
+    stopCodonTypes: data.stopCodonTypes,
+    stopCodonReplacements: data.stopCodonReplacements,
+
+    runMode: data.runMode,
+    limitInput: data.limitInput,
+    perProcessMemGB: data.perProcessMemGB,
+    perProcessCPUs: data.perProcessCPUs,
+
+    defaultBlockLabel: data.defaultBlockLabel,
+    customBlockLabel: data.customBlockLabel,
+    title: data.title,
+  }))
 
   .prerunArgs((data) => ({
     preset: data.preset,
@@ -109,7 +158,7 @@ export const platforma = BlockModelV3.create(dataModel)
   )
 
   .output("datasetSpec", (ctx) => {
-    if (ctx.data.inputLibrary) return ctx.resultPool.getSpecByRef(ctx.data.inputLibrary);
+    if (ctx.data.inputLibrary) return Column(ctx.data.inputLibrary)?.getSpec();
     else return undefined;
   })
 
@@ -150,9 +199,10 @@ export const platforma = BlockModelV3.create(dataModel)
   })
 
   .outputWithStatus("clones", (ctx) => {
-    const pColumns = ctx.outputs?.resolve("clonotypes")?.getPColumns();
-    if (pColumns === undefined) return undefined;
-    return ctx.createPFrame(pColumns);
+    const clonotypes = ctx.outputs?.resolve("clonotypes");
+    if (clonotypes === undefined) return undefined;
+    // Ids go straight to the host — no spec or data is pulled into the sandbox.
+    return ctx.createPFrame(ColumnsCollection([clonotypes]).getColumnIds());
   })
 
   .retentiveOutput("inputOptions", (ctx) => {
@@ -194,7 +244,7 @@ export const platforma = BlockModelV3.create(dataModel)
   .output("sampleLabels", (ctx): Record<string, string> | undefined => {
     const inputRef = ctx.data.input;
     if (inputRef === undefined) return undefined;
-    const inputSpec = ctx.resultPool.getSpecByRef(inputRef);
+    const inputSpec = Column(inputRef)?.getSpec();
     if (inputSpec === undefined || !isPColumnSpec(inputSpec)) return undefined;
     const sampleAxisSpec = inputSpec.axesSpec[0];
 
@@ -220,48 +270,46 @@ export const platforma = BlockModelV3.create(dataModel)
     return Object.fromEntries(
       Object.entries(
         sampleLabelsObj.obj.data.getDataAsJson<{ data: Record<string, string> }>().data,
-        // @TODO zod
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       ).map((e) => [JSON.parse(e[0])[0], e[1]]),
     ) as Record<string, string>;
   })
 
   .outputWithStatus("pt", (ctx) => {
-    const pCols = ctx.outputs
-      ?.resolve({ field: "qcReportTable", assertFieldType: "Input", allowPermanentAbsence: true })
-      ?.getPColumns();
-    if (pCols === undefined || pCols.length === 0) {
-      return undefined;
-    }
+    const qcReportTable = ctx.outputs?.resolve({
+      field: "qcReportTable",
+      assertFieldType: "Input",
+      allowPermanentAbsence: true,
+    });
+    if (qcReportTable === undefined) return undefined;
+    const collection = ColumnsCollection([qcReportTable]);
+    if (collection.isEmpty()) return undefined;
+    const cols = collection.getColumns();
+    if (cols.length === 0) return undefined;
     // Single primary column avoids V3's per-primary label-discovery collision on same-axis columns.
     return createPlDataTableV3(ctx, {
-      primaryColumns: [ColumnLazy.fromColumn(pCols[0])],
-      columns: pCols.slice(1).map((c) => ColumnLazy.fromColumn(c)),
+      primaryColumns: [cols[0]],
+      columns: cols.slice(1),
       tableState: ctx.data.tableState,
     });
   })
 
   .output("rawTsvs", (ctx) => {
-    if (ctx.outputs === undefined) return undefined;
-    const pCols = ctx.outputs?.resolve("clonotypeTables")?.getPColumns();
-    if (pCols === undefined) {
-      return undefined;
-    }
-    return pCols
-      .map((pCol) => {
-        return {
-          ...pCol,
-          id: (JSON.parse(pCol.id) as { name: string }).name,
-          data: parseResourceMap(pCol.data, (acc) => acc.getRemoteFileHandle(), false),
-        };
-      })
-      .filter((pCol) => pCol.data.isComplete)
-      .map((pCol) => {
-        return {
-          ...pCol,
-          data: pCol.data.data,
-        };
-      });
+    const clonotypeTables = ctx.outputs?.resolve("clonotypeTables");
+    if (clonotypeTables === undefined) return undefined;
+    return ColumnsCollection([clonotypeTables])
+      .getColumns()
+      .filter(isDataColumn)
+      .map((col) => ({
+        id: (JSON.parse(col.id) as { name: string }).name,
+        data: parseResourceMap(
+          asAccessor(col.getData()),
+          (acc) => acc.getRemoteFileHandle(),
+          false,
+        ),
+      }))
+      .filter((col) => col.data.isComplete)
+      .map((col) => ({ ...col, data: col.data.data }));
   })
 
   .output(
@@ -316,3 +364,24 @@ export * from "./progress";
 export * from "./qc";
 export * from "./reports";
 export { BlockArgs };
+
+// ---------------------------------------------------------------------------
+// Internals
+// ---------------------------------------------------------------------------
+
+/** `parseResourceMap` needs the accessor arm of the column-data union. */
+function asAccessor(data: ColumnData): TreeNodeAccessor | undefined {
+  return data instanceof TreeNodeAccessor ? data : undefined;
+}
+
+/** Keeps a file handle only if it survives leaving this machine. */
+function portableHandle(handle: ImportFileHandle | undefined): ImportFileHandleIndex | undefined {
+  return handle !== undefined && isImportFileHandleIndex(handle) ? handle : undefined;
+}
+
+function portablePreset(preset: BlockData["preset"]): KindBlockParams["preset"] {
+  if (preset === undefined) return undefined;
+  if (preset.type === "name") return preset;
+  const file = portableHandle(preset.file);
+  return file === undefined ? undefined : { type: "file", file };
+}

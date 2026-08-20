@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@milaboratories/helpers": "catalog:",
+    "@platforma-open/milaboratories.mixcr-clonotyping-2.kind": "workspace:*",
     "@platforma-sdk/model": "catalog:",
     "zod": "catalog:"
   },
