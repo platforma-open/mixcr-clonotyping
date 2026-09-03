@@ -1,6 +1,6 @@
 {
   "name": "@platforma-open/milaboratories.mixcr-clonotyping-2.model",
-  "version": "1.27.2",
+  "version": "1.28.0",
   "private": true,
   "description": "Block model",
   "type": "module",
@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@milaboratories/helpers": "catalog:",
+    "@platforma-open/milaboratories.mixcr-clonotyping-2.kind": "workspace:*",
     "@platforma-sdk/model": "catalog:",
     "zod": "catalog:"
   },

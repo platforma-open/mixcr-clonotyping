@@ -7,7 +7,6 @@ smart := import("@platforma-sdk/workflow-tengo:smart")
 slices := import("@platforma-sdk/workflow-tengo:slices")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 exec := import("@platforma-sdk/workflow-tengo:exec")
-units := import("@platforma-sdk/workflow-tengo:units")
 pt := import("@platforma-sdk/workflow-tengo:pt")
 clonotypeLabel := import(":clonotype-label")
 stopCodonReplacement := import(":stop-codon-replacement")
@@ -50,16 +49,42 @@ self.body(func(inputs) {
 
 	useProductiveFilter := is_undefined(stopCodonTypes) || len(stopCodonTypes) == 0
 
-	exportMemGB := undefined
-	if !is_undefined(inputs.perProcessMemGB) {
-		exportMemGB = int(1.0*inputs.perProcessMemGB/4.0)
-		if exportMemGB < 12 {
-			exportMemGB = 12
+	// Size both `exportClones` execs from the .clns. A constant cannot work here:
+	// exportClones loads the whole CloneSet into heap, and single-cell exports then
+	// materialise a SECOND, expanded list via divideClonesByTags -- one clone per
+	// (clonotype x cell), each with its own split TagCount -- then sort and re-rank it.
+	// --chains filters only after that expansion, so exporting one chain group still
+	// pays the whole-file cost. Single-cell therefore costs several times bulk.
+	//
+	// A flat 12 GiB failed on a 10.7k-cell / 26.7k-clone 10x BCR sample. The mixcr
+	// entrypoint turns a container grant R into
+	//     -Xmx = max(min(0.85*R, R - 3500 MiB), 0.5*R)   and   -Xms = 0.5*R
+	// so the flat non-heap reserve costs small grants disproportionately: 12 GiB yields
+	// 8788 MiB of heap, which OOM'd.
+	//
+	//     ram = clamp(perByte * size(clns), floor, 128 GiB)
+	//
+	// The floor carries small inputs, where the in-heap tag-count graph rather than the
+	// stored file dominates; the linear term carries large ones. size("clns") reads the
+	// blob size via getBlobSize -- metadata only, no pre-exec. An Advanced Settings
+	// override replaces the formula outright, matching the analyze step; where a backend
+	// cannot evaluate formulas, the static fallback is the floor.
+	//
+	// Keep the floors tight. -Xms is half the grant, so the request is a hard
+	// pre-allocation, not just a ceiling -- and a sample runs one bulk plus one
+	// single-cell export per chain group, so the floors are paid several times over
+	// concurrently. An over-estimate here does not merely waste the reservation, it
+	// pre-touches it. 24 GiB yields 20889 MiB of heap, 2.4x the ceiling that failed.
+	formula := exec.formula
+	exportRamCapGiB := 128
+	exportRam := func(floorGiB, perByte) {
+		if !is_undefined(inputs.perProcessMemGB) {
+			return string(inputs.perProcessMemGB) + "GiB"
 		}
-	} else {
-		exportMemGB = 12
+		return formula.size("clns").times(perByte).
+			between(formula.gib(floorGiB), formula.gib(exportRamCapGiB)).
+			staticFallback(formula.gib(floorGiB))
 	}
-	ptMemGB := int(2.0*exportMemGB/3.0)
 
 	hashKeyDerivationExpressionPt := func(sourceColumns) {
 		return pt.concatStr(
@@ -70,11 +95,10 @@ self.body(func(inputs) {
 
 	// Exporting clones from clns file
 
-	createExport := func(additionalAction) {
+	createExport := func(additionalAction, ramRequest) {
 		mixcrCmdBuilder := exec.builder().
 			inMediumQueue().
-			mem(string(exportMemGB) + "GiB").
-		    cpu(2).
+			resources({ onCPU: { cpu: 2, ram: ramRequest } }).
 			env("MI_USE_SYSTEM_CA", "true").
 			software(mixcrSw).
 			secret("MI_LICENSE", "MI_LICENSE").
@@ -102,20 +126,21 @@ self.body(func(inputs) {
 
 		return mixcrCmdBuilder.
 			arg("clones.clns").
-			addFile("clones.clns", clnsFile).
+			addFile("clones.clns", clnsFile, { tag: "clns" }).
 			arg("clones.tsv").
 			saveFile("clones.tsv").
 			cacheHours(3).
 			run()
 	}
 
+	// Bulk export: loads the CloneSet and writes it straight out.
 	mixcrCmd := createExport(func(mixcrCmdBuilder) {
 		for argGrp in exportArgs {
 			for arg in argGrp {
 				mixcrCmdBuilder.arg(arg)
 			}
 		}
-	})
+	}, exportRam(16, 16))
 
 	unprocessedTsv := mixcrCmd.getFile("clones.tsv")
 
@@ -127,11 +152,12 @@ self.body(func(inputs) {
 		ll.panic("clonotypeKeyColumns is undefined")
 	}
 
-	// PTabler processing for main TSV output
+	// PTabler processing for main TSV output. Left unsized so workflow-tengo 6.8 sizes it
+	// from its own input volume (ram = clamp(2 GiB + 4 * size, 2 GiB, 64 GiB)), which
+	// tracks the exported TSV better than a fixed share of the mixcr step's budget. An
+	// explicit .mem()/.cpu() would suppress that.
 	wfMain := pt.workflow().
-		inMediumQueue().
-		mem(ptMemGB * units.GiB).
-		cpu(2)
+		inMediumQueue()
 
 	frameInputMap := {
 		file: unprocessedTsv,
@@ -181,6 +207,8 @@ self.body(func(inputs) {
 	result.tsv = processedTsv
 
 	if !is_undefined(cellTagColumns) {
+		// Single-cell export: pays the divideClonesByTags expansion on top of the
+		// resident CloneSet -- hence the higher floor and steeper slope.
 		mixcrForSingleCell := createExport(func(mixcrCmdBuilder) {
 			mixcrCmdBuilder.
 				arg("--split-by-tags").arg("Cell").
@@ -196,15 +224,13 @@ self.body(func(inputs) {
 					mixcrCmdBuilder.arg(arg)
 				}
 			}
-		})
+		}, exportRam(24, 32))
 
 		unprocessedTsvForSingleCell := mixcrForSingleCell.getFile("clones.tsv")
 
-		// PTabler processing for single-cell TSV output
+		// PTabler processing for single-cell TSV output (unsized -- see wfMain above).
 		wfSingleCell := pt.workflow().
-			inMediumQueue().
-			mem(ptMemGB * units.GiB).
-			cpu(2)
+			inMediumQueue()
 
 		frameLoadOps := {
 			xsvType: "tsv",
