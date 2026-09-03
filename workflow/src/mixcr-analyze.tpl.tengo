@@ -1,4 +1,4 @@
-//tengo:hash_override D70EDB25-6FF6-4615-966D-B79B04B5751C
+//tengo:hash_override AD2092AB-97D5-4758-873E-EEB932A856EA
 
 self := import("@platforma-sdk/workflow-tengo:tpl")
 smart := import("@platforma-sdk/workflow-tengo:smart")
@@ -10,6 +10,7 @@ pcolumn := import("@platforma-sdk/workflow-tengo:pframes.pcolumn")
 times := import("times")
 text := import("text")
 maps := import("@platforma-sdk/workflow-tengo:maps")
+memf := import(":mem-formula")
 
 json := import("json")
 
@@ -83,33 +84,25 @@ self.body(func(inputs) {
 	perProcessCPUsResolved := is_undefined(perProcessCPUs) ? 16 : perProcessCPUs
 
 	// Memory limit per process.
-	// Size analyze RAM from the input reads' file size, on top of a per-analysis
-	// floor. size("reads") sums the stored (compressed) blob size of the sample's
-	// R1+R2 FASTQ via getBlobSize — a metadata read, no pre-exec — so it tracks
-	// total input volume (read count and read length) without decompressing.
-	//     mem = clamp(baseMemGiB + 4 bytes/byte * size, baseMemGiB, 256 GiB)
-	// baseMemGiB is the per-analysis floor (64, or 110/192 for contig/cell and
-	// single-cell+MiTool pipelines, which need that headroom regardless of size);
-	// the linear term scales with input volume; the 256 GiB cap bounds the largest.
-	// An "Advanced Settings" memory override takes precedence; on backends that
-	// cannot evaluate resource formulas, the formula's static fallback is the baseline.
+	//     mem = clamp(4 * size("reads"), baseMemGiB, 256 GiB)
+	// size("reads") sums the stored (compressed) blob size of the sample's R1+R2 FASTQ
+	// via getBlobSize — a metadata read, no pre-exec — so it tracks total input volume
+	// (read count and read length) without decompressing.
+	// baseMemGiB is a TOTAL-memory floor for the analysis, so it acts as the lower bound
+	// rather than a base to add data on top of. It is 64 GiB, rising to 110 or 192 for
+	// contig/cell and single-cell+MiTool pipelines, which need that headroom whatever the
+	// input size. The linear term scales with input volume, and the 256 GiB cap bounds
+	// the largest runs.
+	// An "Advanced Settings" memory override takes precedence. On backends that cannot
+	// evaluate resource formulas, the formula's static fallback is the baseline.
     if !is_undefined(perProcessMemGB) {
         // memory per process was set in "Advanced Settings" block directly
 		mixcrCmdBuilder.cpu(perProcessCPUsResolved).mem(string(perProcessMemGB) + "GiB")
 	} else {
-		baseMemGiB := 64
-		if hasMiToolSteps {
-			baseMemGiB = 192
-		} else if hasAssembleContigs || hasAssembleCells {
-			baseMemGiB = 110
-		}
-		// workflow-tengo 6.7 fluent formula API fed via .resources({ onCPU: { cpu, ram } }).
-		formula := exec.formula
-		memFormula := formula.gib(baseMemGiB).
-			plus(formula.size("reads").times(4)).
-			between(formula.gib(baseMemGiB), formula.gib(256)).
-			staticFallback(formula.gib(baseMemGiB))
-		mixcrCmdBuilder.resources({ onCPU: { cpu: perProcessCPUsResolved, ram: memFormula } })
+		base := memf.baseMemGiB(hasMiToolSteps, hasAssembleContigs, hasAssembleCells)
+		mixcrCmdBuilder.resources({
+			onCPU: { cpu: perProcessCPUsResolved, ram: memf.memFormula(base) }
+		})
 	}
 
 	if !is_undefined(limitInput) {
