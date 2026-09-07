@@ -1,0 +1,46 @@
+//tengo:hash_override C35A0BFB-0798-497D-BA0A-019AFF59AE34
+
+// Measures the reads of one sample, then runs MiXCR on them.
+//
+// MiXCR needs disposable disk space for its temporary files, sized from the sample's read
+// count and read length. Measuring those is a command, and a template cannot read the result
+// of a command it started itself, so :mixcr-analyze stays a separate template and this one
+// only feeds it. See :read-stats for what is measured and how the size follows from it.
+
+self := import("@platforma-sdk/workflow-tengo:tpl")
+render := import("@platforma-sdk/workflow-tengo:render")
+assets := import("@platforma-sdk/workflow-tengo:assets")
+pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
+
+readStats := import(":read-stats")
+
+self.defineOutputs("qc", "reports", "log", "clns")
+
+mixcrAnalyzeTpl := assets.importTemplate(":mixcr-analyze")
+
+self.body(func(inputs) {
+	inputData := inputs[pConstants.VALUE_FIELD_NAME]
+	params := inputs.params
+
+	mixcrAnalyze := render.create(mixcrAnalyzeTpl, {
+		"__value__": inputData,
+		"__aggregation_axes_names__": inputs[pConstants.AGGREGATION_AXES_NAMES_FIELD_NAME],
+
+		preset: inputs.preset,
+		params: params,
+		library: inputs.library,
+		presetContent: inputs.presetContent,
+
+		perProcessMemGB: inputs.perProcessMemGB,
+		perProcessCPUs: inputs.perProcessCPUs,
+
+		readStats: readStats.measure(inputData, params.fileExtension)
+	})
+
+	return {
+		qc: mixcrAnalyze.output("qc", readStats.CACHE_PERIOD),
+		log: mixcrAnalyze.output("log", readStats.CACHE_PERIOD),
+		reports: mixcrAnalyze.output("reports", readStats.CACHE_PERIOD),
+		clns: mixcrAnalyze.output("clns", readStats.CACHE_PERIOD)
+	}
+})

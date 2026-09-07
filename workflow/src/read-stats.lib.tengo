@@ -8,7 +8,8 @@
 //
 // Measuring is a command, so its result is a resource. A template cannot read the result of
 // a command it started itself, which is why measure() and scratchFreeSpaceFor() are called
-// from two different templates: :mixcr-analyze starts the measurement, :mixcr-run reads it.
+// from two different templates: :measure-and-analyze starts the measurement,
+// :mixcr-analyze reads it.
 //
 // The request is an optimisation and never a precondition. Every unusable case — no read end
 // to measure, an unparsable number — returns 'undefined', the field is left out, and the
