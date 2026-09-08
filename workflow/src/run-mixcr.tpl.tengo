@@ -15,6 +15,7 @@ times := import("times")
 text := import("text")
 maps := import("@platforma-sdk/workflow-tengo:maps")
 memf := import(":mem-formula")
+feats := import("@platforma-sdk/workflow-tengo:feats")
 readStats := import(":read-stats")
 
 json := import("json")
@@ -90,6 +91,14 @@ self.body(func(inputs) {
 		secret("MI_LICENSE", "MI_LICENSE").
 		env("MI_LICENSE_DEBUG", "MI_LICENSE_DEBUG").
 		arg("analyze")
+
+	// A backend that does not understand a scratch space request leaves TMPDIR pointing at
+	// the small temporary directory every job shares, which is not enough for MiXCR to sort
+	// in. Telling it to keep temporary files in the working directory is what this block did
+	// before scratch space existed, so old backends keep exactly the behaviour they had.
+	if !feats.hasScratchSpace {
+		mixcrCmdBuilder.arg("--use-local-temp")
+	}
 
 	// CPUs number per process
 	perProcessCPUsResolved := is_undefined(perProcessCPUs) ? 16 : perProcessCPUs

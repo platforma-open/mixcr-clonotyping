@@ -19,12 +19,14 @@
 // a command it started itself, which is why measure() and scratchFreeSpaceFor() are called
 // from two different templates: :mixcr-analyze starts the measurement, :run-mixcr reads it.
 //
-// The request is an optimisation and never a precondition. Every unusable case — no read end
-// to measure, an unparsable number — returns 'undefined', the field is left out, and the
-// command runs with whatever temporary storage its runner provides by default.
+// The request is an optimisation and never a precondition. Every unusable case — a backend
+// that does not understand the request, no read end to measure, an unparsable number —
+// returns 'undefined', the field is left out, and the command runs with whatever temporary
+// storage its runner provides by default. :run-mixcr restores --use-local-temp in that case.
 
 exec := import("@platforma-sdk/workflow-tengo:exec")
 assets := import("@platforma-sdk/workflow-tengo:assets")
+feats := import("@platforma-sdk/workflow-tengo:feats")
 smart := import("@platforma-sdk/workflow-tengo:smart")
 maps := import("@platforma-sdk/workflow-tengo:maps")
 
@@ -91,6 +93,12 @@ readsToMeasure := func(inputMap, keyLength, fileExtension) {
 //                    passed to scratchFreeSpaceFor() in another template; 'undefined' when
 //                    the sample holds no read end to measure.
 measure := func(inputData, fileExtension) {
+	// A backend that does not understand a scratch space request cannot use the measurement,
+	// so the reads are not read at all: the pass costs a full decompression per sample.
+	if !feats.hasScratchSpace {
+		return undefined
+	}
+
 	reads := readsToMeasure(inputData.inputs(), inputData.getDataAsJson().keyLength, fileExtension)
 	if len(reads) == 0 {
 		return undefined
