@@ -9,9 +9,12 @@ The size is `11 x millionsOfReads x (averageReadLength / 1000) ^ 2` GiB, rounded
 Neither number is in the column metadata, so one read end is measured with `seqkit
 stats` and read back through `csvtk` before the run starts; read ends are symmetrical,
 so one of them describes the whole sample. The measurement and the size formula live
-in the new `read-stats` library, called from the new `measure-and-analyze` template that
-now wraps `mixcr-analyze` — a template cannot read the result of a command it started
-itself. `mixcr-analyze` keeps its identity, so runs already finished still deduplicate.
+in the new `read-stats` library. `mixcr-analyze` now measures and then renders the run,
+which moved to the new `run-mixcr` template, because a template cannot read the result of a
+command it started itself. `mixcr-analyze` keeps the identity and the inputs it has always
+had, so an analysis that already finished still deduplicates to its result instead of
+running again — scratch space changes only where MiXCR writes temporary files, never what
+it produces.
 
 The request is an optimisation and never a precondition. A deployment that cannot
 serve the size shrinks or grows it, one with no scratch storage ignores it, and a

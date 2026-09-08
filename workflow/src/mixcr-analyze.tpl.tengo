@@ -1,254 +1,59 @@
 //tengo:hash_override AD2092AB-97D5-4758-873E-EEB932A856EA
 
-self := import("@platforma-sdk/workflow-tengo:tpl")
-smart := import("@platforma-sdk/workflow-tengo:smart")
-pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
-ll := import("@platforma-sdk/workflow-tengo:ll")
-exec := import("@platforma-sdk/workflow-tengo:exec")
-assets := import("@platforma-sdk/workflow-tengo:assets")
-pcolumn := import("@platforma-sdk/workflow-tengo:pframes.pcolumn")
-times := import("times")
-text := import("text")
-maps := import("@platforma-sdk/workflow-tengo:maps")
-memf := import(":mem-formula")
-readStats := import(":read-stats")
+// Measures the reads of one sample, then runs MiXCR on them.
+//
+// MiXCR needs disposable disk space for its temporary files, sized from the sample's read
+// count and read length. Measuring those is a command, and a template cannot read the result
+// of a command it started itself, so the run lives in :run-mixcr and this template only
+// feeds it. See :read-stats for what is measured and how the size follows from it.
+//
+// The hash override is the one this template has always carried, and the inputs are the ones
+// pframes.processColumn has always passed, so an analysis that already finished still
+// deduplicates to its result instead of running again. That is safe because scratch space
+// changes only where MiXCR writes its temporary files, never what it produces.
 
-json := import("json")
+self := import("@platforma-sdk/workflow-tengo:tpl")
+render := import("@platforma-sdk/workflow-tengo:render")
+assets := import("@platforma-sdk/workflow-tengo:assets")
+pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
+
+readStats := import(":read-stats")
 
 self.defineOutputs("qc", "reports", "log", "clns")
 
-mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
-
-progressPrefix := "[==PROGRESS==]"
+runMixcrTpl := assets.importTemplate(":run-mixcr")
 
 self.body(func(inputs) {
 	inputData := inputs[pConstants.VALUE_FIELD_NAME]
-	aggregationAxesNames := inputs[pConstants.AGGREGATION_AXES_NAMES_FIELD_NAME]
-
-	// Disposable disk space for MiXCR's temporary files. The backend points TMPDIR at a
-	// volume of this size, which is why --use-local-temp is gone: it wrote into the working
-	// directory on the shared workspace storage, where the I/O is slower and billed.
-	// 'undefined' when :measure-and-analyze found no read end to measure.
-	mixcrScratchSpace := readStats.scratchFreeSpaceFor(inputs.readStats)
-
-	preset := inputs.preset
-	library := inputs.library
-
 	params := inputs.params
-	species := params.species
-	limitInput := params.limitInput
-	leftAlignmentMode := params.leftAlignmentMode
-	rightAlignmentMode := params.rightAlignmentMode
-	materialType := params.materialType
-	tagPattern := params.tagPattern
-	assembleClonesBy := params.assembleClonesBy
-	perProcessMemGB := inputs.perProcessMemGB
-	perProcessCPUs := inputs.perProcessCPUs
-	fileExtension := params.fileExtension
-	reports := params.reports
-	isLibraryFileGzipped := params.isLibraryFileGzipped
 
-	presetContent := inputs.presetContent.getDataAsJson()
+	runMixcr := render.create(
+		runMixcrTpl,
+		{
+			"__value__": inputData,
+			"__aggregation_axes_names__": inputs[pConstants.AGGREGATION_AXES_NAMES_FIELD_NAME],
 
-	if !is_map(presetContent) || !is_array(presetContent.pipeline) {
-		ll.panic("malformed presetContent %v", presetContent)
-	}
+			preset: inputs.preset,
+			params: params,
+			library: inputs.library,
+			presetContent: inputs.presetContent,
 
-	inputDataMeta := inputData.getDataAsJson()
-
-	hasAssembleContigs := false
-	hasAssembleCells := false
-	hasMiToolSteps := false
-	for stage in presetContent.pipeline {
-		if stage == "assembleContigs" {
-			hasAssembleContigs = true
-		} else if stage == "assembleCells" {
-			hasAssembleCells = true
-		} else if text.has_prefix(stage, "mitool-") {
-			hasMiToolSteps = true
+			readStats: readStats.measure(inputData, params.fileExtension)
+		},
+		{
+			// Kept out of the deduplication key, the way process.tpl.tengo passes them to this
+			// template: a run may be recovered across a change of the CPU or memory override.
+			metaInputs: {
+				perProcessMemGB: inputs.perProcessMemGB,
+				perProcessCPUs: inputs.perProcessCPUs
+			}
 		}
-	}
+	)
 
-	clnsFileName := "result.clns"
-	if hasAssembleContigs {
-		clnsFileName = "result.contigs.clns"
+	return {
+		qc: runMixcr.output("qc", readStats.CACHE_PERIOD),
+		log: runMixcr.output("log", readStats.CACHE_PERIOD),
+		reports: runMixcr.output("reports", readStats.CACHE_PERIOD),
+		clns: runMixcr.output("clns", readStats.CACHE_PERIOD)
 	}
-	if hasAssembleCells {
-		clnsFileName = "result.assembledCells.clns"
-	}
-
-	mixcrCmdBuilder := exec.builder().
-		printErrStreamToStdout().
-		saveStdoutStream().
-		env("MI_USE_SYSTEM_CA", "true").
-		env("MI_PROGRESS_PREFIX", progressPrefix).
-		software(mixcrSw).
-		secret("MI_LICENSE", "MI_LICENSE").
-		env("MI_LICENSE_DEBUG", "MI_LICENSE_DEBUG").
-		arg("analyze")
-
-	// CPUs number per process
-	perProcessCPUsResolved := is_undefined(perProcessCPUs) ? 16 : perProcessCPUs
-
-	// Memory limit per process.
-	//     mem = clamp(4 * size("reads"), baseMemGiB, 256 GiB)
-	// size("reads") sums the stored (compressed) blob size of the sample's R1+R2 FASTQ
-	// via getBlobSize — a metadata read, no pre-exec — so it tracks total input volume
-	// (read count and read length) without decompressing.
-	// baseMemGiB is a TOTAL-memory floor for the analysis, so it acts as the lower bound
-	// rather than a base to add data on top of. It is 64 GiB, rising to 110 or 192 for
-	// contig/cell and single-cell+MiTool pipelines, which need that headroom whatever the
-	// input size. The linear term scales with input volume, and the 256 GiB cap bounds
-	// the largest runs.
-	// An "Advanced Settings" memory override takes precedence. On backends that cannot
-	// evaluate resource formulas, the formula's static fallback is the baseline.
-	onCPUResources := { cpu: perProcessCPUsResolved }
-	if !is_undefined(perProcessMemGB) {
-		// memory per process was set in "Advanced Settings" block directly
-		onCPUResources.ram = string(perProcessMemGB) + "GiB"
-	} else {
-		base := memf.baseMemGiB(hasMiToolSteps, hasAssembleContigs, hasAssembleCells)
-		onCPUResources.ram = memf.memFormula(base)
-	}
-	if !is_undefined(mixcrScratchSpace) {
-		onCPUResources.scratchFreeSpace = mixcrScratchSpace
-	}
-	mixcrCmdBuilder.resources({ onCPU: onCPUResources })
-
-	if !is_undefined(limitInput) {
-		mixcrCmdBuilder.arg("--limit-input").arg(string(limitInput))
-	}
-
-	if library {
-		mixcrCmdBuilder.arg("--species").arg(species)
-		if isLibraryFileGzipped {
-			mixcrCmdBuilder.arg("--library").arg("library.json.gz").
-			addFile("library.json.gz", library)
-		} else {
-			mixcrCmdBuilder.arg("--library").arg("library.json").
-			addFile("library.json", library)
-		}
-	} else if !is_undefined(species) {
-		species = params.species
-		mixcrCmdBuilder.arg("--species").arg(species)
-	}
-
-	if smart.isResource(preset) /* file */ {
-		mixcrCmdBuilder.
-			arg("local#input_preset").
-			addFile("input_preset.yaml", preset)
-	} else {
-		ll.assert(!is_undefined(preset.name), "undefined preset name")
-		mixcrCmdBuilder.
-			arg(preset.name)
-	}
-
-	// Optional preset-specific parameters (order matters if preset requires positional values)
-	if !is_undefined(leftAlignmentMode) {
-		mixcrCmdBuilder.arg(leftAlignmentMode)
-	}
-	if !is_undefined(rightAlignmentMode) {
-		mixcrCmdBuilder.arg(rightAlignmentMode)
-	}
-	if !is_undefined(materialType) {
-		mixcrCmdBuilder.arg(materialType)
-	}
-	if !is_undefined(tagPattern) {
-		mixcrCmdBuilder.arg("--tag-pattern").arg(tagPattern)
-	}
-	if !is_undefined(assembleClonesBy) {
-		mixcrCmdBuilder.arg("--assemble-clonotypes-by").arg(assembleClonesBy)
-	}
-	// Clone clustering tuning
-	cloneClusteringMode := params.cloneClusteringMode
-	if is_undefined(cloneClusteringMode) {
-		cloneClusteringMode = "default"
-	}
-	if cloneClusteringMode == "relaxed" {
-		mixcrCmdBuilder.
-			arg("-Massemble.cloneAssemblerParameters.minimalQuality=20").
-			arg("-Massemble.cloneAssemblerParameters.badQualityThreshold=10").
-			arg("-Massemble.cloneAssemblerParameters.cloneClusteringParameters.searchParameters=oneMismatchOrIndel").
-			arg("-Massemble.cloneAssemblerParameters.cloneClusteringParameters.searchDepth=1")
-	} else if cloneClusteringMode == "off" {
-		mixcrCmdBuilder.arg("-Massemble.cloneAssemblerParameters.cloneClusteringParameters=null")
-	}
-
-	inputMap := inputData.inputs()
-	if inputDataMeta.keyLength == 0 {
-		ll.assert(aggregationAxesNames == [], "unexpected aggregation axes names")
-		// Assuming only one key "[]" exists here, no need for sorted iteration
-		inputFile := inputMap["[]"]
-		ll.assert(!is_undefined(inputFile), "unexpected agg group structure")
-		inputFileName := "input." + fileExtension
-		mixcrCmdBuilder.addFile(inputFileName, inputFile, { tag: "reads" })
-		mixcrCmdBuilder.arg(inputFileName)
-	} else if inputDataMeta.keyLength == 1 {
-		ll.assert(aggregationAxesNames == ["pl7.app/sequencing/readIndex"], "unexpected aggregation axes names")
-		for sKey in maps.getKeys(inputMap) {
-			inputFile := inputMap[sKey]
-			key := json.decode(sKey)
-			if len(key) != 1 {
-				ll.panic("malformed key: %v", sKey)
-			}
-			r := key[0]
-			if (r[0] != 'R' && r[0] != "I") || (r[1] != '1' && r[1] != '2') || len(r) != 2 {
-				ll.panic("malformed read index: %v", r)
-			}
-			mixcrCmdBuilder.addFile("input_" + r + "." + fileExtension, inputFile, { tag: "reads" })
-		}
-		mixcrCmdBuilder.arg("input_{{R}}." + fileExtension)
-	} else if inputDataMeta.keyLength == 2 {
-		ll.assert(aggregationAxesNames == ["pl7.app/sequencing/lane", "pl7.app/sequencing/readIndex"], "unexpected aggregation axes names")
-		for sKey in maps.getKeys(inputMap) {
-			inputFile := inputMap[sKey]
-			key := json.decode(sKey)
-			if len(key) != 2 {
-				ll.panic("malformed key: %v", sKey)
-			}
-			lane := key[0]
-			r := key[1]
-			if (r[0] != 'R' && r[0] != "I") || (r[1] != '1' && r[1] != '2') || len(r) != 2 {
-				ll.panic("malformed read index: %v", r)
-			}
-			if is_undefined(int(lane)) {
-				ll.panic("malformed lane: %v", lane)
-			}
-			mixcrCmdBuilder.addFile("input_L" + lane + "_" + r + "." + fileExtension, inputFile, { tag: "reads" })
-		}
-		mixcrCmdBuilder.arg("input_L{{n}}_{{R}}." + fileExtension)
-	} else {
-		ll.panic("too many axes / not supported")
-	}
-
-	mixcrCmdBuilder.arg("result")
-	mixcrCmdBuilder.arg("--force-overwrite")
-
-	mixcrCmdBuilder.saveFile("result.qc.json")
-	mixcrCmdBuilder.saveFile(clnsFileName)
-
-	for report in reports {
-		mixcrCmdBuilder.saveFile(report.fileJson)
-		mixcrCmdBuilder.saveFile(report.fileTxt)
-	}
-
-	mixcrCmdBuilder = mixcrCmdBuilder.cache(48 * times.hour)
-	mixcrCmd := mixcrCmdBuilder.run()
-
-	// collecting results
-
-	reportsMap := pcolumn.resourceMapBuilder( /* keyLength */ 2 )
-	for report in reports {
-		reportsMap.add([report.id, "json"], mixcrCmd.getFile(report.fileJson))
-		reportsMap.add([report.id, "txt"], mixcrCmd.getFile(report.fileTxt))
-	}
-
-	result := {
-		qc: mixcrCmd.getFile("result.qc.json"),
-		log: mixcrCmd.getStdoutStream(),
-		reports: reportsMap.build(),
-		clns: mixcrCmd.getFile(clnsFileName)
-	}
-
-	return result
 })

@@ -16,7 +16,7 @@ json := import("json")
 text := import("text")
 times := import("times")
 
-measureAndAnalyzeTpl := assets.importTemplate(":measure-and-analyze")
+mixcrAnalyzeTpl := assets.importTemplate(":mixcr-analyze")
 mixcrExportTpl := assets.importTemplate(":mixcr-export")
 aggregateByClonotypeKeyTpl := assets.importTemplate(":aggregate-by-clonotype-key")
 exportReportTpl := assets.importTemplate(":export-report")
@@ -245,7 +245,7 @@ self.body(func(inputs) {
 
 	mixcrResults := pframes.processColumn(
 		{ spec: inputSpec, data: inputs.inputData },
-		measureAndAnalyzeTpl,
+		mixcrAnalyzeTpl,
 		targetOutputs,
 		{
 			aggregate: [{
