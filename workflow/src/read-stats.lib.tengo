@@ -1,10 +1,19 @@
 // Single source of truth for the `mixcr analyze` scratch space request.
 //
-//     GiB = 11 x millionsOfReads x (averageReadLength / 1000) ^ 2
+// Two shapes of temporary data compete for the space, and the run needs whichever is
+// larger:
 //
-// Neither number is in the p-column metadata, so the reads are measured with
-// 'seqkit stats' and the result is read back as JSON through 'csvtk'. Only one read end is
-// measured: read ends are symmetrical, so one of them describes the whole sample.
+//     S   = 2.0 x millionsOfReads x (lengthOfR1 + lengthOfR2) / 1000
+//     C   = 11  x millionsOfReads x (lengthOfTheLongestRead / 1000) ^ 2
+//     GiB = max(S, C)
+//
+// S scales with the volume of the input — two bytes per base of the pair. C is quadratic in
+// read length, so it overtakes S only on long reads.
+//
+// None of those numbers is in the p-column metadata, so the reads are measured with
+// 'seqkit stats' and the result is read back as JSON through 'csvtk'. Both read ends are
+// measured: the formula needs their lengths separately, and the longest read may sit in
+// either of them.
 //
 // Measuring is a command, so its result is a resource. A template cannot read the result of
 // a command it started itself, which is why measure() and scratchFreeSpaceFor() are called
@@ -20,84 +29,103 @@ smart := import("@platforma-sdk/workflow-tengo:smart")
 maps := import("@platforma-sdk/workflow-tengo:maps")
 
 times := import("times")
+text := import("text")
 json := import("json")
 
 seqkitSw := assets.importSoftware("@platforma-open/milaboratories.software-binary-collection:seqkit")
 csvtkSw := assets.importSoftware("@platforma-open/milaboratories.software-binary-collection:csvtk")
 
 // How long a measurement may be reused. Matches the MiXCR run cache, so a repeated analysis
-// of the same sample reads the file no more often than it runs MiXCR.
+// of the same sample reads the files no more often than it runs MiXCR.
 CACHE_PERIOD := 48 * times.hour
 
-// CPU cores asked for the read pass. seqkit parallelises across files and this pass reads a
-// single one, so more cores buy little; the command reads the granted count back from
-// '{system.cpu}' rather than repeating this number, so the two can never diverge.
-STATS_CPU := 1
+// CPU cores asked for the read pass. seqkit parallelises across files, so a paired sample
+// can use two; the command reads the granted count back from '{system.cpu}' rather than
+// repeating this number, so the two can never diverge.
+STATS_CPU := 2
 
-// readEndToMeasure picks the single read end that describes the sample: the first R1 in key
-// order, or the only file when the reads are not split by read index. Returns 'undefined'
-// when the sample holds no R1.
-readEndToMeasure := func(inputMap, keyLength) {
+// Prefix of the name every measured file is given inside the command. The read end goes
+// into the name as "_R1_" or "_R2_", because 'seqkit stats' reports one row per file and
+// names it by that name — the only way back from a row to the end it describes.
+_NAME_PREFIX := "reads_"
+
+// readsToMeasure lists the sample's R1 and R2 files with the name each gets inside the
+// command. Index reads are left out: they carry tags, not the sequence the run has to sort.
+// Names follow the sorted key order, so a repeated analysis of the same sample builds the
+// same command and hits its cache.
+readsToMeasure := func(inputMap, keyLength, fileExtension) {
 	if keyLength == 0 {
-		return inputMap["[]"]
+		readsFile := inputMap["[]"]
+		if is_undefined(readsFile) {
+			return []
+		}
+		return [{
+			name: _NAME_PREFIX + "R1_0." + fileExtension,
+			readIndex: "R1",
+			file: readsFile
+		}]
 	}
 
-	chosenKey := undefined
+	reads := []
 	for sKey in maps.getKeys(inputMap) {
 		key := json.decode(sKey)
 		if len(key) != keyLength {
 			continue
 		}
-		if key[keyLength - 1] != "R1" {
+
+		readIndex := key[keyLength - 1]
+		if readIndex != "R1" && readIndex != "R2" {
 			continue
 		}
-		if is_undefined(chosenKey) || sKey < chosenKey {
-			chosenKey = sKey
-		}
+
+		reads = append(reads, {
+			name: _NAME_PREFIX + readIndex + "_" + string(len(reads)) + "." + fileExtension,
+			readIndex: readIndex,
+			file: inputMap[sKey]
+		})
 	}
 
-	if is_undefined(chosenKey) {
-		return undefined
-	}
-	return inputMap[chosenKey]
+	return reads
 }
 
-// measure runs the read statistics of one read end of the sample.
+// measure runs the read statistics of the sample's read ends.
 //
 // @param inputData: resource - the aggregated p-column data holding the sample's read files
 // @param fileExtension: string - extension of those files, e.g. "fastq.gz"
-// @return resource - content of a one-element JSON array, to be passed to
-//                    scratchFreeSpaceFor() in another template; 'undefined' when the sample
-//                    holds no read end to measure.
+// @return resource - content of a JSON array with one element per measured file, to be
+//                    passed to scratchFreeSpaceFor() in another template; 'undefined' when
+//                    the sample holds no read end to measure.
 measure := func(inputData, fileExtension) {
-	readsFile := readEndToMeasure(inputData.inputs(), inputData.getDataAsJson().keyLength)
-	if is_undefined(readsFile) {
+	reads := readsToMeasure(inputData.inputs(), inputData.getDataAsJson().keyLength, fileExtension)
+	if len(reads) == 0 {
 		return undefined
 	}
 
-	readsFileName := "reads." + fileExtension
-
-	// seqkit reads the whole file, so it gets the same queue as other data passes.
-	// '--tabular' makes the output a single header line plus a single data line.
-	statsCmd := exec.builder().
+	// seqkit reads every file whole, so it gets the same queue as other data passes.
+	// '--tabular' makes the output a header line plus one line per file.
+	statsBuilder := exec.builder().
 		inMediumQueue().
 		cpu(STATS_CPU).
 		mem("1GiB").
 		software(seqkitSw).
-		addFile(readsFileName, readsFile).
 		arg("stats").
 		arg("--threads").
 		argExpr("{system.cpu}").
-		arg("--tabular").
-		arg(readsFileName).
+		arg("--tabular")
+
+	for readsFile in reads {
+		statsBuilder.addFile(readsFile.name, readsFile.file).arg(readsFile.name)
+	}
+
+	statsCmd := statsBuilder.
 		saveStdoutFile().
 		cache(CACHE_PERIOD).
 		run()
 
-	// csvtk turns those two lines into a one-element JSON array, so the fields can be read
-	// by name instead of by column position. '--tabs' sets the tab delimiter; passing it as
-	// '--delimiter' with an escaped tab does not survive the trip to the command, which sees
-	// a two-character string and rejects it.
+	// csvtk turns those lines into a JSON array, so the fields can be read by name instead
+	// of by column position. '--tabs' sets the tab delimiter; passing it as '--delimiter'
+	// with an escaped tab does not survive the trip to the command, which sees a
+	// two-character string and rejects it.
 	statsFileName := "stats.tsv"
 	statsJsonCmd := exec.builder().
 		inLightQueue().
@@ -115,6 +143,43 @@ measure := func(inputData, fileExtension) {
 	return statsJsonCmd.getStdoutContent()
 }
 
+// _totals folds the measured rows into the three numbers the formulas need: the number of
+// reads, the summed bases of each end, and the longest read of the sample. Bases are summed
+// rather than averaged, which is exact and needs no weighting when a sample spans lanes.
+// The read count comes from R1 alone — it counts pairs, not sequences, so adding R2 would
+// double it.
+_totals := func(readStats) {
+	totals := { reads: 0, basesR1: 0, basesR2: 0, longestRead: 0, ok: false }
+
+	for stats in readStats {
+		if !is_map(stats) || is_undefined(stats.file) {
+			return totals
+		}
+
+		numberOfReads := int(stats.num_seqs)
+		bases := int(stats.sum_len)
+		longestRead := int(stats.max_len)
+		if is_undefined(numberOfReads) || is_undefined(bases) || is_undefined(longestRead) {
+			return totals
+		}
+
+		// Matched on the infix rather than the whole name: seqkit echoes the name it was
+		// given, and a leading path would break a prefix match.
+		if text.contains(stats.file, "_R1_") {
+			totals.reads += numberOfReads
+			totals.basesR1 += bases
+		} else {
+			totals.basesR2 += bases
+		}
+		if longestRead > totals.longestRead {
+			totals.longestRead = longestRead
+		}
+	}
+
+	totals.ok = totals.reads > 0 && totals.basesR1 > 0 && totals.longestRead > 0
+	return totals
+}
+
 // scratchFreeSpaceFor turns a measure() result into a size string for
 // `.resources({onCPU:{scratchFreeSpace}})`. Accepts the resource as it arrives in a template
 // input, or the already decoded array. Returns 'undefined' when there is nothing to size on.
@@ -126,19 +191,24 @@ scratchFreeSpaceFor := func(readStats) {
 		return undefined
 	}
 
-	stats := readStats[0]
-	numberOfReads := int(stats.num_seqs)
-	averageReadLength := float(stats.avg_len)
-	if is_undefined(numberOfReads) || is_undefined(averageReadLength) {
-		return undefined
-	}
-	if numberOfReads <= 0 || averageReadLength <= 0.0 {
+	totals := _totals(readStats)
+	if !totals.ok {
 		return undefined
 	}
 
-	millionsOfReads := float(numberOfReads) / 1000000.0
-	kilobases := averageReadLength / 1000.0
-	gib := 11.0 * millionsOfReads * kilobases * kilobases
+	millionsOfReads := float(totals.reads) / 1000000.0
+
+	// 'reads x (lengthOfR1 + lengthOfR2)' is the summed bases of the pair, so the sums stand
+	// in for the two average lengths with no rounding of their own.
+	volumeGiB := 2.0 * float(totals.basesR1 + totals.basesR2) / 1000000000.0
+
+	kilobases := float(totals.longestRead) / 1000.0
+	lengthGiB := 11.0 * millionsOfReads * kilobases * kilobases
+
+	gib := volumeGiB
+	if lengthGiB > gib {
+		gib = lengthGiB
+	}
 
 	// Rounded up: a sample small enough to land below one whole GiB still needs scratch
 	// space, and a request of zero reads as no request at all.

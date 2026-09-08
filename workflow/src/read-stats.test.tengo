@@ -1,0 +1,87 @@
+test := import("@platforma-sdk/workflow-tengo:test")
+rs := import(":read-stats")
+
+// One row of 'seqkit stats --tabular' as csvtk renders it: every field is a string.
+_row := func(name, numberOfReads, bases, longestRead) {
+	return {
+		file: name,
+		format: "FASTQ",
+		type: "DNA",
+		num_seqs: string(numberOfReads),
+		sum_len: string(bases),
+		min_len: string(longestRead),
+		avg_len: string(bases / numberOfReads) + ".0",
+		max_len: string(longestRead)
+	}
+}
+
+// A paired sample of uniform read length, as one file per end.
+_paired := func(numberOfReads, readLength) {
+	return [
+		_row("reads_R1_0.fastq.gz", numberOfReads, numberOfReads * readLength, readLength),
+		_row("reads_R2_1.fastq.gz", numberOfReads, numberOfReads * readLength, readLength)
+	]
+}
+
+TestVolumeTermWins := func() {
+	// The reference sample: 72,604,410 pairs of 151 bp.
+	//   S = 2.0 x 72.60441 x 302/1000     = 43.85 GiB
+	//   C = 11  x 72.60441 x (0.151)^2    = 18.21 GiB
+	test.isEqual("44GiB", rs.scratchFreeSpaceFor(_paired(72604410, 151)))
+}
+
+TestLengthTermWins := func() {
+	// Long reads make the quadratic term overtake the volume term.
+	//   S = 2.0 x 1.0 x 4000/1000         =  8.00 GiB
+	//   C = 11  x 1.0 x (2.0)^2           = 44.00 GiB
+	test.isEqual("44GiB", rs.scratchFreeSpaceFor(_paired(1000000, 2000)))
+}
+
+TestSingleEndUsesOneLength := func() {
+	// Only R1 present, so 'lengthOfR2' contributes nothing.
+	//   S = 2.0 x 72.60441 x 151/1000     = 21.93 GiB
+	//   C = 18.21 GiB
+	single := [_row("reads_R1_0.fastq.gz", 72604410, 72604410 * 151, 151)]
+	test.isEqual("22GiB", rs.scratchFreeSpaceFor(single))
+}
+
+TestReadCountCountsPairsOnce := func() {
+	// R2 must not add to the read count, or the quadratic term doubles. Long reads make
+	// that term decide, so a doubled count would show up as 88GiB instead of 44GiB.
+	test.isEqual("44GiB", rs.scratchFreeSpaceFor(_paired(1000000, 2000)))
+}
+
+TestLanesAreSummed := func() {
+	// The same sample split across two lanes must size the same as one file per end.
+	lanes := [
+		_row("reads_R1_0.fastq.gz", 36302205, 36302205 * 151, 151),
+		_row("reads_R2_1.fastq.gz", 36302205, 36302205 * 151, 151),
+		_row("reads_R1_2.fastq.gz", 36302205, 36302205 * 151, 151),
+		_row("reads_R2_3.fastq.gz", 36302205, 36302205 * 151, 151)
+	]
+	test.isEqual("44GiB", rs.scratchFreeSpaceFor(lanes))
+}
+
+TestLongestReadIsTakenAcrossEnds := func() {
+	// R2 holds the longest read, and it is the term that decides.
+	//   C = 11 x 1.0 x (2.0)^2 = 44.00 GiB
+	mixed := [
+		_row("reads_R1_0.fastq.gz", 1000000, 1000000 * 100, 100),
+		_row("reads_R2_1.fastq.gz", 1000000, 1000000 * 100, 2000)
+	]
+	test.isEqual("44GiB", rs.scratchFreeSpaceFor(mixed))
+}
+
+TestSmallSampleRoundsUpToOneGiB := func() {
+	// Below a whole GiB, but a request of zero would read as no request at all.
+	test.isEqual("1GiB", rs.scratchFreeSpaceFor(_paired(10000, 151)))
+}
+
+TestUnusableInputAsksForNothing := func() {
+	test.isTrue(is_undefined(rs.scratchFreeSpaceFor(undefined)))
+	test.isTrue(is_undefined(rs.scratchFreeSpaceFor([])))
+	// A row with no counts cannot size anything.
+	test.isTrue(is_undefined(rs.scratchFreeSpaceFor([_row("reads_R1_0.fastq.gz", 1, 0, 0)])))
+	// Only an index read: nothing named R1, so no read count.
+	test.isTrue(is_undefined(rs.scratchFreeSpaceFor([_row("reads_R2_0.fastq.gz", 100, 15100, 151)])))
+}
