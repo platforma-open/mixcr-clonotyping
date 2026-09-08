@@ -1,6 +1,13 @@
 test := import("@platforma-sdk/workflow-tengo:test")
 rs := import(":read-stats")
 
+text := import("text")
+
+// The largest volume EBS gp3 can create, and what AWS deployments configure as
+// --k8s-max-scratch-request. A request above it is clamped, so the run would get less space
+// than it was sized for without anything saying so.
+_CEILING_GIB := 16 * 1024
+
 // One row of 'seqkit stats --tabular' as csvtk renders it: every field is a string.
 _row := func(name, numberOfReads, bases, longestRead) {
 	return {
@@ -13,6 +20,12 @@ _row := func(name, numberOfReads, bases, longestRead) {
 		avg_len: string(bases / numberOfReads) + ".0",
 		max_len: string(longestRead)
 	}
+}
+
+// The whole number of GiB behind a scratchFreeSpaceFor() result.
+_gibOf := func(size) {
+	test.isTrue(text.has_suffix(size, "GiB"), "expected a GiB size string, got %v", size)
+	return int(size[:len(size) - 3])
 }
 
 // A paired sample of uniform read length, as one file per end.
@@ -84,4 +97,16 @@ TestUnusableInputAsksForNothing := func() {
 	test.isTrue(is_undefined(rs.scratchFreeSpaceFor([_row("reads_R1_0.fastq.gz", 1, 0, 0)])))
 	// Only an index read: nothing named R1, so no read count.
 	test.isTrue(is_undefined(rs.scratchFreeSpaceFor([_row("reads_R2_0.fastq.gz", 100, 15100, 151)])))
+}
+
+TestLargeSingleEndSampleStaysUnderTheCeiling := func() {
+	// The largest shape we expect: 600M single-end reads of 1000 bp. The quadratic term
+	// decides, and this is where it would run away if it were going to.
+	//   S = 2.0 x 600 x 1000/1000  = 1200 GiB
+	//   C = 11  x 600 x (1.0)^2    = 6600 GiB
+	single := [_row("reads_R1_0.fastq.gz", 600000000, 600000000 * 1000, 1000)]
+	size := rs.scratchFreeSpaceFor(single)
+
+	test.isEqual("6600GiB", size)
+	test.isTrue(_gibOf(size) < _CEILING_GIB, "%v is at or above the %vGiB ceiling", size, _CEILING_GIB)
 }
