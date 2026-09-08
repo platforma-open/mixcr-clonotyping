@@ -1,0 +1,234 @@
+// Single source of truth for the `mixcr analyze` scratch space request.
+//
+// Two shapes of temporary data compete for the space, and the run needs whichever is
+// larger:
+//
+//     S   = 2.0 x millionsOfReads x (lengthOfR1 + lengthOfR2) / 1000
+//     C   = 11  x millionsOfReads x (lengthOfTheLongestRead / 1000) ^ 2
+//     GiB = max(S, C)
+//
+// S scales with the volume of the input — two bytes per base of the pair. C is quadratic in
+// read length, so it overtakes S only on long reads.
+//
+// None of those numbers is in the p-column metadata, so the reads are measured with
+// 'seqkit stats' and the result is read back as JSON through 'csvtk'. Both read ends are
+// measured: the formula needs their lengths separately, and the longest read may sit in
+// either of them.
+//
+// Measuring is a command, so its result is a resource. A template cannot read the result of
+// a command it started itself, which is why measure() and scratchFreeSpaceFor() are called
+// from two different templates: :mixcr-analyze starts the measurement, :run-mixcr reads it.
+//
+// The request is an optimisation and never a precondition. Every unusable case — a backend
+// that does not understand the request, no read end to measure, an unparsable number —
+// returns 'undefined', the field is left out, and the command runs with whatever temporary
+// storage its runner provides by default. :run-mixcr restores --use-local-temp in that case.
+
+exec := import("@platforma-sdk/workflow-tengo:exec")
+assets := import("@platforma-sdk/workflow-tengo:assets")
+feats := import("@platforma-sdk/workflow-tengo:feats")
+smart := import("@platforma-sdk/workflow-tengo:smart")
+maps := import("@platforma-sdk/workflow-tengo:maps")
+
+times := import("times")
+text := import("text")
+json := import("json")
+
+seqkitSw := assets.importSoftware("@platforma-open/milaboratories.software-binary-collection:seqkit")
+csvtkSw := assets.importSoftware("@platforma-open/milaboratories.software-binary-collection:csvtk")
+
+// How long a measurement may be reused. Matches the MiXCR run cache, so a repeated analysis
+// of the same sample reads the files no more often than it runs MiXCR.
+CACHE_PERIOD := 48 * times.hour
+
+// Prefix of the name every measured file is given inside the command. The read end goes
+// into the name as "_R1_" or "_R2_", because 'seqkit stats' reports one row per file and
+// names it by that name — the only way back from a row to the end it describes.
+_NAME_PREFIX := "reads_"
+
+// readsToMeasure lists the sample's R1 and R2 files with the name each gets inside the
+// command. Index reads are left out: they carry tags, not the sequence the run has to sort.
+// Names follow the sorted key order, so a repeated analysis of the same sample builds the
+// same command and hits its cache.
+readsToMeasure := func(inputMap, keyLength, fileExtension) {
+	if keyLength == 0 {
+		readsFile := inputMap["[]"]
+		if is_undefined(readsFile) {
+			return []
+		}
+		return [{
+			name: _NAME_PREFIX + "R1_0." + fileExtension,
+			readIndex: "R1",
+			file: readsFile
+		}]
+	}
+
+	reads := []
+	for sKey in maps.getKeys(inputMap) {
+		key := json.decode(sKey)
+		if len(key) != keyLength {
+			continue
+		}
+
+		readIndex := key[keyLength - 1]
+		if readIndex != "R1" && readIndex != "R2" {
+			continue
+		}
+
+		reads = append(reads, {
+			name: _NAME_PREFIX + readIndex + "_" + string(len(reads)) + "." + fileExtension,
+			readIndex: readIndex,
+			file: inputMap[sKey]
+		})
+	}
+
+	return reads
+}
+
+// measure runs the read statistics of the sample's read ends.
+//
+// @param inputData: resource - the aggregated p-column data holding the sample's read files
+// @param fileExtension: string - extension of those files, e.g. "fastq.gz"
+// @return resource - content of a JSON array with one element per measured file, to be
+//                    passed to scratchFreeSpaceFor() in another template; 'undefined' when
+//                    the sample holds no read end to measure.
+measure := func(inputData, fileExtension) {
+	// A backend that does not understand a scratch space request cannot use the measurement,
+	// so the reads are not read at all: the pass costs a full decompression per sample.
+	if !feats.hasScratchSpace {
+		return undefined
+	}
+
+	reads := readsToMeasure(inputData.inputs(), inputData.getDataAsJson().keyLength, fileExtension)
+	if len(reads) == 0 {
+		return undefined
+	}
+
+	// seqkit reads every file whole, so it gets the same queue as other data passes.
+	// '--tabular' makes the output a header line plus one line per file.
+	//
+	// One core per file: seqkit parallelises across files, not within one, so a core beyond
+	// their number would idle. The command reads the granted count back from '{system.cpu}'
+	// instead of repeating the number, so the request and the flag can never diverge.
+	statsBuilder := exec.builder().
+		inMediumQueue().
+		cpu(len(reads)).
+		mem("1GiB").
+		software(seqkitSw).
+		arg("stats").
+		arg("--threads").
+		argExpr("{system.cpu}").
+		arg("--tabular")
+
+	for readsFile in reads {
+		statsBuilder.addFile(readsFile.name, readsFile.file).arg(readsFile.name)
+	}
+
+	statsCmd := statsBuilder.
+		saveStdoutFile().
+		cache(CACHE_PERIOD).
+		run()
+
+	// csvtk turns those lines into a JSON array, so the fields can be read by name instead
+	// of by column position. '--tabs' sets the tab delimiter; passing it as '--delimiter'
+	// with an escaped tab does not survive the trip to the command, which sees a
+	// two-character string and rejects it.
+	statsFileName := "stats.tsv"
+	statsJsonCmd := exec.builder().
+		inLightQueue().
+		cpu(1).
+		mem("256MiB").
+		software(csvtkSw).
+		addFile(statsFileName, statsCmd.getStdoutFile()).
+		arg("--tabs").
+		arg("csv2json").
+		arg(statsFileName).
+		saveStdoutContent().
+		cache(CACHE_PERIOD).
+		run()
+
+	return statsJsonCmd.getStdoutContent()
+}
+
+// _totals folds the measured rows into the three numbers the formulas need: the number of
+// reads, the summed bases of each end, and the longest read of the sample. Bases are summed
+// rather than averaged, which is exact and needs no weighting when a sample spans lanes.
+// The read count comes from R1 alone — it counts pairs, not sequences, so adding R2 would
+// double it.
+_totals := func(readStats) {
+	totals := { reads: 0, basesR1: 0, basesR2: 0, longestRead: 0, ok: false }
+
+	for stats in readStats {
+		if !is_map(stats) || is_undefined(stats.file) {
+			return totals
+		}
+
+		numberOfReads := int(stats.num_seqs)
+		bases := int(stats.sum_len)
+		longestRead := int(stats.max_len)
+		if is_undefined(numberOfReads) || is_undefined(bases) || is_undefined(longestRead) {
+			return totals
+		}
+
+		// Matched on the infix rather than the whole name: seqkit echoes the name it was
+		// given, and a leading path would break a prefix match.
+		if text.contains(stats.file, "_R1_") {
+			totals.reads += numberOfReads
+			totals.basesR1 += bases
+		} else {
+			totals.basesR2 += bases
+		}
+		if longestRead > totals.longestRead {
+			totals.longestRead = longestRead
+		}
+	}
+
+	totals.ok = totals.reads > 0 && totals.basesR1 > 0 && totals.longestRead > 0
+	return totals
+}
+
+// scratchFreeSpaceFor turns a measure() result into a size string for
+// `.resources({onCPU:{scratchFreeSpace}})`. Accepts the resource as it arrives in a template
+// input, or the already decoded array. Returns 'undefined' when there is nothing to size on.
+scratchFreeSpaceFor := func(readStats) {
+	if smart.isResource(readStats) {
+		readStats = readStats.getDataAsJson()
+	}
+	if !is_array(readStats) || len(readStats) == 0 {
+		return undefined
+	}
+
+	totals := _totals(readStats)
+	if !totals.ok {
+		return undefined
+	}
+
+	millionsOfReads := float(totals.reads) / 1000000.0
+
+	// 'reads x (lengthOfR1 + lengthOfR2)' is the summed bases of the pair, so the sums stand
+	// in for the two average lengths with no rounding of their own.
+	volumeGiB := 2.0 * float(totals.basesR1 + totals.basesR2) / 1000000000.0
+
+	kilobases := float(totals.longestRead) / 1000.0
+	lengthGiB := 11.0 * millionsOfReads * kilobases * kilobases
+
+	gib := volumeGiB
+	if lengthGiB > gib {
+		gib = lengthGiB
+	}
+
+	// Rounded up: a sample small enough to land below one whole GiB still needs scratch
+	// space, and a request of zero reads as no request at all.
+	wholeGiB := int(gib)
+	if float(wholeGiB) < gib {
+		wholeGiB += 1
+	}
+
+	return string(wholeGiB) + "GiB"
+}
+
+export {
+	CACHE_PERIOD: CACHE_PERIOD,
+	measure: measure,
+	scratchFreeSpaceFor: scratchFreeSpaceFor
+}

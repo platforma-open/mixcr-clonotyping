@@ -9,7 +9,7 @@ packages:
 catalog:
   "@milaboratories/ts-builder": 1.7.0
   "@milaboratories/ts-configs": 1.4.0
-  "@platforma-sdk/workflow-tengo": 6.8.2
+  "@platforma-sdk/workflow-tengo": 6.9.0
   "@platforma-sdk/model": 1.82.0
   "@platforma-sdk/ui-vue": 1.82.1
   "@platforma-sdk/tengo-builder": 4.0.23
@@ -21,6 +21,7 @@ catalog:
   "@milaboratories/helpers": 1.14.5
 
   "@platforma-open/milaboratories.software-mixcr": 4.7.0-347-develop
+  "@platforma-open/milaboratories.software-binary-collection": 1.0.12
   "vue": 3.5.24
 
   "zod": ~3.25.76

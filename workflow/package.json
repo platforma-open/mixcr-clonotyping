@@ -12,6 +12,7 @@
     "test": "pl-tengo test && vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@platforma-open/milaboratories.software-binary-collection": "catalog:",
     "@platforma-open/milaboratories.software-mixcr": "catalog:",
     "@platforma-sdk/workflow-tengo": "catalog:"
   },
