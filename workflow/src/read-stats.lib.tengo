@@ -39,11 +39,6 @@ csvtkSw := assets.importSoftware("@platforma-open/milaboratories.software-binary
 // of the same sample reads the files no more often than it runs MiXCR.
 CACHE_PERIOD := 48 * times.hour
 
-// CPU cores asked for the read pass. seqkit parallelises across files, so a paired sample
-// can use two; the command reads the granted count back from '{system.cpu}' rather than
-// repeating this number, so the two can never diverge.
-STATS_CPU := 2
-
 // Prefix of the name every measured file is given inside the command. The read end goes
 // into the name as "_R1_" or "_R2_", because 'seqkit stats' reports one row per file and
 // names it by that name — the only way back from a row to the end it describes.
@@ -103,9 +98,13 @@ measure := func(inputData, fileExtension) {
 
 	// seqkit reads every file whole, so it gets the same queue as other data passes.
 	// '--tabular' makes the output a header line plus one line per file.
+	//
+	// One core per file: seqkit parallelises across files, not within one, so a core beyond
+	// their number would idle. The command reads the granted count back from '{system.cpu}'
+	// instead of repeating the number, so the request and the flag can never diverge.
 	statsBuilder := exec.builder().
 		inMediumQueue().
-		cpu(STATS_CPU).
+		cpu(len(reads)).
 		mem("1GiB").
 		software(seqkitSw).
 		arg("stats").
