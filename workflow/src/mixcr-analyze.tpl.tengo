@@ -1,4 +1,10 @@
-//tengo:hash_override AD2092AB-97D5-4758-873E-EEB932A856EA
+// Identity of this template for the platform's deduplication.
+//
+// CHANGING THIS VALUE MEANS "RE-RUN EVERY SAMPLE ON THE NEXT BLOCK UPDATE".
+//
+// List of template's inputs + values of inputs + this hash decides whether an analysis is
+// repeated or needs to be run again.
+//tengo:hash_override D70EDB25-6FF6-4615-966D-B79B04B5751C
 
 // Measures the reads of one sample, then runs MiXCR on them.
 //

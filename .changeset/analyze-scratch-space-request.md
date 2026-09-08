@@ -1,27 +1,13 @@
 ---
+"@platforma-open/milaboratories.mixcr-clonotyping-2": minor
 "@platforma-open/milaboratories.mixcr-clonotyping-2.workflow": minor
 ---
 
 Analyze asks the backend for disposable disk space sized from the sample's reads, so
 its temporary files no longer land in the working directory on shared storage.
 
-The size is the larger of two terms, in GiB and rounded up: `2.0 x millionsOfReads x
-(lengthOfR1 + lengthOfR2) / 1000`, which scales with the volume of the input, and
-`11 x millionsOfReads x (lengthOfTheLongestRead / 1000) ^ 2`, which is quadratic in read
-length and so decides only on long reads. None of those numbers is in the column
-metadata, so both read ends are measured with `seqkit stats` and read back through
-`csvtk` before the run starts. The measurement and the size formula live
-in the new `read-stats` library. `mixcr-analyze` now measures and then renders the run,
-which moved to the new `run-mixcr` template, because a template cannot read the result of a
-command it started itself. `mixcr-analyze` keeps the identity and the inputs it has always
-had, so an analysis that already finished still deduplicates to its result instead of
-running again — scratch space changes only where MiXCR writes temporary files, never what
-it produces.
+This reduces single sample computation bill by ~25-40% on large samples, where
+EFS I/O cost starts to be comparable or larger than cost of compute itself.
 
-The request is an optimisation and never a precondition. A deployment that cannot
-serve the size shrinks or grows it, one with no scratch storage ignores it, and a
-sample with no read end to measure asks for nothing — analyze runs either way, on
-whatever temporary storage its runner provides. `--use-local-temp` is dropped, since
-`TMPDIR` now points at that storage.
-
-Requires workflow-tengo 6.9.0.
+To have an effect, you need backend version 4.4.1 or above.
+On older backends this optimisation is just ignored and computations run as usual.

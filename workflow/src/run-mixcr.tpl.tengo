@@ -1,3 +1,7 @@
+// Identity of this template for the platform's deduplication. Changing this value means
+// "re-run every sample on the next block update" — see the longer note in :mixcr-analyze.
+// Fresh here because this template is new; it must never equal the one :mixcr-analyze uses,
+// as a shared value declares two templates interchangeable.
 //tengo:hash_override 9B26DCEF-7F7B-4A39-8DD9-EC302622A2A3
 
 self := import("@platforma-sdk/workflow-tengo:tpl")
