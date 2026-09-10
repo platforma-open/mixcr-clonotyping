@@ -19,10 +19,11 @@
 // a command it started itself, which is why measure() and scratchFreeSpaceFor() are called
 // from two different templates: :mixcr-analyze starts the measurement, :run-mixcr reads it.
 //
-// The request is an optimisation and never a precondition. Every unusable case — a backend
-// that does not understand the request, no read end to measure, an unparsable number —
-// returns 'undefined', the field is left out, and the command runs with whatever temporary
-// storage its runner provides by default. :run-mixcr restores --use-local-temp in that case.
+// The request is an optimisation and never a precondition. Every unusable case — a deployment
+// with no scratch storage, no read end to measure, an unparsable number — returns 'undefined'
+// and the field is left out. The command still gets a temporary directory: the SDK guarantees
+// TMPDIR on every backend, on the working directory's own filesystem where no device exists.
+// Only the SIZE is unavailable, never the directory.
 
 exec := import("@platforma-sdk/workflow-tengo:exec")
 assets := import("@platforma-sdk/workflow-tengo:assets")
@@ -93,8 +94,9 @@ readsToMeasure := func(inputMap, keyLength, fileExtension) {
 //                    passed to scratchFreeSpaceFor() in another template; 'undefined' when
 //                    the sample holds no read end to measure.
 measure := func(inputData, fileExtension) {
-	// A backend that does not understand a scratch space request cannot use the measurement,
-	// so the reads are not read at all: the pass costs a full decompression per sample.
+	// A deployment with no scratch storage cannot act on a SIZE, so the reads are not read at
+	// all: the pass costs a full decompression per sample. The command still gets its
+	// temporary directory from the SDK either way - only the size of it is skipped here.
 	if !feats.hasScratchSpace {
 		return undefined
 	}
