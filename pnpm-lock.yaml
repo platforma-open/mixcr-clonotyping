@@ -46,8 +46,8 @@ catalogs:
       specifier: 1.82.1
       version: 1.82.1
     '@platforma-sdk/workflow-tengo':
-      specifier: 6.9.0
-      version: 6.9.0
+      specifier: 6.10.0
+      version: 6.10.0
     '@types/wicg-file-system-access':
       specifier: ^2023.10.7
       version: 2023.10.7
@@ -324,7 +324,7 @@ importers:
         version: 4.7.0-347-develop
       '@platforma-sdk/workflow-tengo':
         specifier: 'catalog:'
-        version: 6.9.0
+        version: 6.10.0
     devDependencies:
       '@platforma-sdk/tengo-builder':
         specifier: 'catalog:'
@@ -1709,11 +1709,11 @@ packages:
   '@platforma-sdk/ui-vue@1.82.1':
     resolution: {integrity: sha512-HCwLm+yN2cKbRL0caQ21+40mcodVGTmnruruNQAkcCkgHu4AaRmkEVRtel8AdHLpcqJS5ray341E1bqGErguSw==}
 
+  '@platforma-sdk/workflow-tengo@6.10.0':
+    resolution: {integrity: sha512-BzEDsGkguRTCPKADWF3hYvfzMMI5aFh341uhuCXR0ueonek0ItyN4UBSyw2/FrTZQadINaQvK08CGgM+I1y4PA==}
+
   '@platforma-sdk/workflow-tengo@6.8.2':
     resolution: {integrity: sha512-AHR/Y+vbyfda17A7xY2uH9TlXiBpM8242tTO6+lj8phA4/KS6mez4GLu4ZEaASlZpX6YkQsUs5LUxYQU7pXeiQ==}
-
-  '@platforma-sdk/workflow-tengo@6.9.0':
-    resolution: {integrity: sha512-jcc1p6QaP/HrEOIpeogBjqFsY9n2rCXiOc5iikWLTR5keAetlpGjlsMcdo3SgYD0JsZtNd3yA092ke7XKCwGOQ==}
 
   '@protobuf-ts/grpc-transport@2.11.1':
     resolution: {integrity: sha512-l6wrcFffY+tuNnuyrNCkRM8hDIsAZVLA8Mn7PKdVyYxITosYh60qW663p9kL6TWXYuDCL3oxH8ih3vLKTDyhtg==}
@@ -7210,7 +7210,7 @@ snapshots:
       - typescript
       - universal-cookie
 
-  '@platforma-sdk/workflow-tengo@6.8.2':
+  '@platforma-sdk/workflow-tengo@6.10.0':
     dependencies:
       '@milaboratories/pframes-rs-wasip2': 1.1.56
       '@milaboratories/software-pframes-conv': 2.2.9
@@ -7218,7 +7218,7 @@ snapshots:
       '@platforma-open/milaboratories.software-ptexter': 1.2.4
       '@platforma-open/milaboratories.software-small-binaries': 2.1.1
 
-  '@platforma-sdk/workflow-tengo@6.9.0':
+  '@platforma-sdk/workflow-tengo@6.8.2':
     dependencies:
       '@milaboratories/pframes-rs-wasip2': 1.1.56
       '@milaboratories/software-pframes-conv': 2.2.9
