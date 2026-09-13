@@ -1,5 +1,13 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.23.1
+
+### Patch Changes
+
+- 2f6dcf9: Analyze no longer passes `--use-local-temp`. The SDK now guarantees a temporary
+  directory on every backend the block can meet, so MiXCR keeps its temporary files
+  off the working directory on shared storage in all cases.
+
 ## 2.23.0
 
 ### Minor Changes
