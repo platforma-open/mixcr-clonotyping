@@ -159,11 +159,11 @@ self.body(func(inputs) {
     rawTsvFile := result.getFile("qc-report.tsv")
     
     // Use pTabler to remove ".clns" from fileName column
-    // Left unsized so workflow-tengo sizes it from its own input volume
+    // Left unsized. workflow-tengo then sizes this workflow from its own input volume
     // (ram = clamp(2 GiB + 4 * size, 2 GiB, 64 GiB), cpu = clamp(2 + size / 16 GiB, 2, 8)).
-    // This workflow frames the qc report, every sample's clonotype TSV, every per-sample
-    // filter TSV and every single-cell chain TSV, so its input volume scales with the
-    // cohort, not with one sample. An explicit .mem()/.cpu() would suppress that.
+    // The workflow frames the qc report, every sample's clonotype TSV, every per-sample
+    // filter TSV and every single-cell chain TSV. Its input volume scales with the cohort,
+    // not with one sample. An explicit .mem() or .cpu() suppresses this sizing.
     wf := pt.workflow().
         inMediumQueue()
     
@@ -211,9 +211,9 @@ self.body(func(inputs) {
     mixcrChainsArg := text.join(chainsForMixcr, ",")
     for key, clnsFile in clnsFiles {
         sampleId := json.decode(key)[0]
-        // Same .clns load as the main clonotype export, so the same rule sizes it -- see
-        // :mem-formula exportRam. mixcrSw here is the `main` entrypoint
-        // (-XX:MaxRAMPercentage=80.0), which is why the coefficient is 32 and not the 30
+        // This export reads the same .clns as the main clonotype export. The same rule
+        // sizes it. See :mem-formula exportRam. mixcrSw here is the `main` entrypoint
+        // (-XX:MaxRAMPercentage=80.0). The coefficient is therefore 32, not the 30 that
         // mixcr-export uses on `memory-from-limits`.
         exportFiltersCmd := exec.builder().
             inMediumQueue().

@@ -50,15 +50,17 @@ self.body(func(inputs) {
 
 	useProductiveFilter := is_undefined(stopCodonTypes) || len(stopCodonTypes) == 0
 
-	// Both `exportClones` execs are sized from the .clns by :mem-formula exportRam,
-	// which carries the rule and the measured fit. Single-cell costs more than bulk: it
-	// materialises a SECOND, expanded list via divideClonesByTags -- one clone per
-	// (clonotype x cell), each with its own split TagCount -- then sorts and re-ranks it.
+	// :mem-formula exportRam sizes both `exportClones` execs from the .clns. It carries the
+	// rule and the measured fit.
 	//
-	// Keep the floors tight. -Xms is half the grant, so the request is pre-allocated and
-	// not merely a ceiling, and one sample runs one bulk plus one single-cell export per
-	// chain group concurrently. A flat 12 GiB failed on a 10.7k-cell / 26.7k-clone 10x
-	// BCR sample: it yields 8788 MiB of heap.
+	// Single-cell costs more than bulk. divideClonesByTags materializes a SECOND, expanded
+	// list: one clone per (clonotype x cell), each with its own split TagCount. It then
+	// sorts and re-ranks that list.
+	//
+	// Keep the floors tight. -Xms is half the grant, so the backend pre-allocates the
+	// request. One sample runs one bulk export and one single-cell export per chain group
+	// at the same time. A flat 12 GiB failed on a 10.7k-cell / 26.7k-clone 10x BCR sample.
+	// That grant gives 8788 MiB of heap.
 	exportRam := func(floorGiB, perByte) {
 		return memf.exportRam(inputs.perProcessMemGB, floorGiB, perByte)
 	}

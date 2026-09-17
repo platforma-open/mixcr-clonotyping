@@ -71,14 +71,14 @@ TestExportRam := func() {
 	test.isEqual(_gib(24), _evalClns(mf.exportRam(undefined, 24, 32), 0))
 	test.isEqual(_gib(16), _evalClns(mf.exportRam(undefined, 16, 32), _gib(1) / 4))
 
-	// Above the floor the fitted term stands alone. perByte is 32 on the `main`
-	// entrypoint (-XX:MaxRAMPercentage=80.0) and 30 on `memory-from-limits`.
+	// Above the floor, the fitted term stands alone. perByte is 32 on the `main`
+	// entrypoint (-XX:MaxRAMPercentage=80.0). perByte is 30 on `memory-from-limits`.
 	test.isEqual(_gib(40), _evalClns(mf.exportRam(undefined, 16, 32), _gib(1)))
 	test.isEqual(_gib(38), _evalClns(mf.exportRam(undefined, 16, 30), _gib(1)))
 	test.isEqual(_gib(72), _evalClns(mf.exportRam(undefined, 16, 32), _gib(2)))
 
-	// Regression guard for MILAB-6973: the flat 16 GiB the QC exports used to request
-	// is below what a 1 GiB .clns needs.
+	// Regression guard for MILAB-6973. A 1 GiB .clns needs more than the flat 16 GiB that
+	// the QC exports requested before.
 	test.isTrue(_evalClns(mf.exportRam(undefined, 16, 32), _gib(1)) > _gib(16))
 
 	// The ceiling binds.
