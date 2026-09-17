@@ -84,8 +84,11 @@ TestExportRam := func() {
 	// The ceiling binds.
 	test.isEqual(_gib(256), _evalClns(mf.exportRam(undefined, 16, 32), _gib(8)))
 
-	// The Advanced Settings override replaces the rule outright.
+	// The Advanced Settings override replaces the rule, but never below the floor.
 	test.isEqual("48GiB", mf.exportRam(48, 16, 32))
+	test.isEqual("16GiB", mf.exportRam(5, 16, 32))
+	test.isEqual("24GiB", mf.exportRam(5, 24, 32))
+	test.isEqual("24GiB", mf.exportRam(24, 24, 32))
 
 	// Backends that cannot evaluate formulas fall back to the floor.
 	test.isEqual(_gib(16), f.fallbackOf(mf.exportRam(undefined, 16, 32)))

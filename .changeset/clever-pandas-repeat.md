@@ -27,3 +27,8 @@ Two related fixes:
 - The report's PTabler workflow dropped its flat 8 GiB / 2 CPU request and is now sized by
   workflow-tengo from its own input volume. It frames every sample's clonotype TSV, every
   per-sample filter TSV and every single-cell chain TSV, so its cost scales with the cohort.
+
+The override itself is now floored. `perProcessMemGB` replaced the export rule outright, so a
+project that set it below the floor requested that value and OOMed, and passing the override
+into the QC exports would have carried the same value into steps that previously ignored it.
+It is now `max(override, floor)`, which is how `aggregate-by-clonotype-key` already treats it.

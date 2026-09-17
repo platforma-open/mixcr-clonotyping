@@ -10,6 +10,8 @@
 
 exec := import("@platforma-sdk/workflow-tengo:exec")
 
+math := import("math")
+
 f := exec.formula
 
 // baseMemGiB picks the per-analysis memory floor from the preset's step set.
@@ -51,13 +53,17 @@ memFormula := func(base) {
 // why no floor goes below 16 GiB. The intercept is JVM and reference-library overhead;
 // it is a fitted term, not a second floor, so it is added and not clamped.
 //
-// perProcessMemGB is the "Advanced Settings" override and replaces the whole rule.
+// perProcessMemGB is the "Advanced Settings" override. It replaces the rule but is itself
+// floored at floorGiB: every value below the floor is one the step is known to OOM on, and
+// the backend clamps an oversized request down to what the install can give anyway, so a
+// request under the floor buys nothing. aggregate-by-clonotype-key floors the same override
+// the same way.
 exportRamCapGiB := 256
 exportRamInterceptGiB := 8
 
 exportRam := func(perProcessMemGB, floorGiB, perByte) {
 	if !is_undefined(perProcessMemGB) {
-		return string(perProcessMemGB) + "GiB"
+		return string(int(math.max(perProcessMemGB, floorGiB))) + "GiB"
 	}
 	return f.gib(exportRamInterceptGiB).
 		plus(f.size("clns").times(perByte)).
