@@ -66,20 +66,28 @@ TestMemFormula := func() {
 TestExportRam := func() {
 	// ram = clamp(8 GiB + perByte x size(clns), floor, 256 GiB)
 
-	// The floor carries an empty or small .clns. It binds up to 0.25 GiB at perByte 32.
+	// The floor carries an empty or small .clns. At perByte 32 it binds up to 0.25 GiB.
 	test.isEqual(_gib(16), _evalClns(mf.exportRam(undefined, 16, 32), 0))
 	test.isEqual(_gib(24), _evalClns(mf.exportRam(undefined, 24, 32), 0))
 	test.isEqual(_gib(16), _evalClns(mf.exportRam(undefined, 16, 32), _gib(1) / 4))
 
-	// Above the floor, the fitted term stands alone. perByte is 32 on the `main`
-	// entrypoint (-XX:MaxRAMPercentage=80.0). perByte is 30 on `memory-from-limits`.
+	// Above the floor, the fitted term stands alone. perByte is 30 for a bulk export on
+	// `memory-from-limits`, which is what every caller ships. 32 covers two other cases:
+	// the `main` entrypoint (-XX:MaxRAMPercentage=80.0), and mixcr-export's single-cell
+	// export, where it pays for the divideClonesByTags expansion instead.
 	test.isEqual(_gib(40), _evalClns(mf.exportRam(undefined, 16, 32), _gib(1)))
 	test.isEqual(_gib(38), _evalClns(mf.exportRam(undefined, 16, 30), _gib(1)))
 	test.isEqual(_gib(72), _evalClns(mf.exportRam(undefined, 16, 32), _gib(2)))
 
-	// Regression guard for MILAB-6973. A 1 GiB .clns needs more than the flat 16 GiB that
-	// the QC exports requested before.
-	test.isTrue(_evalClns(mf.exportRam(undefined, 16, 32), _gib(1)) > _gib(16))
+	// Regression guard for MILAB-6973, at the values the QC exports ship: a 1 GiB .clns
+	// needs more than the flat 16 GiB they requested before.
+	test.isTrue(_evalClns(mf.exportRam(undefined, 24, 30), _gib(1)) > _gib(16))
+
+	// The QC export floor is 24, not 16. Below a 23 GiB grant memory-from-limits binds on
+	// `grant - 3500 MiB`, which is under the 0.85 that perByte 30 is fitted to, so a 16 GiB
+	// floor under-serves a .clns of 0.25 to 0.38 GiB. 24 GiB grants 20.4 GiB of heap, above
+	// the 20.0 GiB that 0.35 GiB of .clns needs by the fit.
+	test.isEqual(_gib(24), _evalClns(mf.exportRam(undefined, 24, 30), _gib(35) / 100))
 
 	// The ceiling binds.
 	test.isEqual(_gib(256), _evalClns(mf.exportRam(undefined, 16, 32), _gib(8)))
@@ -89,8 +97,8 @@ TestExportRam := func() {
 	test.isEqual(_gib(48), f.fallbackOf(mf.exportRam(48, 16, 32)))
 	// The data term still applies above the raised floor: 8 + 32 x 2 = 72.
 	test.isEqual(_gib(72), _evalClns(mf.exportRam(48, 16, 32), _gib(2)))
-	// An override below the floor has no effect. This is the MILAB-6973 case: a project
-	// set 5, every export asked for 5 GiB, and the rule never ran.
+	// An override below the floor has no effect. Before this change the override replaced
+	// the rule outright, so whatever a project set was what every export asked for.
 	test.isEqual(_gib(16), _evalClns(mf.exportRam(5, 16, 32), 0))
 	test.isEqual(_gib(40), _evalClns(mf.exportRam(5, 16, 32), _gib(1)))
 	test.isEqual(_gib(24), _evalClns(mf.exportRam(5, 24, 32), 0))

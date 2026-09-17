@@ -48,11 +48,21 @@ memFormula := func(base) {
 // Measured fit across five samples, .clns 0.13 to 1.31 GiB:
 //     export peak = 6.4 + 25.0 x clns_GiB     (R2 0.970)
 //
-// perByte carries that peak, divided by the heap fraction of the caller's entrypoint. Every
-// caller runs `memory-from-limits`, which gives -Xmx = 0.85 x grant above a 23 GiB grant, so
-// perByte is 30. A caller on the `main` entrypoint (-XX:MaxRAMPercentage=80.0) would need 32.
-// Below a 23 GiB grant, memory-from-limits binds on `grant - 3500 MiB`. No floor goes
-// below 16 GiB.
+// perByte carries two separate things, so read a caller's value against both.
+//
+// First, the peak divided by the heap fraction of the caller's entrypoint. Every caller runs
+// `memory-from-limits`, which gives -Xmx = 0.85 x grant above a 23 GiB grant, so the bulk
+// value is 30. A caller on the `main` entrypoint (-XX:MaxRAMPercentage=80.0) would need 32.
+//
+// Second, the workload. mixcr-export's single-cell export passes 32 on the same entrypoint,
+// because divideClonesByTags materialises a second, expanded list. That 32 is the expansion,
+// not a heap fraction.
+//
+// The 0.85 term binds only above a 23 GiB grant. Below it the binding term is
+// `grant - 3500 MiB`, which is a SMALLER fraction than `main` gives: 78.6% at a 16 GiB grant
+// against main's 80%. perByte is fitted to the 0.85 regime, so a floor must put the whole
+// active range above a 23 GiB grant. 24 GiB does; 16 GiB leaves a .clns of 0.25 to 0.38 GiB
+// under its measured peak.
 //
 // The intercept is JVM overhead and reference-library overhead. It is a fitted term and
 // not a second floor. The formula adds it and does not clamp it.

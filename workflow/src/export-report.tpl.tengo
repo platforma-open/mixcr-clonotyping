@@ -1,16 +1,11 @@
 self := import("@platforma-sdk/workflow-tengo:tpl")
-smart := import("@platforma-sdk/workflow-tengo:smart")
 ll := import("@platforma-sdk/workflow-tengo:ll")
 exec := import("@platforma-sdk/workflow-tengo:exec")
 assets := import("@platforma-sdk/workflow-tengo:assets")
-pcolumn := import("@platforma-sdk/workflow-tengo:pframes.pcolumn")
-times := import("times")
 text := import("text")
 maps := import("@platforma-sdk/workflow-tengo:maps")
 pframes := import("@platforma-sdk/workflow-tengo:pframes")
 xsv := import("@platforma-sdk/workflow-tengo:pframes.xsv")
-slices := import("@platforma-sdk/workflow-tengo:slices")
-pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 pt := import("@platforma-sdk/workflow-tengo:pt")
 qcReportColumns := import(":qc-report-columns")
 memf := import(":mem-formula")
@@ -216,10 +211,14 @@ self.body(func(inputs) {
     for key, clnsFile in clnsFiles {
         sampleId := json.decode(key)[0]
         // This export reads the same .clns as the main clonotype export, so the same rule
-        // and the same coefficient size it. See :mem-formula exportRam.
+        // and the same coefficient size it. See :mem-formula exportRam. The floor is 24 and
+        // not 16 GiB: memory-from-limits binds on `grant - 3500 MiB` below a 23 GiB grant,
+        // and perByte 30 is fitted to the 0.85 regime, so a 16 GiB floor leaves a .clns of
+        // 0.25 to 0.38 GiB under its measured peak. A 24 GiB grant yields 20.4 GiB of heap,
+        // which is the 0.85 regime, so the whole active range sits inside the fit.
         exportFiltersCmd := exec.builder().
             inMediumQueue().
-            resources({ onCPU: { cpu: 2, ram: memf.exportRam(inputs.perProcessMemGB, 16, 30) } }).
+            resources({ onCPU: { cpu: 2, ram: memf.exportRam(inputs.perProcessMemGB, 24, 30) } }).
             software(mixcrSw).
             env("MI_USE_SYSTEM_CA", "true").
             secret("MI_LICENSE", "MI_LICENSE").
@@ -289,7 +288,7 @@ self.body(func(inputs) {
                 sampleId := json.decode(key)[0]
                 exportChainFiltersCmd := exec.builder().
                     inMediumQueue().
-                    resources({ onCPU: { cpu: 2, ram: memf.exportRam(inputs.perProcessMemGB, 16, 30) } }).
+                    resources({ onCPU: { cpu: 2, ram: memf.exportRam(inputs.perProcessMemGB, 24, 30) } }).
                     software(mixcrSw).
                     env("MI_USE_SYSTEM_CA", "true").
                     secret("MI_LICENSE", "MI_LICENSE").
