@@ -79,8 +79,8 @@ TestExportRam := func() {
 	test.isEqual(_gib(38), _evalClns(mf.exportRam(undefined, 16, 30), _gib(1)))
 	test.isEqual(_gib(72), _evalClns(mf.exportRam(undefined, 16, 32), _gib(2)))
 
-	// Regression guard for MILAB-6973, at the values the QC exports ship: a 1 GiB .clns
-	// needs more than the flat 16 GiB they requested before.
+	// Regression guard at the values the QC exports ship: a 1 GiB .clns needs more than the
+	// flat 16 GiB those exports requested before they were sized from the file.
 	test.isTrue(_evalClns(mf.exportRam(undefined, 24, 30), _gib(1)) > _gib(16))
 
 	// The QC export floor is 24, not 16. Below a 23 GiB grant memory-from-limits binds on
