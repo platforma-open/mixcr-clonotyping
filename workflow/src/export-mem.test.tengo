@@ -1,0 +1,68 @@
+test := import("@platforma-sdk/workflow-tengo:test")
+exec := import("@platforma-sdk/workflow-tengo:exec")
+em := import(":export-mem")
+
+f := exec.formula
+
+_gib := func(n) { return n * 1073741824 }
+
+// Evaluate a resource formula with a test "clns" input of sizeBytes.
+_eval := func(node, sizeBytes) {
+	fileName := "clones.clns"
+	resolved := f.resolveAst(node, { "clns": [fileName] }, [fileName])
+	resolver := {
+		size:      func(files) { return sizeBytes },
+		lineCount: func(files) { return 0 }
+	}
+	return f.evaluateResource(resolved, resolver, "test")
+}
+
+_bulk := func(overrideGiB) {
+	return em.exportRam(em.BULK_FLOOR_GIB, em.BULK_PER_BYTE, overrideGiB)
+}
+
+_singleCell := func(overrideGiB) {
+	return em.exportRam(em.SINGLE_CELL_FLOOR_GIB, em.SINGLE_CELL_PER_BYTE, overrideGiB)
+}
+
+TestFormulaWithoutOverride := func() {
+	// ram = clamp(perByte x size, floor, 128 GiB)
+
+	// An empty input and a small input get the floor.
+	test.isEqual(_gib(16), _eval(_bulk(undefined), 0))
+	test.isEqual(_gib(24), _eval(_singleCell(undefined), 0))
+
+	// A 2 GiB .clns gives 16 x 2 = 32 GiB for bulk and 32 x 2 = 64 GiB for single-cell.
+	test.isEqual(_gib(32), _eval(_bulk(undefined), _gib(2)))
+	test.isEqual(_gib(64), _eval(_singleCell(undefined), _gib(2)))
+
+	// The 128 GiB cap applies. The formula gives 16 x 16 GiB = 256 GiB.
+	test.isEqual(_gib(128), _eval(_bulk(undefined), _gib(16)))
+
+	// A backend that cannot evaluate a formula gets the floor.
+	test.isEqual(_gib(16), f.fallbackOf(_bulk(undefined)))
+	test.isEqual(_gib(24), f.fallbackOf(_singleCell(undefined)))
+}
+
+TestOverrideNeverDropsBelowTheFloor := func() {
+	// This test guards a regression. The block sent an override below the floor to the
+	// exec without a change. A 5 GiB grant gives -Xmx2560m with the memory-from-limits
+	// entrypoint. exportClones then failed with OutOfMemoryError.
+	test.isEqual("16GiB", _bulk(5))
+	test.isEqual("16GiB", _bulk(15))
+	test.isEqual("24GiB", _singleCell(5))
+	test.isEqual("24GiB", _singleCell(23))
+
+	// The override is equal to the floor.
+	test.isEqual("16GiB", _bulk(16))
+	test.isEqual("24GiB", _singleCell(24))
+}
+
+TestOverrideAboveTheFloorPassesThrough := func() {
+	// Above the floor, the override applies without a change. This includes a value
+	// above the 128 GiB cap. The cap bounds the formula, not the override.
+	test.isEqual("100GiB", _bulk(100))
+	test.isEqual("100GiB", _singleCell(100))
+	test.isEqual("200GiB", _bulk(200))
+	test.isEqual("512GiB", _singleCell(512))
+}
