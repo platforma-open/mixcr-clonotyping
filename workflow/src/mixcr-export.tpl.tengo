@@ -10,6 +10,7 @@ exec := import("@platforma-sdk/workflow-tengo:exec")
 pt := import("@platforma-sdk/workflow-tengo:pt")
 clonotypeLabel := import(":clonotype-label")
 stopCodonReplacement := import(":stop-codon-replacement")
+memf := import(":mem-formula")
 
 json := import("json")
 text := import("text")
@@ -49,52 +50,17 @@ self.body(func(inputs) {
 
 	useProductiveFilter := is_undefined(stopCodonTypes) || len(stopCodonTypes) == 0
 
-	// Size both `exportClones` execs from the .clns. A constant cannot work here:
-	// exportClones loads the whole CloneSet into heap, and single-cell exports then
-	// materialise a SECOND, expanded list via divideClonesByTags -- one clone per
-	// (clonotype x cell), each with its own split TagCount -- then sort and re-rank it.
-	// --chains filters only after that expansion, so exporting one chain group still
-	// pays the whole-file cost. Single-cell therefore costs several times bulk.
+	// Both `exportClones` execs are sized from the .clns by :mem-formula exportRam,
+	// which carries the rule and the measured fit. Single-cell costs more than bulk: it
+	// materialises a SECOND, expanded list via divideClonesByTags -- one clone per
+	// (clonotype x cell), each with its own split TagCount -- then sorts and re-ranks it.
 	//
-	// A flat 12 GiB failed on a 10.7k-cell / 26.7k-clone 10x BCR sample. The mixcr
-	// entrypoint turns a container grant R into
-	//     -Xmx = max(min(0.85*R, R - 3500 MiB), 0.5*R)   and   -Xms = 0.5*R
-	// so the flat non-heap reserve costs small grants disproportionately: 12 GiB yields
-	// 8788 MiB of heap, which OOM'd.
-	//
-	// The floor carries small inputs, where the in-heap tag-count graph rather than the
-	// stored file dominates; the linear term carries large ones. size("clns") reads the
-	// blob size via getBlobSize -- metadata only, no pre-exec. An Advanced Settings
-	// override replaces the formula outright, matching the analyze step; where a backend
-	// cannot evaluate formulas, the static fallback is the floor.
-	//
-	// Keep the floors tight. -Xms is half the grant, so the request is a hard
-	// pre-allocation, not just a ceiling -- and a sample runs one bulk plus one
-	// single-cell export per chain group, so the floors are paid several times over
-	// concurrently. An over-estimate here does not merely waste the reservation, it
-	// pre-touches it. 24 GiB yields 20889 MiB of heap, 2.4x the ceiling that failed.
-	//
-	//     ram = clamp(interceptGiB + perByte * size(clns), floorGiB, 256 GiB)
-	//
-	// Five measured samples, with a .clns from 0.13 to 1.31 GiB, give this fit:
-	//     export peak = 6.4 + 25.0 x clns_GiB     (R2 0.970)
-	// The entrypoint gives -Xmx = 0.85 x grant. The grant must therefore carry the peak
-	// divided by 0.85, which is 7.5 + 29.4 x clns_GiB.
-	//
-	// The intercept is JVM overhead and reference-library overhead. It does not scale
-	// with the file. The intercept is a fitted term and not a second floor, so the
-	// formula adds it and does not clamp it.
-	formula := exec.formula
-	exportRamCapGiB := 256
-	exportRamInterceptGiB := 8
+	// Keep the floors tight. -Xms is half the grant, so the request is pre-allocated and
+	// not merely a ceiling, and one sample runs one bulk plus one single-cell export per
+	// chain group concurrently. A flat 12 GiB failed on a 10.7k-cell / 26.7k-clone 10x
+	// BCR sample: it yields 8788 MiB of heap.
 	exportRam := func(floorGiB, perByte) {
-		if !is_undefined(inputs.perProcessMemGB) {
-			return string(inputs.perProcessMemGB) + "GiB"
-		}
-		return formula.gib(exportRamInterceptGiB).
-			plus(formula.size("clns").times(perByte)).
-			between(formula.gib(floorGiB), formula.gib(exportRamCapGiB)).
-			staticFallback(formula.gib(floorGiB))
+		return memf.exportRam(inputs.perProcessMemGB, floorGiB, perByte)
 	}
 
 	hashKeyDerivationExpressionPt := func(sourceColumns) {

@@ -911,7 +911,8 @@ self.body(func(inputs) {
 		stopCodonTypes: params.stopCodonTypes,
 		stopCodonReplacements: params.stopCodonReplacements,
 		singleCellChainTsvsData: singleCellChainTsvs,
-		scHeavyOnly: scHeavyOnly
+		scHeavyOnly: scHeavyOnly,
+		perProcessMemGB: perProcessMemGB
 	})
 
 	return {

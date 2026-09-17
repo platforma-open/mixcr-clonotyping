@@ -13,6 +13,7 @@ slices := import("@platforma-sdk/workflow-tengo:slices")
 pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 pt := import("@platforma-sdk/workflow-tengo:pt")
 qcReportColumns := import(":qc-report-columns")
+memf := import(":mem-formula")
 
 json := import("json")
 
@@ -158,10 +159,13 @@ self.body(func(inputs) {
     rawTsvFile := result.getFile("qc-report.tsv")
     
     // Use pTabler to remove ".clns" from fileName column
+    // Left unsized so workflow-tengo sizes it from its own input volume
+    // (ram = clamp(2 GiB + 4 * size, 2 GiB, 64 GiB), cpu = clamp(2 + size / 16 GiB, 2, 8)).
+    // This workflow frames the qc report, every sample's clonotype TSV, every per-sample
+    // filter TSV and every single-cell chain TSV, so its input volume scales with the
+    // cohort, not with one sample. An explicit .mem()/.cpu() would suppress that.
     wf := pt.workflow().
-        inMediumQueue().
-        mem("8GiB").
-        cpu(2)
+        inMediumQueue()
     
     // Load the raw TSV file as a DataFrame
     df := wf.frame(rawTsvFile, {
@@ -207,10 +211,13 @@ self.body(func(inputs) {
     mixcrChainsArg := text.join(chainsForMixcr, ",")
     for key, clnsFile in clnsFiles {
         sampleId := json.decode(key)[0]
+        // Same .clns load as the main clonotype export, so the same rule sizes it -- see
+        // :mem-formula exportRam. mixcrSw here is the `main` entrypoint
+        // (-XX:MaxRAMPercentage=80.0), which is why the coefficient is 32 and not the 30
+        // mixcr-export uses on `memory-from-limits`.
         exportFiltersCmd := exec.builder().
             inMediumQueue().
-            mem("16GiB").
-            cpu(2).
+            resources({ onCPU: { cpu: 2, ram: memf.exportRam(inputs.perProcessMemGB, 16, 32) } }).
             software(mixcrSw).
             env("MI_USE_SYSTEM_CA", "true").
             secret("MI_LICENSE", "MI_LICENSE").
@@ -227,7 +234,7 @@ self.body(func(inputs) {
             arg("-hasStops").arg(featureForFlags).
             arg("-nFeature").arg(featureForFlags).
             arg("clones.clns").
-            addFile("clones.clns", clnsFile).
+            addFile("clones.clns", clnsFile, { tag: "clns" }).
             arg("clones.tsv").
             saveFile("clones.tsv")
         if library {
@@ -280,8 +287,7 @@ self.body(func(inputs) {
                 sampleId := json.decode(key)[0]
                 exportChainFiltersCmd := exec.builder().
                     inMediumQueue().
-                    mem("16GiB").
-                    cpu(2).
+                    resources({ onCPU: { cpu: 2, ram: memf.exportRam(inputs.perProcessMemGB, 16, 32) } }).
                     software(mixcrSw).
                     env("MI_USE_SYSTEM_CA", "true").
                     secret("MI_LICENSE", "MI_LICENSE").
@@ -303,7 +309,7 @@ self.body(func(inputs) {
                     arg("-hasStops").arg(featureForFlags).
                     arg("-nFeature").arg(featureForFlags).
                     arg("clones.clns").
-                    addFile("clones.clns", clnsFile).
+                    addFile("clones.clns", clnsFile, { tag: "clns" }).
                     arg("clones.tsv").
                     saveFile("clones.tsv").
                     cacheHours(3).

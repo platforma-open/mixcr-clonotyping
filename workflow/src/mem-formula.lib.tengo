@@ -32,7 +32,41 @@ memFormula := func(base) {
 		staticFallback(f.gib(base))
 }
 
+// exportRam builds the exec.formula node for an `exportClones` step.
+//
+//     ram = clamp(interceptGiB + perByte x size("clns"), floorGiB, 256 GiB)
+//
+// exportClones loads the whole CloneSet into heap and applies --chains after the load,
+// so the request tracks the .clns and not the exported field set: a 3-column export of
+// a given .clns costs what a 40-column export of it costs. size("clns") is a metadata
+// read via getBlobSize, so every caller must tag its .clns input `{ tag: "clns" }`.
+//
+// Measured fit over five samples, .clns 0.13 to 1.31 GiB:
+//     export peak = 6.4 + 25.0 x clns_GiB     (R2 0.970)
+// perByte carries that peak divided by the heap fraction the caller's entrypoint hands
+// the JVM, so it differs per entrypoint:
+//     memory-from-limits, -Xmx = 0.85 x grant above a 23 GiB grant  ->  30
+//     main, -XX:MaxRAMPercentage=80.0                               ->  32
+// Below a 23 GiB grant memory-from-limits binds on `grant - 3500 MiB` instead, which is
+// why no floor goes below 16 GiB. The intercept is JVM and reference-library overhead;
+// it is a fitted term, not a second floor, so it is added and not clamped.
+//
+// perProcessMemGB is the "Advanced Settings" override and replaces the whole rule.
+exportRamCapGiB := 256
+exportRamInterceptGiB := 8
+
+exportRam := func(perProcessMemGB, floorGiB, perByte) {
+	if !is_undefined(perProcessMemGB) {
+		return string(perProcessMemGB) + "GiB"
+	}
+	return f.gib(exportRamInterceptGiB).
+		plus(f.size("clns").times(perByte)).
+		between(f.gib(floorGiB), f.gib(exportRamCapGiB)).
+		staticFallback(f.gib(floorGiB))
+}
+
 export {
 	baseMemGiB: baseMemGiB,
-	memFormula: memFormula
+	memFormula: memFormula,
+	exportRam: exportRam
 }
