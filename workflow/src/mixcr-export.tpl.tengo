@@ -1,4 +1,4 @@
-//tengo:hash_override E5C1AD4C-B44D-4DE1-BBF1-4CB42ED7579A
+//tengo:hash_override 7F2B1A64-0D3E-4C89-B5A7-31E8C0946D52
 
 ll := import("@platforma-sdk/workflow-tengo:ll")
 self := import("@platforma-sdk/workflow-tengo:tpl.light")
@@ -62,8 +62,6 @@ self.body(func(inputs) {
 	// so the flat non-heap reserve costs small grants disproportionately: 12 GiB yields
 	// 8788 MiB of heap, which OOM'd.
 	//
-	//     ram = clamp(perByte * size(clns), floor, 128 GiB)
-	//
 	// The floor carries small inputs, where the in-heap tag-count graph rather than the
 	// stored file dominates; the linear term carries large ones. size("clns") reads the
 	// blob size via getBlobSize -- metadata only, no pre-exec. An Advanced Settings
@@ -75,13 +73,26 @@ self.body(func(inputs) {
 	// single-cell export per chain group, so the floors are paid several times over
 	// concurrently. An over-estimate here does not merely waste the reservation, it
 	// pre-touches it. 24 GiB yields 20889 MiB of heap, 2.4x the ceiling that failed.
+	//
+	//     ram = clamp(interceptGiB + perByte * size(clns), floorGiB, 256 GiB)
+	//
+	// Five measured samples, with a .clns from 0.13 to 1.31 GiB, give this fit:
+	//     export peak = 6.4 + 25.0 x clns_GiB     (R2 0.970)
+	// The entrypoint gives -Xmx = 0.85 x grant. The grant must therefore carry the peak
+	// divided by 0.85, which is 7.5 + 29.4 x clns_GiB.
+	//
+	// The intercept is JVM overhead and reference-library overhead. It does not scale
+	// with the file. The intercept is a fitted term and not a second floor, so the
+	// formula adds it and does not clamp it.
 	formula := exec.formula
-	exportRamCapGiB := 128
+	exportRamCapGiB := 256
+	exportRamInterceptGiB := 8
 	exportRam := func(floorGiB, perByte) {
 		if !is_undefined(inputs.perProcessMemGB) {
 			return string(inputs.perProcessMemGB) + "GiB"
 		}
-		return formula.size("clns").times(perByte).
+		return formula.gib(exportRamInterceptGiB).
+			plus(formula.size("clns").times(perByte)).
 			between(formula.gib(floorGiB), formula.gib(exportRamCapGiB)).
 			staticFallback(formula.gib(floorGiB))
 	}
@@ -140,7 +151,7 @@ self.body(func(inputs) {
 				mixcrCmdBuilder.arg(arg)
 			}
 		}
-	}, exportRam(16, 16))
+	}, exportRam(16, 30))
 
 	unprocessedTsv := mixcrCmd.getFile("clones.tsv")
 
