@@ -912,13 +912,6 @@ self.body(func(inputs) {
 		stopCodonReplacements: params.stopCodonReplacements,
 		singleCellChainTsvsData: singleCellChainTsvs,
 		scHeavyOnly: scHeavyOnly
-	}, {
-		// meta inputs do not take part in deduplication or recovery, so changing the memory
-		// override does not invalidate this whole subtree. Same treatment as the analyze and
-		// export steps above.
-		metaInputs: {
-			perProcessMemGB: perProcessMemGB
-		}
 	})
 
 	return {

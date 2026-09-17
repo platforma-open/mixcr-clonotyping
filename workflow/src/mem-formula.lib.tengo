@@ -38,40 +38,29 @@ memFormula := func(base) {
 //
 //     ram = clamp(interceptGiB + perByte x size("clns"), floorGiB, 256 GiB)
 //
-// exportClones reads the whole CloneSet into heap. It applies --chains after that read.
-// The request therefore tracks the .clns, not the exported field set. A 3-column export
-// of a .clns costs what a 40-column export of the same .clns costs.
+// exportClones reads the whole CloneSet into heap and applies --chains after that read, so
+// the request tracks the .clns and not the exported field set.
 //
-// size("clns") reads file metadata through getBlobSize. Every caller must tag its .clns
-// input `{ tag: "clns" }`.
+// Every caller must tag its .clns input `{ tag: "clns" }`. size("clns") reads file metadata
+// through getBlobSize.
 //
 // Measured fit across five samples, .clns 0.13 to 1.31 GiB:
 //     export peak = 6.4 + 25.0 x clns_GiB     (R2 0.970)
 //
-// perByte carries two separate things, so read a caller's value against both.
+// perByte is the peak divided by the caller's heap fraction, times any workload expansion:
+//   30  bulk export on `memory-from-limits` (-Xmx = 0.85 x grant)
+//   32  the same export under the divideClonesByTags expansion of a single-cell run
 //
-// First, the peak divided by the heap fraction of the caller's entrypoint. Every caller runs
-// `memory-from-limits`, which gives -Xmx = 0.85 x grant above a 23 GiB grant, so the bulk
-// value is 30. A caller on the `main` entrypoint (-XX:MaxRAMPercentage=80.0) would need 32.
+// floorGiB must hold the whole active range above a 23 GiB grant. Below that grant
+// `memory-from-limits` binds on `grant - 3500 MiB`, which is under the 0.85 that perByte is
+// fitted to. 24 GiB holds; 16 GiB leaves a .clns of 0.25 to 0.38 GiB under its measured peak.
 //
-// Second, the workload. mixcr-export's single-cell export passes 32 on the same entrypoint,
-// because divideClonesByTags materialises a second, expanded list. That 32 is the expansion,
-// not a heap fraction.
-//
-// The 0.85 term binds only above a 23 GiB grant. Below it the binding term is
-// `grant - 3500 MiB`, which is a SMALLER fraction than `main` gives: 78.6% at a 16 GiB grant
-// against main's 80%. perByte is fitted to the 0.85 regime, so a floor must put the whole
-// active range above a 23 GiB grant. 24 GiB does; 16 GiB leaves a .clns of 0.25 to 0.38 GiB
-// under its measured peak.
-//
-// The intercept is JVM overhead and reference-library overhead. It is a fitted term and
-// not a second floor. The formula adds it and does not clamp it.
+// interceptGiB is a fitted term for JVM and reference-library overhead, not a second floor.
+// The formula adds it and does not clamp it.
 //
 // perProcessMemGB is the "Advanced Settings" override. It RAISES the floor and does not
-// replace the rule, so the data term still applies above it and a value below floorGiB has
-// no effect. aggregate-by-clonotype-key treats the same override the same way. A request
-// below the floor only OOMs the step, and the backend clamps an oversized request down to
-// the install ceiling, so neither direction needs the override to win outright.
+// replace the rule: a value below floorGiB has no effect, and the data term still applies
+// above one above it. aggregate-by-clonotype-key treats the same override the same way.
 exportRamCapGiB := 256
 exportRamInterceptGiB := 8
 

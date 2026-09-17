@@ -210,12 +210,8 @@ self.body(func(inputs) {
     mixcrChainsArg := text.join(chainsForMixcr, ",")
     for key, clnsFile in clnsFiles {
         sampleId := json.decode(key)[0]
-        // This export reads the same .clns as the main clonotype export, so the same rule
-        // and the same coefficient size it. See :mem-formula exportRam. The floor is 24 and
-        // not 16 GiB: memory-from-limits binds on `grant - 3500 MiB` below a 23 GiB grant,
-        // and perByte 30 is fitted to the 0.85 regime, so a 16 GiB floor leaves a .clns of
-        // 0.25 to 0.38 GiB under its measured peak. A 24 GiB grant yields 20.4 GiB of heap,
-        // which is the 0.85 regime, so the whole active range sits inside the fit.
+        // Reads the same .clns as the main clonotype export, so :mem-formula exportRam sizes
+        // it with the same rule and the same coefficient.
         exportFiltersCmd := exec.builder().
             inMediumQueue().
             resources({ onCPU: { cpu: 2, ram: memf.exportRam(inputs.perProcessMemGB, 24, 30) } }).
