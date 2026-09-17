@@ -33,11 +33,10 @@ project that set it below the floor requested that value and OOMed, and passing 
 into the QC exports would have carried the same value into steps that previously ignored it.
 It is now `max(override, floor)`, which is how `aggregate-by-clonotype-key` already treats it.
 
-The report PTabler keeps an 8 GiB floor. Removing its flat request outright would have sized
-it from stored bytes alone, and cost there also tracks the number of frames and joins: a
-cohort of many samples with small repertoires is little data in many frames, and would have
-dropped from 8 GiB to the SDK's 2 GiB floor. The rule is now
-`clamp(2 GiB + 4 x size, 8 GiB, 64 GiB)`.
+The report PTabler keeps its flat 8 GiB. Sizing it from its input volume needs a formula to
+cross a metaInputs boundary into the pt run template, which no block does today, and the SDK
+rule reads stored bytes while cost there also tracks the number of frames and joins. It stays
+on the list of flat requests to size properly, with the seven Xsv imports in process.tpl.tengo.
 
 The override raises the floor rather than replacing the rule. A value below the floor now has
 no effect, and the data term still applies above a value above it.

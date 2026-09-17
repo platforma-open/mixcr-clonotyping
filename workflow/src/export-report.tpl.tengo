@@ -160,22 +160,16 @@ self.body(func(inputs) {
     
     // Use pTabler to remove ".clns" from fileName column
     // This workflow frames the qc report, every sample's clonotype TSV, every per-sample
-    // filter TSV and every single-cell chain TSV. Its input volume scales with the cohort,
-    // not with one sample.
-    //
-    //     ram = clamp(2 GiB + 4 * size, 8 GiB, 64 GiB)
-    //
-    // This is workflow-tengo's own rule for an unsized PTabler run, with the floor raised
-    // from 2 to 8 GiB. The floor holds the previous flat request. size() reads stored bytes,
-    // and cost here also tracks the NUMBER of frames and joins, which no byte metric sees:
-    // a cohort of many samples with small repertoires is little data in many frames. cpu
-    // stays unset, so workflow-tengo sizes it.
-    f := exec.formula
+    // filter TSV and every single-cell chain TSV, so its cost scales with the cohort and not
+    // with one sample. The request stays flat for now. workflow-tengo sizes an unsized
+    // PTabler run from its input volume, but `mem()` here crosses a metaInputs boundary into
+    // the pt run template, and no block passes a formula through it. An unsized run would
+    // also size on stored bytes alone, and cost here tracks the NUMBER of frames and joins
+    // as well: many samples with small repertoires is little data in many frames.
     wf := pt.workflow().
         inMediumQueue().
-        mem(f.size({ default: 0 }).times(4).plus(f.gib(2)).
-            between(f.gib(8), f.gib(64)).
-            staticFallback(f.gib(8)))
+        mem("8GiB").
+        cpu(2)
     
     // Load the raw TSV file as a DataFrame
     df := wf.frame(rawTsvFile, {
