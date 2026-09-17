@@ -16,9 +16,9 @@ Both now use the same rule as the main export, moved into `:mem-formula` as `exp
 
     ram = clamp(8 GiB + perByte x size(clns), 16 GiB, 256 GiB)
 
-`perByte` is 32 here, not the 30 the main export uses: the QC exports run the `main` entrypoint
-(`-XX:MaxRAMPercentage=80.0`) rather than `memory-from-limits` (`-Xmx = 0.85 x grant`), so the
-same measured peak needs a larger grant to sit under it.
+The report template also moves from the `main` MiXCR entrypoint to `memory-from-limits`, which
+every other template in the block already uses. The entrypoint decides the heap fraction the
+JVM gets, so one entrypoint means one coefficient for the whole block.
 
 Two related fixes:
 

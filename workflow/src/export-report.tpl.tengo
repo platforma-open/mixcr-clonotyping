@@ -19,7 +19,7 @@ json := import("json")
 
 self.defineOutputs("qcReportTable")
 
-mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:main")
+mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
 ptablerSw := assets.importSoftware("@platforma-open/milaboratories.software-ptabler:main")
 
 self.body(func(inputs) {
@@ -215,13 +215,11 @@ self.body(func(inputs) {
     mixcrChainsArg := text.join(chainsForMixcr, ",")
     for key, clnsFile in clnsFiles {
         sampleId := json.decode(key)[0]
-        // This export reads the same .clns as the main clonotype export. The same rule
-        // sizes it. See :mem-formula exportRam. mixcrSw here is the `main` entrypoint
-        // (-XX:MaxRAMPercentage=80.0). The coefficient is therefore 32, not the 30 that
-        // mixcr-export uses on `memory-from-limits`.
+        // This export reads the same .clns as the main clonotype export, so the same rule
+        // and the same coefficient size it. See :mem-formula exportRam.
         exportFiltersCmd := exec.builder().
             inMediumQueue().
-            resources({ onCPU: { cpu: 2, ram: memf.exportRam(inputs.perProcessMemGB, 16, 32) } }).
+            resources({ onCPU: { cpu: 2, ram: memf.exportRam(inputs.perProcessMemGB, 16, 30) } }).
             software(mixcrSw).
             env("MI_USE_SYSTEM_CA", "true").
             secret("MI_LICENSE", "MI_LICENSE").
@@ -291,7 +289,7 @@ self.body(func(inputs) {
                 sampleId := json.decode(key)[0]
                 exportChainFiltersCmd := exec.builder().
                     inMediumQueue().
-                    resources({ onCPU: { cpu: 2, ram: memf.exportRam(inputs.perProcessMemGB, 16, 32) } }).
+                    resources({ onCPU: { cpu: 2, ram: memf.exportRam(inputs.perProcessMemGB, 16, 30) } }).
                     software(mixcrSw).
                     env("MI_USE_SYSTEM_CA", "true").
                     secret("MI_LICENSE", "MI_LICENSE").

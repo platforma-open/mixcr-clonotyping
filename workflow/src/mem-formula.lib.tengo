@@ -48,9 +48,9 @@ memFormula := func(base) {
 // Measured fit across five samples, .clns 0.13 to 1.31 GiB:
 //     export peak = 6.4 + 25.0 x clns_GiB     (R2 0.970)
 //
-// perByte carries that peak, divided by the heap fraction of the caller's entrypoint:
-//     memory-from-limits, -Xmx = 0.85 x grant above a 23 GiB grant  ->  30
-//     main, -XX:MaxRAMPercentage=80.0                               ->  32
+// perByte carries that peak, divided by the heap fraction of the caller's entrypoint. Every
+// caller runs `memory-from-limits`, which gives -Xmx = 0.85 x grant above a 23 GiB grant, so
+// perByte is 30. A caller on the `main` entrypoint (-XX:MaxRAMPercentage=80.0) would need 32.
 // Below a 23 GiB grant, memory-from-limits binds on `grant - 3500 MiB`. No floor goes
 // below 16 GiB.
 //
