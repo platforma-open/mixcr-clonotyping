@@ -84,11 +84,16 @@ TestExportRam := func() {
 	// The ceiling binds.
 	test.isEqual(_gib(256), _evalClns(mf.exportRam(undefined, 16, 32), _gib(8)))
 
-	// The Advanced Settings override replaces the rule, but never below the floor.
-	test.isEqual("48GiB", mf.exportRam(48, 16, 32))
-	test.isEqual("16GiB", mf.exportRam(5, 16, 32))
-	test.isEqual("24GiB", mf.exportRam(5, 24, 32))
-	test.isEqual("24GiB", mf.exportRam(24, 24, 32))
+	// The Advanced Settings override raises the floor. It does not replace the rule.
+	test.isEqual(_gib(48), _evalClns(mf.exportRam(48, 16, 32), 0))
+	test.isEqual(_gib(48), f.fallbackOf(mf.exportRam(48, 16, 32)))
+	// The data term still applies above the raised floor: 8 + 32 x 2 = 72.
+	test.isEqual(_gib(72), _evalClns(mf.exportRam(48, 16, 32), _gib(2)))
+	// An override below the floor has no effect. This is the MILAB-6973 case: a project
+	// set 5, every export asked for 5 GiB, and the rule never ran.
+	test.isEqual(_gib(16), _evalClns(mf.exportRam(5, 16, 32), 0))
+	test.isEqual(_gib(40), _evalClns(mf.exportRam(5, 16, 32), _gib(1)))
+	test.isEqual(_gib(24), _evalClns(mf.exportRam(5, 24, 32), 0))
 
 	// Backends that cannot evaluate formulas fall back to the floor.
 	test.isEqual(_gib(16), f.fallbackOf(mf.exportRam(undefined, 16, 32)))

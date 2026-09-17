@@ -57,20 +57,23 @@ memFormula := func(base) {
 // The intercept is JVM overhead and reference-library overhead. It is a fitted term and
 // not a second floor. The formula adds it and does not clamp it.
 //
-// perProcessMemGB is the "Advanced Settings" override. It replaces the rule, and floorGiB
-// floors it. A value below the floor OOMs the step. The backend also clamps an oversized
-// request down to the install ceiling. aggregate-by-clonotype-key floors the same override.
+// perProcessMemGB is the "Advanced Settings" override. It RAISES the floor and does not
+// replace the rule, so the data term still applies above it and a value below floorGiB has
+// no effect. aggregate-by-clonotype-key treats the same override the same way. A request
+// below the floor only OOMs the step, and the backend clamps an oversized request down to
+// the install ceiling, so neither direction needs the override to win outright.
 exportRamCapGiB := 256
 exportRamInterceptGiB := 8
 
 exportRam := func(perProcessMemGB, floorGiB, perByte) {
+	floor := floorGiB
 	if !is_undefined(perProcessMemGB) {
-		return string(int(math.max(perProcessMemGB, floorGiB))) + "GiB"
+		floor = int(math.max(perProcessMemGB, floorGiB))
 	}
 	return f.gib(exportRamInterceptGiB).
 		plus(f.size("clns").times(perByte)).
-		between(f.gib(floorGiB), f.gib(exportRamCapGiB)).
-		staticFallback(f.gib(floorGiB))
+		between(f.gib(floor), f.gib(exportRamCapGiB)).
+		staticFallback(f.gib(floor))
 }
 
 export {

@@ -38,3 +38,6 @@ it from stored bytes alone, and cost there also tracks the number of frames and 
 cohort of many samples with small repertoires is little data in many frames, and would have
 dropped from 8 GiB to the SDK's 2 GiB floor. The rule is now
 `clamp(2 GiB + 4 x size, 8 GiB, 64 GiB)`.
+
+The override raises the floor rather than replacing the rule. A value below the floor now has
+no effect, and the data term still applies above a value above it.
