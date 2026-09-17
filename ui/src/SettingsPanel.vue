@@ -793,7 +793,12 @@ watch(stopCodonSelection, (selected) => {
       label="Set memory per every sample process (GB)"
       :minValue="1"
       :maxValue="999999"
-    />
+    >
+      <template #tooltip>
+        Applies to the analysis step. The clonotype export steps size themselves from the clones
+        file and take this value only when it is higher, so a value below 24 GB does not lower them.
+      </template>
+    </PlNumberField>
 
     <PlNumberField
       v-model="app.model.data.perProcessCPUs"
