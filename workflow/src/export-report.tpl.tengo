@@ -1,24 +1,20 @@
 self := import("@platforma-sdk/workflow-tengo:tpl")
-smart := import("@platforma-sdk/workflow-tengo:smart")
 ll := import("@platforma-sdk/workflow-tengo:ll")
 exec := import("@platforma-sdk/workflow-tengo:exec")
 assets := import("@platforma-sdk/workflow-tengo:assets")
-pcolumn := import("@platforma-sdk/workflow-tengo:pframes.pcolumn")
-times := import("times")
 text := import("text")
 maps := import("@platforma-sdk/workflow-tengo:maps")
 pframes := import("@platforma-sdk/workflow-tengo:pframes")
 xsv := import("@platforma-sdk/workflow-tengo:pframes.xsv")
-slices := import("@platforma-sdk/workflow-tengo:slices")
-pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 pt := import("@platforma-sdk/workflow-tengo:pt")
 qcReportColumns := import(":qc-report-columns")
+memf := import(":mem-formula")
 
 json := import("json")
 
 self.defineOutputs("qcReportTable")
 
-mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:main")
+mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
 ptablerSw := assets.importSoftware("@platforma-open/milaboratories.software-ptabler:main")
 
 self.body(func(inputs) {
@@ -158,6 +154,13 @@ self.body(func(inputs) {
     rawTsvFile := result.getFile("qc-report.tsv")
     
     // Use pTabler to remove ".clns" from fileName column
+    // This workflow frames the qc report, every sample's clonotype TSV, every per-sample
+    // filter TSV and every single-cell chain TSV, so its cost scales with the cohort and not
+    // with one sample. The request stays flat for now. workflow-tengo sizes an unsized
+    // PTabler run from its input volume, but `mem()` here crosses a metaInputs boundary into
+    // the pt run template, and no block passes a formula through it. An unsized run would
+    // also size on stored bytes alone, and cost here tracks the NUMBER of frames and joins
+    // as well: many samples with small repertoires is little data in many frames.
     wf := pt.workflow().
         inMediumQueue().
         mem("8GiB").
@@ -207,10 +210,11 @@ self.body(func(inputs) {
     mixcrChainsArg := text.join(chainsForMixcr, ",")
     for key, clnsFile in clnsFiles {
         sampleId := json.decode(key)[0]
+        // Reads the same .clns as the main clonotype export, so :mem-formula exportRam sizes
+        // it with the same rule and the same coefficient.
         exportFiltersCmd := exec.builder().
             inMediumQueue().
-            mem("16GiB").
-            cpu(2).
+            resources({ onCPU: { cpu: 2, ram: memf.exportRam(inputs.perProcessMemGB, 24, 30) } }).
             software(mixcrSw).
             env("MI_USE_SYSTEM_CA", "true").
             secret("MI_LICENSE", "MI_LICENSE").
@@ -227,7 +231,7 @@ self.body(func(inputs) {
             arg("-hasStops").arg(featureForFlags).
             arg("-nFeature").arg(featureForFlags).
             arg("clones.clns").
-            addFile("clones.clns", clnsFile).
+            addFile("clones.clns", clnsFile, { tag: "clns" }).
             arg("clones.tsv").
             saveFile("clones.tsv")
         if library {
@@ -280,8 +284,7 @@ self.body(func(inputs) {
                 sampleId := json.decode(key)[0]
                 exportChainFiltersCmd := exec.builder().
                     inMediumQueue().
-                    mem("16GiB").
-                    cpu(2).
+                    resources({ onCPU: { cpu: 2, ram: memf.exportRam(inputs.perProcessMemGB, 24, 30) } }).
                     software(mixcrSw).
                     env("MI_USE_SYSTEM_CA", "true").
                     secret("MI_LICENSE", "MI_LICENSE").
@@ -303,7 +306,7 @@ self.body(func(inputs) {
                     arg("-hasStops").arg(featureForFlags).
                     arg("-nFeature").arg(featureForFlags).
                     arg("clones.clns").
-                    addFile("clones.clns", clnsFile).
+                    addFile("clones.clns", clnsFile, { tag: "clns" }).
                     arg("clones.tsv").
                     saveFile("clones.tsv").
                     cacheHours(3).
