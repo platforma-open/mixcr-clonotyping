@@ -95,6 +95,14 @@ TestExportRam := func() {
 	test.isEqual(_gib(40), _evalClns(mf.exportRam(5, 16, 32), _gib(1)))
 	test.isEqual(_gib(24), _evalClns(mf.exportRam(5, 24, 32), 0))
 
+	// An override ABOVE the 256 GiB cap raises the cap. Leaving the cap where it is would
+	// give between() lo > hi, which it asserts against. 400 is a real configured value.
+	test.isEqual(_gib(400), _evalClns(mf.exportRam(400, 16, 30), _gib(1)))
+	test.isEqual(_gib(400), _evalClns(mf.exportRam(400, 16, 30), 0))
+	test.isEqual(_gib(400), f.fallbackOf(mf.exportRam(400, 16, 30)))
+	// At the cap exactly, nothing changes.
+	test.isEqual(_gib(256), _evalClns(mf.exportRam(256, 16, 30), 0))
+
 	// Backends that cannot evaluate formulas fall back to the floor.
 	test.isEqual(_gib(16), f.fallbackOf(mf.exportRam(undefined, 16, 32)))
 	test.isEqual(_gib(24), f.fallbackOf(mf.exportRam(undefined, 24, 32)))

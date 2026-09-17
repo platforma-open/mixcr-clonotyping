@@ -70,9 +70,12 @@ exportRam := func(perProcessMemGB, floorGiB, perByte) {
 	if !is_undefined(perProcessMemGB) {
 		floor = int(math.max(perProcessMemGB, floorGiB))
 	}
+	// An override above the cap raises the cap. between() asserts lo <= hi, so leaving the
+	// cap at 256 GiB would panic on any override above it rather than clamp.
+	cap := int(math.max(floor, exportRamCapGiB))
 	return f.gib(exportRamInterceptGiB).
 		plus(f.size("clns").times(perByte)).
-		between(f.gib(floor), f.gib(exportRamCapGiB)).
+		between(f.gib(floor), f.gib(cap)).
 		staticFallback(f.gib(floor))
 }
 

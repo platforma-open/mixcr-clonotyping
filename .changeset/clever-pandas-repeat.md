@@ -40,3 +40,6 @@ on the list of flat requests to size properly, with the seven Xsv imports in pro
 
 The override raises the floor rather than replacing the rule. A value below the floor now has
 no effect, and the data term still applies above a value above it.
+
+An override above the 256 GiB cap raises the cap. `between()` asserts `lo <= hi`, so a floor
+raised past a fixed cap would have panicked instead of clamping. One real project sets 400.
