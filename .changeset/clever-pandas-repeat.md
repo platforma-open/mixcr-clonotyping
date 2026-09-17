@@ -32,3 +32,9 @@ The override itself is now floored. `perProcessMemGB` replaced the export rule o
 project that set it below the floor requested that value and OOMed, and passing the override
 into the QC exports would have carried the same value into steps that previously ignored it.
 It is now `max(override, floor)`, which is how `aggregate-by-clonotype-key` already treats it.
+
+The report PTabler keeps an 8 GiB floor. Removing its flat request outright would have sized
+it from stored bytes alone, and cost there also tracks the number of frames and joins: a
+cohort of many samples with small repertoires is little data in many frames, and would have
+dropped from 8 GiB to the SDK's 2 GiB floor. The rule is now
+`clamp(2 GiB + 4 x size, 8 GiB, 64 GiB)`.
