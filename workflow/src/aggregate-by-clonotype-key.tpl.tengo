@@ -73,6 +73,12 @@ self.body(func(inputs) {
 
 	// Builds the aggregation of one shard on the given workflow and returns the frame to save.
 	// letters: the shard's bucket letters; catchAll: also take rows with an empty bucket.
+	//
+	// Every shard frames and filters every input TSV, so K shards parse the cohort K times:
+	// 26 shards over 260 GiB is about 6.6 TiB of CSV parsing and 26 bucket evaluations per
+	// row. This costs time, not memory. The fix is a streaming pre-pass per sample that
+	// writes K bucket files, so each shard reads 1/K of the bytes. It would also lift the
+	// 26-shard ceiling of the one-letter bucket.
 	buildShard := func(wf, letters, catchAll) {
 		dataFrames := []
 		for sKey in maps.getKeys(inputMap) {
