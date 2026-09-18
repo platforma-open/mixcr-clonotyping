@@ -30,6 +30,14 @@ json := import("json")
 
 self.defineOutputs("tsv")
 
+// The concat grant does not follow the input size. The concat run is scan_csv per
+// shard file, then concat, then sink_csv, with inferSchema false. The plan has no
+// group-by, no window and no sort, so polars streams it end to end. Peak RAM is
+// bounded by the morsel size, not by the file size.
+// Measured: at a fixed total byte count, the aggregate plan used the same peak RAM
+// with 1 and with 128 read_csv inputs.
+// 16 GiB is a margin, not a fitted value. The concat-only plan is not measured at
+// 130 M rows.
 CONCAT_MEM_GIB := 16
 CONCAT_CPU := 2
 
