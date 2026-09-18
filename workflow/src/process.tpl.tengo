@@ -388,7 +388,6 @@ self.body(func(inputs) {
 					storageFormat: "Parquet",
 					partitionKeyLength: 0
 				},
-				mem: "16GiB",
 				cpu: 2,
 				name: "byCloneKeyBySample",
 				path: ["tsv"]
@@ -693,7 +692,6 @@ self.body(func(inputs) {
 					storageFormat: "Parquet",
 					partitionKeyLength: 1
 				},
-				mem: "16GiB",
 				cpu: 2,
 				name: "abundanceTable",
 				path: ["abundanceTsv"]
@@ -705,7 +703,6 @@ self.body(func(inputs) {
 					columns: columnsSpecPerClonotypeSc,
 					storageFormat: "Parquet"
 				},
-				mem: "12GiB",
 				cpu: 2,
 				name: "aggregates",
 				path: ["clonotypeTsv"]
@@ -802,7 +799,6 @@ self.body(func(inputs) {
 							storageFormat: "Parquet",
 							partitionKeyLength: 0
 						},
-						mem: "24GiB",
 						cpu: 2,
 						name: propertiesTableName,
 						path: [ propertiesTsvOutputName ]
@@ -814,7 +810,6 @@ self.body(func(inputs) {
 				type: "Xsv",
 				xsvType: "tsv",
 				settings: cellLinkerColumnSettingsGen(receptor),
-				mem: "16GiB",
 				cpu: 2,
 				name: "cellsLinkerTable",
 				path: ["cellsTsv"]
@@ -830,7 +825,6 @@ self.body(func(inputs) {
 						storageFormat: "Parquet",
 						partitionKeyLength: 0
 					},
-					mem: "12GiB",
 					cpu: 2,
 					name: "shmCombined",
 					path: ["shmTsv"]

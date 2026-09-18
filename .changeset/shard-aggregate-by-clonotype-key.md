@@ -34,6 +34,11 @@ is now left to the SDK, which sizes the ptabler run from the blob size of the ag
 (`2 GiB + 4 x size`, capped at 64 GiB in workflow-tengo 6.10.5, above the measured need at
 every size it can express). The memory override, when set, replaces the formula.
 
+The six other Parquet imports of the block had flat grants of 12, 16 or 24 GiB: the per-sample
+`byCloneKeyBySample` table and the single-cell abundance, aggregates, properties, cell-linker
+and SHM tables. A 16 GiB grant holds about 7 GiB of TSV under the same law, and one deep sample
+can export twice that. Their memory is now left to the same SDK sizing.
+
 The QC report run in `export-report` framed every sample's full clonotype TSV and every filter
 TSV in one 8 GiB ptabler run to count clonotypes, reads, out-of-frame and stop-codon clones per
 sample. Those counts are now computed by one small ptabler run per sample, each reading only
