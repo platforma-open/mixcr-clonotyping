@@ -5,6 +5,7 @@ render := import("@platforma-sdk/workflow-tengo:render")
 ll := import("@platforma-sdk/workflow-tengo:ll")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 pframes := import("@platforma-sdk/workflow-tengo:pframes")
+execConstants := import("@platforma-sdk/workflow-tengo:exec.constants")
 slices := import("@platforma-sdk/workflow-tengo:slices")
 maps := import("@platforma-sdk/workflow-tengo:maps")
 sets := import("@platforma-sdk/workflow-tengo:sets")
@@ -381,6 +382,7 @@ self.body(func(inputs) {
 					storageFormat: "Parquet",
 					partitionKeyLength: 0
 				},
+				queue: execConstants.MEDIUM_QUEUE,
 				cpu: 2,
 				name: "byCloneKeyBySample",
 				path: ["tsv"]
@@ -507,6 +509,8 @@ self.body(func(inputs) {
 			// the blob size of the aggregated TSV, above that need at every size it can
 			// express. The memory override does not apply here. The Xsv output passes no
 			// floor through to the import, and a fixed request would replace the formula.
+			// The import runs in the medium queue, like every other cohort-sized run of this
+			// block. The Xsv import default is the light queue.
 			byCloneKeyOutput := {
 				type: "Xsv",
 				xsvType: "tsv",
@@ -516,6 +520,7 @@ self.body(func(inputs) {
 					storageFormat: "Parquet",
 					partitionKeyLength: 0
 				},
+				queue: execConstants.MEDIUM_QUEUE,
 				cpu: 2,
 				name: "byCloneKey",
 				path: ["tsv"]
@@ -684,6 +689,7 @@ self.body(func(inputs) {
 					storageFormat: "Parquet",
 					partitionKeyLength: 1
 				},
+				queue: execConstants.MEDIUM_QUEUE,
 				cpu: 2,
 				name: "abundanceTable",
 				path: ["abundanceTsv"]
@@ -695,6 +701,7 @@ self.body(func(inputs) {
 					columns: columnsSpecPerClonotypeSc,
 					storageFormat: "Parquet"
 				},
+				queue: execConstants.MEDIUM_QUEUE,
 				cpu: 2,
 				name: "aggregates",
 				path: ["clonotypeTsv"]
@@ -791,6 +798,7 @@ self.body(func(inputs) {
 							storageFormat: "Parquet",
 							partitionKeyLength: 0
 						},
+						queue: execConstants.MEDIUM_QUEUE,
 						cpu: 2,
 						name: propertiesTableName,
 						path: [ propertiesTsvOutputName ]
@@ -802,6 +810,7 @@ self.body(func(inputs) {
 				type: "Xsv",
 				xsvType: "tsv",
 				settings: cellLinkerColumnSettingsGen(receptor),
+				queue: execConstants.MEDIUM_QUEUE,
 				cpu: 2,
 				name: "cellsLinkerTable",
 				path: ["cellsTsv"]
@@ -817,6 +826,7 @@ self.body(func(inputs) {
 						storageFormat: "Parquet",
 						partitionKeyLength: 0
 					},
+					queue: execConstants.MEDIUM_QUEUE,
 					cpu: 2,
 					name: "shmCombined",
 					path: ["shmTsv"]
