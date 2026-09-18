@@ -29,8 +29,10 @@ without notice, so a larger target would only recreate the single oversized run.
 runs on 8 cores. A backend without `getBlobSize` gets a single shard.
 
 The `byCloneKey` Parquet import that follows was a flat 24 GiB, which the measured `write_frame`
-law says holds about 13 GiB of aggregated TSV. It is now 64 GiB, or the memory override when
-higher, which holds about 56 GiB.
+law (`4.13 x^0.68` GiB for x GiB of TSV) says holds about 13 GiB of aggregated TSV. Its memory
+is now left to the SDK, which sizes the ptabler run from the blob size of the aggregated TSV
+(`2 GiB + 4 x size`, capped at 64 GiB in workflow-tengo 6.10.5, above the measured need at
+every size it can express). The memory override, when set, replaces the formula.
 
 The QC report run in `export-report` framed every sample's full clonotype TSV and every filter
 TSV in one 8 GiB ptabler run to count clonotypes, reads, out-of-frame and stop-codon clones per
