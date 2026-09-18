@@ -49,8 +49,8 @@ TSVs. The `exportClones` filter runs are unchanged.
 
 The single-cell per-cell preprocessing run asked for one core and one GiB per sample, with
 floors of 16 and 32. Its memory is now left to the SDK, which sizes the run from the blob size
-of its input TSVs with a 32 GiB floor, and its cpu is pinned at 8, the thread count that formula
-assumes.
+of its input TSVs with a 32 GiB floor, and its cpu is pinned at 12, which the formula's slope
+still covers.
 
 The block moves to workflow-tengo 6.11.0, which ships that sizing formula and `memFloor`.
 

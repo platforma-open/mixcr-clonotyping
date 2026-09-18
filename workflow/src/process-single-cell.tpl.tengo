@@ -57,13 +57,15 @@ self.body(func(inputs) {
 		inputMap := byCellTag.inputs()
 
 		// Memory is left to the SDK, which sizes the run from the blob size of the input
-		// TSVs, with a 32 GiB floor. Its formula assumes at most 8 polars threads, so cpu is
-		// pinned at 8. The previous request grew with the sample count (one core and one
-		// GiB per sample), not with the data volume.
+		// TSVs, with a 32 GiB floor. Its formula is fitted at 8 polars threads and the need
+		// rises with the thread count (4.94 GiB per input GiB at 8 threads, 6.85 at 32, for
+		// the aggregate plan shape). 12 threads stays under the formula's slope of 6. The
+		// previous request grew with the sample count (one core and one GiB per sample),
+		// not with the data volume.
 		wf := pt.workflow().
 			inMediumQueue().
 			memFloor(32 * units.GiB).
-			cpu(8)
+			cpu(12)
 
 		sampleDataFrames := []
 
