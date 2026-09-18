@@ -38,7 +38,8 @@ passes no floor through, and a fixed request would replace the formula.
 The six other Parquet imports of the block had flat grants of 12, 16 or 24 GiB: the per-sample
 `byCloneKeyBySample` table and the single-cell abundance, aggregates, properties, cell-linker
 and SHM tables. A 16 GiB grant holds about 7 GiB of TSV under the same law, and one deep sample
-can export twice that. Their memory is now left to the same SDK sizing.
+can export twice that. Their memory is now left to the same SDK sizing. All seven imports run in
+the medium queue; the Xsv import default is the light queue.
 
 The QC report run in `export-report` framed every sample's full clonotype TSV and every filter
 TSV in one 8 GiB ptabler run to count clonotypes, reads, out-of-frame and stop-codon clones per
