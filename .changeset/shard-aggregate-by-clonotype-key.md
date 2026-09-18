@@ -31,7 +31,7 @@ runs on 8 cores. A backend without `getBlobSize` gets a single shard.
 The `byCloneKey` Parquet import that follows was a flat 24 GiB, which the measured `write_frame`
 law (`4.13 x^0.68` GiB for x GiB of TSV) says holds about 13 GiB of aggregated TSV. Its memory
 is now left to the SDK, which sizes the ptabler run from the blob size of the aggregated TSV
-(`2 GiB + 4 x size`, capped at 64 GiB in workflow-tengo 6.10.5, above the measured need at
+(`2 GiB + 6 x size`, capped at 256 GiB in workflow-tengo 6.11.0, above the measured need at
 every size it can express). The memory override, when set, replaces the formula.
 
 The six other Parquet imports of the block had flat grants of 12, 16 or 24 GiB: the per-sample
@@ -49,7 +49,10 @@ TSVs. The `exportClones` filter runs are unchanged.
 
 The single-cell per-cell preprocessing run asked for one core and one GiB per sample, with
 floors of 16 and 32. Its memory is now left to the SDK, which sizes the run from the blob size
-of its input TSVs, and its cpu is pinned at 8, the thread count that formula assumes.
+of its input TSVs with a 32 GiB floor, and its cpu is pinned at 8, the thread count that formula
+assumes.
+
+The block moves to workflow-tengo 6.11.0, which ships that sizing formula and `memFloor`.
 
 The hash override of `aggregate-by-clonotype-key` is new, so a failed aggregation is not
 recovered from its old identity.

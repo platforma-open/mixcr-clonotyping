@@ -9,6 +9,7 @@ exec := import("@platforma-sdk/workflow-tengo:exec")
 maps := import("@platforma-sdk/workflow-tengo:maps")
 slices := import("@platforma-sdk/workflow-tengo:slices")
 pt := import("@platforma-sdk/workflow-tengo:pt")
+units := import("@platforma-sdk/workflow-tengo:units")
 
 clonotypeLabel := import(":clonotype-label")
 
@@ -56,11 +57,12 @@ self.body(func(inputs) {
 		inputMap := byCellTag.inputs()
 
 		// Memory is left to the SDK, which sizes the run from the blob size of the input
-		// TSVs. Its formula assumes at most 8 polars threads, so cpu is pinned at 8. The
-		// previous request grew with the sample count (one core and one GiB per sample),
-		// not with the data volume.
+		// TSVs, with a 32 GiB floor. Its formula assumes at most 8 polars threads, so cpu is
+		// pinned at 8. The previous request grew with the sample count (one core and one
+		// GiB per sample), not with the data volume.
 		wf := pt.workflow().
 			inMediumQueue().
+			memFloor(32 * units.GiB).
 			cpu(8)
 
 		sampleDataFrames := []
