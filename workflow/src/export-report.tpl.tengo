@@ -7,6 +7,7 @@ maps := import("@platforma-sdk/workflow-tengo:maps")
 pframes := import("@platforma-sdk/workflow-tengo:pframes")
 xsv := import("@platforma-sdk/workflow-tengo:pframes.xsv")
 pt := import("@platforma-sdk/workflow-tengo:pt")
+units := import("@platforma-sdk/workflow-tengo:units")
 qcReportColumns := import(":qc-report-columns")
 memf := import(":mem-formula")
 
@@ -17,9 +18,10 @@ self.defineOutputs("qcReportTable")
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
 ptablerSw := assets.importSoftware("@platforma-open/milaboratories.software-ptabler:main")
 
-// grant for the one-row-per-sample counting runs; count and sum stream, so the request
-// does not follow the size of the clonotype TSV
-PER_SAMPLE_COUNTS_MEM := "8GiB"
+// The one-row-per-sample counting runs leave memory to the SDK, which sizes each run from
+// the blob size of that sample's TSVs, with this floor. The bulk counts stream, but the
+// single-cell pairing statistics group by cellKey and join, which polars runs in memory.
+PER_SAMPLE_COUNTS_MEM_FLOOR_GIB := 8
 PER_SAMPLE_COUNTS_CPU := 2
 
 self.body(func(inputs) {
@@ -288,7 +290,7 @@ self.body(func(inputs) {
         sampleId := json.decode(key)[0]
         swf := pt.workflow().
             inMediumQueue().
-            mem(PER_SAMPLE_COUNTS_MEM).
+            memFloor(PER_SAMPLE_COUNTS_MEM_FLOOR_GIB * units.GiB).
             cpu(PER_SAMPLE_COUNTS_CPU)
 
         row := flagFilterRows(swf.frame(filterTsvs[key], { xsvType: "tsv", inferSchema: false, schema: filterSchema })).select(
@@ -449,11 +451,8 @@ self.body(func(inputs) {
         }
     }
 
-    perChainJoined := joinedDf
-
-
     // Finalize: cast/fill totals and per-chain counts
-    finalDf := perChainJoined
+    finalDf := joinedDf
     if isSingleCell {
         // Use paired-only totals and per-chain counts
         // Replace per-chain columns from ".paired" variants and set total from exportedClonotypesPaired
@@ -497,13 +496,6 @@ self.body(func(inputs) {
                 pt.col("assemble.clonotypesDroppedByStopCodonsByChain." + chain).fillNull(0).cast("Long").alias("assemble.clonotypesDroppedByStopCodonsByChain." + chain)
             )
         }
-    }
-
-    for chain in chains {
-        col := "clonotypesByChain." + chain
-        finalDf = finalDf.withColumns(
-            pt.col(col).fillNull(0).cast("Long").alias(col)
-        )
     }
 
     if isSingleCell {
