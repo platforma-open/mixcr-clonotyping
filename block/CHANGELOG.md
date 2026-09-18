@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.23.4
+
+### Patch Changes
+
+- e820119: Move to workflow-tengo 6.10.5
+
 ## 2.23.3
 
 ### Patch Changes
