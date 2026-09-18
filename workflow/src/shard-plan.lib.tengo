@@ -86,19 +86,18 @@ plan := func(totalBytes, grantFloorGiB) {
 		return { shards: [LETTERS], memGiB: floor, cpu: SHARD_CPU }
 	}
 
-	count := 1
-	largest := totalBytes
-	for count < MAX_SHARDS {
-		lettersMax := ceilDiv(MAX_SHARDS, count)
-		largest = ceilDiv(totalBytes * lettersMax, MAX_SHARDS)
-		if needGiB(largest) <= DEFAULT_SHARD_GIB {
+	// The most letters one shard may hold so that its need stays under the default. With
+	// one letter per shard and the need still above the default, every shard requests its
+	// need.
+	lettersMax := 1
+	for lm := MAX_SHARDS; lm > 1; lm-- {
+		if needGiB(ceilDiv(totalBytes * lm, MAX_SHARDS)) <= DEFAULT_SHARD_GIB {
+			lettersMax = lm
 			break
 		}
-		count++
 	}
-	if count == MAX_SHARDS {
-		largest = ceilDiv(totalBytes, MAX_SHARDS)
-	}
+	count := ceilDiv(MAX_SHARDS, lettersMax)
+	largest := ceilDiv(totalBytes * ceilDiv(MAX_SHARDS, count), MAX_SHARDS)
 
 	return {
 		shards: shardLetters(count),
