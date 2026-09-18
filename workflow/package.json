@@ -13,7 +13,6 @@
   },
   "dependencies": {
     "@platforma-open/milaboratories.software-binary-collection": "catalog:",
-    "@platforma-open/milaboratories.software-small-binaries": "catalog:",
     "@platforma-open/milaboratories.software-mixcr": "catalog:",
     "@platforma-sdk/workflow-tengo": "catalog:"
   },

@@ -19,12 +19,14 @@ prefix uses — so every key lands in exactly one shard, every group is complete
 and the label is computed per shard. The shard outputs are disjoint and a final streaming run
 concatenates them. A cohort small enough for one shard runs unfiltered, as before.
 
-The shard count is chosen from the measured row count. `aggregate-by-clonotype-key` now counts
-the lines of every input TSV with the SDK line-counter and renders
-`aggregate-by-clonotype-key-shards` with the counts; the plan takes the smallest shard count
-whose largest shard stays under the target grant, at 4 KiB of RAM per row and a 2 GiB
-intercept (the concat + maxBy law measured under MILAB-6874, at 0.5 KiB per exported row). The
-target is 64 GiB, or the memory override when higher. Each shard runs on 8 cores.
+The shard count is chosen from the input volume. The template reads the blob size of every
+input TSV through the backend's `getBlobSize` (the same call `f.size()` resolves through) and
+takes the smallest shard count whose largest shard stays under 64 GiB at 6 GiB of RAM per GiB
+of TSV plus a 2 GiB intercept -- the concat + `maxBy` law measured under MILAB-6874 (4.94 at
+eight threads), at the slope the SDK's default ptabler sizing uses. The memory override raises
+every shard's grant but never the shard count: a request the backend cannot satisfy is clamped
+without notice, so a larger target would only recreate the single oversized run. Each shard
+runs on 8 cores. A backend without `getBlobSize` gets a single shard.
 
 The `byCloneKey` Parquet import that follows was a flat 24 GiB, which the measured `write_frame`
 law says holds about 13 GiB of aggregated TSV. It is now 64 GiB, or the memory override when

@@ -1,9 +1,9 @@
-// Shard plan for the cohort clonotype aggregation (:aggregate-by-clonotype-key-shards).
+// Shard plan for the cohort clonotype aggregation (:aggregate-by-clonotype-key).
 //
 // The aggregation groups all samples' clonotype rows by clonotypeKey and keeps, per column,
 // the value from the most abundant sample (maxBy). ptabler lowers maxBy to
 // top_k_by(k=1).first(), which polars runs as an in-memory group-by: one run holds every
-// group it produces at once, and its peak follows the number of input rows, not the grant.
+// group it produces at once, and its peak follows the input volume, not the grant.
 //
 // Rows are split into shards by the first letter of the clonotypeKey after digits are
 // removed, upper-cased. Each shard is one ptabler run over all input files with a filter on
@@ -19,26 +19,28 @@
 // equal probability. Letters are dealt to shards round-robin. A key with no letters at all
 // (all digits) has an empty bucket and belongs to shard 0.
 //
-// Memory per shard:
+// Memory per shard, from the input TSV bytes whose rows the shard keeps (1/K of the whole):
 //
-//     need(rows) = INTERCEPT_GIB + rows x RAM_PER_ROW_BYTES
+//     need(bytes) = INTERCEPT_GIB + RAM_PER_BYTE x bytes
 //
-// RAM_PER_ROW_BYTES is the concat + maxBy law from MILAB-6874 -- 4.94 GiB of RAM per GiB of
-// TSV at eight polars threads -- applied to about 0.5 KiB per exported clonotype row, rounded
-// up to 4 KiB. The shard count is the smallest that brings the largest shard under the target
-// grant; if 26 shards are not enough the largest shard's need is requested as-is.
+// RAM_PER_BYTE is the concat + maxBy law measured under MILAB-6874: 4.94 GiB of RAM per GiB
+// of TSV at eight polars threads, taken as 6 -- the same slope the SDK's default ptabler
+// sizing uses. The input TSVs are written uncompressed by ptabler, so their blob size is the
+// unit the law was fitted in.
 //
-// The row count comes from the SDK line-counter run on every input TSV by
-// :aggregate-by-clonotype-key. Each file has one header line.
+// The shard count is the smallest that brings the largest shard under DEFAULT_SHARD_GIB. The
+// memory override raises the grant of every shard but never the shard count: a request the
+// backend cannot satisfy is clamped without notice, so a larger target would only recreate
+// the single oversized run. If 26 shards are not enough, the largest shard's need is
+// requested as-is.
 
 math := import("math")
-text := import("text")
 
 LETTERS := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 MAX_SHARDS := len(LETTERS)
 
 INTERCEPT_GIB := 2
-RAM_PER_ROW_BYTES := 4 * 1024
+RAM_PER_BYTE := 6
 DEFAULT_SHARD_GIB := 64
 SHARD_CPU := 8
 
@@ -49,9 +51,9 @@ ceilDiv := func(a, b) {
 	return (a + b - 1) / b
 }
 
-// needGiB returns the whole GiB one shard of `rows` rows requires.
-needGiB := func(rows) {
-	return INTERCEPT_GIB + ceilDiv(rows * RAM_PER_ROW_BYTES, GIB)
+// needGiB returns the whole GiB one shard needs to hold `bytes` bytes of input rows.
+needGiB := func(bytes) {
+	return INTERCEPT_GIB + ceilDiv(bytes * RAM_PER_BYTE, GIB)
 }
 
 // shardLetters deals the 26 letters round-robin into `count` shards.
@@ -69,33 +71,37 @@ shardLetters := func(count) {
 
 // plan chooses the shard count and the per-shard grant.
 //
-// @param totalRows: int | undefined - clonotype rows over all input files; undefined when the
-//                   count is unavailable, which yields a single shard at the target grant.
-// @param targetGiB: int - grant each shard should stay under (the memory override, or
-//                   DEFAULT_SHARD_GIB)
+// @param totalBytes: int | undefined - bytes over all input TSVs; undefined when the backend
+//                    cannot report blob sizes, which yields a single shard.
+// @param grantFloorGiB: int | undefined - the memory override; raises every shard's grant
 // @return { shards: [string], memGiB: int, cpu: int }
-plan := func(totalRows, targetGiB) {
-	if is_undefined(totalRows) || totalRows <= 0 {
-		return { shards: [LETTERS], memGiB: targetGiB, cpu: SHARD_CPU }
+plan := func(totalBytes, grantFloorGiB) {
+	floor := DEFAULT_SHARD_GIB
+	if !is_undefined(grantFloorGiB) && grantFloorGiB > floor {
+		floor = grantFloorGiB
+	}
+
+	if is_undefined(totalBytes) || totalBytes <= 0 {
+		return { shards: [LETTERS], memGiB: floor, cpu: SHARD_CPU }
 	}
 
 	count := 1
-	largest := totalRows
+	largest := totalBytes
 	for count < MAX_SHARDS {
 		lettersMax := ceilDiv(MAX_SHARDS, count)
-		largest = ceilDiv(totalRows * lettersMax, MAX_SHARDS)
-		if needGiB(largest) <= targetGiB {
+		largest = ceilDiv(totalBytes * lettersMax, MAX_SHARDS)
+		if needGiB(largest) <= DEFAULT_SHARD_GIB {
 			break
 		}
 		count++
 	}
 	if count == MAX_SHARDS {
-		largest = ceilDiv(totalRows, MAX_SHARDS)
+		largest = ceilDiv(totalBytes, MAX_SHARDS)
 	}
 
 	return {
 		shards: shardLetters(count),
-		memGiB: int(math.max(targetGiB, needGiB(largest))),
+		memGiB: int(math.max(floor, needGiB(largest))),
 		cpu:    SHARD_CPU
 	}
 }
@@ -124,33 +130,11 @@ shardPredicate := func(pt, keyCol, letters, catchAll) {
 	return pred
 }
 
-// parseLineCount reads a line-counter output (a base-10 integer, optional whitespace).
-// Returns undefined when the text is not an integer.
-parseLineCount := func(data) {
-	return int(text.trim(string(data), "\n \r\t"))
-}
-
-// totalRowsFromLineCounts sums clonotype rows over per-file line counts, one header line per
-// file. Returns undefined when any count is missing or unparsable.
-totalRowsFromLineCounts := func(lineCounts) {
-	total := 0
-	for _, data in lineCounts {
-		n := parseLineCount(data)
-		if is_undefined(n) {
-			return undefined
-		}
-		if n > 0 {
-			total += n - 1
-		}
-	}
-	return total
-}
-
 export {
 	LETTERS: LETTERS,
 	MAX_SHARDS: MAX_SHARDS,
 	INTERCEPT_GIB: INTERCEPT_GIB,
-	RAM_PER_ROW_BYTES: RAM_PER_ROW_BYTES,
+	RAM_PER_BYTE: RAM_PER_BYTE,
 	DEFAULT_SHARD_GIB: DEFAULT_SHARD_GIB,
 	SHARD_CPU: SHARD_CPU,
 
@@ -158,7 +142,5 @@ export {
 	shardLetters: shardLetters,
 	plan: plan,
 	bucketExpr: bucketExpr,
-	shardPredicate: shardPredicate,
-	parseLineCount: parseLineCount,
-	totalRowsFromLineCounts: totalRowsFromLineCounts
+	shardPredicate: shardPredicate
 }

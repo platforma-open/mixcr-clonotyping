@@ -1,72 +1,180 @@
 //tengo:hash_override 16C140BA-55E8-46E5-95B6-294A67C539A9
 
-// Feeds :aggregate-by-clonotype-key-shards, which does the aggregation.
+// Aggregates every sample's clonotype rows into one row per clonotypeKey, in shards.
 //
-// The shard plan needs the number of clonotype rows over all input TSVs before the ptabler
-// runs can be built. Counting is a command, and a template cannot read the result of a
-// command it started itself, so this template counts and the shards template reads.
+// The shard plan, the letter buckets and the memory law are in :shard-plan. The plan is sized
+// from the blob size of the input TSVs, read through the backend's getBlobSize; a backend
+// without it gets a single shard.
 //
-// The hash override changed with the split: the previous identity has failed runs recorded
+// Every shard is one ptabler run over all input files, filtered to its letters, aggregated,
+// labelled and written. A single-shard plan runs the aggregation unfiltered, as the block did
+// before sharding. Several shards are concatenated by one more run; that run only appends
+// files, which polars streams to the sink.
+//
+// The hash override changed with sharding: the previous identity has failed runs recorded
 // against it that must not be recovered.
 
 ll := import("@platforma-sdk/workflow-tengo:ll")
 self := import("@platforma-sdk/workflow-tengo:tpl")
 pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
-exec := import("@platforma-sdk/workflow-tengo:exec")
-assets := import("@platforma-sdk/workflow-tengo:assets")
-render := import("@platforma-sdk/workflow-tengo:render")
-smart := import("@platforma-sdk/workflow-tengo:smart")
+slices := import("@platforma-sdk/workflow-tengo:slices")
 maps := import("@platforma-sdk/workflow-tengo:maps")
+units := import("@platforma-sdk/workflow-tengo:units")
+feats := import("@platforma-sdk/workflow-tengo:feats")
+pt := import("@platforma-sdk/workflow-tengo:pt")
+
+clonotypeLabel := import(":clonotype-label")
+sp := import(":shard-plan")
+
+json := import("json")
 
 self.defineOutputs("tsv")
 
-lineCounterSw := assets.importSoftware("@platforma-open/milaboratories.software-small-binaries:line-counter")
-shardsTpl := assets.importTemplate(":aggregate-by-clonotype-key-shards")
-
-// Same invocation as the SDK's exec.formula lineCount pre-exec: streaming binary, fixed small
-// memory, light queue, 30-day input cache. Output is the number of newline characters.
-countLines := func(fileRef) {
-	fileName := "clonotypes.tsv"
-	countOut := "linecount.txt"
-	res := exec.builder().
-		inLightQueue().
-		cpu(1).
-		mem("256MiB").
-		software(lineCounterSw).
-		addFile(fileName, fileRef).
-		arg("--input").arg(fileName).
-		arg("--output").arg(countOut).
-		saveFileContent(countOut).
-		cacheInputsDays(30).
-		run()
-	return res.getFileContent(countOut)
-}
+CONCAT_MEM_GIB := 16
+CONCAT_CPU := 2
 
 self.body(func(inputs) {
 	inputData := inputs[pConstants.VALUE_FIELD_NAME]
+	inputDataMeta := inputData.getDataAsJson()
+
+	ll.assert(inputDataMeta.keyLength == 1, "unexpected number of aggregation axes")
+
+	params := inputs.params
+	mainAbundanceColumnNormalized := params.mainAbundanceColumnNormalized
+	mainAbundanceColumnUnnormalized := params.mainAbundanceColumnUnnormalized
+
+	// { column: string; type: string }
+	schemaPerClonotypeNoAggregates := params.schemaPerClonotypeNoAggregates
+	schemaPerSample := params.schemaPerSample
+
 	inputMap := inputData.inputs()
 	ll.assert(len(inputMap) > 0, "no input files found")
 
-	lineCounts := {}
-	for sKey in maps.getKeys(inputMap) {
-		lineCounts[sKey] = countLines(inputMap[sKey])
-	}
-
-	shardsInputs := {
-		params: inputs.params,
-		lineCounts: smart.createMapResource(lineCounts)
-	}
-	shardsInputs[pConstants.VALUE_FIELD_NAME] = inputData
-
-	shards := render.create(shardsTpl, shardsInputs, {
-		// Kept out of the deduplication key, the way process.tpl.tengo passes it to this
-		// template: a run may be recovered across a change of the memory override.
-		metaInputs: {
-			perProcessMemGB: inputs.perProcessMemGB
+	totalBytes := undefined
+	if feats.hasBlobSize {
+		totalBytes = 0
+		for sKey in maps.getKeys(inputMap) {
+			totalBytes += ll.getBlobSize(inputMap[sKey].getValue().id)
 		}
+	}
+	shardPlan := sp.plan(totalBytes, inputs.perProcessMemGB)
+	singleShard := len(shardPlan.shards) == 1
+
+	baseSchemaForRead := schemaPerSample + [ { column: "clonotypeKey", type: "String" } ]
+
+	// Builds the aggregation of one shard on the given workflow and returns the frame to save.
+	// letters: the shard's bucket letters; catchAll: also take rows with an empty bucket.
+	buildShard := func(wf, letters, catchAll) {
+		dataFrames := []
+		for sKey in maps.getKeys(inputMap) {
+			key := json.decode(sKey)
+			if len(key) != 1 {
+				ll.panic("malformed key: %v", sKey)
+			}
+			sampleId := key[0]
+
+			df := wf.frame({
+				file: inputMap[sKey],
+				xsvType: "tsv",
+				schema: baseSchemaForRead
+			}, {
+				id: "table_" + sampleId,
+				inferSchema: false
+			})
+			dataFrames = append(dataFrames, df)
+		}
+
+		currentDf := len(dataFrames) == 1 ? dataFrames[0] : pt.concat(dataFrames)
+
+		if !singleShard {
+			currentDf = currentDf.filter(sp.shardPredicate(pt, "clonotypeKey", letters, catchAll))
+		}
+
+		aggExpressions := []
+		hasFractionCDRMutations := false
+
+		for colDef in schemaPerClonotypeNoAggregates {
+			if colDef.column == "clonotypeLabel" || colDef.column == "nLengthTotalAdded" {
+				continue
+			}
+			if colDef.column == "fractionCDRMutations" {
+				hasFractionCDRMutations = true
+				continue
+			}
+			aggExpressions = append(aggExpressions,
+				pt.col(colDef.column).maxBy(pt.col(mainAbundanceColumnNormalized)).alias(colDef.column)
+			)
+		}
+
+		aggExpressions = append(aggExpressions,
+			pt.col(mainAbundanceColumnNormalized).count().alias("sampleCount"),
+			pt.col(mainAbundanceColumnUnnormalized).sum().alias(mainAbundanceColumnUnnormalized + "Sum"),
+			pt.col(mainAbundanceColumnNormalized).mean().alias(mainAbundanceColumnNormalized + "Mean")
+		)
+
+		aggregatedDf := currentDf.groupBy("clonotypeKey").agg(aggExpressions...)
+
+		// Total added nucleotides: VDJunction + DJJunction for chains with D genes, VJJunction
+		// for chains without.
+		aggregatedDf = aggregatedDf.withColumns(
+			pt.when(pt.col("nLengthVDJunction").isNotNull().and(pt.col("nLengthVDJunction").neq("no_d_gene"))).
+				then(pt.col("nLengthVDJunction").cast("Int").plus(pt.col("nLengthDJJunction").cast("Int"))).
+				otherwise(pt.col("nLengthVJJunction").cast("Int")).
+				alias("nLengthTotalAdded")
+		)
+
+		// CDR mutation fraction: CDR / (CDR + FWR); 1.0 when NA or zero denominator.
+		if hasFractionCDRMutations {
+			cdr := "aaMutationsCountCDR1,CDR2"
+			fwr := "aaMutationsCountFR1,FR2,FR3,FR4"
+			aggregatedDf = aggregatedDf.withColumns(
+				pt.when(
+					pt.col(cdr).isNotNull().
+						and(pt.col(fwr).isNotNull()).
+						and(pt.col(cdr).cast("Double").plus(pt.col(fwr).cast("Double")).gt(0.0))
+				).then(
+					pt.col(cdr).cast("Double").truediv(
+						pt.col(cdr).cast("Double").plus(pt.col(fwr).cast("Double"))
+					)
+				).otherwise(pt.lit(1.0)).
+					alias("fractionCDRMutations")
+			)
+		}
+
+		// The label ranks keys inside a five-letter prefix whose first letter is the shard
+		// letter, so every key of a prefix is in this shard.
+		return clonotypeLabel.addClonotypeLabelColumnsPt(aggregatedDf, "clonotypeKey", "clonotypeLabel", pt)
+	}
+
+	shardFiles := []
+	for i, letters in shardPlan.shards {
+		wf := pt.workflow().
+			inMediumQueue().
+			mem(shardPlan.memGiB * units.GiB).
+			cpu(shardPlan.cpu)
+
+		buildShard(wf, letters, i == 0).save("output.tsv")
+
+		shardFiles = append(shardFiles, wf.run().getFile("output.tsv"))
+	}
+
+	if singleShard {
+		return {
+			tsv: shardFiles[0]
+		}
+	}
+
+	concatWf := pt.workflow().
+		inMediumQueue().
+		mem(CONCAT_MEM_GIB * units.GiB).
+		cpu(CONCAT_CPU)
+
+	shardFrames := slices.map(shardFiles, func(f) {
+		return concatWf.frame(f, { xsvType: "tsv", inferSchema: false })
 	})
+	pt.concat(shardFrames).save("output.tsv")
 
 	return {
-		tsv: shards.output("tsv")
+		tsv: concatWf.run().getFile("output.tsv")
 	}
 })
