@@ -67,13 +67,6 @@ self.body(func(inputs) {
 	perProcessMemGB := params.perProcessMemGB
 	perProcessCPUs := params.perProcessCPUs
 
-	// Grant for the cohort-wide byCloneKey Parquet import. Left unset, the SDK sizes the
-	// ptabler run from the blob size of the aggregated TSV. The memory override, when set,
-	// replaces that formula.
-	byCloneKeyImportMem := undefined
-	if !is_undefined(perProcessMemGB) && perProcessMemGB > 0 {
-		byCloneKeyImportMem = string(perProcessMemGB) + "GiB"
-	}
 	blockId := params.blockId
 	libraryId := params.libraryId
 	presetCommonName := params.presetCommonName
@@ -510,8 +503,10 @@ self.body(func(inputs) {
 				})
 			}
 			// The cohort table is written to Parquet by one DuckDB sort. Its measured need is
-			// 4.13 x^0.68 GiB for x GiB of TSV. The SDK formula for an unset mem is above that
-			// need at every size it can express.
+			// 4.13 x^0.68 GiB for x GiB of TSV. mem is left unset: the SDK sizes the run from
+			// the blob size of the aggregated TSV, above that need at every size it can
+			// express. The memory override does not apply here. The Xsv output passes no
+			// floor through to the import, and a fixed request would replace the formula.
 			byCloneKeyOutput := {
 				type: "Xsv",
 				xsvType: "tsv",
@@ -524,9 +519,6 @@ self.body(func(inputs) {
 				cpu: 2,
 				name: "byCloneKey",
 				path: ["tsv"]
-			}
-			if !is_undefined(byCloneKeyImportMem) {
-				byCloneKeyOutput.mem = byCloneKeyImportMem
 			}
 			aggregationOutputs += [ byCloneKeyOutput ]
 		}

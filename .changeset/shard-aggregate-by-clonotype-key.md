@@ -32,7 +32,8 @@ The `byCloneKey` Parquet import that follows was a flat 24 GiB, which the measur
 law (`4.13 x^0.68` GiB for x GiB of TSV) says holds about 13 GiB of aggregated TSV. Its memory
 is now left to the SDK, which sizes the ptabler run from the blob size of the aggregated TSV
 (`2 GiB + 6 x size`, capped at 256 GiB in workflow-tengo 6.11.0, above the measured need at
-every size it can express). The memory override, when set, replaces the formula.
+every size it can express). The memory override does not apply to this import: the Xsv output
+passes no floor through, and a fixed request would replace the formula.
 
 The six other Parquet imports of the block had flat grants of 12, 16 or 24 GiB: the per-sample
 `byCloneKeyBySample` table and the single-cell abundance, aggregates, properties, cell-linker
@@ -41,8 +42,9 @@ can export twice that. Their memory is now left to the same SDK sizing.
 
 The QC report run in `export-report` framed every sample's full clonotype TSV and every filter
 TSV in one 8 GiB ptabler run to count clonotypes, reads, out-of-frame and stop-codon clones per
-sample. Those counts are now computed by one small ptabler run per sample, each reading only
-that sample's files and writing a one-row table; the cohort run frames those rows and the qc
+sample. Those counts are now computed by one ptabler run per sample, sized by the SDK from that
+sample's files with an 8 GiB floor, each reading only that sample's files and writing a one-row
+table; the cohort run frames those rows and the qc
 report, so its input no longer grows with the clonotype or cell count. In single-cell mode the
 per-sample run also computes that sample's cell-pairing statistics from its single-cell chain
 TSVs. The `exportClones` filter runs are unchanged.
