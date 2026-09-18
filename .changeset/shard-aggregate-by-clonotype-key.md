@@ -42,5 +42,9 @@ report, so its input no longer grows with the clonotype or cell count. In single
 per-sample run also computes that sample's cell-pairing statistics from its single-cell chain
 TSVs. The `exportClones` filter runs are unchanged.
 
+The single-cell per-cell preprocessing run asked for one core and one GiB per sample, with
+floors of 16 and 32. Its memory and cpu are now left to the SDK, which sizes the run from the
+blob size of its input TSVs and caps cpu at 8.
+
 The hash override of `aggregate-by-clonotype-key` is new, so a failed aggregation is not
 recovered from its old identity.

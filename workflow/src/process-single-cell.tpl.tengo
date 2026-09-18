@@ -8,13 +8,11 @@ assets := import("@platforma-sdk/workflow-tengo:assets")
 exec := import("@platforma-sdk/workflow-tengo:exec")
 maps := import("@platforma-sdk/workflow-tengo:maps")
 slices := import("@platforma-sdk/workflow-tengo:slices")
-units := import("@platforma-sdk/workflow-tengo:units")
 pt := import("@platforma-sdk/workflow-tengo:pt")
 
 clonotypeLabel := import(":clonotype-label")
 
 json := import("json")
-math := import("math")
 
 self.defineOutputs("abundanceTsv", "clonotypeTsv",
 	"propertiesAPrimaryTsv", "propertiesASecondaryTsv", "propertiesBPrimaryTsv", "propertiesBSecondaryTsv",
@@ -56,12 +54,12 @@ self.body(func(inputs) {
 	 */
 	preprocessByCell := func(byCellTag) {
 		inputMap := byCellTag.inputs()
-		numberOfSamples := len(inputMap)
 
+		// Memory and cpu are left to the SDK, which sizes the run from the blob size of the
+		// input TSVs and caps cpu at 8. The previous request grew with the sample count
+		// (one core and one GiB per sample), not with the data volume.
 		wf := pt.workflow().
-			inMediumQueue().
-			mem(int(math.max(numberOfSamples, 32)) * units.GiB).
-			cpu(int(math.max(numberOfSamples, 16)))
+			inMediumQueue()
 
 		sampleDataFrames := []
 
