@@ -276,6 +276,12 @@ self.body(func(inputs) {
             countColumns = append(countColumns, "assemble.clonotypesDroppedByStopCodonsByChain." + chain)
         }
     }
+    if isSingleCell {
+        countColumns = append(countColumns, "scCellsTotal", "scCellsBothChains", "exportedClonotypesPaired")
+        for chain in chains {
+            countColumns = append(countColumns, "clonotypesByChain." + chain + ".paired")
+        }
+    }
 
     countsFiles := []
     for key in maps.getKeys(clnsFiles) {
@@ -332,6 +338,72 @@ self.body(func(inputs) {
             readsExpr.alias("readsUsedInClonotypesNew")
         )
 
+        // Single-cell: cell pairing statistics for this sample from its single-cell chain
+        // TSVs (cellKey, clonotypeKey per chain). A cell is paired when it carries more than
+        // pairMinExclusive distinct chains: 2 for paired receptors, 1 for heavy-chain-only.
+        if isSingleCell {
+            scDfs := []
+            if !is_undefined(singleCellChainTsvsData) {
+                for chain in chains {
+                    chainFiles := singleCellChainTsvsData[chain]
+                    scFile := is_undefined(chainFiles) ? undefined : chainFiles.inputs()[key]
+                    if is_undefined(scFile) {
+                        continue
+                    }
+                    scDfs = append(scDfs, swf.frame(scFile, { xsvType: "tsv", inferSchema: false, schema: [ { column: "cellKey", type: "String" }, { column: "clonotypeKey", type: "String" } ] }).select(
+                        pt.col("cellKey"),
+                        pt.col("clonotypeKey"),
+                        pt.lit(chain).alias("chain")
+                    ))
+                }
+            }
+            if len(scDfs) == 0 {
+                zeroExprs := [
+                    pt.lit(0).alias("scCellsTotal"),
+                    pt.lit(0).alias("scCellsBothChains"),
+                    pt.lit(0).alias("exportedClonotypesPaired")
+                ]
+                for chain in chains {
+                    zeroExprs = append(zeroExprs, pt.lit(0).alias("clonotypesByChain." + chain + ".paired"))
+                }
+                row = row.withColumns(zeroExprs...)
+            } else {
+                scAll := len(scDfs) > 1 ? pt.concat(scDfs) : scDfs[0]
+                pairMinExclusive := scHeavyOnly ? 0 : 1
+                pairedKeys := scAll.groupBy("cellKey").agg(pt.col("chain").nUnique().alias("_numChains")).
+                    filter(pt.col("_numChains").gt(pairMinExclusive)).
+                    select(pt.col("cellKey"))
+                scPaired := scAll.join(pairedKeys, { how: "inner", on: ["cellKey"] })
+
+                cellCounts := scAll.select(
+                    pt.lit(sampleId).alias("sampleId"),
+                    pt.col("cellKey").nUnique().alias("scCellsTotal")
+                )
+                pairedCellCounts := pairedKeys.select(
+                    pt.lit(sampleId).alias("sampleId"),
+                    pt.col("cellKey").count().alias("scCellsBothChains")
+                )
+                row = row.join(cellCounts, { how: "left", on: ["sampleId"] }).
+                    join(pairedCellCounts, { how: "left", on: ["sampleId"] })
+
+                pairedTotalExpr := pt.lit(0)
+                for chain in chains {
+                    colPaired := "clonotypesByChain." + chain + ".paired"
+                    if is_undefined(singleCellChainTsvsData[chain]) {
+                        row = row.withColumns(pt.lit(0).alias(colPaired))
+                    } else {
+                        chainPaired := scPaired.filter(pt.col("chain").eq(chain)).select(
+                            pt.lit(sampleId).alias("sampleId"),
+                            pt.col("clonotypeKey").nUnique().alias(colPaired)
+                        )
+                        row = row.join(chainPaired, { how: "left", on: ["sampleId"] })
+                    }
+                    pairedTotalExpr = pairedTotalExpr.plus(pt.col(colPaired).fillNull(0))
+                }
+                row = row.withColumns(pairedTotalExpr.alias("exportedClonotypesPaired"))
+            }
+        }
+
         selectExprs := [ pt.col("sampleId") ]
         for c in countColumns {
             selectExprs = append(selectExprs, pt.col(c).cast("Long"))
@@ -342,8 +414,7 @@ self.body(func(inputs) {
     }
 
     // Cohort run: the qc report joined with the per-sample count rows. Every frame here has
-    // one row per sample, so the run stays flat in clonotype count. The single-cell pairing
-    // statistics below still read the single-cell chain TSVs in this run.
+    // one row per sample, so the run stays flat in clonotype and cell count.
     wf := pt.workflow().
         inMediumQueue().
         mem("8GiB").
@@ -380,73 +451,6 @@ self.body(func(inputs) {
 
     perChainJoined := joinedDf
 
-    // Single-cell: compute per-sample cell pairing stats and paired clonotype counts
-    if isSingleCell && !is_undefined(singleCellChainTsvsData) {
-        // Load all single-cell chain TSVs once with (sampleId, cellKey, clonotypeKey, chain)
-        scDfs := []
-        maps.forEach(singleCellChainTsvsData, func(chainName, chainFiles) {
-            maps.forEach(chainFiles.inputs(), func(key, f) {
-                sampleId := json.decode(key)[0]
-                df := wf.frame(f, { xsvType: "tsv", inferSchema: false, schema: [ { column: "cellKey", type: "String" }, { column: "clonotypeKey", type: "String" } ] })
-                scDfs = append(scDfs, df.select(
-                    pt.lit(sampleId).alias("sampleId"),
-                    pt.col("cellKey"),
-                    pt.col("clonotypeKey"),
-                    pt.lit(chainName).alias("chain")
-                ))
-            })
-        })
-        if len(scDfs) > 0 {
-            scAll := len(scDfs) > 1 ? pt.concat(scDfs) : scDfs[0]
-
-            // Count cells per sample across all chains (unique cellKey)
-            cellsPerSample := scAll.groupBy("sampleId").agg(pt.col("cellKey").nUnique().alias("scCellsTotal"))
-
-            // A cell is "valid" when it has at least the required number of distinct chains:
-            // 2 for paired receptors, 1 for heavy-chain-only (VHH). Encoded as an exclusive
-            // lower bound so the existing ">" comparison is reused.
-            pairMinExclusive := scHeavyOnly ? 0 : 1
-            cellsPerSampleChainCounts := scAll.groupBy("sampleId", "cellKey").agg(pt.col("chain").nUnique().alias("_numChains"))
-            pairedKeys := cellsPerSampleChainCounts.filter(pt.col("_numChains").gt(pairMinExclusive)).select(pt.col("sampleId"), pt.col("cellKey"))
-
-            perChainJoined = perChainJoined.join(cellsPerSample, { how: "left", on: ["sampleId"] })
-            // scCellsBothChains (cells with >=2 distinct chains) feeds only the paired scCellsTotal;
-            // in heavy-only mode scCellsTotal comes from cellsPerSample, so skip this aggregation/join.
-            if !scHeavyOnly {
-                bothChainCells := cellsPerSampleChainCounts.filter(pt.col("_numChains").gt(pairMinExclusive)).groupBy("sampleId").agg(pt.col("cellKey").count().alias("scCellsBothChains"))
-                perChainJoined = perChainJoined.join(bothChainCells, { how: "left", on: ["sampleId"] })
-            }
-
-            // Filter to paired cells only
-            scPaired := scAll.join(pairedKeys, { how: "inner", on: ["sampleId", "cellKey"] })
-
-            // Per-chain clonotype counts from paired cells
-            perChainPairedJoined := perChainJoined
-            totalPairedParts := []
-            for chain in chains {
-                chainColPaired := "clonotypesByChain." + chain + ".paired"
-                if is_undefined(singleCellChainTsvsData[chain]) {
-                    perChainPairedJoined = perChainPairedJoined.withColumns(pt.lit(0).alias(chainColPaired))
-                    continue
-                }
-                chainPaired := scPaired.filter(pt.col("chain").eq(chain))
-                chainAggPaired := chainPaired.groupBy("sampleId").agg(pt.col("clonotypeKey").nUnique().alias(chainColPaired))
-                perChainPairedJoined = perChainPairedJoined.join(chainAggPaired, { how: "left", on: ["sampleId"] })
-                totalPairedParts = append(totalPairedParts, chainAggPaired.select(pt.col("sampleId"), pt.col(chainColPaired).alias("__pairedPart")))
-            }
-
-            if len(totalPairedParts) > 0 {
-                totalPairedDf := len(totalPairedParts) > 1 ? pt.concat(totalPairedParts) : totalPairedParts[0]
-                totalPairedAgg := totalPairedDf.groupBy("sampleId").agg(pt.col("__pairedPart").sum().alias("exportedClonotypesPaired"))
-                perChainJoined = perChainPairedJoined.join(totalPairedAgg, { how: "left", on: ["sampleId"] })
-            } else {
-                perChainJoined = perChainPairedJoined.withColumns(pt.lit(0).alias("exportedClonotypesPaired"))
-            }
-
-        } else {
-            perChainJoined = perChainJoined.withColumns(pt.lit(0).alias("scCellsTotal"), pt.lit(0).alias("scCellsBothChains"))
-        }
-    }
 
     // Finalize: cast/fill totals and per-chain counts
     finalDf := perChainJoined
