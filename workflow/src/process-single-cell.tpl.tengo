@@ -55,11 +55,13 @@ self.body(func(inputs) {
 	preprocessByCell := func(byCellTag) {
 		inputMap := byCellTag.inputs()
 
-		// Memory and cpu are left to the SDK, which sizes the run from the blob size of the
-		// input TSVs and caps cpu at 8. The previous request grew with the sample count
-		// (one core and one GiB per sample), not with the data volume.
+		// Memory is left to the SDK, which sizes the run from the blob size of the input
+		// TSVs. Its formula assumes at most 8 polars threads, so cpu is pinned at 8. The
+		// previous request grew with the sample count (one core and one GiB per sample),
+		// not with the data volume.
 		wf := pt.workflow().
-			inMediumQueue()
+			inMediumQueue().
+			cpu(8)
 
 		sampleDataFrames := []
 

@@ -48,8 +48,8 @@ per-sample run also computes that sample's cell-pairing statistics from its sing
 TSVs. The `exportClones` filter runs are unchanged.
 
 The single-cell per-cell preprocessing run asked for one core and one GiB per sample, with
-floors of 16 and 32. Its memory and cpu are now left to the SDK, which sizes the run from the
-blob size of its input TSVs and caps cpu at 8.
+floors of 16 and 32. Its memory is now left to the SDK, which sizes the run from the blob size
+of its input TSVs, and its cpu is pinned at 8, the thread count that formula assumes.
 
 The hash override of `aggregate-by-clonotype-key` is new, so a failed aggregation is not
 recovered from its old identity.
