@@ -35,6 +35,7 @@
 // requested as-is.
 
 math := import("math")
+clonotypeLabel := import(":clonotype-label")
 
 LETTERS := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 MAX_SHARDS := len(LETTERS)
@@ -106,13 +107,11 @@ plan := func(totalBytes, grantFloorGiB) {
 	}
 }
 
-// bucketExpr returns the pt expression for a row's shard letter.
+// bucketExpr returns the pt expression for a row's shard letter: the first character of the
+// clonotype label prefix, from the same normalization the label uses, so every prefix group
+// is inside one shard. A null key buckets to "".
 bucketExpr := func(pt, keyCol) {
-	return pt.col(keyCol).
-		fillNull("").
-		strReplace("\\d", "", { replaceAll: true }).
-		strSlice(0, 1).
-		strToUpper()
+	return clonotypeLabel.labelPrefixExpr(pt, keyCol, 1).fillNull("")
 }
 
 // shardPredicate returns the pt filter expression selecting rows whose shard letter is one of
