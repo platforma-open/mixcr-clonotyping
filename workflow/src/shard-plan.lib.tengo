@@ -21,9 +21,9 @@
 //
 // Memory per shard, from the input TSV bytes whose rows the shard keeps (1/K of the whole):
 //
-//     need(bytes) = INTERCEPT_GIB + RAM_PER_BYTE x bytes
+//     need(bytes) = INTERCEPT_GIB + RAM_GIB_PER_INPUT_GIB x bytes
 //
-// RAM_PER_BYTE is the concat + maxBy law measured under MILAB-6874: 4.94 GiB of RAM per GiB
+// RAM_GIB_PER_INPUT_GIB is the concat + maxBy law measured under MILAB-6874: 4.94 GiB of RAM per GiB
 // of TSV at eight polars threads, taken as 6 -- the same slope the SDK's default ptabler
 // sizing uses. The input TSVs are written uncompressed by ptabler, so their blob size is the
 // unit the law was fitted in.
@@ -40,7 +40,7 @@ LETTERS := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 MAX_SHARDS := len(LETTERS)
 
 INTERCEPT_GIB := 2
-RAM_PER_BYTE := 6
+RAM_GIB_PER_INPUT_GIB := 6
 DEFAULT_SHARD_GIB := 64
 SHARD_CPU := 8
 
@@ -53,7 +53,7 @@ ceilDiv := func(a, b) {
 
 // needGiB returns the whole GiB one shard needs to hold `bytes` bytes of input rows.
 needGiB := func(bytes) {
-	return INTERCEPT_GIB + ceilDiv(bytes * RAM_PER_BYTE, GIB)
+	return INTERCEPT_GIB + ceilDiv(bytes * RAM_GIB_PER_INPUT_GIB, GIB)
 }
 
 // shardLetters deals the 26 letters round-robin into `count` shards.
@@ -134,7 +134,7 @@ export {
 	LETTERS: LETTERS,
 	MAX_SHARDS: MAX_SHARDS,
 	INTERCEPT_GIB: INTERCEPT_GIB,
-	RAM_PER_BYTE: RAM_PER_BYTE,
+	RAM_GIB_PER_INPUT_GIB: RAM_GIB_PER_INPUT_GIB,
 	DEFAULT_SHARD_GIB: DEFAULT_SHARD_GIB,
 	SHARD_CPU: SHARD_CPU,
 
