@@ -30,5 +30,13 @@ The `byCloneKey` Parquet import that follows was a flat 24 GiB, which the measur
 law says holds about 13 GiB of aggregated TSV. It is now 64 GiB, or the memory override when
 higher, which holds about 56 GiB.
 
+The QC report run in `export-report` framed every sample's full clonotype TSV and every filter
+TSV in one 8 GiB ptabler run to count clonotypes, reads, out-of-frame and stop-codon clones per
+sample. Those counts are now computed by one small ptabler run per sample, each reading only
+that sample's files and writing a one-row table; the cohort run frames those rows and the qc
+report, so its input no longer grows with the clonotype count. The `exportClones` filter runs
+are unchanged. In single-cell mode the cell-pairing statistics still read the single-cell chain
+TSVs in the cohort run.
+
 The hash override of `aggregate-by-clonotype-key` is new, so a failed aggregation is not
 recovered from its old identity.
