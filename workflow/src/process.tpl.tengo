@@ -66,6 +66,12 @@ self.body(func(inputs) {
 	limitInput := params.limitInput
 	perProcessMemGB := params.perProcessMemGB
 	perProcessCPUs := params.perProcessCPUs
+
+	// grant for the cohort-wide byCloneKey Parquet import; the override raises it
+	byCloneKeyImportMemGiB := 64
+	if !is_undefined(perProcessMemGB) && perProcessMemGB > byCloneKeyImportMemGiB {
+		byCloneKeyImportMemGiB = perProcessMemGB
+	}
 	blockId := params.blockId
 	libraryId := params.libraryId
 	presetCommonName := params.presetCommonName
@@ -511,7 +517,10 @@ self.body(func(inputs) {
 					storageFormat: "Parquet",
 					partitionKeyLength: 0
 				},
-				mem: "24GiB",
+				// The cohort table is written to Parquet by one DuckDB sort. Its measured need
+				// is 4.13 x^0.68 GiB for x GiB of TSV: 64 GiB holds ~56 GiB of aggregated TSV,
+				// 128 GiB holds ~155 GiB. The memory override raises it.
+				mem: string(byCloneKeyImportMemGiB) + "GiB",
 				cpu: 2,
 				name: "byCloneKey",
 				path: ["tsv"]
