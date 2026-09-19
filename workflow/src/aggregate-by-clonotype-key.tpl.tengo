@@ -65,7 +65,7 @@ self.body(func(inputs) {
 			totalBytes += ll.getBlobSize(inputMap[sKey].getValue().id)
 		}
 	}
-	shardPlan := sp.plan(totalBytes)
+	shardPlan := sp.plan(totalBytes, inputs.perProcessMemGB)
 	ll.print("aggregate-by-clonotype-key shard plan: inputBytes=", totalBytes, " shards=", len(shardPlan.shards), " memGiB=", shardPlan.memGiB, " cpu=", shardPlan.cpu)
 	singleShard := len(shardPlan.shards) == 1
 

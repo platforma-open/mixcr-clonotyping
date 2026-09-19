@@ -558,7 +558,8 @@ self.body(func(inputs) {
 				// by passing those parameters as meta fields we allow for recovery and deduplication mechanisms
 				// to pick up the results from executions with different values for CPU and Memory overrides
 				//
-				// The agg template does not read this value: its shards are sized from the input bytes.
+				// The agg template's shards are sized from the input bytes and ignore this value.
+				// It raises only the fallback taken when the backend cannot report blob sizes.
 				//
 				metaExtra: {
 					perProcessMemGB: perProcessMemGB
