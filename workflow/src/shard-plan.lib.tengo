@@ -19,17 +19,23 @@
 // equal probability. Letters are dealt to shards round-robin. A key with no letters at all
 // (all digits) has an empty bucket and belongs to shard 0.
 //
-// Memory per shard, from the input TSV bytes whose rows the shard keeps (1/K of the whole):
+// Memory per shard has two parts, and only the second shrinks with the shard count:
 //
-//     need(bytes) = INTERCEPT_GIB + RAM_GIB_PER_INPUT_GIB x bytes
+//     need = INTERCEPT_GIB + SCAN_RAM x scanned + GROUP_RAM x kept
 //
-// RAM_GIB_PER_INPUT_GIB is the concat + maxBy law measured under MILAB-6874: 4.94 GiB of RAM per GiB
-// of TSV at eight polars threads, taken as 6 -- the same slope the SDK's default ptabler
-// sizing uses. The input TSVs are written uncompressed by ptabler, so their blob size is the
-// unit the law was fitted in.
+// Every shard frames all input TSVs and filters them to its own letters, so `scanned` is the
+// whole cohort for every shard however many there are. Measured at 1.0 GiB of RAM per GiB
+// scanned; taken as 1.5 for margin.
 //
-// The shard count is the smallest that brings the largest shard under DEFAULT_SHARD_GIB. If
-// 26 shards are not enough, the largest shard's need is requested as-is.
+// GROUP_RAM covers the concat + maxBy over the rows a shard keeps. Measured at 4.43 on a
+// 42-column bulk export with no repertoire overlap; taken as 6, the slope the SDK's default
+// ptabler sizing uses.
+//
+// Blob sizes are the unit both laws are fitted in: ptabler writes these TSVs uncompressed.
+//
+// The shard count is the smallest that brings a shard under DEFAULT_SHARD_GIB. The scan term
+// puts that out of reach for a large cohort, which then takes all 26 shards and requests what
+// it needs.
 //
 // A planned shard's grant ignores `perProcessMemGB`: it is never below the computed need, so
 // a user number cannot help, and it can only shrink how many shards the queue admits at once.
@@ -47,6 +53,10 @@ RAM_GIB_PER_INPUT_GIB := 6
 DEFAULT_SHARD_GIB := 64
 SHARD_CPU := 8
 
+// GiB of RAM per GiB of TSV a shard reads and filters away, as a fraction.
+SCAN_RAM_NUM := 3
+SCAN_RAM_DEN := 2
+
 GIB := 1024 * 1024 * 1024
 
 // ceilDiv returns ceil(a / b) for non-negative integers.
@@ -54,9 +64,12 @@ ceilDiv := func(a, b) {
 	return (a + b - 1) / b
 }
 
-// needGiB returns the whole GiB one shard needs to hold `bytes` bytes of input rows.
-needGiB := func(bytes) {
-	return INTERCEPT_GIB + ceilDiv(bytes * RAM_GIB_PER_INPUT_GIB, GIB)
+// needGiB returns the whole GiB one shard needs: `scanBytes` over all inputs it frames, of
+// which `keptBytes` survive its filter and reach the group-by.
+needGiB := func(scanBytes, keptBytes) {
+	return INTERCEPT_GIB +
+		ceilDiv(scanBytes * SCAN_RAM_NUM, SCAN_RAM_DEN * GIB) +
+		ceilDiv(keptBytes * RAM_GIB_PER_INPUT_GIB, GIB)
 }
 
 // shardLetters deals the 26 letters round-robin into `count` shards.
@@ -90,12 +103,12 @@ plan := func(totalBytes, grantFloorGiB) {
 		return { shards: [LETTERS], memGiB: floor, cpu: SHARD_CPU }
 	}
 
-	// The most letters one shard may hold so that its need stays under the default. With
-	// one letter per shard and the need still above the default, every shard requests its
-	// need.
+	// The most letters one shard may hold so that its need stays under the default. Every
+	// shard scans the whole cohort whatever the count, so past a certain size no count fits
+	// and each shard requests its need.
 	lettersMax := 1
 	for lm := MAX_SHARDS; lm > 1; lm-- {
-		if needGiB(ceilDiv(totalBytes * lm, MAX_SHARDS)) <= DEFAULT_SHARD_GIB {
+		if needGiB(totalBytes, ceilDiv(totalBytes * lm, MAX_SHARDS)) <= DEFAULT_SHARD_GIB {
 			lettersMax = lm
 			break
 		}
@@ -105,7 +118,7 @@ plan := func(totalBytes, grantFloorGiB) {
 
 	return {
 		shards: shardLetters(count),
-		memGiB: int(math.max(floor, needGiB(largest))),
+		memGiB: int(math.max(floor, needGiB(totalBytes, largest))),
 		cpu:    SHARD_CPU
 	}
 }
