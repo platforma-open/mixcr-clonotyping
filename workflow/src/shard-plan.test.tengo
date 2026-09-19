@@ -34,7 +34,7 @@ TestShardLettersDealEveryLetterOnce := func() {
 
 TestPlanSmallCohortIsOneShardAtDefault := func() {
 	// 1 GiB of TSV needs 8 GiB: one shard, granted the 64 GiB default.
-	p := sp.plan(1 * GIB, undefined)
+	p := sp.plan(1 * GIB)
 	test.isEqual(1, len(p.shards))
 	test.isEqual(sp.LETTERS, p.shards[0])
 	test.isEqual(sp.DEFAULT_SHARD_GIB, p.memGiB)
@@ -42,39 +42,27 @@ TestPlanSmallCohortIsOneShardAtDefault := func() {
 }
 
 TestPlanUnknownBytesIsOneShard := func() {
-	p := sp.plan(undefined, undefined)
+	p := sp.plan(undefined)
 	test.isEqual(1, len(p.shards))
 	test.isEqual(sp.DEFAULT_SHARD_GIB, p.memGiB)
 }
 
 TestPlanLargestShardStaysUnderDefault := func() {
-	// 65 GiB of TSV (130 M rows at 0.5 KiB): 2 + 6 x 65 = 392 GiB in one run.
+	// 65 GiB of TSV: 2 + 6 x 65 = 392 GiB in one run.
 	// 7 shards -> 4 letters -> 10 GiB -> 62 GiB fits; 6 shards -> 5 letters -> 12.5 -> 77 does not.
-	p := sp.plan(65 * GIB, undefined)
+	p := sp.plan(65 * GIB)
 	test.isEqual(7, len(p.shards))
 	test.isEqual(sp.DEFAULT_SHARD_GIB, p.memGiB)
 
-	// 260 GiB of TSV (130 M rows at 2 KiB): only 26 shards bring a shard to 10 GiB -> 62.
-	p = sp.plan(260 * GIB, undefined)
+	// 260 GiB of TSV: only 26 shards bring a shard to 10 GiB -> 62.
+	p = sp.plan(260 * GIB)
 	test.isEqual(26, len(p.shards))
-	test.isEqual(sp.DEFAULT_SHARD_GIB, p.memGiB)
-}
-
-TestPlanOverrideRaisesGrantNotShardCount := func() {
-	// The same 65 GiB cohort with a 600 GiB override: still 7 shards, each granted 600.
-	p := sp.plan(65 * GIB, 600)
-	test.isEqual(7, len(p.shards))
-	test.isEqual(600, p.memGiB)
-
-	// An override below the default changes nothing.
-	p = sp.plan(65 * GIB, 16)
-	test.isEqual(7, len(p.shards))
 	test.isEqual(sp.DEFAULT_SHARD_GIB, p.memGiB)
 }
 
 TestPlanBeyondTwentySixShardsRequestsTheNeed := func() {
 	// 1 TiB of TSV: 26 shards leave 39.4 GiB per shard -> 2 + 237 GiB > 64.
-	p := sp.plan(1024 * GIB, undefined)
+	p := sp.plan(1024 * GIB)
 	test.isEqual(26, len(p.shards))
 	test.isEqual(sp.needGiB((1024 * GIB + 25) / 26), p.memGiB)
 	test.isTrue(p.memGiB > sp.DEFAULT_SHARD_GIB)
