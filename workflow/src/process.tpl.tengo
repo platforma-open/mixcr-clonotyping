@@ -5,6 +5,7 @@ render := import("@platforma-sdk/workflow-tengo:render")
 ll := import("@platforma-sdk/workflow-tengo:ll")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 pframes := import("@platforma-sdk/workflow-tengo:pframes")
+execConstants := import("@platforma-sdk/workflow-tengo:exec.constants")
 slices := import("@platforma-sdk/workflow-tengo:slices")
 maps := import("@platforma-sdk/workflow-tengo:maps")
 sets := import("@platforma-sdk/workflow-tengo:sets")
@@ -66,6 +67,7 @@ self.body(func(inputs) {
 	limitInput := params.limitInput
 	perProcessMemGB := params.perProcessMemGB
 	perProcessCPUs := params.perProcessCPUs
+
 	blockId := params.blockId
 	libraryId := params.libraryId
 	presetCommonName := params.presetCommonName
@@ -380,7 +382,7 @@ self.body(func(inputs) {
 					storageFormat: "Parquet",
 					partitionKeyLength: 0
 				},
-				mem: "16GiB",
+				queue: execConstants.MEDIUM_QUEUE,
 				cpu: 2,
 				name: "byCloneKeyBySample",
 				path: ["tsv"]
@@ -502,7 +504,14 @@ self.body(func(inputs) {
 					return col
 				})
 			}
-			aggregationOutputs += [ {
+			// The cohort table is written to Parquet by one DuckDB sort. Its measured need is
+			// 4.13 x^0.68 GiB for x GiB of TSV. mem is left unset: the SDK sizes the run from
+			// the blob size of the aggregated TSV, above that need at every size it can
+			// express. The memory override does not apply here. The Xsv output passes no
+			// floor through to the import, and a fixed request would replace the formula.
+			// The import runs in the medium queue, like every other cohort-sized run of this
+			// block. The Xsv import default is the light queue.
+			byCloneKeyOutput := {
 				type: "Xsv",
 				xsvType: "tsv",
 				settings: {
@@ -511,11 +520,12 @@ self.body(func(inputs) {
 					storageFormat: "Parquet",
 					partitionKeyLength: 0
 				},
-				mem: "24GiB",
+				queue: execConstants.MEDIUM_QUEUE,
 				cpu: 2,
 				name: "byCloneKey",
 				path: ["tsv"]
-			} ]
+			}
+			aggregationOutputs += [ byCloneKeyOutput ]
 		}
 
         resultsToCache["clonotypeTable/" + chain] = exportResults.outputData("clonotypeTable")
@@ -679,7 +689,7 @@ self.body(func(inputs) {
 					storageFormat: "Parquet",
 					partitionKeyLength: 1
 				},
-				mem: "16GiB",
+				queue: execConstants.MEDIUM_QUEUE,
 				cpu: 2,
 				name: "abundanceTable",
 				path: ["abundanceTsv"]
@@ -691,7 +701,7 @@ self.body(func(inputs) {
 					columns: columnsSpecPerClonotypeSc,
 					storageFormat: "Parquet"
 				},
-				mem: "12GiB",
+				queue: execConstants.MEDIUM_QUEUE,
 				cpu: 2,
 				name: "aggregates",
 				path: ["clonotypeTsv"]
@@ -788,7 +798,7 @@ self.body(func(inputs) {
 							storageFormat: "Parquet",
 							partitionKeyLength: 0
 						},
-						mem: "24GiB",
+						queue: execConstants.MEDIUM_QUEUE,
 						cpu: 2,
 						name: propertiesTableName,
 						path: [ propertiesTsvOutputName ]
@@ -800,7 +810,7 @@ self.body(func(inputs) {
 				type: "Xsv",
 				xsvType: "tsv",
 				settings: cellLinkerColumnSettingsGen(receptor),
-				mem: "16GiB",
+				queue: execConstants.MEDIUM_QUEUE,
 				cpu: 2,
 				name: "cellsLinkerTable",
 				path: ["cellsTsv"]
@@ -816,7 +826,7 @@ self.body(func(inputs) {
 						storageFormat: "Parquet",
 						partitionKeyLength: 0
 					},
-					mem: "12GiB",
+					queue: execConstants.MEDIUM_QUEUE,
 					cpu: 2,
 					name: "shmCombined",
 					path: ["shmTsv"]

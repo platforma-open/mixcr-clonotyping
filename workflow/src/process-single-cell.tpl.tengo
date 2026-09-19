@@ -8,13 +8,12 @@ assets := import("@platforma-sdk/workflow-tengo:assets")
 exec := import("@platforma-sdk/workflow-tengo:exec")
 maps := import("@platforma-sdk/workflow-tengo:maps")
 slices := import("@platforma-sdk/workflow-tengo:slices")
-units := import("@platforma-sdk/workflow-tengo:units")
 pt := import("@platforma-sdk/workflow-tengo:pt")
+units := import("@platforma-sdk/workflow-tengo:units")
 
 clonotypeLabel := import(":clonotype-label")
 
 json := import("json")
-math := import("math")
 
 self.defineOutputs("abundanceTsv", "clonotypeTsv",
 	"propertiesAPrimaryTsv", "propertiesASecondaryTsv", "propertiesBPrimaryTsv", "propertiesBSecondaryTsv",
@@ -56,12 +55,17 @@ self.body(func(inputs) {
 	 */
 	preprocessByCell := func(byCellTag) {
 		inputMap := byCellTag.inputs()
-		numberOfSamples := len(inputMap)
 
+		// Memory is left to the SDK, which sizes the run from the blob size of the input
+		// TSVs, with a 32 GiB floor. Its formula is fitted at 8 polars threads and the need
+		// rises with the thread count (4.94 GiB per input GiB at 8 threads, 6.85 at 32, for
+		// the aggregate plan shape). 12 threads stays under the formula's slope of 6. The
+		// previous request grew with the sample count (one core and one GiB per sample),
+		// not with the data volume.
 		wf := pt.workflow().
 			inMediumQueue().
-			mem(int(math.max(numberOfSamples, 32)) * units.GiB).
-			cpu(int(math.max(numberOfSamples, 16)))
+			memFloor(32 * units.GiB).
+			cpu(12)
 
 		sampleDataFrames := []
 

@@ -84,17 +84,23 @@ generateClonotypeLabelSteps := func(clonotypeKeyCol, clonotypeLabelCol, targetTa
     return steps
 }
 
+// labelPrefixExpr returns the pt expression for the label prefix of a key: digits removed,
+// first `length` characters, uppercased. The label uses length 5. A shard plan that buckets
+// on a shorter prefix of the same normalization keeps every prefix group inside one shard.
+labelPrefixExpr := func(pt, clonotypeKeyCol, length) {
+    return pt.col(clonotypeKeyCol).
+        strReplace("\\d", "", { replaceAll: true }).
+        strSlice(0, length).
+        strToUpper()
+}
+
 addClonotypeLabelColumnsPt := func(df, clonotypeKeyCol, clonotypeLabelCol, pt) {
     prefixTempCol := clonotypeLabelCol + "_prefix_temp"
     rankTempCol := clonotypeLabelCol + "_rank_temp"
 
     // Add prefix_temp column (digits removed, first 5 chars, uppercased)
     df = df.withColumns(
-        pt.col(clonotypeKeyCol).
-            strReplace("\\d", "", { replaceAll: true }).
-            strSlice(0, 5).               // Take first 5 characters
-            strToUpper().                 // Convert to uppercase
-            alias(prefixTempCol)
+        labelPrefixExpr(pt, clonotypeKeyCol, 5).alias(prefixTempCol)
     )
 
     // Add rank_temp column - rank of the clonotypeKeyCol within each prefixTempCol group
@@ -116,6 +122,7 @@ addClonotypeLabelColumnsPt := func(df, clonotypeKeyCol, clonotypeLabelCol, pt) {
 }
 
 export {
+    labelPrefixExpr: labelPrefixExpr,
 	generateClonotypeLabelSteps: generateClonotypeLabelSteps,
     addClonotypeLabelColumnsPt: addClonotypeLabelColumnsPt
 }
