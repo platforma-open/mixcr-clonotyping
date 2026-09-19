@@ -37,7 +37,7 @@ self.defineOutputs("tsv")
 // Measured: at a fixed total byte count, the aggregate plan used the same peak RAM
 // with 1 and with 128 read_csv inputs.
 // 16 GiB is a margin, not a fitted value. The concat-only plan is not measured at
-// 130 M rows.
+// cohort scale.
 CONCAT_MEM_GIB := 16
 CONCAT_CPU := 2
 

@@ -28,11 +28,13 @@
 // sizing uses. The input TSVs are written uncompressed by ptabler, so their blob size is the
 // unit the law was fitted in.
 //
-// The shard count is the smallest that brings the largest shard under DEFAULT_SHARD_GIB. The
-// memory override raises the grant of every shard but never the shard count: a request the
-// backend cannot satisfy is clamped without notice, so a larger target would only recreate
-// the single oversized run. If 26 shards are not enough, the largest shard's need is
-// requested as-is.
+// The shard count is the smallest that brings the largest shard under DEFAULT_SHARD_GIB. If
+// 26 shards are not enough, the largest shard's need is requested as-is.
+//
+// A planned shard's grant ignores `perProcessMemGB`: it is never below the computed need, so
+// a user number cannot help, and it can only shrink how many shards the queue admits at once.
+// The override does raise the unsized fallback below, which has no need to compare against
+// and is always a single run.
 
 math := import("math")
 clonotypeLabel := import(":clonotype-label")
@@ -74,15 +76,17 @@ shardLetters := func(count) {
 //
 // @param totalBytes: int | undefined - bytes over all input TSVs; undefined when the backend
 //                    cannot report blob sizes, which yields a single shard.
-// @param grantFloorGiB: int | undefined - the memory override; raises every shard's grant
+// @param grantFloorGiB: int | undefined - the memory override; raises the unsized fallback only
 // @return { shards: [string], memGiB: int, cpu: int }
 plan := func(totalBytes, grantFloorGiB) {
 	floor := DEFAULT_SHARD_GIB
-	if !is_undefined(grantFloorGiB) && grantFloorGiB > floor {
-		floor = grantFloorGiB
-	}
 
 	if is_undefined(totalBytes) || totalBytes <= 0 {
+		// Nothing to size from: one unsharded run. This is the only branch with no computed
+		// need, so the override still raises it. A single run costs no parallelism.
+		if !is_undefined(grantFloorGiB) && grantFloorGiB > floor {
+			floor = grantFloorGiB
+		}
 		return { shards: [LETTERS], memGiB: floor, cpu: SHARD_CPU }
 	}
 

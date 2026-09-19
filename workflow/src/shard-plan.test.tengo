@@ -47,28 +47,39 @@ TestPlanUnknownBytesIsOneShard := func() {
 	test.isEqual(sp.DEFAULT_SHARD_GIB, p.memGiB)
 }
 
+TestPlanOverrideRaisesOnlyTheUnsizedFallback := func() {
+	// No blob sizes: the plan has no need to compare against, so the override raises the
+	// single run's grant. This is the one branch where a user number still counts.
+	p := sp.plan(undefined, 600)
+	test.isEqual(1, len(p.shards))
+	test.isEqual(600, p.memGiB)
+
+	// An override below the default changes nothing there.
+	p = sp.plan(undefined, 16)
+	test.isEqual(sp.DEFAULT_SHARD_GIB, p.memGiB)
+
+	// A sized plan ignores the override entirely: same shards, same grant, with and without.
+	withOverride := sp.plan(65 * GIB, 600)
+	without := sp.plan(65 * GIB, undefined)
+	test.isEqual(7, len(withOverride.shards))
+	test.isEqual(sp.DEFAULT_SHARD_GIB, withOverride.memGiB)
+	test.isEqual(without.memGiB, withOverride.memGiB)
+
+	// Including when the need itself is above the default.
+	big := sp.plan(1024 * GIB, 600)
+	test.isEqual(sp.needGiB((1024 * GIB + 25) / 26), big.memGiB)
+}
+
 TestPlanLargestShardStaysUnderDefault := func() {
-	// 65 GiB of TSV (130 M rows at 0.5 KiB): 2 + 6 x 65 = 392 GiB in one run.
+	// 65 GiB of TSV: 2 + 6 x 65 = 392 GiB in one run.
 	// 7 shards -> 4 letters -> 10 GiB -> 62 GiB fits; 6 shards -> 5 letters -> 12.5 -> 77 does not.
 	p := sp.plan(65 * GIB, undefined)
 	test.isEqual(7, len(p.shards))
 	test.isEqual(sp.DEFAULT_SHARD_GIB, p.memGiB)
 
-	// 260 GiB of TSV (130 M rows at 2 KiB): only 26 shards bring a shard to 10 GiB -> 62.
+	// 260 GiB of TSV: only 26 shards bring a shard to 10 GiB -> 62.
 	p = sp.plan(260 * GIB, undefined)
 	test.isEqual(26, len(p.shards))
-	test.isEqual(sp.DEFAULT_SHARD_GIB, p.memGiB)
-}
-
-TestPlanOverrideRaisesGrantNotShardCount := func() {
-	// The same 65 GiB cohort with a 600 GiB override: still 7 shards, each granted 600.
-	p := sp.plan(65 * GIB, 600)
-	test.isEqual(7, len(p.shards))
-	test.isEqual(600, p.memGiB)
-
-	// An override below the default changes nothing.
-	p = sp.plan(65 * GIB, 16)
-	test.isEqual(7, len(p.shards))
 	test.isEqual(sp.DEFAULT_SHARD_GIB, p.memGiB)
 }
 

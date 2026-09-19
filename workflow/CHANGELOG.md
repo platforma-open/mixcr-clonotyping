@@ -10,8 +10,8 @@
   per column, the value from the most abundant sample. ptabler lowers that `maxBy` to
   `top_k_by(k=1).first()`, which polars runs as an in-memory group-by, so one run held every
   group of the cohort at once. The peak followed the number of input rows and no grant could
-  change it: a 113-sample, 130 M-clonotype cohort needed on the order of 500 GiB and was killed
-  at whatever the cluster's ceiling was. The step also asked for `max(samples, 32)` cores, and the
+  change it: a large cohort can need hundreds of GiB in a single run, above any cluster ceiling.
+  The step also asked for `max(samples, 32)` cores, and the
   memory need of this plan shape rises with the polars thread count.
 
   The aggregation now runs in shards. Rows are bucketed by the first letter of `clonotypeKey`
