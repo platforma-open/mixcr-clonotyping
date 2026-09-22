@@ -17,12 +17,13 @@
 self := import("@platforma-sdk/workflow-tengo:tpl")
 smart := import("@platforma-sdk/workflow-tengo:smart")
 exec := import("@platforma-sdk/workflow-tengo:exec")
+ll := import("@platforma-sdk/workflow-tengo:ll")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 pcolumn := import("@platforma-sdk/workflow-tengo:pframes.pcolumn")
 times := import("times")
 memf := import(":mem-formula")
 
-self.defineOutputs("qc", "reports", "log", "clns")
+self.defineOutputs("qc", "reports", "log", "qcLog", "clns")
 
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
 
@@ -39,7 +40,8 @@ self.body(func(inputs) {
 	alignReport := inputs.alignReport
 	clnsFileName := inputs.clnsFileName
 	reports := inputs.reports
-	assembleClonesBy := inputs.assembleClonesBy
+	assemblingFeatures := inputs.assemblingFeatures
+	splitsClones := inputs.splitsClones
 	baseMemGiB := inputs.baseMemGiB
 	scratchFreeSpace := inputs.scratchFreeSpace
 	perProcessMemGB := inputs.perProcessMemGB
@@ -54,11 +56,18 @@ self.body(func(inputs) {
 	// The align report arrives as saved file content, so it decodes here. Anything unreadable
 	// leaves the estimate undefined and selects the fallback rule — the same shape
 	// :read-stats uses for a measurement it cannot use.
-	decodedAlignReport := undefined
-	if smart.isResource(alignReport) {
-		decodedAlignReport = alignReport.getDataAsJson()
+	//
+	// A preset that splits clones by V, J or C gene takes the fallback rule too: the sketch
+	// counts distinct assembling-feature sequences, which is a lower bound on the clone count
+	// once the gene splits multiply it.
+	estimatedClonotypes := undefined
+	if !splitsClones {
+		decodedAlignReport := undefined
+		if smart.isResource(alignReport) {
+			decodedAlignReport = alignReport.getDataAsJson()
+		}
+		estimatedClonotypes = memf.assembleEstimate(decodedAlignReport, assemblingFeatures)
 	}
-	estimatedClonotypes := memf.assembleEstimate(decodedAlignReport, assembleClonesBy)
 
 	assembleResources := { cpu: is_undefined(perProcessCPUs) ? 16 : perProcessCPUs }
 	if !is_undefined(perProcessMemGB) {
@@ -103,9 +112,18 @@ self.body(func(inputs) {
 
 	// One invocation writes both report formats: the command takes 0..2 output paths and
 	// picks the writer by extension.
-	// stderr is left on its own stream: nothing saves this command's stdout, so merging the
-	// two would drop the error text out of a failure report.
+	//
+	// stderr is merged into stdout and the stream is saved, so the log column carries this
+	// command's failure text like every other step's.
+	qcMem := QC_MEM
+	if !is_undefined(perProcessMemGB) {
+		// memory per process was set in "Advanced Settings" block directly
+		qcMem = string(perProcessMemGB) + "GiB"
+	}
+
 	qcCmd := exec.builder().
+		printErrStreamToStdout().
+		saveStdoutStream().
 		env("MI_USE_SYSTEM_CA", "true").
 		software(mixcrSw).
 		secret("MI_LICENSE", "MI_LICENSE").
@@ -119,7 +137,7 @@ self.body(func(inputs) {
 		arg(qcJsonFile).
 		inLightQueue().
 		cpu(1).
-		mem(QC_MEM).
+		mem(qcMem).
 		saveFile(qcJsonFile).
 		cache(48 * times.hour).
 		run()
@@ -134,12 +152,15 @@ self.body(func(inputs) {
 		} else if report.id == "assemble" {
 			reportsMap.add([report.id, "json"], assembleCmd.getFile(assembleReportJson))
 			reportsMap.add([report.id, "txt"], assembleCmd.getFile(assembleReportTxt))
+		} else {
+			ll.panic("unexpected report id %v", report.id)
 		}
 	}
 
 	return {
 		qc: qcCmd.getFile(qcJsonFile),
 		log: assembleCmd.getStdoutStream(),
+		qcLog: qcCmd.getStdoutStream(),
 		reports: reportsMap.build(),
 		clns: clnsFile
 	}

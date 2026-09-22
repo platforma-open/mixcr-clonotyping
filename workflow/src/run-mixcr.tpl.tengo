@@ -1,24 +1,24 @@
 // Identity of this template for the platform's deduplication. Changing this value means
 // "re-run every sample on the next block update" — see the longer note in :mixcr-analyze.
-// Rotated when the bulk-amplicon pipelines stopped running as one `analyze` command: the
-// template graph below it changed, and reusing the old value would serve cache hits from a
+// Rotated when bulk amplicon pipelines without UMIs stopped running as one `analyze` command:
+// the template graph below it changed, and reusing the old value would serve cache hits from a
 // different computation.
 //tengo:hash_override FAE77C04-507C-4925-A66A-EA488C9FEAF1
 
 // Runs MiXCR on one measured sample.
 //
-// Bulk amplicon presets — pipeline `align, assemble, exportClones`, with or without
-// `refineTagsAndSort` — run each step as its own exec, so each step carries its own memory
-// grant instead of sharing the worst step's. `assemble` is sized from the clonotype estimate
-// the align report carries, which a template can only read after the align command has
-// finished, so `assemble` and `qc` live in :assemble-mixcr.
+// Bulk amplicon presets without UMIs — pipeline `align, assemble, exportClones` exactly — run
+// each step as its own exec, so each step carries its own memory grant instead of sharing the
+// worst step's. `assemble` is sized from the clonotype estimate the align report carries, which
+// a template can only read after the align command has finished, so `assemble` and `qc` live in
+// :assemble-mixcr.
 //
-// The in-chain `exportClones` of those pipelines is dropped rather than reproduced: the block
+// The in-chain `exportClones` of that pipeline is dropped rather than reproduced: the block
 // saves no clones.tsv from it and re-exports from the .clns with its own argv in :mixcr-export.
 //
-// Every other preset keeps the single `analyze` command. Their steps — assemblePartial,
-// extend, assembleContigs, assembleCells, exportCloneGroups, the mitool steps — have no
-// per-step memory rule, and exportCloneGroups has never been measured.
+// Every other preset keeps the single `analyze` command. Their steps — refineTagsAndSort,
+// assemblePartial, extend, assembleContigs, assembleCells, exportCloneGroups, the mitool steps
+// — have no per-step memory rule of their own.
 
 self := import("@platforma-sdk/workflow-tengo:tpl")
 smart := import("@platforma-sdk/workflow-tengo:smart")
@@ -45,13 +45,11 @@ progressPrefix := "[==PROGRESS==]"
 
 CACHE_PERIOD := 48 * times.hour
 
-// The two pipelines that run as separate execs, matched whole. A pipeline carrying any other
+// The one pipeline that runs as separate execs, matched whole. A pipeline carrying any other
 // step falls through to `analyze`.
 PIPELINE_BULK := ["align", "assemble", "exportClones"]
-PIPELINE_BULK_UMI := ["align", "refineTagsAndSort", "assemble", "exportClones"]
 
-// `align` streams its input and never held more than about 10 GiB of heap anywhere on the W3
-// bulk ladder. It is granted 64 GiB today only because it shared the `analyze` grant.
+// `align` streams its input; its measured heap peak on bulk amplicon runs stays under 10 GiB.
 ALIGN_BASE_MEM_GIB := 16
 
 _sameSteps := func(pipeline, steps) {
@@ -120,9 +118,7 @@ self.body(func(inputs) {
 		}
 	}
 
-	isBulkAmplicon := _sameSteps(presetContent.pipeline, PIPELINE_BULK)
-	isBulkAmpliconUmi := _sameSteps(presetContent.pipeline, PIPELINE_BULK_UMI)
-	splitSteps := isBulkAmplicon || isBulkAmpliconUmi
+	splitSteps := _sameSteps(presetContent.pipeline, PIPELINE_BULK)
 
 	clnsFileName := "result.clns"
 	if hasAssembleContigs {
@@ -373,56 +369,25 @@ self.body(func(inputs) {
 
 	logs.add(["align"], alignCmd.getStdoutStream())
 
-	vdjcaFile := alignCmd.getFile(alignedFile)
-
-	if isBulkAmpliconUmi {
-		refinedFile := "result.refined.vdjca"
-
-		// Today's whole-analysis grant, no rule of its own yet. The volume term of that rule
-		// reads the FASTQs, which this step never stages, so only its floor survives.
-		refineResources := { cpu: perProcessCPUsResolved }
-		if !is_undefined(perProcessMemGB) {
-			refineResources.ram = string(perProcessMemGB) + "GiB"
-		} else {
-			refineResources.ram = string(baseMemGiB) + "GiB"
-		}
-		if !is_undefined(mixcrScratchSpace) {
-			refineResources.scratchFreeSpace = mixcrScratchSpace
-		}
-
-		refineCmd := newMixcrBuilder().
-			arg("refineTagsAndSort").
-			arg("-f").
-			addFile(alignedFile, vdjcaFile).
-			arg(alignedFile).
-			arg(refinedFile).
-			resources({ onCPU: refineResources }).
-			saveFile(refinedFile).
-			cache(CACHE_PERIOD).
-			run()
-
-		logs.add(["refineTagsAndSort"], refineCmd.getStdoutStream())
-		vdjcaFile = refineCmd.getFile(refinedFile)
-	}
-
 	assembleRun := render.create(
 		assembleMixcrTpl,
 		{
-			vdjca: vdjcaFile,
+			vdjca: alignCmd.getFile(alignedFile),
 			alignReport: alignCmd.getFileContent(alignReportJson),
 			alignReportJson: alignCmd.getFile(alignReportJson),
 			alignReportTxt: alignCmd.getFile(alignReportTxt),
 
 			clnsFileName: clnsFileName,
 			reports: reports,
-			assembleClonesBy: assembleClonesBy,
+			assemblingFeatures: memf.assemblingFeatures(presetContent, assembleClonesBy),
+			splitsClones: memf.splitsClones(presetContent),
 			baseMemGiB: baseMemGiB
 		},
 		{
-			// Kept out of the deduplication key for the same reason :mixcr-analyze keeps
-			// them out of this template's: a run may be recovered across a change of the
-			// CPU or memory override. The scratch request rides along because it is an
-			// optimisation and never changes what the step produces.
+			// Kept out of the deduplication key for the same reason :mixcr-analyze keeps them
+			// out of this template's: a run is recovered across a change of the CPU or memory
+			// override. The scratch request rides along; it never changes what the step
+			// produces.
 			metaInputs: {
 				perProcessMemGB: perProcessMemGB,
 				perProcessCPUs: perProcessCPUs,
@@ -432,6 +397,7 @@ self.body(func(inputs) {
 	)
 
 	logs.add(["assemble"], assembleRun.output("log", CACHE_PERIOD))
+	logs.add(["qc"], assembleRun.output("qcLog", CACHE_PERIOD))
 
 	return {
 		qc: assembleRun.output("qc", CACHE_PERIOD),
