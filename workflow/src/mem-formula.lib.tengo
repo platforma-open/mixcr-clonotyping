@@ -34,6 +34,97 @@ memFormula := func(base) {
 		staticFallback(f.gib(base))
 }
 
+// grantGiBForXmx inverts the `memory-from-limits` entrypoint of software-mixcr, which sets
+//
+//     -Xmx = max(min(grant x 0.85, grant - 3500 MiB), grant x 0.50)
+//
+// so a step that needs a target heap must ask for the grant that produces it:
+//
+//     grant(X) = ceil(max(X / 0.85, X + 3500 MiB))
+//
+// The 0.85 arm binds above a 23.3 GiB grant, the additive arm from about 7 to 23.3 GiB. The
+// entrypoint's `grant x 0.50` term only ever RAISES Xmx, so it needs no arm of its own.
+_MIB_PER_GIB := 1024.0
+_ENTRYPOINT_HEADROOM_MIB := 3500.0
+_ENTRYPOINT_HEAP_FRACTION := 0.85
+
+grantGiBForXmx := func(xmxGiB) {
+	byFraction := xmxGiB / _ENTRYPOINT_HEAP_FRACTION
+	byHeadroom := xmxGiB + _ENTRYPOINT_HEADROOM_MIB / _MIB_PER_GIB
+	return int(math.ceil(math.max(byFraction, byHeadroom)))
+}
+
+// assembleEstimate reads the distinct-clonotype estimate the `align` step reports for the
+// feature the run assembles by.
+//
+// The field is `estimatedClonotypes: { features: { <GeneFeature>: <count> }, minimalQuality: N }`,
+// written by MiXCR's HyperLogLog sketch over the quality-passing sequences of each feature it
+// hashes. Keys are MiXCR gene-feature names as the block passes them to
+// `--assemble-clonotypes-by`, brace forms included, so the configured value indexes the map
+// directly. A run that configures no feature assembles by CDR3.
+//
+// Returns 'undefined' whenever the number is not there to read: a MiXCR pin older than the
+// sketch writes no field at all, and a run assembling by a feature outside the sketched set
+// has no entry. Both take the caller's fallback rule.
+_DEFAULT_ASSEMBLING_FEATURE := "CDR3"
+
+assembleEstimate := func(alignReport, assembleClonesBy) {
+	if !is_map(alignReport) {
+		return undefined
+	}
+
+	estimate := alignReport.estimatedClonotypes
+	if !is_map(estimate) || !is_map(estimate.features) {
+		return undefined
+	}
+
+	feature := assembleClonesBy
+	if is_undefined(feature) {
+		feature = _DEFAULT_ASSEMBLING_FEATURE
+	}
+
+	count := int(estimate.features[feature])
+	if is_undefined(count) || count < 0 {
+		return undefined
+	}
+
+	return count
+}
+
+// assembleRamGiB sizes the `assemble` step from that estimate.
+//
+//     Xmx_GiB = 15.7 x est_M + 2
+//     ram     = clamp(grantGiBForXmx(Xmx_GiB), 4 GiB, 256 GiB)
+//
+// The slope and intercept are fitted on the bisected floors of the W3 bulk ladder, not on live
+// sets measured at a generous grant: a 110 GiB run holds an Xmx-adaptive buffer that a run at
+// the floor never allocates, so live sets read high. Against those floors (grants) the rule
+// gives 7 vs 5, 17 vs 11, 37 vs 24, 74 vs 71 and 81 vs 79 — never under, worst over-grant 1.7x.
+//
+// 15.7 GiB per million is LS10M's slope, the envelope of the three measured points (11.1, 10.9,
+// 15.7). The +2 GiB intercept replaces the +4 GiB headroom term of the earlier live-set model,
+// which over-granted B2 by 15 GiB.
+//
+// The 4 GiB floor is a guard, not an operating point: the additive arm of the entrypoint
+// inverse already holds the smallest run at 6 GiB. The 256 GiB cap is today's.
+_ASSEMBLE_GIB_PER_MILLION := 15.7
+_ASSEMBLE_INTERCEPT_GIB := 2.0
+_ASSEMBLE_FLOOR_GIB := 4
+_ASSEMBLE_CAP_GIB := 256
+
+assembleRamGiB := func(estimatedClonotypes) {
+	millions := float(estimatedClonotypes) / 1000000.0
+	xmxGiB := _ASSEMBLE_GIB_PER_MILLION * millions + _ASSEMBLE_INTERCEPT_GIB
+	grant := grantGiBForXmx(xmxGiB)
+	if grant < _ASSEMBLE_FLOOR_GIB {
+		return _ASSEMBLE_FLOOR_GIB
+	}
+	if grant > _ASSEMBLE_CAP_GIB {
+		return _ASSEMBLE_CAP_GIB
+	}
+	return grant
+}
+
 // exportRam builds the exec.formula node for an `exportClones` step.
 //
 //     ram = clamp(interceptGiB + perByte x size("clns"), floorGiB, 256 GiB)
@@ -81,5 +172,8 @@ exportRam := func(perProcessMemGB, floorGiB, perByte) {
 export {
 	baseMemGiB: baseMemGiB,
 	memFormula: memFormula,
+	grantGiBForXmx: grantGiBForXmx,
+	assembleEstimate: assembleEstimate,
+	assembleRamGiB: assembleRamGiB,
 	exportRam: exportRam
 }
