@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.29.7
+
+### Patch Changes
+
+- 7bf8dee: Bump mixcr version to 4.7.0-365-develop
+
 ## 3.29.6
 
 ### Patch Changes
