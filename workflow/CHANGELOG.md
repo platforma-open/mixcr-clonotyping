@@ -1,5 +1,252 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.29.6
+
+### Patch Changes
+
+- f458597: fix: size an aggregation shard from the bytes it scans, not the bytes it keeps
+
+  Every shard frames all input TSVs and filters them to its own letters, so each one reads the
+  whole cohort however many shards there are. The plan sized the grant from a shard's share
+  alone, which understates the need by the cost of the scan. Measured at 1.0 GiB of RAM per GiB
+  scanned, taken as 1.5 for margin; the group-by term over the kept rows is unchanged.
+
+  A cohort large enough that the scan term alone passes the 64 GiB target now takes all 26
+  shards and requests what it needs, rather than 26 shards that each fit on paper and are
+  killed in practice.
+
+## 3.29.5
+
+### Patch Changes
+
+- 231f62f: fix: the aggregation shard grant ignores `perProcessMemGB`
+
+  A shard's grant is already the larger of 64 GiB and its need computed from the bytes it
+  keeps, so the override cannot help it and only reduces how many shards run at once. It
+  still raises the single unsharded run taken when the backend cannot report blob sizes,
+  and it still applies to the MiXCR steps.
+
+## 3.29.4
+
+### Patch Changes
+
+- fd14efa: fix: aggregate the cohort clonotype table in shards
+
+  `aggregate-by-clonotype-key` groups every sample's clonotype rows by `clonotypeKey` and keeps,
+  per column, the value from the most abundant sample. ptabler lowers that `maxBy` to
+  `top_k_by(k=1).first()`, which polars runs as an in-memory group-by, so one run held every
+  group of the cohort at once. The peak followed the number of input rows and no grant could
+  change it: a large cohort can need hundreds of GiB in a single run, above any cluster ceiling.
+  The step also asked for `max(samples, 32)` cores, and the
+  memory need of this plan shape rises with the polars thread count.
+
+  The aggregation now runs in shards. Rows are bucketed by the first letter of `clonotypeKey`
+  after digits are removed, upper-cased — the same first letter the clonotype label's five-letter
+  prefix uses — so every key lands in exactly one shard, every group is complete inside its shard
+  and the label is computed per shard. The shard outputs are disjoint and a final streaming run
+  concatenates them. A cohort small enough for one shard runs unfiltered, as before.
+
+  The shard count is chosen from the input volume. The template reads the blob size of every
+  input TSV through the backend's `getBlobSize` (the same call `f.size()` resolves through) and
+  takes the smallest shard count whose largest shard stays under 64 GiB at 6 GiB of RAM per GiB
+  of TSV plus a 2 GiB intercept -- the concat + `maxBy` law measured under MILAB-6874 (4.94 at
+  eight threads), at the slope the SDK's default ptabler sizing uses. The memory override raises
+  every shard's grant but never the shard count: a request the backend cannot satisfy is clamped
+  without notice, so a larger target would only recreate the single oversized run. Each shard
+  runs on 8 cores. A backend without `getBlobSize` gets a single shard.
+
+  The `byCloneKey` Parquet import that follows was a flat 24 GiB, which the measured `write_frame`
+  law (`4.13 x^0.68` GiB for x GiB of TSV) says holds about 13 GiB of aggregated TSV. Its memory
+  is now left to the SDK, which sizes the ptabler run from the blob size of the aggregated TSV
+  (`2 GiB + 6 x size`, capped at 256 GiB in workflow-tengo 6.11.0, above the measured need at
+  every size it can express). The memory override does not apply to this import: the Xsv output
+  passes no floor through, and a fixed request would replace the formula.
+
+  The six other Parquet imports of the block had flat grants of 12, 16 or 24 GiB: the per-sample
+  `byCloneKeyBySample` table and the single-cell abundance, aggregates, properties, cell-linker
+  and SHM tables. A 16 GiB grant holds about 7 GiB of TSV under the same law, and one deep sample
+  can export twice that. Their memory is now left to the same SDK sizing. All seven imports run in
+  the medium queue; the Xsv import default is the light queue.
+
+  The QC report run in `export-report` framed every sample's full clonotype TSV and every filter
+  TSV in one 8 GiB ptabler run to count clonotypes, reads, out-of-frame and stop-codon clones per
+  sample. Those counts are now computed by one ptabler run per sample, sized by the SDK from that
+  sample's files with an 8 GiB floor, each reading only that sample's files and writing a one-row
+  table; the cohort run frames those rows and the qc
+  report, so its input no longer grows with the clonotype or cell count. In single-cell mode the
+  per-sample run also computes that sample's cell-pairing statistics from its single-cell chain
+  TSVs. The `exportClones` filter runs are unchanged.
+
+  The single-cell per-cell preprocessing run asked for one core and one GiB per sample, with
+  floors of 16 and 32. Its memory is now left to the SDK, which sizes the run from the blob size
+  of its input TSVs with a 32 GiB floor, and its cpu is pinned at 12, which the formula's slope
+  still covers.
+
+  The block moves to workflow-tengo 6.11.0, which ships that sizing formula and `memFloor`.
+
+  The hash override of `aggregate-by-clonotype-key` is new, so a failed aggregation is not
+  recovered from its old identity.
+
+## 3.29.3
+
+### Patch Changes
+
+- 2dc34c8: fix: size the QC exportClones steps from the .clns
+
+  The QC report runs `exportClones` twice more per sample — once for the bulk out-of-frame /
+  stop-codon counts and once per chain in single-cell mode — and both asked for a flat 16 GiB.
+  `exportClones` loads the whole CloneSet and applies `--chains` after the load, so those runs
+  cost what the main clonotype export costs; only the column list is smaller. On a large `.clns`
+  they OOM at the 12.8 GiB heap the `main` entrypoint hands the JVM out of 16 GiB, while the main
+  export beside them now gets a request sized from the file.
+
+  Both now use the same rule as the main export, moved into `:mem-formula` as `exportRam`:
+
+      ram = clamp(8 GiB + perByte x size(clns), floorGiB, 256 GiB)
+
+  with `floorGiB` 24 and `perByte` 30. The report template also moves from the `main` MiXCR
+  entrypoint to `memory-from-limits`, which every other template in the block already uses. The
+  entrypoint sets the heap fraction the JVM gets, so one entrypoint means one coefficient.
+
+  The `perProcessMemGB` override now raises the floor instead of replacing the rule. A project
+  that set it below the floor requested that value and OOMed; a value below the floor now has no
+  effect, and the data term still applies above one above it. This is how
+  `aggregate-by-clonotype-key` already treats the same override. An override above the 256 GiB
+  cap also raises the cap — `between()` asserts `lo <= hi`, so a floor raised past a fixed cap
+  would have failed the step outright rather than clamped.
+
+## 3.29.2
+
+### Patch Changes
+
+- 732f0c6: fix: size the exportClones formula from the measured regression
+
+  The bulk export rule was `clamp(16 x size(clns), 16 GiB, 128 GiB)`. Five measured samples,
+  with a `.clns` from 0.13 to 1.31 GiB, show that the rule gives the two largest samples 40%
+  less memory than they use:
+
+  | `.clns` GiB | measured peak |    old grant | new grant |
+  | ----------: | ------------: | -----------: | --------: |
+  |       0.125 |         10.31 |        16.00 |     16.00 |
+  |       0.152 |         10.57 |        16.00 |     16.00 |
+  |       0.410 |         15.86 |        16.00 |     20.31 |
+  |       1.116 |         30.76 | 17.85 (fail) |     41.48 |
+  |       1.308 |         42.26 | 20.92 (fail) |     47.23 |
+
+  The fit is `export peak = 6.4 + 25.0 x clns_GiB`, with R2 0.970. The `memory-from-limits`
+  entrypoint gives `-Xmx = 0.85 x grant`. The grant must therefore carry the peak divided by
+  0.85, which is `7.5 + 29.4 x clns_GiB`. Three values change:
+
+  - **Intercept, 8 GiB.** JVM overhead and reference-library overhead do not scale with the
+    file. The previous rule had no constant term, so it started at zero, and the 16 GiB floor
+    did all the work until the file became large enough to fail. The intercept is a fitted
+    term and not a second floor, so the formula adds it and does not clamp it.
+    It applies to both exports.
+  - **Bulk coefficient, 16 to 30.** The single-cell coefficient stays at 32. Every measured
+    sample is a bulk export, so no measurement supports or contradicts that value. The
+    single-cell path does gain the same intercept, because JVM overhead and reference-library
+    overhead do not depend on the path.
+  - **Cap, 128 to 256 GiB.** With the new coefficient the old cap applies at a 4.1 GiB
+    `.clns`, which a 60M-read sample can reach. It now applies at 8.5 GiB.
+
+  The floors do not change. They are 16 GiB for bulk and 24 GiB for single-cell, and they
+  still carry the two smallest samples.
+
+  The template `hash_override` UUID also changes. This forces a one-time recompute of cached
+  export results. Without the new UUID the new sizing does not reach a project that has
+  already run the export.
+
+## 3.29.1
+
+### Patch Changes
+
+- 2f6dcf9: Analyze no longer passes `--use-local-temp`. The SDK now guarantees a temporary
+  directory on every backend the block can meet, so MiXCR keeps its temporary files
+  off the working directory on shared storage in all cases.
+
+## 3.29.0
+
+### Minor Changes
+
+- 73e912a: Analyze asks the backend for disposable disk space sized from the sample's reads, so
+  its temporary files no longer land in the working directory on shared storage.
+
+  This reduces single sample computation bill by ~25-40% on large samples, where
+  EFS I/O cost starts to be comparable or larger than cost of compute itself.
+
+  To have an effect, you need backend version 4.4.1 or above.
+  On older backends this optimisation is just ignored and computations run as usual.
+
+## 3.28.4
+
+### Patch Changes
+
+- 86d727d: Analyze counts input size once when sizing its memory request, cutting a 110 GiB
+  preset with 31.75 GiB of reads from 237 GiB to 127 GiB.
+
+  The per-analysis baseline — 64 GiB, or 110 and 192 GiB for contig/cell and MiTool
+  presets — is already a total-memory value for the run, so adding a size-derived term
+  on top of it counted the input twice. The request is now
+  `clamp(4 x size, baseMemGiB, 256 GiB)`, making the baseline the lower bound it was
+  always meant to be. Small inputs still receive the full baseline, and both the
+  256 GiB cap and the "Advanced Settings" memory override behave as before.
+
+  The analyze template's `hash_override` UUID also changes, which forces a one-time
+  recompute of cached analyze results.
+
+## 3.28.3
+
+### Patch Changes
+
+- 9f35bb7: fix: size the exportClones execs from the .clns instead of a flat 12 GiB
+
+  `exportClones` requested a constant 12 GiB (or `perProcessMemGB / 4`) — a number
+  unrelated to what the command holds in memory. It reads the entire CloneSet into
+  heap, and single-cell exports then materialise a second, expanded list — one clone
+  per (clonotype × cell), each with its own split TagCount — then sort and re-rank it.
+  `--chains` filters only after that division, so exporting one chain group still pays
+  the whole-file cost.
+
+  Under the `memory-from-limits` entrypoint a 12 GiB grant yields 8788 MiB of heap,
+  because the non-heap reserve is a flat 3500 MiB. A 10.7k-cell / 26.7k-clone 10x BCR
+  sample exhausted it: `exportClones` died with `OutOfMemoryError`, taking the
+  `clonotypes`, `clonotypeTables` and `qcReportTable` outputs with it.
+
+  - RAM is now `clamp(perByte × size(clns), floor, 128 GiB)` — 16 GiB and 16× for the
+    bulk export, 24 GiB and 32× for the single-cell export, which pays the per-cell
+    expansion. 24 GiB yields 20889 MiB of heap, 2.4× the ceiling that failed. The floors
+    are kept tight because `-Xms` is half the grant: the request is a hard pre-allocation,
+    and a sample runs one bulk plus one single-cell export per chain group.
+  - An Advanced Settings memory override now applies as-is rather than quartered,
+    matching how the analyze step treats the same setting. Projects that set it will
+    request 4× more for the export step than before.
+  - The two PTabler steps now inherit workflow-tengo 6.8's built-in input-volume
+    formula, as the rest of the single-cell pipeline already does. They previously took
+    ⅔ of the mixcr step's budget.
+
+## 3.28.2
+
+### Patch Changes
+
+- 7289088: fix: size single-cell PTabler steps by input volume
+
+  Bump @platforma-sdk/workflow-tengo to 6.8.2. The single-cell pipeline's
+  unsized `pt.workflow()` steps (cell grouping, output processing, SHM) now
+  request CPU/RAM from the built-in input-size formula instead of the backend
+  default, fixing out-of-memory failures on large datasets.
+
+## 3.28.1
+
+### Patch Changes
+
+- 32eb93e: SDK Update
+
+## 3.28.0
+
+### Minor Changes
+
+- 6e46692: Allow single-cell VHH data analysis
+
 ## 3.27.1
 
 ### Patch Changes

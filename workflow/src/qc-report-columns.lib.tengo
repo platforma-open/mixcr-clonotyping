@@ -6,7 +6,7 @@ pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 text := import("text")
 
 // QC Report column specifications function
-getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellTags, umiTags, hasAssembleCells) {
+getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellTags, umiTags, hasAssembleCells, scHeavyOnly) {
     if is_undefined(umiTags) {
         umiTags = []
     }
@@ -805,8 +805,11 @@ getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellT
     ]
 
     singleCellColumns := []
-    
-    // Paired cells total (single-cell): number of cells with distinct chains per sample
+
+    // Cells total (single-cell). Paired mode counts cells with distinct chains; heavy-only
+    // (VHH) mode counts all cells carrying the single chain.
+    scCellsTotalLabel := scHeavyOnly ? "Total number of cells" : "Total number of cells (with paired chains)"
+    scCellsTotalDescription := scHeavyOnly ? "Cells detected with a heavy (VHH) chain." : "Cells detected with at least two distinct chains (e.g. heavy and light)."
     singleCellColumns += [{
         column: "scCellsTotal",
         id: "sc-cells-total",
@@ -819,13 +822,14 @@ getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellT
                 "pl7.app/min": "0",
                 "pl7.app/table/orderPriority": "107900",
                 "pl7.app/table/visibility": "default",
-                "pl7.app/label": "Total number of cells (with paired chains)",
-                "pl7.app/description": "Cells detected with at least two distinct chains (e.g. heavy and light)."
+                "pl7.app/label": scCellsTotalLabel,
+                "pl7.app/description": scCellsTotalDescription
             }
         }
     }]
 
     // Per-chain clonotype counts (paired-only in single-cell), one column per available chain
+    clonotypesByChainDescription := scHeavyOnly ? "Number of unique clonotypes for this chain. Includes secondary chain rearrangements." : "Number of unique clonotypes for this chain (paired cells only). Includes secondary chain rearrangements."
     n := 107800
     for chain in chains {
         singleCellColumns += [{
@@ -841,31 +845,34 @@ getQcReportColumns := func(hasUmi, isSingleCell, sampleIdAxisSpec, chains, cellT
                     "pl7.app/table/orderPriority": string(n),
                     "pl7.app/table/visibility": "default",
                     "pl7.app/label": "Clonotypes by Chain " + chain,
-                    "pl7.app/description": "Number of unique clonotypes for this chain (paired cells only). Includes secondary chain rearrangements."
+                    "pl7.app/description": clonotypesByChainDescription
                 }
             }
         }]
         n -= 100
     }
 
-    // Clonotypes dropped because the cell was unpaired (single-chain only)
-    singleCellColumns += [{
-        column: "clonotypesDroppedUnpaired",
-        id: "clonotypes-dropped-unpaired",
-        allowNA: true,
-        naRegex: "NaN",
-        spec: {
-            name: "mixcr.com/reports/singleCell/clonotypesDroppedUnpaired",
-            valueType: "Long",
-            annotations: {
-                "pl7.app/min": "0",
-                "pl7.app/table/orderPriority": "108150",
-                "pl7.app/table/visibility": "optional",
-                "pl7.app/label": "Clonotypes Dropped - Unpaired",
-                "pl7.app/description": "Clonotypes discarded because their cell lacked a paired chain."
+    // Clonotypes dropped because the cell was unpaired. Only meaningful for paired
+    // receptors — omitted in heavy-chain-only (VHH) mode where pairing does not apply.
+    if !scHeavyOnly {
+        singleCellColumns += [{
+            column: "clonotypesDroppedUnpaired",
+            id: "clonotypes-dropped-unpaired",
+            allowNA: true,
+            naRegex: "NaN",
+            spec: {
+                name: "mixcr.com/reports/singleCell/clonotypesDroppedUnpaired",
+                valueType: "Long",
+                annotations: {
+                    "pl7.app/min": "0",
+                    "pl7.app/table/orderPriority": "108150",
+                    "pl7.app/table/visibility": "optional",
+                    "pl7.app/label": "Clonotypes Dropped - Unpaired",
+                    "pl7.app/description": "Clonotypes discarded because their cell lacked a paired chain."
+                }
             }
-        }
-    }]
+        }]
+    }
 
     // Single Cell columns
     singleCellColumns += [

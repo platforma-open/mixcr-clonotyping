@@ -1,4 +1,4 @@
-//tengo:hash_override E5C1AD4C-B44D-4DE1-BBF1-4CB42ED7579A
+//tengo:hash_override 7F2B1A64-0D3E-4C89-B5A7-31E8C0946D52
 
 ll := import("@platforma-sdk/workflow-tengo:ll")
 self := import("@platforma-sdk/workflow-tengo:tpl.light")
@@ -7,10 +7,10 @@ smart := import("@platforma-sdk/workflow-tengo:smart")
 slices := import("@platforma-sdk/workflow-tengo:slices")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 exec := import("@platforma-sdk/workflow-tengo:exec")
-units := import("@platforma-sdk/workflow-tengo:units")
 pt := import("@platforma-sdk/workflow-tengo:pt")
 clonotypeLabel := import(":clonotype-label")
 stopCodonReplacement := import(":stop-codon-replacement")
+memf := import(":mem-formula")
 
 json := import("json")
 text := import("text")
@@ -50,16 +50,20 @@ self.body(func(inputs) {
 
 	useProductiveFilter := is_undefined(stopCodonTypes) || len(stopCodonTypes) == 0
 
-	exportMemGB := undefined
-	if !is_undefined(inputs.perProcessMemGB) {
-		exportMemGB = int(1.0*inputs.perProcessMemGB/4.0)
-		if exportMemGB < 12 {
-			exportMemGB = 12
-		}
-	} else {
-		exportMemGB = 12
+	// :mem-formula exportRam sizes both `exportClones` execs from the .clns. It carries the
+	// rule and the measured fit.
+	//
+	// Single-cell costs more than bulk. divideClonesByTags materializes a SECOND, expanded
+	// list: one clone per (clonotype x cell), each with its own split TagCount. It then
+	// sorts and re-ranks that list.
+	//
+	// Keep the floors tight. -Xms is half the grant, so the backend pre-allocates the
+	// request. One sample runs one bulk export and one single-cell export per chain group
+	// at the same time. A flat 12 GiB failed on a 10.7k-cell / 26.7k-clone 10x BCR sample.
+	// That grant gives 8788 MiB of heap.
+	exportRam := func(floorGiB, perByte) {
+		return memf.exportRam(inputs.perProcessMemGB, floorGiB, perByte)
 	}
-	ptMemGB := int(2.0*exportMemGB/3.0)
 
 	hashKeyDerivationExpressionPt := func(sourceColumns) {
 		return pt.concatStr(
@@ -70,11 +74,10 @@ self.body(func(inputs) {
 
 	// Exporting clones from clns file
 
-	createExport := func(additionalAction) {
+	createExport := func(additionalAction, ramRequest) {
 		mixcrCmdBuilder := exec.builder().
 			inMediumQueue().
-			mem(string(exportMemGB) + "GiB").
-		    cpu(2).
+			resources({ onCPU: { cpu: 2, ram: ramRequest } }).
 			env("MI_USE_SYSTEM_CA", "true").
 			software(mixcrSw).
 			secret("MI_LICENSE", "MI_LICENSE").
@@ -102,20 +105,21 @@ self.body(func(inputs) {
 
 		return mixcrCmdBuilder.
 			arg("clones.clns").
-			addFile("clones.clns", clnsFile).
+			addFile("clones.clns", clnsFile, { tag: "clns" }).
 			arg("clones.tsv").
 			saveFile("clones.tsv").
 			cacheHours(3).
 			run()
 	}
 
+	// Bulk export: loads the CloneSet and writes it straight out.
 	mixcrCmd := createExport(func(mixcrCmdBuilder) {
 		for argGrp in exportArgs {
 			for arg in argGrp {
 				mixcrCmdBuilder.arg(arg)
 			}
 		}
-	})
+	}, exportRam(16, 30))
 
 	unprocessedTsv := mixcrCmd.getFile("clones.tsv")
 
@@ -127,11 +131,12 @@ self.body(func(inputs) {
 		ll.panic("clonotypeKeyColumns is undefined")
 	}
 
-	// PTabler processing for main TSV output
+	// PTabler processing for main TSV output. Left unsized so workflow-tengo 6.8 sizes it
+	// from its own input volume (ram = clamp(2 GiB + 4 * size, 2 GiB, 64 GiB)), which
+	// tracks the exported TSV better than a fixed share of the mixcr step's budget. An
+	// explicit .mem()/.cpu() would suppress that.
 	wfMain := pt.workflow().
-		inMediumQueue().
-		mem(ptMemGB * units.GiB).
-		cpu(2)
+		inMediumQueue()
 
 	frameInputMap := {
 		file: unprocessedTsv,
@@ -181,6 +186,8 @@ self.body(func(inputs) {
 	result.tsv = processedTsv
 
 	if !is_undefined(cellTagColumns) {
+		// Single-cell export: pays the divideClonesByTags expansion on top of the
+		// resident CloneSet -- hence the higher floor and steeper slope.
 		mixcrForSingleCell := createExport(func(mixcrCmdBuilder) {
 			mixcrCmdBuilder.
 				arg("--split-by-tags").arg("Cell").
@@ -196,15 +203,13 @@ self.body(func(inputs) {
 					mixcrCmdBuilder.arg(arg)
 				}
 			}
-		})
+		}, exportRam(24, 32))
 
 		unprocessedTsvForSingleCell := mixcrForSingleCell.getFile("clones.tsv")
 
-		// PTabler processing for single-cell TSV output
+		// PTabler processing for single-cell TSV output (unsized -- see wfMain above).
 		wfSingleCell := pt.workflow().
-			inMediumQueue().
-			mem(ptMemGB * units.GiB).
-			cpu(2)
+			inMediumQueue()
 
 		frameLoadOps := {
 			xsvType: "tsv",

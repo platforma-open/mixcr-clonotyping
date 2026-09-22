@@ -1,0 +1,101 @@
+test := import("@platforma-sdk/workflow-tengo:test")
+sp := import(":shard-plan")
+
+GIB := 1024 * 1024 * 1024
+
+TestNeedGiBCountsScannedAndKeptSeparately := func() {
+	test.isEqual(sp.INTERCEPT_GIB, sp.needGiB(0, 0))
+	// 1.5 GiB of RAM per GiB scanned and filtered away
+	test.isEqual(sp.INTERCEPT_GIB + 3, sp.needGiB(2 * GIB, 0))
+	// 6 GiB per GiB that survives into the group-by
+	test.isEqual(sp.INTERCEPT_GIB + 6, sp.needGiB(0, 1 * GIB))
+	// both terms, and one byte over rounds up to the next GiB
+	test.isEqual(sp.INTERCEPT_GIB + 3 + 7, sp.needGiB(2 * GIB, 1 * GIB + 1))
+}
+
+TestShardLettersDealEveryLetterOnce := func() {
+	one := sp.shardLetters(1)
+	test.isEqual(1, len(one))
+	test.isEqual(sp.LETTERS, one[0])
+
+	seven := sp.shardLetters(7)
+	test.isEqual(7, len(seven))
+	total := 0
+	for s in seven {
+		total += len(s)
+	}
+	test.isEqual(26, total)
+	// round-robin: shard 0 takes A, H, O, V; shard 6 takes G, N, U
+	test.isEqual("AHOV", seven[0])
+	test.isEqual("GNU", seven[6])
+
+	all := sp.shardLetters(26)
+	test.isEqual(26, len(all))
+	test.isEqual("A", all[0])
+	test.isEqual("Z", all[25])
+}
+
+TestPlanSmallCohortIsOneShardAtDefault := func() {
+	// 1 GiB of TSV needs 8 GiB: one shard, granted the 64 GiB default.
+	p := sp.plan(1 * GIB, undefined)
+	test.isEqual(1, len(p.shards))
+	test.isEqual(sp.LETTERS, p.shards[0])
+	test.isEqual(sp.DEFAULT_SHARD_GIB, p.memGiB)
+	test.isEqual(sp.SHARD_CPU, p.cpu)
+}
+
+TestPlanUnknownBytesIsOneShard := func() {
+	p := sp.plan(undefined, undefined)
+	test.isEqual(1, len(p.shards))
+	test.isEqual(sp.DEFAULT_SHARD_GIB, p.memGiB)
+}
+
+TestPlanOverrideRaisesOnlyTheUnsizedFallback := func() {
+	// No blob sizes: the plan has no need to compare against, so the override raises the
+	// single run's grant. This is the one branch where a user number still counts.
+	p := sp.plan(undefined, 600)
+	test.isEqual(1, len(p.shards))
+	test.isEqual(600, p.memGiB)
+
+	// An override below the default changes nothing there.
+	p = sp.plan(undefined, 16)
+	test.isEqual(sp.DEFAULT_SHARD_GIB, p.memGiB)
+
+	// A sized plan ignores the override entirely: same shards, same grant, with and without.
+	withOverride := sp.plan(20 * GIB, 600)
+	without := sp.plan(20 * GIB, undefined)
+	test.isEqual(len(without.shards), len(withOverride.shards))
+	test.isEqual(sp.DEFAULT_SHARD_GIB, withOverride.memGiB)
+	test.isEqual(without.memGiB, withOverride.memGiB)
+
+	// Including when the need itself is above the default.
+	big := sp.plan(1024 * GIB, 600)
+	test.isEqual(sp.needGiB(1024 * GIB, (1024 * GIB + 25) / 26), big.memGiB)
+}
+
+TestPlanAddsShardsWhileTheyStillFit := func() {
+	// 20 GiB of TSV: the scan term costs 30 GiB whatever the count, leaving 32 for the
+	// group-by, which 5 shards bring under.
+	p := sp.plan(20 * GIB, undefined)
+	test.isEqual(5, len(p.shards))
+	test.isEqual(sp.DEFAULT_SHARD_GIB, p.memGiB)
+	test.isTrue(sp.needGiB(20 * GIB, (20 * GIB * 6 + 25) / 26) <= sp.DEFAULT_SHARD_GIB)
+}
+
+TestPlanScanTermDominatesLargeCohorts := func() {
+	// Past roughly 41 GiB the scan term alone exceeds the default, so no shard count fits
+	// and every shard requests what it needs.
+	p := sp.plan(200 * GIB, undefined)
+	test.isEqual(26, len(p.shards))
+	test.isEqual(sp.needGiB(200 * GIB, (200 * GIB + 25) / 26), p.memGiB)
+	// The scan of the whole cohort, not the shard's own slice, is what drives the grant.
+	test.isTrue(p.memGiB > 200)
+}
+
+TestPlanBeyondTwentySixShardsRequestsTheNeed := func() {
+	// 1 TiB of TSV: 26 shards leave 39.4 GiB each, and every shard still scans the TiB.
+	p := sp.plan(1024 * GIB, undefined)
+	test.isEqual(26, len(p.shards))
+	test.isEqual(sp.needGiB(1024 * GIB, (1024 * GIB + 25) / 26), p.memGiB)
+	test.isTrue(p.memGiB > sp.DEFAULT_SHARD_GIB)
+}

@@ -126,6 +126,12 @@ const isSingleCell = computed(
   () => preset.value?.analysisStages.includes("assembleCells") === true,
 );
 
+// Heavy-chain-only (VHH) applies to single-cell IG data, so the option is offered only
+// when the preset is single-cell and IG is among the selected receptors.
+const showHeavyOnly = computed(
+  () => isSingleCell.value && (app.model.data.chains ?? []).includes("IG"),
+);
+
 // Compute and sync generic preset flag: requires all except tagPattern
 const isGenericPresetComputed = computed(() => {
   const rf = preset.value?.requiredFlags as unknown as readonly string[] | undefined;
@@ -277,6 +283,14 @@ watch(isSingleCell, () => {
   }
 });
 
+// The VHH option is only offered for single-cell IG; clear a stale flag when it stops applying
+// (left single-cell, or IG deselected) so it can't silently block a later run.
+watch(showHeavyOnly, (visible) => {
+  if (!visible && app.model.data.scHeavyOnly) {
+    app.model.data.scHeavyOnly = undefined;
+  }
+});
+
 type LocalState = {
   tab: "fromFile" | "fromBlock" | undefined;
 };
@@ -385,6 +399,22 @@ const imputeGermline = computed({
     app.model.data.imputeGermline = value;
   },
 });
+
+const scHeavyOnly = computed({
+  get: () => app.model.data.scHeavyOnly ?? false,
+  set: (value: boolean) => {
+    app.model.data.scHeavyOnly = value;
+  },
+});
+
+// Heavy-chain only (VHH) mode only supports the IG receptor. Warn (and block via model
+// validation) if it is enabled while any non-IG receptor is selected.
+const scHeavyOnlyReceptorConflict = computed(
+  () =>
+    isSingleCell.value &&
+    scHeavyOnly.value &&
+    (app.model.data.chains ?? []).some((c) => c !== "IG"),
+);
 
 const stopCodonOptions: ListOption<StopCodonType>[] = [
   { label: "Amber (TAG)", value: "amber" },
@@ -522,6 +552,21 @@ watch(stopCodonSelection, (selected) => {
   >
     <template #tooltip> Restrict the analysis to certain receptor types. </template>
   </PlDropdownMulti>
+
+  <PlCheckbox v-if="showHeavyOnly" v-model="scHeavyOnly">
+    Heavy-chain only (VHH)
+    <PlTooltip class="info" position="top">
+      <template #tooltip
+        >Enable for single-cell heavy-chain-only data (e.g. VHH / nanobodies) with no light chain.
+        Clonotypes are built from the heavy chain alone and cells are not required to have a paired
+        light chain. Requires selecting only the IG receptor.</template
+      >
+    </PlTooltip>
+  </PlCheckbox>
+  <PlAlert v-if="scHeavyOnlyReceptorConflict" type="warn">
+    Heavy-chain-only (VHH) mode is specific to immunoglobulins (IG) — please deselect any other
+    receptors (e.g. TCR) to run the block.
+  </PlAlert>
   <PlDropdown
     v-if="needLeftAlignmentMode"
     v-model="app.model.data.leftAlignmentMode"

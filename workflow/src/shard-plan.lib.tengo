@@ -1,0 +1,161 @@
+// Shard plan for the cohort clonotype aggregation (:aggregate-by-clonotype-key).
+//
+// The aggregation groups all samples' clonotype rows by clonotypeKey and keeps, per column,
+// the value from the most abundant sample (maxBy). ptabler lowers maxBy to
+// top_k_by(k=1).first(), which polars runs as an in-memory group-by: one run holds every
+// group it produces at once, and its peak follows the input volume, not the grant.
+//
+// Rows are split into shards by the first letter of the clonotypeKey after digits are
+// removed, upper-cased. Each shard is one ptabler run over all input files with a filter on
+// that letter set, so a run holds only its own groups. A key always maps to one shard, so
+// every group is complete inside a shard and the shard outputs are disjoint.
+//
+// The clonotype label (C-XXXXX or C-XXXXX-N) ranks keys inside a five-letter prefix built the
+// same way. The shard letter is the first letter of that prefix, so a prefix never spans two
+// shards and the label is computed inside the shard.
+//
+// clonotypeKey is a 120-bit sha256 in the base64 alphanumeric alphabet (A-Z, a-z, 0-9), so
+// after digit removal and upper-casing the first character is one of 26 letters, each with
+// equal probability. Letters are dealt to shards round-robin. A key with no letters at all
+// (all digits) has an empty bucket and belongs to shard 0.
+//
+// Memory per shard has two parts, and only the second shrinks with the shard count:
+//
+//     need = INTERCEPT_GIB + SCAN_RAM x scanned + GROUP_RAM x kept
+//
+// Every shard frames all input TSVs and filters them to its own letters, so `scanned` is the
+// whole cohort for every shard however many there are. Measured at 1.0 GiB of RAM per GiB
+// scanned; taken as 1.5 for margin.
+//
+// GROUP_RAM covers the concat + maxBy over the rows a shard keeps. Measured at 4.43 on a
+// 42-column bulk export with no repertoire overlap; taken as 6, the slope the SDK's default
+// ptabler sizing uses.
+//
+// Blob sizes are the unit both laws are fitted in: ptabler writes these TSVs uncompressed.
+//
+// The shard count is the smallest that brings a shard under DEFAULT_SHARD_GIB. The scan term
+// puts that out of reach for a large cohort, which then takes all 26 shards and requests what
+// it needs.
+//
+// A planned shard's grant ignores `perProcessMemGB`: it is never below the computed need, so
+// a user number cannot help, and it can only shrink how many shards the queue admits at once.
+// The override does raise the unsized fallback below, which has no need to compare against
+// and is always a single run.
+
+math := import("math")
+clonotypeLabel := import(":clonotype-label")
+
+LETTERS := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+MAX_SHARDS := len(LETTERS)
+
+INTERCEPT_GIB := 2
+RAM_GIB_PER_INPUT_GIB := 6
+DEFAULT_SHARD_GIB := 64
+SHARD_CPU := 8
+
+// GiB of RAM per GiB of TSV a shard reads and filters away, as a fraction.
+SCAN_RAM_NUM := 3
+SCAN_RAM_DEN := 2
+
+GIB := 1024 * 1024 * 1024
+
+// ceilDiv returns ceil(a / b) for non-negative integers.
+ceilDiv := func(a, b) {
+	return (a + b - 1) / b
+}
+
+// needGiB returns the whole GiB one shard needs: `scanBytes` over all inputs it frames, of
+// which `keptBytes` survive its filter and reach the group-by.
+needGiB := func(scanBytes, keptBytes) {
+	return INTERCEPT_GIB +
+		ceilDiv(scanBytes * SCAN_RAM_NUM, SCAN_RAM_DEN * GIB) +
+		ceilDiv(keptBytes * RAM_GIB_PER_INPUT_GIB, GIB)
+}
+
+// shardLetters deals the 26 letters round-robin into `count` shards.
+// Returns an array of strings, one per shard, each string the letters of that shard.
+shardLetters := func(count) {
+	shards := []
+	for i := 0; i < count; i++ {
+		shards = append(shards, "")
+	}
+	for i := 0; i < MAX_SHARDS; i++ {
+		shards[i % count] += LETTERS[i:i+1]
+	}
+	return shards
+}
+
+// plan chooses the shard count and the per-shard grant.
+//
+// @param totalBytes: int | undefined - bytes over all input TSVs; undefined when the backend
+//                    cannot report blob sizes, which yields a single shard.
+// @param grantFloorGiB: int | undefined - the memory override; raises the unsized fallback only
+// @return { shards: [string], memGiB: int, cpu: int }
+plan := func(totalBytes, grantFloorGiB) {
+	floor := DEFAULT_SHARD_GIB
+
+	if is_undefined(totalBytes) || totalBytes <= 0 {
+		// Nothing to size from: one unsharded run. This is the only branch with no computed
+		// need, so the override still raises it. A single run costs no parallelism.
+		if !is_undefined(grantFloorGiB) && grantFloorGiB > floor {
+			floor = grantFloorGiB
+		}
+		return { shards: [LETTERS], memGiB: floor, cpu: SHARD_CPU }
+	}
+
+	// The most letters one shard may hold so that its need stays under the default. Every
+	// shard scans the whole cohort whatever the count, so past a certain size no count fits
+	// and each shard requests its need.
+	lettersMax := 1
+	for lm := MAX_SHARDS; lm > 1; lm-- {
+		if needGiB(totalBytes, ceilDiv(totalBytes * lm, MAX_SHARDS)) <= DEFAULT_SHARD_GIB {
+			lettersMax = lm
+			break
+		}
+	}
+	count := ceilDiv(MAX_SHARDS, lettersMax)
+	largest := ceilDiv(totalBytes * ceilDiv(MAX_SHARDS, count), MAX_SHARDS)
+
+	return {
+		shards: shardLetters(count),
+		memGiB: int(math.max(floor, needGiB(totalBytes, largest))),
+		cpu:    SHARD_CPU
+	}
+}
+
+// bucketExpr returns the pt expression for a row's shard letter: the first character of the
+// clonotype label prefix, from the same normalization the label uses, so every prefix group
+// is inside one shard. A null key buckets to "".
+bucketExpr := func(pt, keyCol) {
+	return clonotypeLabel.labelPrefixExpr(pt, keyCol, 1).fillNull("")
+}
+
+// shardPredicate returns the pt filter expression selecting rows whose shard letter is one of
+// `letters`. With catchAll the empty bucket is included.
+shardPredicate := func(pt, keyCol, letters, catchAll) {
+	bucket := bucketExpr(pt, keyCol)
+	pred := undefined
+	for i := 0; i < len(letters); i++ {
+		term := bucket.eq(pt.lit(letters[i:i+1]))
+		pred = is_undefined(pred) ? term : pred.or(term)
+	}
+	if catchAll {
+		pred = pred.or(bucket.eq(pt.lit("")))
+	}
+	return pred
+}
+
+export {
+	LETTERS: LETTERS,
+	MAX_SHARDS: MAX_SHARDS,
+	INTERCEPT_GIB: INTERCEPT_GIB,
+	RAM_GIB_PER_INPUT_GIB: RAM_GIB_PER_INPUT_GIB,
+	DEFAULT_SHARD_GIB: DEFAULT_SHARD_GIB,
+	SHARD_CPU: SHARD_CPU,
+
+	needGiB: needGiB,
+	shardLetters: shardLetters,
+	plan: plan,
+	bucketExpr: bucketExpr,
+	shardPredicate: shardPredicate
+}

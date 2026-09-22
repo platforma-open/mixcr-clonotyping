@@ -1,11 +1,9 @@
 {
   "scripts": {
-    "build": "turbo run build",
-    "build:dev": "env PL_PKG_DEV=local turbo run build",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
-    "test": "env PL_PKG_DEV=local turbo run test --concurrency 1",
-    "test:dry-run": "env PL_PKG_DEV=local turbo run test --dry-run=json",
+    "test": "env PL_BUILD_CHANNEL=dev PL_BUILD_VARIANT=binary PL_BUILD_LOCATION=local turbo run test --concurrency 1",
+    "test:dry-run": "env PL_BUILD_CHANNEL=dev PL_BUILD_VARIANT=binary PL_BUILD_LOCATION=local turbo run test --dry-run=json",
     "mark-stable": "turbo run mark-stable",
     "do-pack": "turbo run do-pack",
     "watch": "turbo watch build",
@@ -14,7 +12,12 @@
     "update-sdk": "block-tools structure refresh --update-deps-only",
     "fmt": "turbo run fmt",
     "check": "turbo run check",
-    "upgrade-sdk": "block-tools structure refresh --update-deps-only && pnpm i && block-tools structure refresh && pnpm i && pnpm fmt"
+    "upgrade-sdk": "block-tools structure refresh --update-deps-only && pnpm i && block-tools structure refresh && pnpm i && pnpm fmt",
+    "build:dev-local": "env PL_BUILD_CHANNEL=dev PL_BUILD_VARIANT=all PL_BUILD_LOCATION=local turbo run build",
+    "build:dev-remote": "env PL_BUILD_CHANNEL=dev PL_BUILD_VARIANT=all PL_BUILD_LOCATION=remote turbo run build",
+    "build:dev-no-software": "env PL_BUILD_CHANNEL=dev PL_BUILD_VARIANT=none turbo run build",
+    "build:dev-binary-existing": "env PL_BUILD_CHANNEL=dev PL_BUILD_USE_PUBLISHED=true turbo run build",
+    "build:release": "env PL_BUILD_CHANNEL=release PL_BUILD_VARIANT=all PL_BUILD_LOCATION=remote turbo run build"
   },
   "devDependencies": {
     "@changesets/cli": "catalog:",

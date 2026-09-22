@@ -1,0 +1,85 @@
+// Single source of truth for the `mixcr analyze` memory request.
+//
+//     mem = clamp(4 x size("reads"), baseMemGiB, 256 GiB)
+//
+// baseMemGiB is a TOTAL-memory value for the analysis, selected by which steps the
+// preset runs, so it acts as the lower bound rather than a base to add data on top of.
+// size("reads") is the stored (compressed) blob size of the sample's FASTQs, read from
+// metadata with no pre-exec pass, so the formula resolves on backends that expose blob
+// size and falls back to the bare floor on those that do not.
+
+exec := import("@platforma-sdk/workflow-tengo:exec")
+
+math := import("math")
+
+f := exec.formula
+
+// baseMemGiB picks the per-analysis memory floor from the preset's step set.
+// mitool steps dominate; contig or cell assembly is the middle tier.
+baseMemGiB := func(hasMiToolSteps, hasAssembleContigs, hasAssembleCells) {
+	if hasMiToolSteps {
+		return 192
+	}
+	if hasAssembleContigs || hasAssembleCells {
+		return 110
+	}
+	return 64
+}
+
+// memFormula builds the fluent exec.formula node for `.resources({onCPU:{ram}})`.
+// between() supplies `base` as the lower bound, so no explicit max() is needed.
+memFormula := func(base) {
+	return f.size("reads").times(4).
+		between(f.gib(base), f.gib(256)).
+		staticFallback(f.gib(base))
+}
+
+// exportRam builds the exec.formula node for an `exportClones` step.
+//
+//     ram = clamp(interceptGiB + perByte x size("clns"), floorGiB, 256 GiB)
+//
+// exportClones reads the whole CloneSet into heap and applies --chains after that read, so
+// the request tracks the .clns and not the exported field set.
+//
+// Every caller must tag its .clns input `{ tag: "clns" }`. size("clns") reads file metadata
+// through getBlobSize.
+//
+// Measured fit across five samples, .clns 0.13 to 1.31 GiB:
+//     export peak = 6.4 + 25.0 x clns_GiB     (R2 0.970)
+//
+// perByte is the peak divided by the caller's heap fraction, times any workload expansion:
+//   30  bulk export on `memory-from-limits` (-Xmx = 0.85 x grant)
+//   32  the same export under the divideClonesByTags expansion of a single-cell run
+//
+// floorGiB must hold the whole active range above a 23 GiB grant. Below that grant
+// `memory-from-limits` binds on `grant - 3500 MiB`, which is under the 0.85 that perByte is
+// fitted to. 24 GiB holds; 16 GiB leaves a .clns of 0.25 to 0.38 GiB under its measured peak.
+//
+// interceptGiB is a fitted term for JVM and reference-library overhead, not a second floor.
+// The formula adds it and does not clamp it.
+//
+// perProcessMemGB is the "Advanced Settings" override. It RAISES the floor and does not
+// replace the rule: a value below floorGiB has no effect, and the data term still applies
+// above one above it. aggregate-by-clonotype-key treats the same override the same way.
+exportRamCapGiB := 256
+exportRamInterceptGiB := 8
+
+exportRam := func(perProcessMemGB, floorGiB, perByte) {
+	floor := floorGiB
+	if !is_undefined(perProcessMemGB) {
+		floor = int(math.max(perProcessMemGB, floorGiB))
+	}
+	// An override above the cap raises the cap. between() asserts lo <= hi, so leaving the
+	// cap at 256 GiB would panic on any override above it rather than clamp.
+	cap := int(math.max(floor, exportRamCapGiB))
+	return f.gib(exportRamInterceptGiB).
+		plus(f.size("clns").times(perByte)).
+		between(f.gib(floor), f.gib(cap)).
+		staticFallback(f.gib(floor))
+}
+
+export {
+	baseMemGiB: baseMemGiB,
+	memFormula: memFormula,
+	exportRam: exportRam
+}
