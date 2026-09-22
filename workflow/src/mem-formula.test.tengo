@@ -63,6 +63,51 @@ TestMemFormula := func() {
 	test.isEqual(_gib(110), f.fallbackOf(mf.memFormula(110)))
 }
 
+TestGrantGiBForXmx := func() {
+	// grant(X) = ceil(max(X / 0.85, X + 3500 MiB)).
+	test.isEqual(11,  mf.grantGiBForXmx(7))     // additive arm: 7 + 3.418
+	test.isEqual(28,  mf.grantGiBForXmx(23.3))  // fraction arm: 23.3 / 0.85
+	test.isEqual(157, mf.grantGiBForXmx(133))   // fraction arm: 133 / 0.85
+}
+
+// A resolved preset bundle carrying only the clone-assembler parameters the sizing reads.
+_presetWith := func(cloneAssemblerParameters) {
+	return {
+		pipeline: ["align", "assemble", "exportClones"],
+		assemble: { cloneAssemblerParameters: cloneAssemblerParameters }
+	}
+}
+
+TestAssemblingFeaturesTakesThePresetsOwnFeature := func() {
+	// A kit preset sets its feature through SetClonotypeAssemblingFeatures and leaves the user
+	// override undefined, so reading the override alone would size every such run as CDR3.
+	test.isEqual(["VDJRegion"],
+		mf.assemblingFeatures(_presetWith({ assemblingFeatures: ["VDJRegion"] }), undefined))
+	test.isEqual(["{CDR1Begin:CDR3End}"],
+		mf.assemblingFeatures(_presetWith({ assemblingFeatures: ["{CDR1Begin:CDR3End}"] }), undefined))
+}
+
+TestAssemblingFeaturesPrefersTheUserOverride := func() {
+	test.isEqual(["CDR3"],
+		mf.assemblingFeatures(_presetWith({ assemblingFeatures: ["VDJRegion"] }), "CDR3"))
+}
+
+TestAssemblingFeaturesFallsBackToCdr3WhenTheFieldIsFlagDriven := func() {
+	// assemble-base leaves assemblingFeatures null; generic amplicon presets inherit that and
+	// assemble by CDR3 unless a flag says otherwise.
+	test.isEqual(["CDR3"], mf.assemblingFeatures(_presetWith({ assemblingFeatures: undefined }), undefined))
+	test.isEqual(["CDR3"], mf.assemblingFeatures(_presetWith({}), undefined))
+	test.isEqual(["CDR3"], mf.assemblingFeatures({}, undefined))
+}
+
+TestSplitsClonesReadsEveryGeneFlag := func() {
+	test.isFalse(mf.splitsClones(_presetWith({ separateByV: false, separateByJ: false, separateByC: false })))
+	test.isTrue(mf.splitsClones(_presetWith({ separateByV: true,  separateByJ: false, separateByC: false })))
+	test.isTrue(mf.splitsClones(_presetWith({ separateByV: false, separateByJ: true,  separateByC: false })))
+	test.isTrue(mf.splitsClones(_presetWith({ separateByV: false, separateByJ: false, separateByC: true })))
+	test.isFalse(mf.splitsClones({}))
+}
+
 // An align report carrying the clonotype estimate for two features.
 _alignReportWith := func(features) {
 	return {
@@ -76,47 +121,51 @@ _alignReportWith := func(features) {
 
 TestAssembleEstimatePicksTheConfiguredFeature := func() {
 	report := _alignReportWith({ CDR3: 788535, VDJRegion: 681978 })
-	test.isEqual(681978, mf.assembleEstimate(report, "VDJRegion"))
-	test.isEqual(788535, mf.assembleEstimate(report, "CDR3"))
+	test.isEqual(681978, mf.assembleEstimate(report, ["VDJRegion"]))
+	test.isEqual(788535, mf.assembleEstimate(report, ["CDR3"]))
 }
 
-TestAssembleEstimateFallsBackToCdr3WhenNoFeatureIsConfigured := func() {
+TestAssembleEstimateTakesTheLargestListedFeature := func() {
 	report := _alignReportWith({ CDR3: 788535, VDJRegion: 681978 })
-	test.isEqual(788535, mf.assembleEstimate(report, undefined))
+	test.isEqual(788535, mf.assembleEstimate(report, ["CDR3", "VDJRegion"]))
+	test.isEqual(788535, mf.assembleEstimate(report, ["VDJRegion", "CDR3"]))
+	// A feature outside the sketched set is skipped while another one still answers.
+	test.isEqual(681978, mf.assembleEstimate(report, ["VDJRegion", "{FR1Begin:CDR3End}"]))
 }
 
 TestAssembleEstimateIsUndefinedWhenTheFieldIsAbsent := func() {
 	// The MiXCR pin that predates the sketch writes no estimatedClonotypes at all.
-	test.isTrue(is_undefined(mf.assembleEstimate({ totalReadsProcessed: 1000000 }, "CDR3")))
-	test.isTrue(is_undefined(mf.assembleEstimate({ estimatedClonotypes: undefined }, "CDR3")))
-	test.isTrue(is_undefined(mf.assembleEstimate(undefined, "CDR3")))
+	test.isTrue(is_undefined(mf.assembleEstimate({ totalReadsProcessed: 1000000 }, ["CDR3"])))
+	test.isTrue(is_undefined(mf.assembleEstimate({ estimatedClonotypes: undefined }, ["CDR3"])))
+	test.isTrue(is_undefined(mf.assembleEstimate(undefined, ["CDR3"])))
 }
 
-TestAssembleEstimateIsUndefinedWhenTheFeatureKeyIsMissing := func() {
+TestAssembleEstimateIsUndefinedWhenNoListedFeatureIsPresent := func() {
 	// The sketch hashes a fixed set of features; a run assembling by anything outside it
 	// has no entry and must take the fallback rule rather than a wrong number.
 	report := _alignReportWith({ CDR3: 788535, VDJRegion: 681978 })
-	test.isTrue(is_undefined(mf.assembleEstimate(report, "{FR1Begin:CDR3End}")))
-	test.isTrue(is_undefined(mf.assembleEstimate(_alignReportWith({}), "CDR3")))
+	test.isTrue(is_undefined(mf.assembleEstimate(report, ["{FR1Begin:CDR3End}"])))
+	test.isTrue(is_undefined(mf.assembleEstimate(_alignReportWith({}), ["CDR3"])))
 }
 
 TestAssembleRamGiBClearsEveryBisectedFloor := func() {
 	// Xmx = 15.7 x est_M + 2, grant = max(Xmx / 0.85, Xmx + 3500 MiB), rounded up.
-	// Bisected floors from the W3 ladder (grants): B5 5, B1 11, B2 24, LS10M 71, B4' 79.
-	test.isEqual(7,  mf.assembleRamGiB(45000))     // B5,    floor 5
-	test.isEqual(17, mf.assembleRamGiB(680000))    // B1,    floor 11
-	test.isEqual(37, mf.assembleRamGiB(1870000))   // B2,    floor 24
-	test.isEqual(74, mf.assembleRamGiB(3840000))   // LS10M, floor 71
-	test.isEqual(81, mf.assembleRamGiB(4210000))   // B4',   floor 79
+	// Each pair is (clonotype estimate, bisected `assemble` floor in GiB).
+	test.isEqual(7,  mf.assembleRamGiB(45000))     // floor 5
+	test.isEqual(17, mf.assembleRamGiB(680000))    // floor 11
+	test.isEqual(37, mf.assembleRamGiB(1870000))   // floor 24
+	test.isEqual(74, mf.assembleRamGiB(3840000))   // floor 71
+	test.isEqual(81, mf.assembleRamGiB(4210000))   // floor 79
 }
 
 TestAssembleRamGiBStaysWithinTheOverGrantBudget := func() {
-	// Never under the floor, never more than 1.7x it.
+	// Never under the floor, never more than 1.6x it. The grant ratios are 1.40, 1.55, 1.54,
+	// 1.04 and 1.03.
 	floors := [[45000, 5], [680000, 11], [1870000, 24], [3840000, 71], [4210000, 79]]
 	for point in floors {
 		grant := mf.assembleRamGiB(point[0])
 		test.isTrue(grant >= point[1])
-		test.isTrue(float(grant) <= 1.7 * float(point[1]))
+		test.isTrue(float(grant) <= 1.6 * float(point[1]))
 	}
 }
 
@@ -139,12 +188,13 @@ _evalVdjca := func(node, sizeBytes) {
 	return f.evaluateResource(resolved, resolver, "test")
 }
 
-TestAssembleFallbackRamKeepsTodaysShape := func() {
-	// ram = clamp(4 x size(vdjca), base, 256 GiB) - today's coefficient, floor and cap,
-	// read off the file assemble stages instead of the FASTQs it never sees.
+TestAssembleFallbackRam := func() {
+	// ram = clamp(3 x size(vdjca), base, 256 GiB), read off the file assemble stages instead of
+	// the FASTQs it never sees. A .vdjca is 1.3 to 2.0 times the compressed FASTQ pair, so the
+	// 3x term is never below the 4 x size(reads) that `analyze` requests.
 	test.isEqual(_gib(64),  _evalVdjca(mf.assembleFallbackRam(64), 0))
 	test.isEqual(_gib(64),  _evalVdjca(mf.assembleFallbackRam(64), _gib(8)))
-	test.isEqual(_gib(128), _evalVdjca(mf.assembleFallbackRam(64), _gib(32)))
+	test.isEqual(_gib(96),  _evalVdjca(mf.assembleFallbackRam(64), _gib(32)))
 	test.isEqual(_gib(256), _evalVdjca(mf.assembleFallbackRam(64), _gib(96)))
 	test.isEqual(_gib(64),  f.fallbackOf(mf.assembleFallbackRam(64)))
 }
