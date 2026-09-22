@@ -12,11 +12,11 @@ import { useApp } from "./app";
 
 const reactiveFileContent = ReactiveFileContent.useGlobal();
 
-// MiXCR runs as a single `analyze` command on most presets, and as separate align /
-// refineTagsAndSort / assemble commands on bulk amplicon ones. Logs and progress arrive keyed
-// by (sampleId, step); the log panel and the progress column each show one value per sample,
-// so both take the step that has got furthest. Order is the order the commands run in.
-const STEP_ORDER = ["analyze", "align", "refineTagsAndSort", "assemble"];
+// MiXCR runs as a single `analyze` command on most presets, and as separate align / assemble /
+// qc commands on bulk amplicon ones without UMIs. Logs and progress arrive keyed by
+// (sampleId, step); the log panel and the progress column each show one value per sample, so
+// both take the step that has got furthest. Order is the order the commands run in.
+const STEP_ORDER = ["analyze", "align", "assemble", "qc"];
 
 function stepRank(step: unknown): number {
   return typeof step === "string" ? STEP_ORDER.indexOf(step) : -1;
@@ -133,13 +133,15 @@ export const MiXCRResultsFull = computed<MiXCRResult[] | undefined>(() => {
   // shallow cloning the map and it's values
   const resultMap = new Map([...rawMap].map((v) => [v[0], { ...v[1] }]));
 
-  // adding progress information
-  for (const [sampleId, entry] of furthestStep(progress.data)) {
+  // adding progress information.
+  // A step whose stdout carries no progress line yet reports the empty string. Taking it would
+  // blank the column, so the last step that did report one stands until the next one speaks.
+  // `qc` never reports one at all.
+  const reported = progress.data.filter((p) => p.value !== "");
+  for (const [sampleId, entry] of furthestStep(reported)) {
     const result = resultMap.get(sampleId);
     if (result)
-      result.progress = done.has(sampleId)
-        ? "Done"
-        : (entry.value.replace(ProgressPrefix, "") ?? "Not started");
+      result.progress = done.has(sampleId) ? "Done" : entry.value.replace(ProgressPrefix, "");
   }
 
   return [...resultMap.values()];

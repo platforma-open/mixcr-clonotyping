@@ -4,4 +4,4 @@
 '@platforma-open/milaboratories.mixcr-clonotyping-2': minor
 ---
 
-Run align, assemble and exportClones as separate execs for bulk amplicon presets; size assemble from the align report's clonotype estimate
+Run align, assemble and qc as separate execs for bulk amplicon presets without UMI; size assemble from the align report's clonotype estimate when present
