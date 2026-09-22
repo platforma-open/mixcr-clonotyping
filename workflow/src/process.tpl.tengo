@@ -155,14 +155,24 @@ self.body(func(inputs) {
 		},
 		name: "qc"
 	}, {
-		type: "Resource",
+		// One stream per MiXCR command. Bulk amplicon presets run align, optionally
+		// refineTagsAndSort, and assemble as separate execs; every other preset runs one
+		// `analyze` command and fills the single "analyze" key.
+		type: "ResourceMap",
 		spec: {
 			kind: "PColumn",
 			name: "pl7.app/log",
 			domain: {
 				"pl7.app/vdj/clonotypingRunId": blockId
 			},
-			valueType: "Log"
+			valueType: "Log",
+			axesSpec: [ {
+				type: "String",
+				name: "mixcr.com/step",
+				annotations: {
+					"pl7.app/label": "MiXCR step"
+				}
+			} ]
 		},
 		name: "log"
 	}, {

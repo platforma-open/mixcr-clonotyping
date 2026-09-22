@@ -125,6 +125,27 @@ assembleRamGiB := func(estimatedClonotypes) {
 	return grant
 }
 
+// assembleFallbackRam sizes `assemble` when the align report carries no estimate, which is
+// every run on a MiXCR pin older than the sketch. It is a holding position, not a rule:
+// W3 records that the retry ladder, not the formula, is what makes the old over-grant
+// survivable.
+//
+//     ram = clamp(4 x size("vdjca"), baseMemGiB, 256 GiB)
+//
+// Coefficient, floor and cap are the ones `analyze` carries today. The volume term reads the
+// `.vdjca` rather than the FASTQs because exec.formula sizes only files the command stages,
+// and `assemble` stages the aligned file alone. A `.vdjca` holds the input sequences and
+// qualities plus the alignment hits, so it is at least the size of the compressed FASTQ pair
+// and the substituted term errs high. NEEDS VERIFICATION: no measured `.vdjca`-to-FASTQ ratio
+// exists in the W3 ladder.
+//
+// The caller must tag its `.vdjca` input `{ tag: "vdjca" }`.
+assembleFallbackRam := func(baseGiB) {
+	return f.size("vdjca").times(4).
+		between(f.gib(baseGiB), f.gib(256)).
+		staticFallback(f.gib(baseGiB))
+}
+
 // exportRam builds the exec.formula node for an `exportClones` step.
 //
 //     ram = clamp(interceptGiB + perByte x size("clns"), floorGiB, 256 GiB)
@@ -175,5 +196,6 @@ export {
 	grantGiBForXmx: grantGiBForXmx,
 	assembleEstimate: assembleEstimate,
 	assembleRamGiB: assembleRamGiB,
+	assembleFallbackRam: assembleFallbackRam,
 	exportRam: exportRam
 }

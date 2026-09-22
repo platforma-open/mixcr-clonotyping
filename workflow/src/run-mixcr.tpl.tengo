@@ -1,11 +1,28 @@
 // Identity of this template for the platform's deduplication. Changing this value means
 // "re-run every sample on the next block update" — see the longer note in :mixcr-analyze.
-// Fresh here because this template is new; it must never equal the one :mixcr-analyze uses,
-// as a shared value declares two templates interchangeable.
-//tengo:hash_override 9B26DCEF-7F7B-4A39-8DD9-EC302622A2A3
+// Rotated when the bulk-amplicon pipelines stopped running as one `analyze` command: the
+// template graph below it changed, and reusing the old value would serve cache hits from a
+// different computation.
+//tengo:hash_override FAE77C04-507C-4925-A66A-EA488C9FEAF1
+
+// Runs MiXCR on one measured sample.
+//
+// Bulk amplicon presets — pipeline `align, assemble, exportClones`, with or without
+// `refineTagsAndSort` — run each step as its own exec, so each step carries its own memory
+// grant instead of sharing the worst step's. `assemble` is sized from the clonotype estimate
+// the align report carries, which a template can only read after the align command has
+// finished, so `assemble` and `qc` live in :assemble-mixcr.
+//
+// The in-chain `exportClones` of those pipelines is dropped rather than reproduced: the block
+// saves no clones.tsv from it and re-exports from the .clns with its own argv in :mixcr-export.
+//
+// Every other preset keeps the single `analyze` command. Their steps — assemblePartial,
+// extend, assembleContigs, assembleCells, exportCloneGroups, the mitool steps — have no
+// per-step memory rule, and exportCloneGroups has never been measured.
 
 self := import("@platforma-sdk/workflow-tengo:tpl")
 smart := import("@platforma-sdk/workflow-tengo:smart")
+render := import("@platforma-sdk/workflow-tengo:render")
 pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 ll := import("@platforma-sdk/workflow-tengo:ll")
 exec := import("@platforma-sdk/workflow-tengo:exec")
@@ -22,8 +39,32 @@ json := import("json")
 self.defineOutputs("qc", "reports", "log", "clns")
 
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
+assembleMixcrTpl := assets.importTemplate(":assemble-mixcr")
 
 progressPrefix := "[==PROGRESS==]"
+
+CACHE_PERIOD := 48 * times.hour
+
+// The two pipelines that run as separate execs, matched whole. A pipeline carrying any other
+// step falls through to `analyze`.
+PIPELINE_BULK := ["align", "assemble", "exportClones"]
+PIPELINE_BULK_UMI := ["align", "refineTagsAndSort", "assemble", "exportClones"]
+
+// `align` streams its input and never held more than about 10 GiB of heap anywhere on the W3
+// bulk ladder. It is granted 64 GiB today only because it shared the `analyze` grant.
+ALIGN_BASE_MEM_GIB := 16
+
+_sameSteps := func(pipeline, steps) {
+	if len(pipeline) != len(steps) {
+		return false
+	}
+	for i, step in steps {
+		if pipeline[i] != step {
+			return false
+		}
+	}
+	return true
+}
 
 self.body(func(inputs) {
 	inputData := inputs[pConstants.VALUE_FIELD_NAME]
@@ -35,6 +76,10 @@ self.body(func(inputs) {
 	// on every backend now - it stages a wrapper script where the backend cannot - so there is
 	// no version of Platforma left that needs the old flag.
 	// 'undefined' when :mixcr-analyze found no read end to measure.
+	//
+	// One number covers every step of a split run. :read-stats folds the sequence-volume term
+	// and the read-length term into a single max and exposes no way to separate them, so the
+	// step that needs the smaller of the two over-requests disk.
 	mixcrScratchSpace := readStats.scratchFreeSpaceFor(inputs.readStats)
 
 	preset := inputs.preset
@@ -75,6 +120,10 @@ self.body(func(inputs) {
 		}
 	}
 
+	isBulkAmplicon := _sameSteps(presetContent.pipeline, PIPELINE_BULK)
+	isBulkAmpliconUmi := _sameSteps(presetContent.pipeline, PIPELINE_BULK_UMI)
+	splitSteps := isBulkAmplicon || isBulkAmpliconUmi
+
 	clnsFileName := "result.clns"
 	if hasAssembleContigs {
 		clnsFileName = "result.contigs.clns"
@@ -83,18 +132,21 @@ self.body(func(inputs) {
 		clnsFileName = "result.assembledCells.clns"
 	}
 
-	mixcrCmdBuilder := exec.builder().
-		printErrStreamToStdout().
-		saveStdoutStream().
-		env("MI_USE_SYSTEM_CA", "true").
-		env("MI_PROGRESS_PREFIX", progressPrefix).
-		software(mixcrSw).
-		secret("MI_LICENSE", "MI_LICENSE").
-		env("MI_LICENSE_DEBUG", "MI_LICENSE_DEBUG").
-		arg("analyze")
-
 	// CPUs number per process
 	perProcessCPUsResolved := is_undefined(perProcessCPUs) ? 16 : perProcessCPUs
+
+	baseMemGiB := memf.baseMemGiB(hasMiToolSteps, hasAssembleContigs, hasAssembleCells)
+
+	newMixcrBuilder := func() {
+		return exec.builder().
+			printErrStreamToStdout().
+			saveStdoutStream().
+			env("MI_USE_SYSTEM_CA", "true").
+			env("MI_PROGRESS_PREFIX", progressPrefix).
+			software(mixcrSw).
+			secret("MI_LICENSE", "MI_LICENSE").
+			env("MI_LICENSE_DEBUG", "MI_LICENSE_DEBUG")
+	}
 
 	// Memory limit per process.
 	//     mem = clamp(4 * size("reads"), baseMemGiB, 256 GiB)
@@ -108,153 +160,283 @@ self.body(func(inputs) {
 	// the largest runs.
 	// An "Advanced Settings" memory override takes precedence. On backends that cannot
 	// evaluate resource formulas, the formula's static fallback is the baseline.
-	onCPUResources := { cpu: perProcessCPUsResolved }
-	if !is_undefined(perProcessMemGB) {
-		// memory per process was set in "Advanced Settings" block directly
-		onCPUResources.ram = string(perProcessMemGB) + "GiB"
-	} else {
-		base := memf.baseMemGiB(hasMiToolSteps, hasAssembleContigs, hasAssembleCells)
-		onCPUResources.ram = memf.memFormula(base)
+	applyResources := func(builder, floorGiB) {
+		onCPUResources := { cpu: perProcessCPUsResolved }
+		if !is_undefined(perProcessMemGB) {
+			// memory per process was set in "Advanced Settings" block directly
+			onCPUResources.ram = string(perProcessMemGB) + "GiB"
+		} else {
+			onCPUResources.ram = memf.memFormula(floorGiB)
+		}
+		if !is_undefined(mixcrScratchSpace) {
+			onCPUResources.scratchFreeSpace = mixcrScratchSpace
+		}
+		builder.resources({ onCPU: onCPUResources })
+		return builder
 	}
-	if !is_undefined(mixcrScratchSpace) {
-		onCPUResources.scratchFreeSpace = mixcrScratchSpace
+
+	// Preset selection and every mixin that shapes the resolved parameter bundle. `align`
+	// packs that bundle into the .vdjca header, and the later steps read it from there, so
+	// this whole group belongs to the first command of the run whichever shape it takes.
+	//
+	// `analyze` takes the preset as its first positional; `align` takes it as `--preset`.
+	// Every mixin below is an option on both, because align declares the same mixin groups
+	// (AlignMiXCRMixins, AssembleMiXCRMixins, GenericMiXCRMixins) that analyze does.
+	applyPresetArgs := func(builder, presetAsOption) {
+		if library {
+			builder.arg("--species").arg(species)
+			if isLibraryFileGzipped {
+				builder.arg("--library").arg("library.json.gz").
+				addFile("library.json.gz", library)
+			} else {
+				builder.arg("--library").arg("library.json").
+				addFile("library.json", library)
+			}
+		} else if !is_undefined(species) {
+			builder.arg("--species").arg(species)
+		}
+
+		if presetAsOption {
+			builder.arg("--preset")
+		}
+		if smart.isResource(preset) /* file */ {
+			builder.
+				arg("local#input_preset").
+				addFile("input_preset.yaml", preset)
+		} else {
+			ll.assert(!is_undefined(preset.name), "undefined preset name")
+			builder.
+				arg(preset.name)
+		}
+
+		// Optional preset-specific parameters (order matters if preset requires positional values)
+		if !is_undefined(leftAlignmentMode) {
+			builder.arg(leftAlignmentMode)
+		}
+		if !is_undefined(rightAlignmentMode) {
+			builder.arg(rightAlignmentMode)
+		}
+		if !is_undefined(materialType) {
+			builder.arg(materialType)
+		}
+		if !is_undefined(tagPattern) {
+			builder.arg("--tag-pattern").arg(tagPattern)
+		}
+		if !is_undefined(assembleClonesBy) {
+			builder.arg("--assemble-clonotypes-by").arg(assembleClonesBy)
+		}
+		// Clone clustering tuning
+		cloneClusteringMode := params.cloneClusteringMode
+		if is_undefined(cloneClusteringMode) {
+			cloneClusteringMode = "default"
+		}
+		if cloneClusteringMode == "relaxed" {
+			builder.
+				arg("-Massemble.cloneAssemblerParameters.minimalQuality=20").
+				arg("-Massemble.cloneAssemblerParameters.badQualityThreshold=10").
+				arg("-Massemble.cloneAssemblerParameters.cloneClusteringParameters.searchParameters=oneMismatchOrIndel").
+				arg("-Massemble.cloneAssemblerParameters.cloneClusteringParameters.searchDepth=1")
+		} else if cloneClusteringMode == "off" {
+			builder.arg("-Massemble.cloneAssemblerParameters.cloneClusteringParameters=null")
+		}
+		return builder
 	}
-	mixcrCmdBuilder.resources({ onCPU: onCPUResources })
+
+	// Stages the sample's read files and adds the positional pattern that names them.
+	applyInputFiles := func(builder) {
+		inputMap := inputData.inputs()
+		if inputDataMeta.keyLength == 0 {
+			ll.assert(aggregationAxesNames == [], "unexpected aggregation axes names")
+			// Assuming only one key "[]" exists here, no need for sorted iteration
+			inputFile := inputMap["[]"]
+			ll.assert(!is_undefined(inputFile), "unexpected agg group structure")
+			inputFileName := "input." + fileExtension
+			builder.addFile(inputFileName, inputFile, { tag: "reads" })
+			builder.arg(inputFileName)
+		} else if inputDataMeta.keyLength == 1 {
+			ll.assert(aggregationAxesNames == ["pl7.app/sequencing/readIndex"], "unexpected aggregation axes names")
+			for sKey in maps.getKeys(inputMap) {
+				inputFile := inputMap[sKey]
+				key := json.decode(sKey)
+				if len(key) != 1 {
+					ll.panic("malformed key: %v", sKey)
+				}
+				r := key[0]
+				if (r[0] != 'R' && r[0] != "I") || (r[1] != '1' && r[1] != '2') || len(r) != 2 {
+					ll.panic("malformed read index: %v", r)
+				}
+				builder.addFile("input_" + r + "." + fileExtension, inputFile, { tag: "reads" })
+			}
+			builder.arg("input_{{R}}." + fileExtension)
+		} else if inputDataMeta.keyLength == 2 {
+			ll.assert(aggregationAxesNames == ["pl7.app/sequencing/lane", "pl7.app/sequencing/readIndex"], "unexpected aggregation axes names")
+			for sKey in maps.getKeys(inputMap) {
+				inputFile := inputMap[sKey]
+				key := json.decode(sKey)
+				if len(key) != 2 {
+					ll.panic("malformed key: %v", sKey)
+				}
+				lane := key[0]
+				r := key[1]
+				if (r[0] != 'R' && r[0] != "I") || (r[1] != '1' && r[1] != '2') || len(r) != 2 {
+					ll.panic("malformed read index: %v", r)
+				}
+				if is_undefined(int(lane)) {
+					ll.panic("malformed lane: %v", lane)
+				}
+				builder.addFile("input_L" + lane + "_" + r + "." + fileExtension, inputFile, { tag: "reads" })
+			}
+			builder.arg("input_L{{n}}_{{R}}." + fileExtension)
+		} else {
+			ll.panic("too many axes / not supported")
+		}
+		return builder
+	}
+
+	// One stdout stream per command, keyed by the step that wrote it. `analyze` runs every
+	// step in one JVM and contributes a single entry.
+	logs := pcolumn.resourceMapBuilder( /* keyLength */ 1 )
+
+	if !splitSteps {
+		mixcrCmdBuilder := newMixcrBuilder().arg("analyze")
+		applyResources(mixcrCmdBuilder, baseMemGiB)
+
+		if !is_undefined(limitInput) {
+			mixcrCmdBuilder.arg("--limit-input").arg(string(limitInput))
+		}
+
+		applyPresetArgs(mixcrCmdBuilder, false)
+		applyInputFiles(mixcrCmdBuilder)
+
+		mixcrCmdBuilder.arg("result")
+		mixcrCmdBuilder.arg("--force-overwrite")
+
+		mixcrCmdBuilder.saveFile("result.qc.json")
+		mixcrCmdBuilder.saveFile(clnsFileName)
+
+		for report in reports {
+			mixcrCmdBuilder.saveFile(report.fileJson)
+			mixcrCmdBuilder.saveFile(report.fileTxt)
+		}
+
+		mixcrCmd := mixcrCmdBuilder.cache(CACHE_PERIOD).run()
+
+		reportsMap := pcolumn.resourceMapBuilder( /* keyLength */ 2 )
+		for report in reports {
+			reportsMap.add([report.id, "json"], mixcrCmd.getFile(report.fileJson))
+			reportsMap.add([report.id, "txt"], mixcrCmd.getFile(report.fileTxt))
+		}
+
+		logs.add(["analyze"], mixcrCmd.getStdoutStream())
+
+		return {
+			qc: mixcrCmd.getFile("result.qc.json"),
+			log: logs.build(),
+			reports: reportsMap.build(),
+			clns: mixcrCmd.getFile(clnsFileName)
+		}
+	}
+
+	alignReportJson := "result.align.report.json"
+	alignReportTxt := "result.align.report.txt"
+	alignedFile := "result.vdjca"
+
+	alignBuilder := newMixcrBuilder().arg("align").arg("-f")
+	applyResources(alignBuilder, ALIGN_BASE_MEM_GIB)
+
+	// `--threads` exists on align alone of the three steps. Reading the granted count back
+	// from the placeholder keeps the flag and the request from diverging.
+	alignBuilder.arg("--threads").argExpr("{system.cpu}")
 
 	if !is_undefined(limitInput) {
-		mixcrCmdBuilder.arg("--limit-input").arg(string(limitInput))
+		alignBuilder.arg("--limit-input").arg(string(limitInput))
 	}
 
-	if library {
-		mixcrCmdBuilder.arg("--species").arg(species)
-		if isLibraryFileGzipped {
-			mixcrCmdBuilder.arg("--library").arg("library.json.gz").
-			addFile("library.json.gz", library)
+	applyPresetArgs(alignBuilder, true)
+
+	alignBuilder.
+		arg("--report").arg(alignReportTxt).
+		arg("--json-report").arg(alignReportJson)
+
+	applyInputFiles(alignBuilder)
+
+	// The report is saved twice: as a file, which is what the reports p-column carries, and
+	// as content, which is the only form :assemble-mixcr can decode to size itself.
+	alignCmd := alignBuilder.
+		arg(alignedFile).
+		saveFile(alignedFile).
+		saveFile(alignReportJson).
+		saveFileContent(alignReportJson).
+		saveFile(alignReportTxt).
+		cache(CACHE_PERIOD).
+		run()
+
+	logs.add(["align"], alignCmd.getStdoutStream())
+
+	vdjcaFile := alignCmd.getFile(alignedFile)
+
+	if isBulkAmpliconUmi {
+		refinedFile := "result.refined.vdjca"
+
+		// Today's whole-analysis grant, no rule of its own yet. The volume term of that rule
+		// reads the FASTQs, which this step never stages, so only its floor survives.
+		refineResources := { cpu: perProcessCPUsResolved }
+		if !is_undefined(perProcessMemGB) {
+			refineResources.ram = string(perProcessMemGB) + "GiB"
 		} else {
-			mixcrCmdBuilder.arg("--library").arg("library.json").
-			addFile("library.json", library)
+			refineResources.ram = string(baseMemGiB) + "GiB"
 		}
-	} else if !is_undefined(species) {
-		species = params.species
-		mixcrCmdBuilder.arg("--species").arg(species)
-	}
-
-	if smart.isResource(preset) /* file */ {
-		mixcrCmdBuilder.
-			arg("local#input_preset").
-			addFile("input_preset.yaml", preset)
-	} else {
-		ll.assert(!is_undefined(preset.name), "undefined preset name")
-		mixcrCmdBuilder.
-			arg(preset.name)
-	}
-
-	// Optional preset-specific parameters (order matters if preset requires positional values)
-	if !is_undefined(leftAlignmentMode) {
-		mixcrCmdBuilder.arg(leftAlignmentMode)
-	}
-	if !is_undefined(rightAlignmentMode) {
-		mixcrCmdBuilder.arg(rightAlignmentMode)
-	}
-	if !is_undefined(materialType) {
-		mixcrCmdBuilder.arg(materialType)
-	}
-	if !is_undefined(tagPattern) {
-		mixcrCmdBuilder.arg("--tag-pattern").arg(tagPattern)
-	}
-	if !is_undefined(assembleClonesBy) {
-		mixcrCmdBuilder.arg("--assemble-clonotypes-by").arg(assembleClonesBy)
-	}
-	// Clone clustering tuning
-	cloneClusteringMode := params.cloneClusteringMode
-	if is_undefined(cloneClusteringMode) {
-		cloneClusteringMode = "default"
-	}
-	if cloneClusteringMode == "relaxed" {
-		mixcrCmdBuilder.
-			arg("-Massemble.cloneAssemblerParameters.minimalQuality=20").
-			arg("-Massemble.cloneAssemblerParameters.badQualityThreshold=10").
-			arg("-Massemble.cloneAssemblerParameters.cloneClusteringParameters.searchParameters=oneMismatchOrIndel").
-			arg("-Massemble.cloneAssemblerParameters.cloneClusteringParameters.searchDepth=1")
-	} else if cloneClusteringMode == "off" {
-		mixcrCmdBuilder.arg("-Massemble.cloneAssemblerParameters.cloneClusteringParameters=null")
-	}
-
-	inputMap := inputData.inputs()
-	if inputDataMeta.keyLength == 0 {
-		ll.assert(aggregationAxesNames == [], "unexpected aggregation axes names")
-		// Assuming only one key "[]" exists here, no need for sorted iteration
-		inputFile := inputMap["[]"]
-		ll.assert(!is_undefined(inputFile), "unexpected agg group structure")
-		inputFileName := "input." + fileExtension
-		mixcrCmdBuilder.addFile(inputFileName, inputFile, { tag: "reads" })
-		mixcrCmdBuilder.arg(inputFileName)
-	} else if inputDataMeta.keyLength == 1 {
-		ll.assert(aggregationAxesNames == ["pl7.app/sequencing/readIndex"], "unexpected aggregation axes names")
-		for sKey in maps.getKeys(inputMap) {
-			inputFile := inputMap[sKey]
-			key := json.decode(sKey)
-			if len(key) != 1 {
-				ll.panic("malformed key: %v", sKey)
-			}
-			r := key[0]
-			if (r[0] != 'R' && r[0] != "I") || (r[1] != '1' && r[1] != '2') || len(r) != 2 {
-				ll.panic("malformed read index: %v", r)
-			}
-			mixcrCmdBuilder.addFile("input_" + r + "." + fileExtension, inputFile, { tag: "reads" })
+		if !is_undefined(mixcrScratchSpace) {
+			refineResources.scratchFreeSpace = mixcrScratchSpace
 		}
-		mixcrCmdBuilder.arg("input_{{R}}." + fileExtension)
-	} else if inputDataMeta.keyLength == 2 {
-		ll.assert(aggregationAxesNames == ["pl7.app/sequencing/lane", "pl7.app/sequencing/readIndex"], "unexpected aggregation axes names")
-		for sKey in maps.getKeys(inputMap) {
-			inputFile := inputMap[sKey]
-			key := json.decode(sKey)
-			if len(key) != 2 {
-				ll.panic("malformed key: %v", sKey)
+
+		refineCmd := newMixcrBuilder().
+			arg("refineTagsAndSort").
+			arg("-f").
+			addFile(alignedFile, vdjcaFile).
+			arg(alignedFile).
+			arg(refinedFile).
+			resources({ onCPU: refineResources }).
+			saveFile(refinedFile).
+			cache(CACHE_PERIOD).
+			run()
+
+		logs.add(["refineTagsAndSort"], refineCmd.getStdoutStream())
+		vdjcaFile = refineCmd.getFile(refinedFile)
+	}
+
+	assembleRun := render.create(
+		assembleMixcrTpl,
+		{
+			vdjca: vdjcaFile,
+			alignReport: alignCmd.getFileContent(alignReportJson),
+			alignReportJson: alignCmd.getFile(alignReportJson),
+			alignReportTxt: alignCmd.getFile(alignReportTxt),
+
+			clnsFileName: clnsFileName,
+			reports: reports,
+			assembleClonesBy: assembleClonesBy,
+			baseMemGiB: baseMemGiB
+		},
+		{
+			// Kept out of the deduplication key for the same reason :mixcr-analyze keeps
+			// them out of this template's: a run may be recovered across a change of the
+			// CPU or memory override. The scratch request rides along because it is an
+			// optimisation and never changes what the step produces.
+			metaInputs: {
+				perProcessMemGB: perProcessMemGB,
+				perProcessCPUs: perProcessCPUs,
+				scratchFreeSpace: mixcrScratchSpace
 			}
-			lane := key[0]
-			r := key[1]
-			if (r[0] != 'R' && r[0] != "I") || (r[1] != '1' && r[1] != '2') || len(r) != 2 {
-				ll.panic("malformed read index: %v", r)
-			}
-			if is_undefined(int(lane)) {
-				ll.panic("malformed lane: %v", lane)
-			}
-			mixcrCmdBuilder.addFile("input_L" + lane + "_" + r + "." + fileExtension, inputFile, { tag: "reads" })
 		}
-		mixcrCmdBuilder.arg("input_L{{n}}_{{R}}." + fileExtension)
-	} else {
-		ll.panic("too many axes / not supported")
+	)
+
+	logs.add(["assemble"], assembleRun.output("log", CACHE_PERIOD))
+
+	return {
+		qc: assembleRun.output("qc", CACHE_PERIOD),
+		log: logs.build(),
+		reports: assembleRun.output("reports", CACHE_PERIOD),
+		clns: assembleRun.output("clns", CACHE_PERIOD)
 	}
-
-	mixcrCmdBuilder.arg("result")
-	mixcrCmdBuilder.arg("--force-overwrite")
-
-	mixcrCmdBuilder.saveFile("result.qc.json")
-	mixcrCmdBuilder.saveFile(clnsFileName)
-
-	for report in reports {
-		mixcrCmdBuilder.saveFile(report.fileJson)
-		mixcrCmdBuilder.saveFile(report.fileTxt)
-	}
-
-	mixcrCmdBuilder = mixcrCmdBuilder.cache(48 * times.hour)
-	mixcrCmd := mixcrCmdBuilder.run()
-
-	// collecting results
-
-	reportsMap := pcolumn.resourceMapBuilder( /* keyLength */ 2 )
-	for report in reports {
-		reportsMap.add([report.id, "json"], mixcrCmd.getFile(report.fileJson))
-		reportsMap.add([report.id, "txt"], mixcrCmd.getFile(report.fileTxt))
-	}
-
-	result := {
-		qc: mixcrCmd.getFile("result.qc.json"),
-		log: mixcrCmd.getStdoutStream(),
-		reports: reportsMap.build(),
-		clns: mixcrCmd.getFile(clnsFileName)
-	}
-
-	return result
 })

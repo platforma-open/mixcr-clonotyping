@@ -128,6 +128,27 @@ TestAssembleRamGiBClamps := func() {
 	test.isEqual(256, mf.assembleRamGiB(20000000))
 }
 
+// Evaluate a resource formula against a fake ".vdjca" input of sizeBytes.
+_evalVdjca := func(node, sizeBytes) {
+	fileName := "aligned.vdjca"
+	resolved := f.resolveAst(node, { "vdjca": [fileName] }, [fileName])
+	resolver := {
+		size:      func(files) { return sizeBytes },
+		lineCount: func(files) { return 0 }
+	}
+	return f.evaluateResource(resolved, resolver, "test")
+}
+
+TestAssembleFallbackRamKeepsTodaysShape := func() {
+	// ram = clamp(4 x size(vdjca), base, 256 GiB) - today's coefficient, floor and cap,
+	// read off the file assemble stages instead of the FASTQs it never sees.
+	test.isEqual(_gib(64),  _evalVdjca(mf.assembleFallbackRam(64), 0))
+	test.isEqual(_gib(64),  _evalVdjca(mf.assembleFallbackRam(64), _gib(8)))
+	test.isEqual(_gib(128), _evalVdjca(mf.assembleFallbackRam(64), _gib(32)))
+	test.isEqual(_gib(256), _evalVdjca(mf.assembleFallbackRam(64), _gib(96)))
+	test.isEqual(_gib(64),  f.fallbackOf(mf.assembleFallbackRam(64)))
+}
+
 TestExportRam := func() {
 	// ram = clamp(8 GiB + perByte x size(clns), floor, 256 GiB)
 
