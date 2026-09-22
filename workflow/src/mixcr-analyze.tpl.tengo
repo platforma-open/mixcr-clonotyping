@@ -4,7 +4,13 @@
 //
 // List of template's inputs + values of inputs + this hash decides whether an analysis is
 // repeated or needs to be run again.
-//tengo:hash_override D70EDB25-6FF6-4615-966D-B79B04B5751C
+//
+// An override replaces the identity of the WHOLE subtree, not of this file: the backend
+// renders an overridden template as a `TengoTemplateOverride` resource carrying the UUID
+// alone, with the real template on a Service field. So a rotated UUID in a template this one
+// renders — :run-mixcr, :assemble-mixcr — has no effect while this UUID stands. Rotate here
+// whenever the computation below changes.
+//tengo:hash_override 6FC69973-136C-4481-A878-9DD2F003E0E0
 
 // Measures the reads of one sample, then runs MiXCR on them.
 //
@@ -13,10 +19,10 @@
 // of a command it started itself, so the run lives in :run-mixcr and this template only
 // feeds it. See :read-stats for what is measured and how the size follows from it.
 //
-// The hash override is the one this template has always carried, and the inputs are the ones
-// pframes.processColumn has always passed, so an analysis that already finished still
-// deduplicates to its result instead of running again. That is safe because scratch space
-// changes only where MiXCR writes its temporary files, never what it produces.
+// The hash override was rotated when the bulk-amplicon pipelines stopped running as one
+// `analyze` command, so every sample is analysed again on the next block update. It had to be
+// rotated here and not only in :run-mixcr: this template's override pins the identity of
+// everything it renders.
 
 self := import("@platforma-sdk/workflow-tengo:tpl")
 render := import("@platforma-sdk/workflow-tengo:render")
