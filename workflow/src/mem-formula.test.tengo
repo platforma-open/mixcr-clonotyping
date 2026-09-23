@@ -2,6 +2,8 @@ test := import("@platforma-sdk/workflow-tengo:test")
 exec := import("@platforma-sdk/workflow-tengo:exec")
 mf := import(":mem-formula")
 
+math := import("math")
+
 f := exec.formula
 
 _gib := func(n) { return n * 1073741824 }
@@ -148,32 +150,59 @@ TestAssembleEstimateIsUndefinedWhenNoListedFeatureIsPresent := func() {
 	test.isTrue(is_undefined(mf.assembleEstimate(_alignReportWith({}), ["CDR3"])))
 }
 
+// Xmx is a float, so compare it within a tolerance rather than on exact bits.
+_isNear := func(expect, value) {
+	test.isTruef(math.abs(expect - value) < 0.001, "expected %v, got %v", expect, value)
+}
+
+TestAssembleXmxGiBSwitchesSlopeAtTheCompressedOopsBoundary := func() {
+	// Xmx = 11.0 x est_M + 2 while that is at most 29.5, then 15.7 x est_M + 2.
+	_isNear(2.495,  mf.assembleXmxGiB(45000))
+	_isNear(9.48,   mf.assembleXmxGiB(680000))
+	_isNear(22.57,  mf.assembleXmxGiB(1870000))
+	// The boundary is inclusive: 2.5 M lands on 29.5 exactly and stays on the compressed slope.
+	_isNear(29.5,   mf.assembleXmxGiB(2500000))
+	// 2.51 M crosses it, and the full-width slope applies to the whole estimate.
+	_isNear(41.407, mf.assembleXmxGiB(2510000))
+	_isNear(62.288, mf.assembleXmxGiB(3840000))
+	_isNear(68.097, mf.assembleXmxGiB(4210000))
+}
+
+TestAssembleRamGiBInvertsTheEntrypointAcrossTheBoundary := func() {
+	// grant = ceil(max(Xmx / 0.85, Xmx + 3500 MiB)) of the piecewise Xmx.
+	test.isEqual(27, mf.grantGiBForXmx(22.57))     // max(26.553, 25.988)
+	test.isEqual(27, mf.assembleRamGiB(1870000))
+	test.isEqual(35, mf.assembleRamGiB(2500000))   // Xmx 29.5,   max(34.706, 32.918)
+	test.isEqual(49, mf.assembleRamGiB(2510000))   // Xmx 41.407, max(48.714, 44.825)
+}
+
 TestAssembleRamGiBClearsEveryBisectedFloor := func() {
-	// Xmx = 15.7 x est_M + 2, grant = max(Xmx / 0.85, Xmx + 3500 MiB), rounded up.
 	// Each pair is (clonotype estimate, bisected `assemble` floor in GiB).
-	test.isEqual(7,  mf.assembleRamGiB(45000))     // floor 5
-	test.isEqual(17, mf.assembleRamGiB(680000))    // floor 11
-	test.isEqual(37, mf.assembleRamGiB(1870000))   // floor 24
+	test.isEqual(6,  mf.assembleRamGiB(45000))     // floor 5
+	test.isEqual(13, mf.assembleRamGiB(680000))    // floor 11
+	test.isEqual(27, mf.assembleRamGiB(1870000))   // floor 24
 	test.isEqual(74, mf.assembleRamGiB(3840000))   // floor 71
 	test.isEqual(81, mf.assembleRamGiB(4210000))   // floor 79
 }
 
 TestAssembleRamGiBStaysWithinTheOverGrantBudget := func() {
-	// Never under the floor, never more than 1.6x it. The grant ratios are 1.40, 1.55, 1.54,
+	// Never under the floor, never more than 1.25x it. The grant ratios are 1.20, 1.18, 1.13,
 	// 1.04 and 1.03.
 	floors := [[45000, 5], [680000, 11], [1870000, 24], [3840000, 71], [4210000, 79]]
 	for point in floors {
 		grant := mf.assembleRamGiB(point[0])
 		test.isTrue(grant >= point[1])
-		test.isTrue(float(grant) <= 1.6 * float(point[1]))
+		test.isTrue(float(grant) <= 1.25 * float(point[1]))
 	}
 }
 
 TestAssembleRamGiBClamps := func() {
 	// The additive arm of the entrypoint inverse holds the small end above the 4 GiB floor.
+	// 45 k clones ask for an Xmx of 2.5 GiB and still get a 6 GiB grant.
 	test.isEqual(6, mf.assembleRamGiB(0))
 	test.isEqual(6, mf.assembleRamGiB(1))
-	// The cap binds: 20 M clones would ask for 371 GiB.
+	test.isEqual(6, mf.assembleRamGiB(45000))
+	// The cap binds: 20 M clones would ask for 372 GiB.
 	test.isEqual(256, mf.assembleRamGiB(20000000))
 }
 

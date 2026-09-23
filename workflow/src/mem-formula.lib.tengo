@@ -144,26 +144,43 @@ assembleEstimate := func(alignReport, features) {
 	return best
 }
 
-// assembleRamGiB sizes the `assemble` step from that estimate.
+// assembleXmxGiB sizes the `assemble` heap from that estimate. The rule is piecewise, with one
+// slope per object-pointer width:
 //
-//     Xmx_GiB = 15.7 x est_M + 2
-//     ram     = clamp(grantGiBForXmx(Xmx_GiB), 4 GiB, 256 GiB)
+//     Xmx_GiB = 11.0 x est_M + 2   when that value is at most 29.5
+//               15.7 x est_M + 2   otherwise
 //
-// Slope and intercept are fitted on bisected `assemble` floors. Against those floors the rule
-// grants 7 for 5, 17 for 11, 37 for 24, 74 for 71 and 81 for 79 — never under, worst over-grant
-// 1.55x.
+// The same clone set occupies 0.67 to 0.70 of the memory under compressed object pointers that it
+// occupies at full pointer width. HotSpot turns compressed object pointers off at a maximum heap
+// of about 32 GiB; 29.5 keeps the compressed branch clear of that boundary.
 //
-// The 4 GiB floor never binds: the additive arm of the entrypoint inverse holds the smallest run
-// at 6 GiB. The cap is 256 GiB.
-_ASSEMBLE_GIB_PER_MILLION := 15.7
+// Slopes and intercept are fitted on bisected `assemble` floors. Against those floors the rule
+// grants 6 for 5, 13 for 11, 27 for 24, 74 for 71 and 81 for 79 — never under, worst over-grant
+// 1.20x.
+_ASSEMBLE_GIB_PER_M_COMPRESSED := 11.0
+_ASSEMBLE_GIB_PER_M := 15.7
+_COMPRESSED_OOPS_MAX_XMX_GIB := 29.5
 _ASSEMBLE_INTERCEPT_GIB := 2.0
 _ASSEMBLE_FLOOR_GIB := 4
 _ASSEMBLE_CAP_GIB := 256
 
-assembleRamGiB := func(estimatedClonotypes) {
+assembleXmxGiB := func(estimatedClonotypes) {
 	millions := float(estimatedClonotypes) / 1000000.0
-	xmxGiB := _ASSEMBLE_GIB_PER_MILLION * millions + _ASSEMBLE_INTERCEPT_GIB
-	grant := grantGiBForXmx(xmxGiB)
+	compressed := _ASSEMBLE_GIB_PER_M_COMPRESSED * millions + _ASSEMBLE_INTERCEPT_GIB
+	if compressed <= _COMPRESSED_OOPS_MAX_XMX_GIB {
+		return compressed
+	}
+	return _ASSEMBLE_GIB_PER_M * millions + _ASSEMBLE_INTERCEPT_GIB
+}
+
+// assembleRamGiB converts that heap into the grant that produces it.
+//
+//     ram = clamp(grantGiBForXmx(assembleXmxGiB(est)), 4 GiB, 256 GiB)
+//
+// The 4 GiB floor never binds: the additive arm of the entrypoint inverse holds the smallest run
+// at 6 GiB. The cap is 256 GiB.
+assembleRamGiB := func(estimatedClonotypes) {
+	grant := grantGiBForXmx(assembleXmxGiB(estimatedClonotypes))
 	if grant < _ASSEMBLE_FLOOR_GIB {
 		return _ASSEMBLE_FLOOR_GIB
 	}
@@ -241,6 +258,7 @@ export {
 	assemblingFeatures: assemblingFeatures,
 	splitsClones: splitsClones,
 	assembleEstimate: assembleEstimate,
+	assembleXmxGiB: assembleXmxGiB,
 	assembleRamGiB: assembleRamGiB,
 	assembleFallbackRam: assembleFallbackRam,
 	exportRam: exportRam
