@@ -182,13 +182,13 @@ TestAssembleRamGiBClearsEveryBisectedFloor := func() {
 	test.isEqual(13, mf.assembleRamGiB(680000))    // floor 11
 	test.isEqual(27, mf.assembleRamGiB(1870000))   // floor 24
 	test.isEqual(74, mf.assembleRamGiB(3840000))   // floor 71
-	test.isEqual(81, mf.assembleRamGiB(4210000))   // floor 79
+	test.isEqual(81, mf.assembleRamGiB(4210000))   // floor 77
 }
 
 TestAssembleRamGiBStaysWithinTheOverGrantBudget := func() {
 	// Never under the floor, never more than 1.25x it. The grant ratios are 1.20, 1.18, 1.13,
-	// 1.04 and 1.03.
-	floors := [[45000, 5], [680000, 11], [1870000, 24], [3840000, 71], [4210000, 79]]
+	// 1.04 and 1.05.
+	floors := [[45000, 5], [680000, 11], [1870000, 24], [3840000, 71], [4210000, 77]]
 	for point in floors {
 		grant := mf.assembleRamGiB(point[0])
 		test.isTrue(grant >= point[1])

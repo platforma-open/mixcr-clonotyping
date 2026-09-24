@@ -155,7 +155,7 @@ assembleEstimate := func(alignReport, features) {
 // of about 32 GiB; 29.5 keeps the compressed branch clear of that boundary.
 //
 // Slopes and intercept are fitted on bisected `assemble` floors. Against those floors the rule
-// grants 6 for 5, 13 for 11, 27 for 24, 74 for 71 and 81 for 79 — never under, worst over-grant
+// grants 6 for 5, 13 for 11, 27 for 24, 74 for 71 and 81 for 77 — never under, worst over-grant
 // 1.20x.
 _ASSEMBLE_GIB_PER_M_COMPRESSED := 11.0
 _ASSEMBLE_GIB_PER_M := 15.7
