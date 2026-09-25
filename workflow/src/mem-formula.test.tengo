@@ -102,52 +102,30 @@ TestAssemblingFeaturesFallsBackToCdr3WhenTheFieldIsFlagDriven := func() {
 	test.isEqual(["CDR3"], mf.assemblingFeatures({}, undefined))
 }
 
-TestSplitsClonesReadsEveryGeneFlag := func() {
-	test.isFalse(mf.splitsClones(_presetWith({ separateByV: false, separateByJ: false, separateByC: false })))
-	test.isTrue(mf.splitsClones(_presetWith({ separateByV: true,  separateByJ: false, separateByC: false })))
-	test.isTrue(mf.splitsClones(_presetWith({ separateByV: false, separateByJ: true,  separateByC: false })))
-	test.isTrue(mf.splitsClones(_presetWith({ separateByV: false, separateByJ: false, separateByC: true })))
-	test.isFalse(mf.splitsClones({}))
-}
 
-// An align report carrying the clonotype estimate for two features.
-_alignReportWith := func(features) {
+// An align report carrying the estimate of initialClonesCreated.
+_alignReportWith := func(estimate) {
 	return {
 		totalReadsProcessed: 1000000,
-		estimatedClonotypes: {
-			features: features,
-			minimalQuality: 20
-		}
+		estimatedClonotypes: estimate
 	}
 }
 
-TestAssembleEstimatePicksTheConfiguredFeature := func() {
-	report := _alignReportWith({ CDR3: 788535, VDJRegion: 681978 })
-	test.isEqual(681978, mf.assembleEstimate(report, ["VDJRegion"]))
-	test.isEqual(788535, mf.assembleEstimate(report, ["CDR3"]))
-}
-
-TestAssembleEstimateTakesTheLargestListedFeature := func() {
-	report := _alignReportWith({ CDR3: 788535, VDJRegion: 681978 })
-	test.isEqual(788535, mf.assembleEstimate(report, ["CDR3", "VDJRegion"]))
-	test.isEqual(788535, mf.assembleEstimate(report, ["VDJRegion", "CDR3"]))
-	// A feature outside the sketched set is skipped while another one still answers.
-	test.isEqual(681978, mf.assembleEstimate(report, ["VDJRegion", "{FR1Begin:CDR3End}"]))
+TestAssembleEstimateReadsInitialClones := func() {
+	report := _alignReportWith({
+		assemblingFeatures: ["VDJRegion"], splitBy: ["Constant"], qualityThreshold: 15,
+		initialClones: 182071, cdr3: 190000
+	})
+	test.isEqual(182071, mf.assembleEstimate(report))
 }
 
 TestAssembleEstimateIsUndefinedWhenTheFieldIsAbsent := func() {
 	// The MiXCR pin that predates the sketch writes no estimatedClonotypes at all.
-	test.isTrue(is_undefined(mf.assembleEstimate({ totalReadsProcessed: 1000000 }, ["CDR3"])))
-	test.isTrue(is_undefined(mf.assembleEstimate({ estimatedClonotypes: undefined }, ["CDR3"])))
-	test.isTrue(is_undefined(mf.assembleEstimate(undefined, ["CDR3"])))
-}
-
-TestAssembleEstimateIsUndefinedWhenNoListedFeatureIsPresent := func() {
-	// The sketch hashes a fixed set of features; a run assembling by anything outside it
-	// has no entry and must take the fallback rule rather than a wrong number.
-	report := _alignReportWith({ CDR3: 788535, VDJRegion: 681978 })
-	test.isTrue(is_undefined(mf.assembleEstimate(report, ["{FR1Begin:CDR3End}"])))
-	test.isTrue(is_undefined(mf.assembleEstimate(_alignReportWith({}), ["CDR3"])))
+	test.isTrue(is_undefined(mf.assembleEstimate({ totalReadsProcessed: 1000000 })))
+	test.isTrue(is_undefined(mf.assembleEstimate({ estimatedClonotypes: undefined })))
+	test.isTrue(is_undefined(mf.assembleEstimate(undefined)))
+	test.isTrue(is_undefined(mf.assembleEstimate(_alignReportWith({}))))
+	test.isTrue(is_undefined(mf.assembleEstimate(_alignReportWith({ initialClones: -1 }))))
 }
 
 // Xmx is a float, so compare it within a tolerance rather than on exact bits.

@@ -380,7 +380,6 @@ self.body(func(inputs) {
 			clnsFileName: clnsFileName,
 			reports: reports,
 			assemblingFeatures: memf.assemblingFeatures(presetContent, assembleClonesBy),
-			splitsClones: memf.splitsClones(presetContent),
 			baseMemGiB: baseMemGiB
 		},
 		{

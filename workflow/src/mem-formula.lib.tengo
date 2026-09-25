@@ -97,54 +97,35 @@ assemblingFeatures := func(presetContent, assembleClonesBy) {
 	return [_DEFAULT_ASSEMBLING_FEATURE]
 }
 
-// splitsClones reports whether the preset splits clones by V, J or C gene. The sketch counts
-// distinct sequences of the assembling feature alone, so under any of these flags its number is
-// a lower bound on the clone count and cannot size `assemble`. The caller must take the
-// fallback rule.
-splitsClones := func(presetContent) {
-	params := _cloneAssemblerParameters(presetContent)
-	if is_undefined(params) {
-		return false
-	}
-	return params.separateByV == true || params.separateByJ == true || params.separateByC == true
-}
-
-// assembleEstimate reads the distinct-clonotype estimate the `align` step reports for the
-// features the run assembles by, and returns the largest of them.
+// assembleEstimate reads the estimate of `initialClonesCreated` the `align` step reports: the
+// distinct clonal keys (assembling-feature tuple plus the split genes' best hits) among reads
+// with no base below `badQualityThreshold`, which is the number of accumulators `assemble`
+// holds at its peak.
 //
-// The field is `estimatedClonotypes: { features: { <GeneFeature>: <count> }, minimalQuality: N }`,
-// written by MiXCR's HyperLogLog sketch over the quality-passing sequences of each feature it
-// hashes. Keys are MiXCR gene-feature names, brace forms included, so a resolved feature
-// indexes the map directly.
+// The field is `estimatedClonotypes: { assemblingFeatures, splitBy, qualityThreshold,
+// initialClones, cdr3 }`. `align` computes it under the same assembler parameters the run
+// assembles with, so no cross-check against the preset is needed here.
 //
-// Returns 'undefined' whenever no listed feature is there to read: a MiXCR pin older than the
-// sketch writes no field at all, and a feature outside the sketched set has no entry. Both take
-// the caller's fallback rule.
-assembleEstimate := func(alignReport, features) {
-	if !is_map(alignReport) || !is_array(features) {
+// Returns 'undefined' when the field is missing or unreadable: a MiXCR pin older than the sketch
+// writes no field at all. That takes the caller's fallback rule.
+assembleEstimate := func(alignReport) {
+	if !is_map(alignReport) {
 		return undefined
 	}
-
 	estimate := alignReport.estimatedClonotypes
-	if !is_map(estimate) || !is_map(estimate.features) {
+	if !is_map(estimate) {
 		return undefined
 	}
-
-	best := undefined
-	for feature in features {
-		count := int(estimate.features[feature])
-		if is_undefined(count) || count < 0 {
-			continue
-		}
-		if is_undefined(best) || count > best {
-			best = count
-		}
+	count := int(estimate.initialClones)
+	if is_undefined(count) || count < 0 {
+		return undefined
 	}
-
-	return best
+	return count
 }
 
-// assembleXmxGiB sizes the `assemble` heap from that estimate. The rule is piecewise, with one
+// assembleXmxGiB sizes the `assemble` heap from that estimate. Fitted on floors against the
+// final clone count; on the synthetic ladder the initial count is 1.03x the final, so the
+// estimate grants about 3 % more. A refit on initial clones from real data is pending. The rule is piecewise, with one
 // slope per object-pointer width:
 //
 //     Xmx_GiB = 11.0 x est_M + 2   when that value is at most 29.5
@@ -256,7 +237,6 @@ export {
 	memFormula: memFormula,
 	grantGiBForXmx: grantGiBForXmx,
 	assemblingFeatures: assemblingFeatures,
-	splitsClones: splitsClones,
 	assembleEstimate: assembleEstimate,
 	assembleXmxGiB: assembleXmxGiB,
 	assembleRamGiB: assembleRamGiB,

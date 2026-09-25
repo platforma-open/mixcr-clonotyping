@@ -41,7 +41,6 @@ self.body(func(inputs) {
 	clnsFileName := inputs.clnsFileName
 	reports := inputs.reports
 	assemblingFeatures := inputs.assemblingFeatures
-	splitsClones := inputs.splitsClones
 	baseMemGiB := inputs.baseMemGiB
 	scratchFreeSpace := inputs.scratchFreeSpace
 	perProcessMemGB := inputs.perProcessMemGB
@@ -56,18 +55,11 @@ self.body(func(inputs) {
 	// The align report arrives as saved file content, so it decodes here. Anything unreadable
 	// leaves the estimate undefined and selects the fallback rule — the same shape
 	// :read-stats uses for a measurement it cannot use.
-	//
-	// A preset that splits clones by V, J or C gene takes the fallback rule too: the sketch
-	// counts distinct assembling-feature sequences, which is a lower bound on the clone count
-	// once the gene splits multiply it.
-	estimatedClonotypes := undefined
-	if !splitsClones {
-		decodedAlignReport := undefined
-		if smart.isResource(alignReport) {
-			decodedAlignReport = alignReport.getDataAsJson()
-		}
-		estimatedClonotypes = memf.assembleEstimate(decodedAlignReport, assemblingFeatures)
+	decodedAlignReport := undefined
+	if smart.isResource(alignReport) {
+		decodedAlignReport = alignReport.getDataAsJson()
 	}
+	estimatedClonotypes := memf.assembleEstimate(decodedAlignReport)
 
 	assembleResources := { cpu: is_undefined(perProcessCPUs) ? 16 : perProcessCPUs }
 	if !is_undefined(perProcessMemGB) {
