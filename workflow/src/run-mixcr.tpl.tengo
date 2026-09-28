@@ -1,24 +1,25 @@
 // Identity of this template for the platform's deduplication. Changing this value means
 // "re-run every sample on the next block update" — see the longer note in :mixcr-analyze.
-// Rotated when bulk amplicon pipelines without UMIs stopped running as one `analyze` command:
-// the template graph below it changed, and reusing the old value would serve cache hits from a
-// different computation.
-//tengo:hash_override FAE77C04-507C-4925-A66A-EA488C9FEAF1
+// Rotated whenever the template graph below it changes; reusing the old value would serve
+// cache hits from a different computation.
+//tengo:hash_override 8538713A-E5EB-4181-8989-C733B2E7302E
 
 // Runs MiXCR on one measured sample.
 //
-// Bulk amplicon presets without UMIs — pipeline `align, assemble, exportClones` exactly — run
-// each step as its own exec, so each step carries its own memory grant instead of sharing the
-// worst step's. `assemble` is sized from the clonotype estimate the align report carries, which
-// a template can only read after the align command has finished, so `assemble` and `qc` live in
-// :assemble-mixcr.
+// Two pipelines, matched whole, run each step as its own exec, so each step carries its own
+// memory grant instead of sharing the worst step's:
 //
-// The in-chain `exportClones` of that pipeline is dropped rather than reproduced: the block
-// saves no clones.tsv from it and re-exports from the .clns with its own argv in :mixcr-export.
+//   - `align, assemble, exportClones`: `assemble` is sized from the clonotype estimate the
+//     align report carries, which a template can only read after the align command has
+//     finished, so `assemble` and `qc` live in :assemble-mixcr.
+//   - `align, refineTagsAndSort, assemble, exportClones`: `refineTagsAndSort`, `assemble` and
+//     `qc` live in :refine-assemble-mixcr, each sized from the `.vdjca` it stages. A preset whose
+//     tag pattern captures a cell barcode takes the cell-barcoded assemble rule.
 //
-// Every other preset keeps the single `analyze` command. Their steps — refineTagsAndSort,
-// assemblePartial, extend, assembleContigs, assembleCells, exportCloneGroups, the mitool steps
-// — have no per-step memory rule of their own.
+// The in-chain `exportClones` is dropped rather than reproduced: the block saves no clones.tsv
+// from it and re-exports from the .clns with its own argv in :mixcr-export.
+//
+// Every other preset keeps the single `analyze` command.
 
 self := import("@platforma-sdk/workflow-tengo:tpl")
 smart := import("@platforma-sdk/workflow-tengo:smart")
@@ -40,14 +41,16 @@ self.defineOutputs("qc", "reports", "log", "clns")
 
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
 assembleMixcrTpl := assets.importTemplate(":assemble-mixcr")
+refineAssembleMixcrTpl := assets.importTemplate(":refine-assemble-mixcr")
 
 progressPrefix := "[==PROGRESS==]"
 
 CACHE_PERIOD := 48 * times.hour
 
-// The one pipeline that runs as separate execs, matched whole. A pipeline carrying any other
-// step falls through to `analyze`.
+// The pipelines that run as separate execs, matched whole. A pipeline carrying any other step
+// falls through to `analyze`.
 PIPELINE_BULK := ["align", "assemble", "exportClones"]
+PIPELINE_UMI := ["align", "refineTagsAndSort", "assemble", "exportClones"]
 
 // Flat `align` grant of a split run. `align` streams its input, so the grant does not scale
 // with the sample.
@@ -119,7 +122,8 @@ self.body(func(inputs) {
 		}
 	}
 
-	splitSteps := _sameSteps(presetContent.pipeline, PIPELINE_BULK)
+	splitBulk := _sameSteps(presetContent.pipeline, PIPELINE_BULK)
+	splitUmi := _sameSteps(presetContent.pipeline, PIPELINE_UMI)
 
 	clnsFileName := "result.clns"
 	if hasAssembleContigs {
@@ -294,7 +298,7 @@ self.body(func(inputs) {
 	// step in one JVM and contributes a single entry.
 	logs := pcolumn.resourceMapBuilder( /* keyLength */ 1 )
 
-	if !splitSteps {
+	if !splitBulk && !splitUmi {
 		mixcrCmdBuilder := newMixcrBuilder().arg("analyze")
 		applyResources(mixcrCmdBuilder, memf.memFormula(baseMemGiB))
 
@@ -370,6 +374,42 @@ self.body(func(inputs) {
 
 	logs.add(["align"], alignCmd.getStdoutStream())
 
+	// Kept out of the deduplication key for the same reason :mixcr-analyze keeps them out of
+	// this template's: a run is recovered across a change of the CPU or memory override. The
+	// scratch request rides along; it never changes what the step produces.
+	childMetaInputs := {
+		perProcessMemGB: perProcessMemGB,
+		perProcessCPUs: perProcessCPUs,
+		scratchFreeSpace: mixcrScratchSpace
+	}
+
+	if splitUmi {
+		refineAssembleRun := render.create(
+			refineAssembleMixcrTpl,
+			{
+				vdjca: alignCmd.getFile(alignedFile),
+				alignReportJson: alignCmd.getFile(alignReportJson),
+				alignReportTxt: alignCmd.getFile(alignReportTxt),
+
+				assembleRule: memf.hasCellTag(presetContent) ? "cell" : "umi",
+				clnsFileName: clnsFileName,
+				reports: reports
+			},
+			{ metaInputs: childMetaInputs }
+		)
+
+		logs.add(["refineTagsAndSort"], refineAssembleRun.output("refineLog", CACHE_PERIOD))
+		logs.add(["assemble"], refineAssembleRun.output("log", CACHE_PERIOD))
+		logs.add(["qc"], refineAssembleRun.output("qcLog", CACHE_PERIOD))
+
+		return {
+			qc: refineAssembleRun.output("qc", CACHE_PERIOD),
+			log: logs.build(),
+			reports: refineAssembleRun.output("reports", CACHE_PERIOD),
+			clns: refineAssembleRun.output("clns", CACHE_PERIOD)
+		}
+	}
+
 	assembleRun := render.create(
 		assembleMixcrTpl,
 		{
@@ -382,17 +422,7 @@ self.body(func(inputs) {
 			reports: reports,
 			assemblingFeatures: memf.assemblingFeatures(presetContent, assembleClonesBy)
 		},
-		{
-			// Kept out of the deduplication key for the same reason :mixcr-analyze keeps them
-			// out of this template's: a run is recovered across a change of the CPU or memory
-			// override. The scratch request rides along; it never changes what the step
-			// produces.
-			metaInputs: {
-				perProcessMemGB: perProcessMemGB,
-				perProcessCPUs: perProcessCPUs,
-				scratchFreeSpace: mixcrScratchSpace
-			}
-		}
+		{ metaInputs: childMetaInputs }
 	)
 
 	logs.add(["assemble"], assembleRun.output("log", CACHE_PERIOD))

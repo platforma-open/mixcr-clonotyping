@@ -1,0 +1,174 @@
+// Identity of this template for the platform's deduplication. Changing this value means
+// "re-run every sample on the next block update" — see the longer note in :mixcr-analyze.
+// It must never equal the one another template uses, as a shared value declares two templates
+// interchangeable.
+//tengo:hash_override 529D21A9-C8CD-4E31-913B-62D57F22C87C
+
+// Runs `mixcr refineTagsAndSort`, `mixcr assemble` and `mixcr qc` on an aligned sample.
+//
+// Each step is sized from the `.vdjca` it stages, through exec.formula. `assembleRule` names the
+// assemble rule: "umi" or "cell".
+//
+// `qc` is here because `analyze` appends it at runtime whenever the preset carries qc checks,
+// and it is in no preset pipeline. Dropping it would empty outputs.qc and kill the QC tab.
+
+self := import("@platforma-sdk/workflow-tengo:tpl")
+exec := import("@platforma-sdk/workflow-tengo:exec")
+ll := import("@platforma-sdk/workflow-tengo:ll")
+assets := import("@platforma-sdk/workflow-tengo:assets")
+pcolumn := import("@platforma-sdk/workflow-tengo:pframes.pcolumn")
+times := import("times")
+memf := import(":mem-formula")
+
+self.defineOutputs("qc", "reports", "refineLog", "log", "qcLog", "clns")
+
+mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
+
+progressPrefix := "[==PROGRESS==]"
+
+CACHE_PERIOD := 48 * times.hour
+
+// `mixcr qc` reads the reports in the .clns footer; it holds no clones. NEEDS VERIFICATION: no
+// bisected floor for `qc` exists.
+QC_MEM := "4GiB"
+
+ALIGNED_FILE := "aligned.vdjca"
+REFINED_FILE := "refined.vdjca"
+
+self.body(func(inputs) {
+	vdjca := inputs.vdjca
+	assembleRule := inputs.assembleRule
+	clnsFileName := inputs.clnsFileName
+	reports := inputs.reports
+	scratchFreeSpace := inputs.scratchFreeSpace
+	perProcessMemGB := inputs.perProcessMemGB
+	perProcessCPUs := inputs.perProcessCPUs
+
+	assembleRam := undefined
+	if assembleRule == "umi" {
+		assembleRam = memf.umiAssembleRam()
+	} else if assembleRule == "cell" {
+		assembleRam = memf.cellAssembleRam()
+	} else {
+		ll.panic("unexpected assemble rule %v", assembleRule)
+	}
+
+	resourcesFor := func(ram) {
+		resources := { cpu: is_undefined(perProcessCPUs) ? 16 : perProcessCPUs }
+		if !is_undefined(perProcessMemGB) {
+			// memory per process was set in "Advanced Settings" block directly
+			resources.ram = string(perProcessMemGB) + "GiB"
+		} else {
+			resources.ram = ram
+		}
+		if !is_undefined(scratchFreeSpace) {
+			resources.scratchFreeSpace = scratchFreeSpace
+		}
+		return resources
+	}
+
+	newMixcrBuilder := func() {
+		return exec.builder().
+			printErrStreamToStdout().
+			saveStdoutStream().
+			env("MI_USE_SYSTEM_CA", "true").
+			env("MI_PROGRESS_PREFIX", progressPrefix).
+			software(mixcrSw).
+			secret("MI_LICENSE", "MI_LICENSE").
+			env("MI_LICENSE_DEBUG", "MI_LICENSE_DEBUG")
+	}
+
+	refineReportJson := "result.refine.report.json"
+	refineReportTxt := "result.refine.report.txt"
+
+	refineCmd := newMixcrBuilder().
+		arg("refineTagsAndSort").
+		arg("-f").
+		arg("--report").arg(refineReportTxt).
+		arg("--json-report").arg(refineReportJson).
+		addFile(ALIGNED_FILE, vdjca, { tag: "vdjca" }).
+		arg(ALIGNED_FILE).
+		arg(REFINED_FILE).
+		resources({ onCPU: resourcesFor(memf.refineRam()) }).
+		saveFile(REFINED_FILE).
+		saveFile(refineReportJson).
+		saveFile(refineReportTxt).
+		cache(CACHE_PERIOD).
+		run()
+
+	assembleReportJson := "result.assemble.report.json"
+	assembleReportTxt := "result.assemble.report.txt"
+
+	assembleCmd := newMixcrBuilder().
+		arg("assemble").
+		arg("-f").
+		arg("--report").arg(assembleReportTxt).
+		arg("--json-report").arg(assembleReportJson).
+		addFile(REFINED_FILE, refineCmd.getFile(REFINED_FILE), { tag: "vdjca" }).
+		arg(REFINED_FILE).
+		arg(clnsFileName).
+		resources({ onCPU: resourcesFor(assembleRam) }).
+		saveFile(clnsFileName).
+		saveFile(assembleReportJson).
+		saveFile(assembleReportTxt).
+		cache(CACHE_PERIOD).
+		run()
+
+	clnsFile := assembleCmd.getFile(clnsFileName)
+
+	qcTxtFile := "result.qc.txt"
+	qcJsonFile := "result.qc.json"
+
+	qcMem := QC_MEM
+	if !is_undefined(perProcessMemGB) {
+		// memory per process was set in "Advanced Settings" block directly
+		qcMem = string(perProcessMemGB) + "GiB"
+	}
+
+	qcCmd := exec.builder().
+		printErrStreamToStdout().
+		saveStdoutStream().
+		env("MI_USE_SYSTEM_CA", "true").
+		software(mixcrSw).
+		secret("MI_LICENSE", "MI_LICENSE").
+		env("MI_LICENSE_DEBUG", "MI_LICENSE_DEBUG").
+		arg("qc").
+		arg("--print-to-stdout").
+		arg("-f").
+		addFile(clnsFileName, clnsFile).
+		arg(clnsFileName).
+		arg(qcTxtFile).
+		arg(qcJsonFile).
+		inLightQueue().
+		cpu(1).
+		mem(qcMem).
+		saveFile(qcJsonFile).
+		cache(CACHE_PERIOD).
+		run()
+
+	// The reports p-column carries the ids :process lists; refineTagsAndSort is not among them.
+	reportsMap := pcolumn.resourceMapBuilder( /* keyLength */ 2 )
+	for report in reports {
+		if report.id == "align" {
+			reportsMap.add([report.id, "json"], inputs.alignReportJson)
+			reportsMap.add([report.id, "txt"], inputs.alignReportTxt)
+		} else if report.id == "refineTagsAndSort" {
+			reportsMap.add([report.id, "json"], refineCmd.getFile(refineReportJson))
+			reportsMap.add([report.id, "txt"], refineCmd.getFile(refineReportTxt))
+		} else if report.id == "assemble" {
+			reportsMap.add([report.id, "json"], assembleCmd.getFile(assembleReportJson))
+			reportsMap.add([report.id, "txt"], assembleCmd.getFile(assembleReportTxt))
+		} else {
+			ll.panic("unexpected report id %v", report.id)
+		}
+	}
+
+	return {
+		qc: qcCmd.getFile(qcJsonFile),
+		refineLog: refineCmd.getStdoutStream(),
+		log: assembleCmd.getStdoutStream(),
+		qcLog: qcCmd.getStdoutStream(),
+		reports: reportsMap.build(),
+		clns: clnsFile
+	}
+})

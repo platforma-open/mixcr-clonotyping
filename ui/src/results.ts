@@ -12,11 +12,11 @@ import { useApp } from "./app";
 
 const reactiveFileContent = ReactiveFileContent.useGlobal();
 
-// MiXCR runs as a single `analyze` command on most presets, and as separate align / assemble /
-// qc commands on bulk amplicon ones without UMIs. Logs and progress arrive keyed by
-// (sampleId, step); the log panel and the progress column each show one value per sample, so
-// both take the step that has got furthest. Order is the order the commands run in.
-const STEP_ORDER = ["analyze", "align", "assemble", "qc"];
+// MiXCR runs as a single `analyze` command on most presets, and as separate align /
+// refineTagsAndSort / assemble / qc commands on bulk amplicon ones. Logs and progress arrive
+// keyed by (sampleId, step); the log panel and the progress column each show one value per
+// sample, so both take the step that has got furthest. Order is the order the commands run in.
+const STEP_ORDER = ["analyze", "align", "refineTagsAndSort", "assemble", "qc"];
 
 function stepRank(step: unknown): number {
   return typeof step === "string" ? STEP_ORDER.indexOf(step) : -1;

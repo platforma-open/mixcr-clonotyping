@@ -11,6 +11,7 @@
 exec := import("@platforma-sdk/workflow-tengo:exec")
 
 math := import("math")
+text := import("text")
 
 f := exec.formula
 
@@ -150,6 +151,59 @@ assembleFallbackRam := func() {
 		staticFallback(f.gib(_FALLBACK_FLOOR_GIB))
 }
 
+// hasCellTag reports whether the resolved preset's tag pattern captures a cell barcode (CELL,
+// CELL1, CELL2, ...). `mixcr exportPreset` applies the user's --tag-pattern before writing the
+// bundle, so `align.tagPattern` is the pattern the run aligns with.
+hasCellTag := func(presetContent) {
+	if !is_map(presetContent) || !is_map(presetContent.align) {
+		return false
+	}
+	tagPattern := presetContent.align.tagPattern
+	if !is_string(tagPattern) {
+		return false
+	}
+	return text.contains(tagPattern, "(CELL")
+}
+
+// vdjcaRam builds a grant fitted linearly on the size of the `.vdjca` a step reads:
+//
+//     ram = clamp(ceil(interceptGiB + perByteHundredths / 100 x size("vdjca")), floorGiB, 256 GiB)
+//
+// rounded up to a whole GiB. Backends that cannot evaluate formulas get fallbackGiB.
+//
+// The caller must tag its `.vdjca` input `{ tag: "vdjca" }`.
+_vdjcaRam := func(interceptGiB, perByteHundredths, floorGiB, fallbackGiB) {
+	return f.gib(interceptGiB).
+		plus(f.size("vdjca").times(perByteHundredths).dividedBy(100)).
+		dividedBy(f.gib(1)).times(f.gib(1)).
+		between(f.gib(floorGiB), f.gib(_ASSEMBLE_CAP_GIB)).
+		staticFallback(f.gib(fallbackGiB))
+}
+
+// The grant `analyze` gets on these pipelines, kept for backends that cannot evaluate formulas.
+_TAGGED_FALLBACK_GIB := 64
+
+// refineRam sizes `refineTagsAndSort` from the aligned `.vdjca`:
+//
+//     ram = min(ceil(6 GiB + 2.1 x size("vdjca")), 256 GiB)
+refineRam := func() {
+	return _vdjcaRam(6, 210, 0, _TAGGED_FALLBACK_GIB)
+}
+
+// umiAssembleRam sizes `assemble` of a bulk UMI or barcode run from the refined `.vdjca`:
+//
+//     ram = clamp(ceil(0.86 x size("vdjca")), 16 GiB, 256 GiB)
+umiAssembleRam := func() {
+	return _vdjcaRam(0, 86, 16, _TAGGED_FALLBACK_GIB)
+}
+
+// cellAssembleRam sizes `assemble` of a cell-barcoded run from the refined `.vdjca`:
+//
+//     ram = clamp(ceil(4.1 x size("vdjca")), 16 GiB, 256 GiB)
+cellAssembleRam := func() {
+	return _vdjcaRam(0, 410, 16, _TAGGED_FALLBACK_GIB)
+}
+
 // exportRam builds the exec.formula node for an `exportClones` step.
 //
 //     ram = clamp(interceptGiB + perByte x size("clns"), floorGiB, 256 GiB)
@@ -201,5 +255,9 @@ export {
 	assembleEstimate: assembleEstimate,
 	assembleRamGiB: assembleRamGiB,
 	assembleFallbackRam: assembleFallbackRam,
+	hasCellTag: hasCellTag,
+	refineRam: refineRam,
+	umiAssembleRam: umiAssembleRam,
+	cellAssembleRam: cellAssembleRam,
 	exportRam: exportRam
 }

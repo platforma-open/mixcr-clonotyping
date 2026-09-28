@@ -77,10 +77,14 @@ blockTest("empty inputs", { timeout: 20000 }, async ({ rawPrj: project, ml: _ml,
 //   },
 // );
 
-blockTest(
-  "simple project",
-  { timeout: 150000 },
-  async ({ rawPrj: project, ml, helpers, expect }) => {
+// A one-sample bulk run of `preset` on ./assets/<assetPrefix>_R1/_R2.fastq.gz.
+const bulkProjectTest = (
+  name: string,
+  assetPrefix: string,
+  preset: string,
+  chains: BlockData["chains"],
+) =>
+  blockTest(name, { timeout: 150000 }, async ({ rawPrj: project, ml, helpers, expect }) => {
     const sndBlockId = await project.addBlock("Samples & Data", SamplesAndDataBlockPointer);
     const clonotypingBlockId = await project.addBlock("MiXCR Clonotyping", myBlockSpec);
 
@@ -88,8 +92,8 @@ blockTest(
     const metaColumn1Id = uniquePlId();
     const dataset1Id = uniquePlId();
 
-    const r1Handle = await helpers.getLocalFileHandle("./assets/small_data_R1.fastq.gz");
-    const r2Handle = await helpers.getLocalFileHandle("./assets/small_data_R2.fastq.gz");
+    const r1Handle = await helpers.getLocalFileHandle(`./assets/${assetPrefix}_R1.fastq.gz`);
+    const r2Handle = await helpers.getLocalFileHandle(`./assets/${assetPrefix}_R2.fastq.gz`);
 
     await project.mutateBlockStorage(sndBlockId, {
       operation: "update-block-data",
@@ -176,8 +180,8 @@ blockTest(
         defaultBlockLabel: "",
         customBlockLabel: "",
         input: clonotypingStableState1Outputs.inputOptions[0].ref,
-        preset: { type: "name", name: "milab-human-dna-xcr-7genes-multiplex" },
-        chains: ["IGHeavy", "IGLight"],
+        preset: { type: "name", name: preset },
+        chains,
         cloneClusteringMode: "default",
         runMode: "full",
         tableState: createPlDataTableStateV2(),
@@ -269,8 +273,16 @@ blockTest(
     ).toHaveProperty("pl7.app/vdj/clonotypeKey/structure");
 
     expect(clonesPfColumnList).length.to.greaterThanOrEqual(7);
-  },
-);
+  });
+
+bulkProjectTest("simple project", "small_data", "milab-human-dna-xcr-7genes-multiplex", [
+  "IGHeavy",
+  "IGLight",
+]);
+
+// Pipeline `align, refineTagsAndSort, assemble, exportClones`. The reads are MiXCR's own UMI
+// fixture (tools/mixcr src/test/resources/sequences/umi_ig_data_2_subset_*).
+bulkProjectTest("umi project", "umi_ig_data_2_subset", "mikelov-et-al-2021", ["IGHeavy"]);
 
 blockTest(
   "simple sc project",
