@@ -41,7 +41,6 @@ self.body(func(inputs) {
 	clnsFileName := inputs.clnsFileName
 	reports := inputs.reports
 	assemblingFeatures := inputs.assemblingFeatures
-	baseMemGiB := inputs.baseMemGiB
 	scratchFreeSpace := inputs.scratchFreeSpace
 	perProcessMemGB := inputs.perProcessMemGB
 	perProcessCPUs := inputs.perProcessCPUs
@@ -68,7 +67,7 @@ self.body(func(inputs) {
 	} else if !is_undefined(estimatedClonotypes) {
 		assembleResources.ram = string(memf.assembleRamGiB(estimatedClonotypes)) + "GiB"
 	} else {
-		assembleResources.ram = memf.assembleFallbackRam(baseMemGiB)
+		assembleResources.ram = memf.assembleFallbackRam()
 	}
 	if !is_undefined(scratchFreeSpace) {
 		assembleResources.scratchFreeSpace = scratchFreeSpace

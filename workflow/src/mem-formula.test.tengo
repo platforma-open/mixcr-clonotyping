@@ -2,7 +2,6 @@ test := import("@platforma-sdk/workflow-tengo:test")
 exec := import("@platforma-sdk/workflow-tengo:exec")
 mf := import(":mem-formula")
 
-math := import("math")
 
 f := exec.formula
 
@@ -65,13 +64,6 @@ TestMemFormula := func() {
 	test.isEqual(_gib(110), f.fallbackOf(mf.memFormula(110)))
 }
 
-TestGrantGiBForXmx := func() {
-	// grant(X) = ceil(max(X / 0.85, X + 3500 MiB)).
-	test.isEqual(11,  mf.grantGiBForXmx(7))     // additive arm: 7 + 3.418
-	test.isEqual(28,  mf.grantGiBForXmx(23.3))  // fraction arm: 23.3 / 0.85
-	test.isEqual(157, mf.grantGiBForXmx(133))   // fraction arm: 133 / 0.85
-}
-
 // A resolved preset bundle carrying only the clone-assembler parameters the sizing reads.
 _presetWith := func(cloneAssemblerParameters) {
 	return {
@@ -128,60 +120,15 @@ TestAssembleEstimateIsUndefinedWhenTheFieldIsAbsent := func() {
 	test.isTrue(is_undefined(mf.assembleEstimate(_alignReportWith({ initialClones: -1 }))))
 }
 
-// Xmx is a float, so compare it within a tolerance rather than on exact bits.
-_isNear := func(expect, value) {
-	test.isTruef(math.abs(expect - value) < 0.001, "expected %v, got %v", expect, value)
-}
-
-TestAssembleXmxGiBSwitchesSlopeAtTheCompressedOopsBoundary := func() {
-	// Xmx = 11.0 x est_M + 2 while that is at most 29.5, then 15.7 x est_M + 2.
-	_isNear(2.495,  mf.assembleXmxGiB(45000))
-	_isNear(9.48,   mf.assembleXmxGiB(680000))
-	_isNear(22.57,  mf.assembleXmxGiB(1870000))
-	// The boundary is inclusive: 2.5 M lands on 29.5 exactly and stays on the compressed slope.
-	_isNear(29.5,   mf.assembleXmxGiB(2500000))
-	// 2.51 M crosses it, and the full-width slope applies to the whole estimate.
-	_isNear(41.407, mf.assembleXmxGiB(2510000))
-	_isNear(62.288, mf.assembleXmxGiB(3840000))
-	_isNear(68.097, mf.assembleXmxGiB(4210000))
-}
-
-TestAssembleRamGiBInvertsTheEntrypointAcrossTheBoundary := func() {
-	// grant = ceil(max(Xmx / 0.85, Xmx + 3500 MiB)) of the piecewise Xmx.
-	test.isEqual(27, mf.grantGiBForXmx(22.57))     // max(26.553, 25.988)
-	test.isEqual(27, mf.assembleRamGiB(1870000))
-	test.isEqual(35, mf.assembleRamGiB(2500000))   // Xmx 29.5,   max(34.706, 32.918)
-	test.isEqual(49, mf.assembleRamGiB(2510000))   // Xmx 41.407, max(48.714, 44.825)
-}
-
-TestAssembleRamGiBClearsEveryBisectedFloor := func() {
-	// Each pair is (clonotype estimate, bisected `assemble` floor in GiB).
-	test.isEqual(6,  mf.assembleRamGiB(45000))     // floor 5
-	test.isEqual(13, mf.assembleRamGiB(680000))    // floor 11
-	test.isEqual(27, mf.assembleRamGiB(1870000))   // floor 24
-	test.isEqual(74, mf.assembleRamGiB(3840000))   // floor 71
-	test.isEqual(81, mf.assembleRamGiB(4210000))   // floor 77
-}
-
-TestAssembleRamGiBStaysWithinTheOverGrantBudget := func() {
-	// Never under the floor, never more than 1.25x it. The grant ratios are 1.20, 1.18, 1.13,
-	// 1.04 and 1.05.
-	floors := [[45000, 5], [680000, 11], [1870000, 24], [3840000, 71], [4210000, 77]]
-	for point in floors {
-		grant := mf.assembleRamGiB(point[0])
-		test.isTrue(grant >= point[1])
-		test.isTrue(float(grant) <= 1.25 * float(point[1]))
-	}
-}
-
-TestAssembleRamGiBClamps := func() {
-	// The additive arm of the entrypoint inverse holds the small end above the 4 GiB floor.
-	// 45 k clones ask for an Xmx of 2.5 GiB and still get a 6 GiB grant.
-	test.isEqual(6, mf.assembleRamGiB(0))
-	test.isEqual(6, mf.assembleRamGiB(1))
-	test.isEqual(6, mf.assembleRamGiB(45000))
-	// The cap binds: 20 M clones would ask for 372 GiB.
+TestAssembleRamGiB := func() {
+	// ram = clamp(ceil(1.35 x (7 + 10.8 x est_M)), 4 GiB, 256 GiB)
+	test.isEqual(18,  mf.assembleRamGiB(550000))    // real phage, 0.55 M
+	test.isEqual(67,  mf.assembleRamGiB(3930000))   // dense bulk, 3.93 M
+	test.isEqual(223, mf.assembleRamGiB(14600000))
+	// The cap binds: 20 M clones would ask for 301 GiB.
 	test.isEqual(256, mf.assembleRamGiB(20000000))
+	// The intercept holds the small end above the 4 GiB floor.
+	test.isEqual(10,  mf.assembleRamGiB(0))
 }
 
 // Evaluate a resource formula against a fake ".vdjca" input of sizeBytes.
@@ -196,14 +143,16 @@ _evalVdjca := func(node, sizeBytes) {
 }
 
 TestAssembleFallbackRam := func() {
-	// ram = clamp(3 x size(vdjca), base, 256 GiB), read off the file assemble stages instead of
-	// the FASTQs it never sees. A .vdjca is 1.3 to 2.0 times the compressed FASTQ pair, so the
-	// 3x term is never below the 4 x size(reads) that `analyze` requests.
-	test.isEqual(_gib(64),  _evalVdjca(mf.assembleFallbackRam(64), 0))
-	test.isEqual(_gib(64),  _evalVdjca(mf.assembleFallbackRam(64), _gib(8)))
-	test.isEqual(_gib(96),  _evalVdjca(mf.assembleFallbackRam(64), _gib(32)))
-	test.isEqual(_gib(256), _evalVdjca(mf.assembleFallbackRam(64), _gib(96)))
-	test.isEqual(_gib(64),  f.fallbackOf(mf.assembleFallbackRam(64)))
+	// ram = clamp(ceil(4 GiB + 21.9 x size(vdjca)), 64 GiB, 256 GiB), whole GiB.
+	test.isEqual(_gib(64),  _evalVdjca(mf.assembleFallbackRam(), 0))
+	test.isEqual(_gib(64),  _evalVdjca(mf.assembleFallbackRam(), _gib(2)))
+	// The dense 7.39 M-clone library: .vdjca 5.05 GiB, bisected floor 80 GiB.
+	// 4 + 21.9 x 5.05 = 114.6, rounded up to 115.
+	test.isEqual(_gib(115), _evalVdjca(mf.assembleFallbackRam(), _gib(505) / 100))
+	// 4 + 21.9 x 8 = 179.2, rounded up to 180.
+	test.isEqual(_gib(180), _evalVdjca(mf.assembleFallbackRam(), _gib(8)))
+	test.isEqual(_gib(256), _evalVdjca(mf.assembleFallbackRam(), _gib(12)))
+	test.isEqual(_gib(64),  f.fallbackOf(mf.assembleFallbackRam()))
 }
 
 TestExportRam := func() {

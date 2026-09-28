@@ -34,26 +34,6 @@ memFormula := func(base) {
 		staticFallback(f.gib(base))
 }
 
-// grantGiBForXmx inverts the `memory-from-limits` entrypoint of software-mixcr, which sets
-//
-//     -Xmx = max(min(grant x 0.85, grant - 3500 MiB), grant x 0.50)
-//
-// so a step that needs a target heap must ask for the grant that produces it:
-//
-//     grant(X) = ceil(max(X / 0.85, X + 3500 MiB))
-//
-// The 0.85 arm binds above a 23.3 GiB grant, the additive arm from about 7 to 23.3 GiB. The
-// entrypoint's `grant x 0.50` term only ever RAISES Xmx, so it needs no arm of its own.
-_MIB_PER_GIB := 1024.0
-_ENTRYPOINT_HEADROOM_MIB := 3500.0
-_ENTRYPOINT_HEAP_FRACTION := 0.85
-
-grantGiBForXmx := func(xmxGiB) {
-	byFraction := xmxGiB / _ENTRYPOINT_HEAP_FRACTION
-	byHeadroom := xmxGiB + _ENTRYPOINT_HEADROOM_MIB / _MIB_PER_GIB
-	return int(math.ceil(math.max(byFraction, byHeadroom)))
-}
-
 // _cloneAssemblerParameters reads `assemble.cloneAssemblerParameters` out of the resolved
 // preset bundle that `mixcr exportPreset` writes. 'undefined' when any level is missing.
 _cloneAssemblerParameters := func(presetContent) {
@@ -123,45 +103,22 @@ assembleEstimate := func(alignReport) {
 	return count
 }
 
-// assembleXmxGiB sizes the `assemble` heap from that estimate. Fitted on floors against the
-// final clone count; on the synthetic ladder the initial count is 1.03x the final, so the
-// estimate grants about 3 % more. A refit on initial clones from real data is pending. The rule is piecewise, with one
-// slope per object-pointer width:
+// assembleRamGiB sizes the `assemble` grant of a bulk run without UMIs from that estimate:
 //
-//     Xmx_GiB = 11.0 x est_M + 2   when that value is at most 29.5
-//               15.7 x est_M + 2   otherwise
+//     ram = clamp(ceil(1.35 x (7 + 10.8 x est_M)), 4 GiB, 256 GiB)
 //
-// The same clone set occupies 0.67 to 0.70 of the memory under compressed object pointers that it
-// occupies at full pointer width. HotSpot turns compressed object pointers off at a maximum heap
-// of about 32 GiB; 29.5 keeps the compressed branch clear of that boundary.
-//
-// Slopes and intercept are fitted on bisected `assemble` floors. Against those floors the rule
-// grants 6 for 5, 13 for 11, 27 for 24, 74 for 71 and 81 for 77 — never under, worst over-grant
-// 1.20x.
-_ASSEMBLE_GIB_PER_M_COMPRESSED := 11.0
-_ASSEMBLE_GIB_PER_M := 15.7
-_COMPRESSED_OOPS_MAX_XMX_GIB := 29.5
-_ASSEMBLE_INTERCEPT_GIB := 2.0
+// est_M is the estimate in millions. 7 + 10.8 x est_M is a grant fitted on bisected `assemble`
+// floors under `memory-from-limits`, measured on MiXCR 4.7.0 with milib 3.5.0-31 (mixcr #2147).
+// 1.35 is the release margin over that fit. The floors were measured with clone clustering off.
+_ASSEMBLE_MARGIN := 1.35
+_ASSEMBLE_INTERCEPT_GIB := 7.0
+_ASSEMBLE_GIB_PER_M := 10.8
 _ASSEMBLE_FLOOR_GIB := 4
 _ASSEMBLE_CAP_GIB := 256
 
-assembleXmxGiB := func(estimatedClonotypes) {
-	millions := float(estimatedClonotypes) / 1000000.0
-	compressed := _ASSEMBLE_GIB_PER_M_COMPRESSED * millions + _ASSEMBLE_INTERCEPT_GIB
-	if compressed <= _COMPRESSED_OOPS_MAX_XMX_GIB {
-		return compressed
-	}
-	return _ASSEMBLE_GIB_PER_M * millions + _ASSEMBLE_INTERCEPT_GIB
-}
-
-// assembleRamGiB converts that heap into the grant that produces it.
-//
-//     ram = clamp(grantGiBForXmx(assembleXmxGiB(est)), 4 GiB, 256 GiB)
-//
-// The 4 GiB floor never binds: the additive arm of the entrypoint inverse holds the smallest run
-// at 6 GiB. The cap is 256 GiB.
 assembleRamGiB := func(estimatedClonotypes) {
-	grant := grantGiBForXmx(assembleXmxGiB(estimatedClonotypes))
+	millions := float(estimatedClonotypes) / 1000000.0
+	grant := int(math.ceil(_ASSEMBLE_MARGIN * (_ASSEMBLE_INTERCEPT_GIB + _ASSEMBLE_GIB_PER_M * millions)))
 	if grant < _ASSEMBLE_FLOOR_GIB {
 		return _ASSEMBLE_FLOOR_GIB
 	}
@@ -174,18 +131,23 @@ assembleRamGiB := func(estimatedClonotypes) {
 // assembleFallbackRam sizes `assemble` when the align report carries no estimate, which is
 // every run on a MiXCR pin older than the sketch and every run that splits clones by gene.
 //
-//     ram = clamp(3 x size("vdjca"), baseMemGiB, 256 GiB)
+//     ram = clamp(ceil(4 GiB + 21.9 x size("vdjca")), 64 GiB, 256 GiB)
 //
-// The volume term reads the `.vdjca` rather than the FASTQs because exec.formula sizes only
-// files the command stages, and `assemble` stages the aligned file alone. A `.vdjca` is 1.3 to
-// 2.0 times the compressed FASTQ pair, so 3 x size("vdjca") is never below the 4 x size("reads")
-// that `analyze` requests. Floor and cap are the ones `analyze` carries today.
+// exec.formula sizes only files the command stages, and `assemble` stages the aligned file
+// alone, so the volume term reads the `.vdjca` and not the FASTQs. Every bisected bulk
+// `assemble` floor is at most 3 + 16.2 x vdjca_GiB; 4 + 21.9 is that bound times 1.35.
 //
 // The caller must tag its `.vdjca` input `{ tag: "vdjca" }`.
-assembleFallbackRam := func(baseGiB) {
-	return f.size("vdjca").times(3).
-		between(f.gib(baseGiB), f.gib(256)).
-		staticFallback(f.gib(baseGiB))
+_FALLBACK_INTERCEPT_GIB := 4
+_FALLBACK_PER_BYTE_TENTHS := 219
+_FALLBACK_FLOOR_GIB := 64
+
+assembleFallbackRam := func() {
+	return f.gib(_FALLBACK_INTERCEPT_GIB).
+		plus(f.size("vdjca").times(_FALLBACK_PER_BYTE_TENTHS).dividedBy(10)).
+		dividedBy(f.gib(1)).times(f.gib(1)).
+		between(f.gib(_FALLBACK_FLOOR_GIB), f.gib(_ASSEMBLE_CAP_GIB)).
+		staticFallback(f.gib(_FALLBACK_FLOOR_GIB))
 }
 
 // exportRam builds the exec.formula node for an `exportClones` step.
@@ -235,10 +197,8 @@ exportRam := func(perProcessMemGB, floorGiB, perByte) {
 export {
 	baseMemGiB: baseMemGiB,
 	memFormula: memFormula,
-	grantGiBForXmx: grantGiBForXmx,
 	assemblingFeatures: assemblingFeatures,
 	assembleEstimate: assembleEstimate,
-	assembleXmxGiB: assembleXmxGiB,
 	assembleRamGiB: assembleRamGiB,
 	assembleFallbackRam: assembleFallbackRam,
 	exportRam: exportRam

@@ -49,8 +49,9 @@ CACHE_PERIOD := 48 * times.hour
 // step falls through to `analyze`.
 PIPELINE_BULK := ["align", "assemble", "exportClones"]
 
-// `align` streams its input; its measured heap peak on bulk amplicon runs stays under 10 GiB.
-ALIGN_BASE_MEM_GIB := 16
+// Flat `align` grant of a split run. `align` streams its input, so the grant does not scale
+// with the sample.
+ALIGN_RAM_GIB := 24
 
 _sameSteps := func(pipeline, steps) {
 	if len(pipeline) != len(steps) {
@@ -144,7 +145,7 @@ self.body(func(inputs) {
 			env("MI_LICENSE_DEBUG", "MI_LICENSE_DEBUG")
 	}
 
-	// Memory limit per process.
+	// Memory limit per process. `ram` is the step's own grant. `analyze` passes
 	//     mem = clamp(4 * size("reads"), baseMemGiB, 256 GiB)
 	// size("reads") sums the stored (compressed) blob size of the sample's R1+R2 FASTQ
 	// via getBlobSize — a metadata read, no pre-exec — so it tracks total input volume
@@ -156,13 +157,13 @@ self.body(func(inputs) {
 	// the largest runs.
 	// An "Advanced Settings" memory override takes precedence. On backends that cannot
 	// evaluate resource formulas, the formula's static fallback is the baseline.
-	applyResources := func(builder, floorGiB) {
+	applyResources := func(builder, ram) {
 		onCPUResources := { cpu: perProcessCPUsResolved }
 		if !is_undefined(perProcessMemGB) {
 			// memory per process was set in "Advanced Settings" block directly
 			onCPUResources.ram = string(perProcessMemGB) + "GiB"
 		} else {
-			onCPUResources.ram = memf.memFormula(floorGiB)
+			onCPUResources.ram = ram
 		}
 		if !is_undefined(mixcrScratchSpace) {
 			onCPUResources.scratchFreeSpace = mixcrScratchSpace
@@ -295,7 +296,7 @@ self.body(func(inputs) {
 
 	if !splitSteps {
 		mixcrCmdBuilder := newMixcrBuilder().arg("analyze")
-		applyResources(mixcrCmdBuilder, baseMemGiB)
+		applyResources(mixcrCmdBuilder, memf.memFormula(baseMemGiB))
 
 		if !is_undefined(limitInput) {
 			mixcrCmdBuilder.arg("--limit-input").arg(string(limitInput))
@@ -338,7 +339,7 @@ self.body(func(inputs) {
 	alignedFile := "result.vdjca"
 
 	alignBuilder := newMixcrBuilder().arg("align").arg("-f")
-	applyResources(alignBuilder, ALIGN_BASE_MEM_GIB)
+	applyResources(alignBuilder, string(ALIGN_RAM_GIB) + "GiB")
 
 	// `--threads` exists on align alone of the three steps. Reading the granted count back
 	// from the placeholder keeps the flag and the request from diverging.
@@ -379,8 +380,7 @@ self.body(func(inputs) {
 
 			clnsFileName: clnsFileName,
 			reports: reports,
-			assemblingFeatures: memf.assemblingFeatures(presetContent, assembleClonesBy),
-			baseMemGiB: baseMemGiB
+			assemblingFeatures: memf.assemblingFeatures(presetContent, assembleClonesBy)
 		},
 		{
 			// Kept out of the deduplication key for the same reason :mixcr-analyze keeps them
