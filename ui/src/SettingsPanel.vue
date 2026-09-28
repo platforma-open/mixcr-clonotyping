@@ -245,6 +245,14 @@ function setPresetFile(file?: ImportFileHandle) {
   } else {
     app.model.data.preset = { type: "file", file };
     app.model.data.presetCommonName = extractFileName(getFilePathFromHandle(file));
+    // Settings of a previously chosen built-in preset don't apply to a preset file.
+    app.model.data.species = undefined;
+    app.model.data.materialType = undefined;
+    app.model.data.leftAlignmentMode = undefined;
+    app.model.data.rightAlignmentMode = undefined;
+    app.model.data.tagPattern = undefined;
+    app.model.data.assembleClonesBy = undefined;
+    app.model.data.imputeGermline = undefined;
   }
 }
 
