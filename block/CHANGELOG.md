@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.23.9
+
+### Patch Changes
+
+- afd7ee5: Preview read limit for single-cell presets is no longer reset to 500,000 each time the settings panel is opened
+
 ## 2.23.8
 
 ### Patch Changes
