@@ -122,9 +122,9 @@ const needAssembleClonesBy = computed(() =>
       ) >= 0,
 );
 
-const isSingleCell = computed(
-  () => preset.value?.analysisStages.includes("assembleCells") === true,
-);
+// undefined until the preset list is loaded
+const presetScKind = computed(() => preset.value?.analysisStages.includes("assembleCells"));
+const isSingleCell = computed(() => presetScKind.value === true);
 
 // Heavy-chain-only (VHH) applies to single-cell IG data, so the option is offered only
 // when the preset is single-cell and IG is among the selected receptors.
@@ -268,18 +268,29 @@ const runModeOptions: ListOption<"dry" | "full">[] = [
   { label: "Full run", value: "full" },
 ];
 
+// Swap the default only on a real bulk <-> single-cell change (compared to the last known kind,
+// so the async preset load on panel open is not one) and only if the user kept the old default.
+let lastScKind: boolean | undefined = presetScKind.value;
+
 watch(
   () => app.model.data.runMode,
   (value) => {
     if (value === "dry" && app.model.data.limitInput === undefined) {
       app.model.data.limitInput = isSingleCell.value ? DRY_RUN_READS_SC : DRY_RUN_READS_BULK;
+      // Kind not loaded yet: the bulk default is a guess, let the preset watcher correct it.
+      if (presetScKind.value === undefined) lastScKind = false;
     }
   },
 );
 
-watch(isSingleCell, () => {
-  if (app.model.data.runMode === "dry") {
-    app.model.data.limitInput = isSingleCell.value ? DRY_RUN_READS_SC : DRY_RUN_READS_BULK;
+watch(presetScKind, (sc) => {
+  if (sc === undefined) return;
+  const prev = lastScKind;
+  lastScKind = sc;
+  if (prev === undefined || prev === sc || app.model.data.runMode !== "dry") return;
+  const limit = app.model.data.limitInput;
+  if (limit === undefined || limit === (prev ? DRY_RUN_READS_SC : DRY_RUN_READS_BULK)) {
+    app.model.data.limitInput = sc ? DRY_RUN_READS_SC : DRY_RUN_READS_BULK;
   }
 });
 
