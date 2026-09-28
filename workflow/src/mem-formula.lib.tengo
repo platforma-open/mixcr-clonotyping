@@ -165,6 +165,15 @@ hasCellTag := func(presetContent) {
 	return text.contains(tagPattern, "(CELL")
 }
 
+// hasLongReadAligner reports whether the resolved preset aligns with the long-read aligner:
+// only presets built on `align-long-read` carry `align.parameters.longReadsParameters`.
+hasLongReadAligner := func(presetContent) {
+	if !is_map(presetContent) || !is_map(presetContent.align) || !is_map(presetContent.align.parameters) {
+		return false
+	}
+	return is_map(presetContent.align.parameters.longReadsParameters)
+}
+
 // vdjcaRam builds a grant fitted linearly on the size of the `.vdjca` a step reads:
 //
 //     ram = clamp(ceil(interceptGiB + perByteHundredths / 100 x size("vdjca")), floorGiB, 256 GiB)
@@ -202,6 +211,14 @@ umiAssembleRam := func() {
 //     ram = clamp(ceil(4.1 x size("vdjca")), 16 GiB, 256 GiB)
 cellAssembleRam := func() {
 	return _vdjcaRam(0, 410, 16, _TAGGED_FALLBACK_GIB)
+}
+
+// longReadAssembleRam sizes `assemble` of a run on the long-read aligner from the `.vdjca` it
+// reads, in either split pipeline:
+//
+//     ram = min(ceil(6 GiB + 5.8 x size("vdjca")), 256 GiB)
+longReadAssembleRam := func() {
+	return _vdjcaRam(6, 580, 0, _TAGGED_FALLBACK_GIB)
 }
 
 // exportRam builds the exec.formula node for an `exportClones` step.
@@ -256,6 +273,8 @@ export {
 	assembleRamGiB: assembleRamGiB,
 	assembleFallbackRam: assembleFallbackRam,
 	hasCellTag: hasCellTag,
+	hasLongReadAligner: hasLongReadAligner,
+	longReadAssembleRam: longReadAssembleRam,
 	refineRam: refineRam,
 	umiAssembleRam: umiAssembleRam,
 	cellAssembleRam: cellAssembleRam,

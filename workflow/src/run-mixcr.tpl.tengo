@@ -16,6 +16,8 @@
 //     `qc` live in :refine-assemble-mixcr, each sized from the `.vdjca` it stages. A preset whose
 //     tag pattern captures a cell barcode takes the cell-barcoded assemble rule.
 //
+// In both, a preset on the long-read aligner takes the long-read assemble rule.
+//
 // The in-chain `exportClones` is dropped rather than reproduced: the block saves no clones.tsv
 // from it and re-exports from the .clns with its own argv in :mixcr-export.
 //
@@ -124,6 +126,7 @@ self.body(func(inputs) {
 
 	splitBulk := _sameSteps(presetContent.pipeline, PIPELINE_BULK)
 	splitUmi := _sameSteps(presetContent.pipeline, PIPELINE_UMI)
+	longRead := memf.hasLongReadAligner(presetContent)
 
 	clnsFileName := "result.clns"
 	if hasAssembleContigs {
@@ -391,7 +394,7 @@ self.body(func(inputs) {
 				alignReportJson: alignCmd.getFile(alignReportJson),
 				alignReportTxt: alignCmd.getFile(alignReportTxt),
 
-				assembleRule: memf.hasCellTag(presetContent) ? "cell" : "umi",
+				assembleRule: longRead ? "longRead" : (memf.hasCellTag(presetContent) ? "cell" : "umi"),
 				clnsFileName: clnsFileName,
 				reports: reports
 			},
@@ -420,7 +423,8 @@ self.body(func(inputs) {
 
 			clnsFileName: clnsFileName,
 			reports: reports,
-			assemblingFeatures: memf.assemblingFeatures(presetContent, assembleClonesBy)
+			assemblingFeatures: memf.assemblingFeatures(presetContent, assembleClonesBy),
+			longRead: longRead
 		},
 		{ metaInputs: childMetaInputs }
 	)

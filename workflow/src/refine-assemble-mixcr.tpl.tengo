@@ -7,7 +7,7 @@
 // Runs `mixcr refineTagsAndSort`, `mixcr assemble` and `mixcr qc` on an aligned sample.
 //
 // Each step is sized from the `.vdjca` it stages, through exec.formula. `assembleRule` names the
-// assemble rule: "umi" or "cell".
+// assemble rule: "umi", "cell" or "longRead".
 //
 // `qc` is here because `analyze` appends it at runtime whenever the preset carries qc checks,
 // and it is in no preset pipeline. Dropping it would empty outputs.qc and kill the QC tab.
@@ -49,6 +49,8 @@ self.body(func(inputs) {
 		assembleRam = memf.umiAssembleRam()
 	} else if assembleRule == "cell" {
 		assembleRam = memf.cellAssembleRam()
+	} else if assembleRule == "longRead" {
+		assembleRam = memf.longReadAssembleRam()
 	} else {
 		ll.panic("unexpected assemble rule %v", assembleRule)
 	}

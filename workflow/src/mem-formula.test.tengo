@@ -246,3 +246,19 @@ TestHasCellTag := func() {
 	test.isFalse(mf.hasCellTag({}))
 	test.isFalse(mf.hasCellTag(undefined))
 }
+
+TestLongReadAssembleRam := func() {
+	// ram = min(ceil(6 GiB + 5.8 x size(vdjca)), 256 GiB), whole GiB.
+	test.isEqual(_gib(12),  _evalVdjca(mf.longReadAssembleRam(), _gib(1)))
+	test.isEqual(_gib(50),  _evalVdjca(mf.longReadAssembleRam(), _gib(75) / 10))
+	test.isEqual(_gib(256), _evalVdjca(mf.longReadAssembleRam(), _gib(432) / 10))
+	test.isEqual(_gib(64),  f.fallbackOf(mf.longReadAssembleRam()))
+}
+
+TestHasLongReadAligner := func() {
+	test.isTrue(mf.hasLongReadAligner({ align: { parameters: { longReadsParameters: { windowSize: 1500 } } } }))
+	test.isFalse(mf.hasLongReadAligner({ align: { parameters: { vParameters: {} } } }))
+	test.isFalse(mf.hasLongReadAligner({ align: { parameters: { longReadsParameters: undefined } } }))
+	test.isFalse(mf.hasLongReadAligner({ align: {} }))
+	test.isFalse(mf.hasLongReadAligner(undefined))
+}
