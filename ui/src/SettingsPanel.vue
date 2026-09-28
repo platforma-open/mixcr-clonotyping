@@ -271,23 +271,39 @@ const runModeOptions: ListOption<"dry" | "full">[] = [
 // Swap the default only on a real bulk <-> single-cell change (compared to the last known kind,
 // so the async preset load on panel open is not one) and only if the user kept the old default.
 let lastScKind: boolean | undefined = presetScKind.value;
+// Preview filled the bulk default before the kind was known; the preset watcher may correct it.
+let limitGuessed = false;
 
 watch(
   () => app.model.data.runMode,
   (value) => {
     if (value === "dry" && app.model.data.limitInput === undefined) {
       app.model.data.limitInput = isSingleCell.value ? DRY_RUN_READS_SC : DRY_RUN_READS_BULK;
-      // Kind not loaded yet: the bulk default is a guess, let the preset watcher correct it.
-      if (presetScKind.value === undefined) lastScKind = false;
+      limitGuessed = presetScKind.value === undefined;
     }
+  },
+);
+
+// Edits update per keystroke, so any user edit (even retyping 100,000) clears the guess.
+watch(
+  () => app.model.data.limitInput,
+  (limit) => {
+    if (limit !== DRY_RUN_READS_BULK) limitGuessed = false;
   },
 );
 
 watch(presetScKind, (sc) => {
   if (sc === undefined) return;
   const prev = lastScKind;
+  const guessed = limitGuessed;
   lastScKind = sc;
-  if (prev === undefined || prev === sc || app.model.data.runMode !== "dry") return;
+  limitGuessed = false;
+  if (app.model.data.runMode !== "dry") return;
+  if (guessed) {
+    if (sc) app.model.data.limitInput = DRY_RUN_READS_SC;
+    return;
+  }
+  if (prev === undefined || prev === sc) return;
   const limit = app.model.data.limitInput;
   if (limit === undefined || limit === (prev ? DRY_RUN_READS_SC : DRY_RUN_READS_BULK)) {
     app.model.data.limitInput = sc ? DRY_RUN_READS_SC : DRY_RUN_READS_BULK;
