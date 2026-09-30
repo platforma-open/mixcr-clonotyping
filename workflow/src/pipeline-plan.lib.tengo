@@ -1,0 +1,164 @@
+// Turns a resolved preset into the list of per-step commands a split run executes, or
+// 'undefined' when the pipeline carries a step the split does not know, and the run stays one
+// `analyze` command.
+//
+// The plan reads only the resolved bundle `mixcr exportPreset` writes, so a preset from a file
+// is planned the same way as a built-in one.
+//
+// Shape of a pipeline the split takes:
+//   - optional MiTool steps first, starting with `mitool-parse`;
+//   - then `align`;
+//   - then any of refineTagsAndSort, assemblePartial, extend, assemble, assembleContigs,
+//     assembleCells, in an order whose file types chain;
+//   - exportClones and exportCloneGroups anywhere after `align`. They are dropped: the block
+//     saves nothing from them, and they read a file without changing it.
+//
+// The last step must write a .clns, and `assemble` must be present.
+
+memf := import(":mem-formula")
+
+_EXPORT_STEPS := { exportClones: true, exportCloneGroups: true }
+
+// Input and output file type of each chain step. "same" keeps the input's type.
+_CHAIN_STEPS := {
+	refineTagsAndSort: { from: ["vdjca"], out: "vdjca" },
+	assemblePartial: { from: ["vdjca"], out: "vdjca" },
+	extend: { from: ["vdjca", "clns"], out: "same" },
+	assemble: { from: ["vdjca"], out: "assemble" },
+	assembleContigs: { from: ["clna"], out: "clns" },
+	assembleCells: { from: ["clns"], out: "clns" }
+}
+
+_MITOOL_COMMANDS := {
+	"mitool-parse": "parse",
+	"mitool-refine-tags": "refine-tags",
+	"mitool-consensus": "consensus"
+}
+
+_contains := func(list, value) {
+	for v in list {
+		if v == value {
+			return true
+		}
+	}
+	return false
+}
+
+// mitoolSteps lists the MiTool commands in run order: [{ command, logKey, outName }]. Each
+// `consensus` round is its own command. 'undefined' when the MiTool part is malformed.
+_mitoolSteps := func(presetContent, names) {
+	steps := []
+	for i, name in names {
+		command := _MITOOL_COMMANDS[name]
+		if is_undefined(command) || (i == 0) != (name == "mitool-parse") {
+			return undefined
+		}
+		if command != "consensus" {
+			steps = append(steps, { command: command, logKey: name, outName: command + ".mic" })
+			continue
+		}
+		rounds := is_map(presetContent.mitool) ? presetContent.mitool.consensus : undefined
+		if !is_array(rounds) || len(rounds) == 0 {
+			return undefined
+		}
+		for r := 1; r <= len(rounds); r++ {
+			steps = append(steps, {
+				command: command,
+				logKey: name + "." + string(r),
+				outName: command + "." + string(r) + ".mic"
+			})
+		}
+	}
+	return steps
+}
+
+// plan returns { mitool: [...], chain: [{ step, logKey, outName }] }, or 'undefined'.
+// clnsFileName names the last step's output.
+plan := func(presetContent, clnsFileName) {
+	if !is_map(presetContent) || !is_array(presetContent.pipeline) {
+		return undefined
+	}
+	pipeline := presetContent.pipeline
+
+	alignAt := -1
+	for i, step in pipeline {
+		if step == "align" {
+			alignAt = i
+			break
+		}
+	}
+	if alignAt < 0 {
+		return undefined
+	}
+
+	mitool := _mitoolSteps(presetContent, pipeline[:alignAt])
+	if is_undefined(mitool) {
+		return undefined
+	}
+
+	assemblePartialRounds := 1
+	if is_map(presetContent.assemblePartial) {
+		repeats := int(presetContent.assemblePartial.repeats)
+		if !is_undefined(repeats) && repeats > 1 {
+			assemblePartialRounds = repeats
+		}
+	}
+	clnaOutput := is_map(presetContent.assemble) && presetContent.assemble.clnaOutput == true
+
+	links := []
+	kind := "vdjca"
+	hasAssemble := false
+	for step in pipeline[alignAt + 1:] {
+		if _EXPORT_STEPS[step] {
+			continue
+		}
+		def := _CHAIN_STEPS[step]
+		if is_undefined(def) || !_contains(def.from, kind) {
+			return undefined
+		}
+		if def.out == "assemble" {
+			kind = clnaOutput ? "clna" : "clns"
+			hasAssemble = true
+		} else if def.out != "same" {
+			kind = def.out
+		}
+		rounds := step == "assemblePartial" ? assemblePartialRounds : 1
+		for r := 1; r <= rounds; r++ {
+			suffix := rounds > 1 ? "." + string(r) : ""
+			links = append(links, {
+				step: step,
+				logKey: step + suffix,
+				outName: step + suffix + "." + kind
+			})
+		}
+	}
+	if !hasAssemble || kind != "clns" {
+		return undefined
+	}
+	last := links[len(links) - 1]
+	last.outName = clnsFileName
+
+	return { mitool: mitool, chain: links }
+}
+
+// assembleRule names the grant `assemble` takes in a split run: "longRead" for the long-read
+// aligner, "cell" when the run is cell-barcoded, "umi" when the run refines tags, and
+// "fallback" otherwise, which is the bulk rule sized from the .vdjca alone.
+assembleRule := func(presetContent) {
+	if memf.hasLongReadAligner(presetContent) {
+		return "longRead"
+	}
+	pipeline := presetContent.pipeline
+	if memf.hasCellTag(presetContent) || _contains(pipeline, "assembleCells") {
+		return "cell"
+	}
+	if _contains(pipeline, "refineTagsAndSort") {
+		return "umi"
+	}
+	return "fallback"
+}
+
+export {
+	plan: plan,
+	assembleRule: assembleRule
+}

@@ -236,6 +236,38 @@ TestCellAssembleRam := func() {
 	test.isEqual(_gib(64),  f.fallbackOf(mf.cellAssembleRam()))
 }
 
+// Evaluate a resource formula against a fake input of sizeBytes, staged under tag.
+_evalTagged := func(node, tag, sizeBytes) {
+	fileName := "input.bin"
+	inputs := {}
+	inputs[tag] = [fileName]
+	resolved := f.resolveAst(node, inputs, [fileName])
+	resolver := {
+		size:      func(files) { return sizeBytes },
+		lineCount: func(files) { return 0 }
+	}
+	return f.evaluateResource(resolved, resolver, "test")
+}
+
+TestCellStepRam := func() {
+	// ram = clamp(ceil(2 x size(stepInput)), 8 GiB, 256 GiB), whole GiB.
+	test.isEqual(_gib(8),   _evalTagged(mf.cellStepRam(), "stepInput", _gib(1)))
+	test.isEqual(_gib(8),   _evalTagged(mf.cellStepRam(), "stepInput", _gib(4)))
+	test.isEqual(_gib(20),  _evalTagged(mf.cellStepRam(), "stepInput", _gib(10)))
+	test.isEqual(_gib(256), _evalTagged(mf.cellStepRam(), "stepInput", _gib(200)))
+	test.isEqual(_gib(64),  f.fallbackOf(mf.cellStepRam()))
+}
+
+TestMitoolStepRam := func() {
+	// Placeholder: ram = clamp(ceil(2 x size(mic)), 16 GiB, 256 GiB), whole GiB.
+	test.isEqual(_gib(16),  _evalTagged(mf.mitoolStepRam(), "mic", _gib(1)))
+	test.isEqual(_gib(16),  _evalTagged(mf.mitoolStepRam(), "mic", _gib(8)))
+	test.isEqual(_gib(21),  _evalTagged(mf.mitoolStepRam(), "mic", _gib(105) / 10))
+	test.isEqual(_gib(256), _evalTagged(mf.mitoolStepRam(), "mic", _gib(200)))
+	test.isEqual(_gib(64),  f.fallbackOf(mf.mitoolStepRam()))
+	test.isEqual(16, mf.MITOOL_PARSE_RAM_GIB)
+}
+
 TestHasCellTag := func() {
 	_withPattern := func(p) { return { align: { tagPattern: p } } }
 	test.isTrue(mf.hasCellTag(_withPattern("^(CELL1:N{9})aatg(CELL2:N{9})ccac(CELL3:N{9})(UMI:N{8})\\^(R2:*)")))

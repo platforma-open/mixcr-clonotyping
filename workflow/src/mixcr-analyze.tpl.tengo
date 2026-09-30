@@ -10,7 +10,7 @@
 // alone, with the real template on a Service field. So a rotated UUID in a template this one
 // renders — :run-mixcr, :assemble-mixcr — has no effect while this UUID stands. Rotate here
 // whenever the computation below changes.
-//tengo:hash_override E7AF7E40-F134-4988-9639-05752B79F3F5
+//tengo:hash_override A22C1413-CE7E-408A-9FD0-4673AC4132B2
 
 // Measures the reads of one sample, then runs MiXCR on them.
 //

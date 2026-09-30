@@ -2,26 +2,26 @@
 // "re-run every sample on the next block update" — see the longer note in :mixcr-analyze.
 // Rotated whenever the template graph below it changes; reusing the old value would serve
 // cache hits from a different computation.
-//tengo:hash_override 8538713A-E5EB-4181-8989-C733B2E7302E
+//tengo:hash_override 79DA8B7F-D419-4AC6-8617-CC3C2C12762B
 
 // Runs MiXCR on one measured sample.
 //
-// Two pipelines, matched whole, run each step as its own exec, so each step carries its own
-// memory grant instead of sharing the worst step's:
+// Every step runs as its own exec, so each step carries its own memory grant instead of
+// sharing the worst step's:
 //
 //   - `align, assemble, exportClones`: `assemble` is sized from the clonotype estimate the
 //     align report carries, which a template can only read after the align command has
 //     finished, so `assemble` and `qc` live in :assemble-mixcr.
-//   - `align, refineTagsAndSort, assemble, exportClones`: `refineTagsAndSort`, `assemble` and
-//     `qc` live in :refine-assemble-mixcr, each sized from the `.vdjca` it stages. A preset whose
-//     tag pattern captures a cell barcode takes the cell-barcoded assemble rule.
+//   - Every other pipeline :pipeline-plan accepts, built-in or from a preset file: MiTool steps,
+//     `align`, then the chain up to the final .clns. Each step is sized through exec.formula
+//     from the one file it stages, so the whole chain runs here. :pipeline-plan names the
+//     assemble rule.
 //
-// In both, a preset on the long-read aligner takes the long-read assemble rule.
+// The in-chain `exportClones` and `exportCloneGroups` are dropped rather than reproduced: the
+// block saves nothing from them and re-exports from the .clns with its own argv in
+// :mixcr-export.
 //
-// The in-chain `exportClones` is dropped rather than reproduced: the block saves no clones.tsv
-// from it and re-exports from the .clns with its own argv in :mixcr-export.
-//
-// Every other preset keeps the single `analyze` command.
+// A pipeline :pipeline-plan rejects keeps the single `analyze` command.
 
 self := import("@platforma-sdk/workflow-tengo:tpl")
 smart := import("@platforma-sdk/workflow-tengo:smart")
@@ -36,6 +36,7 @@ text := import("text")
 maps := import("@platforma-sdk/workflow-tengo:maps")
 memf := import(":mem-formula")
 readStats := import(":read-stats")
+pipelinePlan := import(":pipeline-plan")
 
 json := import("json")
 
@@ -43,20 +44,21 @@ self.defineOutputs("qc", "reports", "log", "clns")
 
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
 assembleMixcrTpl := assets.importTemplate(":assemble-mixcr")
-refineAssembleMixcrTpl := assets.importTemplate(":refine-assemble-mixcr")
 
 progressPrefix := "[==PROGRESS==]"
 
 CACHE_PERIOD := 48 * times.hour
 
-// The pipelines that run as separate execs, matched whole. A pipeline carrying any other step
-// falls through to `analyze`.
+// The one pipeline split outside :pipeline-plan, matched whole.
 PIPELINE_BULK := ["align", "assemble", "exportClones"]
-PIPELINE_UMI := ["align", "refineTagsAndSort", "assemble", "exportClones"]
 
 // Flat `align` grant of a split run. `align` streams its input, so the grant does not scale
 // with the sample.
 ALIGN_RAM_GIB := 24
+
+// `mixcr qc` reads the reports in the .clns footer; it holds no clones. NEEDS VERIFICATION: no
+// bisected floor for `qc` exists.
+QC_MEM := "4GiB"
 
 _sameSteps := func(pipeline, steps) {
 	if len(pipeline) != len(steps) {
@@ -125,7 +127,6 @@ self.body(func(inputs) {
 	}
 
 	splitBulk := _sameSteps(presetContent.pipeline, PIPELINE_BULK)
-	splitUmi := _sameSteps(presetContent.pipeline, PIPELINE_UMI)
 	longRead := memf.hasLongReadAligner(presetContent)
 
 	clnsFileName := "result.clns"
@@ -135,6 +136,9 @@ self.body(func(inputs) {
 	if hasAssembleCells {
 		clnsFileName = "result.assembledCells.clns"
 	}
+
+	// 'undefined' when the pipeline stays one `analyze` command.
+	stepPlan := splitBulk ? undefined : pipelinePlan.plan(presetContent, clnsFileName)
 
 	// CPUs number per process
 	perProcessCPUsResolved := is_undefined(perProcessCPUs) ? 16 : perProcessCPUs
@@ -301,7 +305,7 @@ self.body(func(inputs) {
 	// step in one JVM and contributes a single entry.
 	logs := pcolumn.resourceMapBuilder( /* keyLength */ 1 )
 
-	if !splitBulk && !splitUmi {
+	if !splitBulk && is_undefined(stepPlan) {
 		mixcrCmdBuilder := newMixcrBuilder().arg("analyze")
 		applyResources(mixcrCmdBuilder, memf.memFormula(baseMemGiB))
 
@@ -341,6 +345,36 @@ self.body(func(inputs) {
 		}
 	}
 
+	// MiTool steps: parse extracts the cell and UMI tags into a .mic, refine-tags corrects them
+	// against the whitelists, and each consensus round collapses reads per tag group. Only parse
+	// takes the preset. It packs the resolved MiTool parameters into the .mic header, and every
+	// later step, `align` included, reads them from there.
+	micFile := undefined
+	micFileName := undefined
+	if !is_undefined(stepPlan) {
+		for step in stepPlan.mitool {
+			builder := newMixcrBuilder().arg("mitool").arg(step.command)
+			if step.command == "parse" {
+				builder.
+					arg("--preset").arg("local:mitool_preset").
+					writeFile("mitool_preset.yaml", presetContent.mitool)
+				applyResources(builder, string(memf.MITOOL_PARSE_RAM_GIB) + "GiB")
+				applyInputFiles(builder)
+			} else {
+				builder.addFile(micFileName, micFile, { tag: "mic" }).arg(micFileName)
+				applyResources(builder, memf.mitoolStepRam())
+			}
+			cmd := builder.
+				arg(step.outName).
+				saveFile(step.outName).
+				cache(CACHE_PERIOD).
+				run()
+			logs.add([step.logKey], cmd.getStdoutStream())
+			micFileName = step.outName
+			micFile = cmd.getFile(step.outName)
+		}
+	}
+
 	alignReportJson := "result.align.report.json"
 	alignReportTxt := "result.align.report.txt"
 	alignedFile := "result.vdjca"
@@ -362,7 +396,11 @@ self.body(func(inputs) {
 		arg("--report").arg(alignReportTxt).
 		arg("--json-report").arg(alignReportJson)
 
-	applyInputFiles(alignBuilder)
+	if is_undefined(micFile) {
+		applyInputFiles(alignBuilder)
+	} else {
+		alignBuilder.addFile(micFileName, micFile).arg(micFileName)
+	}
 
 	// The report is saved twice: as a file, which is what the reports p-column carries, and
 	// as content, which is the only form :assemble-mixcr can decode to size itself.
@@ -386,30 +424,115 @@ self.body(func(inputs) {
 		scratchFreeSpace: mixcrScratchSpace
 	}
 
-	if splitUmi {
-		refineAssembleRun := render.create(
-			refineAssembleMixcrTpl,
-			{
-				vdjca: alignCmd.getFile(alignedFile),
-				alignReportJson: alignCmd.getFile(alignReportJson),
-				alignReportTxt: alignCmd.getFile(alignReportTxt),
+	if !is_undefined(stepPlan) {
+		rule := pipelinePlan.assembleRule(presetContent)
+		assembleRam := undefined
+		if rule == "longRead" {
+			assembleRam = memf.longReadAssembleRam()
+		} else if rule == "cell" {
+			assembleRam = memf.cellAssembleRam()
+		} else if rule == "umi" {
+			assembleRam = memf.umiAssembleRam()
+		} else {
+			assembleRam = memf.assembleFallbackRam()
+		}
 
-				assembleRule: longRead ? "longRead" : (memf.hasCellTag(presetContent) ? "cell" : "umi"),
-				clnsFileName: clnsFileName,
-				reports: reports
-			},
-			{ metaInputs: childMetaInputs }
-		)
+		assembleReportJson := "result.assemble.report.json"
+		assembleReportTxt := "result.assemble.report.txt"
 
-		logs.add(["refineTagsAndSort"], refineAssembleRun.output("refineLog", CACHE_PERIOD))
-		logs.add(["assemble"], refineAssembleRun.output("log", CACHE_PERIOD))
-		logs.add(["qc"], refineAssembleRun.output("qcLog", CACHE_PERIOD))
+		inName := alignedFile
+		inFile := alignCmd.getFile(alignedFile)
+		assembleCmd := undefined
+		for link in stepPlan.chain {
+			step := link.step
+
+			inTag := "stepInput"
+			ram := undefined
+			if step == "refineTagsAndSort" {
+				inTag = "vdjca"
+				ram = memf.refineRam()
+			} else if step == "assemble" {
+				inTag = "vdjca"
+				ram = assembleRam
+			} else {
+				ram = memf.cellStepRam()
+			}
+
+			builder := newMixcrBuilder().arg(step).arg("-f")
+			if step == "assemble" {
+				builder.
+					arg("--report").arg(assembleReportTxt).
+					arg("--json-report").arg(assembleReportJson).
+					saveFile(assembleReportJson).
+					saveFile(assembleReportTxt)
+			}
+			builder.
+				addFile(inName, inFile, { tag: inTag }).
+				arg(inName).
+				arg(link.outName)
+			applyResources(builder, ram)
+			cmd := builder.saveFile(link.outName).cache(CACHE_PERIOD).run()
+			logs.add([link.logKey], cmd.getStdoutStream())
+
+			if step == "assemble" {
+				assembleCmd = cmd
+			}
+			inName = link.outName
+			inFile = cmd.getFile(link.outName)
+		}
+
+		clnsFile := inFile
+
+		qcTxtFile := "result.qc.txt"
+		qcJsonFile := "result.qc.json"
+
+		qcMem := QC_MEM
+		if !is_undefined(perProcessMemGB) {
+			// memory per process was set in "Advanced Settings" block directly
+			qcMem = string(perProcessMemGB) + "GiB"
+		}
+
+		qcCmd := exec.builder().
+			printErrStreamToStdout().
+			saveStdoutStream().
+			env("MI_USE_SYSTEM_CA", "true").
+			software(mixcrSw).
+			secret("MI_LICENSE", "MI_LICENSE").
+			env("MI_LICENSE_DEBUG", "MI_LICENSE_DEBUG").
+			arg("qc").
+			arg("--print-to-stdout").
+			arg("-f").
+			addFile(clnsFileName, clnsFile).
+			arg(clnsFileName).
+			arg(qcTxtFile).
+			arg(qcJsonFile).
+			inLightQueue().
+			cpu(1).
+			mem(qcMem).
+			saveFile(qcJsonFile).
+			cache(CACHE_PERIOD).
+			run()
+		logs.add(["qc"], qcCmd.getStdoutStream())
+
+		// The reports p-column carries the ids :process lists.
+		reportsMap := pcolumn.resourceMapBuilder( /* keyLength */ 2 )
+		for report in reports {
+			if report.id == "align" {
+				reportsMap.add([report.id, "json"], alignCmd.getFile(alignReportJson))
+				reportsMap.add([report.id, "txt"], alignCmd.getFile(alignReportTxt))
+			} else if report.id == "assemble" {
+				reportsMap.add([report.id, "json"], assembleCmd.getFile(assembleReportJson))
+				reportsMap.add([report.id, "txt"], assembleCmd.getFile(assembleReportTxt))
+			} else {
+				ll.panic("unexpected report id %v", report.id)
+			}
+		}
 
 		return {
-			qc: refineAssembleRun.output("qc", CACHE_PERIOD),
+			qc: qcCmd.getFile(qcJsonFile),
 			log: logs.build(),
-			reports: refineAssembleRun.output("reports", CACHE_PERIOD),
-			clns: refineAssembleRun.output("clns", CACHE_PERIOD)
+			reports: reportsMap.build(),
+			clns: clnsFile
 		}
 	}
 

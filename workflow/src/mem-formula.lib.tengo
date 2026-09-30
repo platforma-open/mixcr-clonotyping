@@ -174,19 +174,24 @@ hasLongReadAligner := func(presetContent) {
 	return is_map(presetContent.align.parameters.longReadsParameters)
 }
 
-// vdjcaRam builds a grant fitted linearly on the size of the `.vdjca` a step reads:
+// _fileRam builds a grant fitted linearly on the size of the file a step reads:
 //
-//     ram = clamp(ceil(interceptGiB + perByteHundredths / 100 x size("vdjca")), floorGiB, 256 GiB)
+//     ram = clamp(ceil(interceptGiB + perByteHundredths / 100 x size(tag)), floorGiB, 256 GiB)
 //
 // rounded up to a whole GiB. Backends that cannot evaluate formulas get fallbackGiB.
 //
-// The caller must tag its `.vdjca` input `{ tag: "vdjca" }`.
-_vdjcaRam := func(interceptGiB, perByteHundredths, floorGiB, fallbackGiB) {
+// The caller must tag that input `{ tag: tag }`.
+_fileRam := func(tag, interceptGiB, perByteHundredths, floorGiB, fallbackGiB) {
 	return f.gib(interceptGiB).
-		plus(f.size("vdjca").times(perByteHundredths).dividedBy(100)).
+		plus(f.size(tag).times(perByteHundredths).dividedBy(100)).
 		dividedBy(f.gib(1)).times(f.gib(1)).
 		between(f.gib(floorGiB), f.gib(_ASSEMBLE_CAP_GIB)).
 		staticFallback(f.gib(fallbackGiB))
+}
+
+// The caller must tag its `.vdjca` input `{ tag: "vdjca" }`.
+_vdjcaRam := func(interceptGiB, perByteHundredths, floorGiB, fallbackGiB) {
+	return _fileRam("vdjca", interceptGiB, perByteHundredths, floorGiB, fallbackGiB)
 }
 
 // The grant `analyze` gets on these pipelines, kept for backends that cannot evaluate formulas.
@@ -219,6 +224,32 @@ cellAssembleRam := func() {
 //     ram = min(ceil(6 GiB + 5.8 x size("vdjca")), 256 GiB)
 longReadAssembleRam := func() {
 	return _vdjcaRam(6, 580, 0, _TAGGED_FALLBACK_GIB)
+}
+
+// cellStepRam sizes `assemblePartial`, `extend`, `assembleContigs` and `assembleCells` of a
+// single-cell run from the one file the step reads (.vdjca, .clna or .clns):
+//
+//     ram = clamp(ceil(2 x size("stepInput")), 8 GiB, 256 GiB)
+//
+// The caller must tag that input `{ tag: "stepInput" }`.
+cellStepRam := func() {
+	return _fileRam("stepInput", 0, 200, 8, _TAGGED_FALLBACK_GIB)
+}
+
+// PLACEHOLDER, NOT MEASURED. The MiTool steps have no bisected floor yet. These grants stand
+// until a profiling run replaces them.
+//
+// `mitool parse` streams reads and holds only per-sample counts: flat 16 GiB.
+MITOOL_PARSE_RAM_GIB := 16
+
+// mitoolStepRam sizes `mitool refine-tags` and each `mitool consensus` round from the `.mic`
+// the step reads:
+//
+//     ram = clamp(ceil(2 x size("mic")), 16 GiB, 256 GiB)
+//
+// The caller must tag its `.mic` input `{ tag: "mic" }`.
+mitoolStepRam := func() {
+	return _fileRam("mic", 0, 200, 16, _TAGGED_FALLBACK_GIB)
 }
 
 // exportRam builds the exec.formula node for an `exportClones` step.
@@ -278,5 +309,8 @@ export {
 	refineRam: refineRam,
 	umiAssembleRam: umiAssembleRam,
 	cellAssembleRam: cellAssembleRam,
+	cellStepRam: cellStepRam,
+	MITOOL_PARSE_RAM_GIB: MITOOL_PARSE_RAM_GIB,
+	mitoolStepRam: mitoolStepRam,
 	exportRam: exportRam
 }

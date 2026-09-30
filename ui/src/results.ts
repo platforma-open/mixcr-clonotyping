@@ -12,14 +12,32 @@ import { useApp } from "./app";
 
 const reactiveFileContent = ReactiveFileContent.useGlobal();
 
-// MiXCR runs as a single `analyze` command on most presets, and as separate align /
-// refineTagsAndSort / assemble / qc commands on bulk amplicon ones. Logs and progress arrive
-// keyed by (sampleId, step); the log panel and the progress column each show one value per
-// sample, so both take the step that has got furthest. Order is the order the commands run in.
-const STEP_ORDER = ["analyze", "align", "refineTagsAndSort", "assemble", "qc"];
+// MiXCR runs either as a single `analyze` command or as one command per step. Logs and
+// progress arrive keyed by (sampleId, step); the log panel and the progress column each show
+// one value per sample, so both take the step that has got furthest. Order is the order the
+// commands run in. A step that runs several rounds is keyed `<step>.<round>`.
+const STEP_ORDER = [
+  "analyze",
+  "mitool-parse",
+  "mitool-refine-tags",
+  "mitool-consensus",
+  "align",
+  "refineTagsAndSort",
+  "assemblePartial",
+  "extend",
+  "assemble",
+  "assembleContigs",
+  "assembleCells",
+  "qc",
+];
+const MAX_ROUNDS = 100;
 
 function stepRank(step: unknown): number {
-  return typeof step === "string" ? STEP_ORDER.indexOf(step) : -1;
+  if (typeof step !== "string") return -1;
+  const [name, round] = step.split(".");
+  const index = STEP_ORDER.indexOf(name);
+  if (index < 0) return -1;
+  return index * MAX_ROUNDS + (round === undefined ? 0 : Number(round));
 }
 
 /** Keeps the entry of the most advanced step seen so far for each sample. */
