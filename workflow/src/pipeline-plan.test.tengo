@@ -24,17 +24,17 @@ TestTenXMiToolPipelineSplitsEveryStep := func() {
 		mitool: { consensus: [{}, {}, {}, {}] },
 		assemble: { clnaOutput: true }
 	}
-	plan := pp.plan(preset, "result.assembledCells.clns")
+	plan := pp.plan(preset)
 	test.isEqual(["parse>parse.mic", "refine-tags>refine-tags.mic", "consensus>consensus.1.mic",
 		"consensus>consensus.2.mic", "consensus>consensus.3.mic", "consensus>consensus.4.mic"], _mitool(plan))
 	test.isEqual("mitool-consensus.4", plan.mitool[5].logKey)
 	test.isEqual(["refineTagsAndSort>refineTagsAndSort.vdjca", "extend>extend.vdjca",
 		"assemble>assemble.clna", "assembleContigs>assembleContigs.clns",
-		"assembleCells>result.assembledCells.clns"], _steps(plan))
+		"assembleCells>result.clns"], _steps(plan))
 }
 
 TestUmiPipelineHasNoMiToolSteps := func() {
-	plan := pp.plan({ pipeline: ["align", "refineTagsAndSort", "assemble", "exportClones"] }, "result.clns")
+	plan := pp.plan({ pipeline: ["align", "refineTagsAndSort", "assemble", "exportClones"] })
 	test.isEqual([], plan.mitool)
 	test.isEqual(["refineTagsAndSort>refineTagsAndSort.vdjca", "assemble>result.clns"], _steps(plan))
 }
@@ -46,8 +46,8 @@ TestAssemblePartialRepeatsAreRounds := func() {
 		assemble: { clnaOutput: true }
 	}
 	test.isEqual(["assemblePartial.1>assemblePartial.1.vdjca", "assemblePartial.2>assemblePartial.2.vdjca",
-		"extend>extend.vdjca", "assemble>assemble.clna", "assembleContigs>result.contigs.clns"],
-		_steps(pp.plan(preset, "result.contigs.clns")))
+		"extend>extend.vdjca", "assemble>assemble.clna", "assembleContigs>result.clns"],
+		_steps(pp.plan(preset)))
 }
 
 TestExportsBeforeTheLastStepAreDropped := func() {
@@ -57,40 +57,79 @@ TestExportsBeforeTheLastStepAreDropped := func() {
 			"exportClones", "exportCloneGroups", "assembleCells"],
 		assemble: { clnaOutput: true }
 	}
-	steps := _steps(pp.plan(preset, "result.assembledCells.clns"))
+	steps := _steps(pp.plan(preset))
 	test.isEqual(6, len(steps))
-	test.isEqual("assembleCells>result.assembledCells.clns", steps[5])
+	test.isEqual("assembleCells>result.clns", steps[5])
 }
 
 TestUnknownStepFallsBackToAnalyze := func() {
-	test.isTrue(is_undefined(pp.plan({ pipeline: ["align", "assemble", "findAlleles", "exportClones"] }, "result.clns")))
-	test.isTrue(is_undefined(pp.plan({ pipeline: ["mitool-parse", "mitool-slice", "align", "assemble"], mitool: {} }, "result.clns")))
+	test.isTrue(is_undefined(pp.plan({ pipeline: ["align", "assemble", "findAlleles", "exportClones"] })))
+	test.isTrue(is_undefined(pp.plan({ pipeline: ["mitool-parse", "mitool-slice", "align", "assemble"], mitool: {} })))
 }
 
 TestMalformedPipelinesFallBackToAnalyze := func() {
 	// No align.
-	test.isTrue(is_undefined(pp.plan({ pipeline: ["assemble", "exportClones"] }, "result.clns")))
+	test.isTrue(is_undefined(pp.plan({ pipeline: ["assemble", "exportClones"] })))
 	// No assemble.
-	test.isTrue(is_undefined(pp.plan({ pipeline: ["align", "refineTagsAndSort", "exportClones"] }, "result.clns")))
+	test.isTrue(is_undefined(pp.plan({ pipeline: ["align", "refineTagsAndSort", "exportClones"] })))
 	// MiTool not starting with parse.
-	test.isTrue(is_undefined(pp.plan({ pipeline: ["mitool-consensus", "align", "assemble"], mitool: { consensus: [{}] } }, "result.clns")))
+	test.isTrue(is_undefined(pp.plan({ pipeline: ["mitool-consensus", "align", "assemble"], mitool: { consensus: [{}] } })))
 	// MiTool consensus with no rounds.
-	test.isTrue(is_undefined(pp.plan({ pipeline: ["mitool-parse", "mitool-consensus", "align", "assemble"], mitool: { consensus: [] } }, "result.clns")))
+	test.isTrue(is_undefined(pp.plan({ pipeline: ["mitool-parse", "mitool-consensus", "align", "assemble"], mitool: { consensus: [] } })))
 	// assembleContigs needs a .clna.
-	test.isTrue(is_undefined(pp.plan({ pipeline: ["align", "assemble", "assembleContigs"], assemble: { clnaOutput: false } }, "result.contigs.clns")))
+	test.isTrue(is_undefined(pp.plan({ pipeline: ["align", "assemble", "assembleContigs"], assemble: { clnaOutput: false } })))
 	// The last step must write a .clns.
-	test.isTrue(is_undefined(pp.plan({ pipeline: ["align", "assemble"], assemble: { clnaOutput: true } }, "result.clns")))
-	test.isTrue(is_undefined(pp.plan(undefined, "result.clns")))
+	test.isTrue(is_undefined(pp.plan({ pipeline: ["align", "assemble"], assemble: { clnaOutput: true } })))
+	test.isTrue(is_undefined(pp.plan(undefined)))
 }
 
-TestAssembleRule := func() {
-	test.isEqual("longRead", pp.assembleRule({ pipeline: ["align", "assemble"],
+_assembleGrant := func(preset) {
+	for link in pp.plan(preset).chain {
+		if link.step == "assemble" {
+			return link.grant
+		}
+	}
+}
+
+TestAssembleGrant := func() {
+	test.isEqual("longReadAssemble", _assembleGrant({ pipeline: ["align", "assemble", "exportClones"],
 		align: { parameters: { longReadsParameters: {} } } }))
-	test.isEqual("cell", pp.assembleRule({ pipeline: ["align", "refineTagsAndSort", "assemble"],
+	test.isEqual("cellAssemble", _assembleGrant({ pipeline: ["align", "refineTagsAndSort", "assemble"],
 		align: { tagPattern: "^(CELL:N{16})(UMI:N{10})\\^(R2:*)" } }))
-	test.isEqual("cell", pp.assembleRule({ pipeline: ["align", "refineTagsAndSort", "assemble", "assembleCells"],
+	test.isEqual("cellAssemble", _assembleGrant({ pipeline: ["align", "refineTagsAndSort", "assemble", "assembleCells"],
 		align: { tagPattern: "^(UMI:N{10})\\^(R2:*)" } }))
-	test.isEqual("umi", pp.assembleRule({ pipeline: ["align", "refineTagsAndSort", "assemble"],
+	test.isEqual("umiAssemble", _assembleGrant({ pipeline: ["align", "refineTagsAndSort", "assemble"],
 		align: { tagPattern: "^(UMI:N{10})\\^(R2:*)" } }))
-	test.isEqual("fallback", pp.assembleRule({ pipeline: ["align", "assemblePartial", "extend", "assemble"], align: {} }))
+	test.isEqual("bulkAssemble", _assembleGrant({ pipeline: ["align", "assemble", "exportClones"], align: {} }))
+	test.isEqual("untaggedAssemble", _assembleGrant({ pipeline: ["align", "assemblePartial", "extend", "assemble"], align: {} }))
+}
+
+TestStepGrants := func() {
+	preset := {
+		pipeline: ["mitool-parse", "mitool-consensus", "align", "refineTagsAndSort", "extend", "assemble"],
+		mitool: { consensus: [{}] }
+	}
+	plan := pp.plan(preset)
+	test.isEqual(["mitoolParse", "mitoolStep"], [plan.mitool[0].grant, plan.mitool[1].grant])
+	test.isEqual(["refineTagsAndSort", "cellStep", "umiAssemble"],
+		[plan.chain[0].grant, plan.chain[1].grant, plan.chain[2].grant])
+}
+
+TestHasCellTag := func() {
+	_withPattern := func(p) { return { align: { tagPattern: p } } }
+	test.isTrue(pp.hasCellTag(_withPattern("^(CELL1:N{9})aatg(CELL2:N{9})ccac(CELL3:N{9})(UMI:N{8})\\^(R2:*)")))
+	test.isTrue(pp.hasCellTag(_withPattern("^(CELL:N{16})(UMI:N{12})\\^(R2:*)")))
+	test.isFalse(pp.hasCellTag(_withPattern("^N{0:2}(UMI:N{12})\\^(R2:*)")))
+	test.isFalse(pp.hasCellTag(_withPattern("^(R1:*)\\^(R2:*)")))
+	test.isFalse(pp.hasCellTag({ align: {} }))
+	test.isFalse(pp.hasCellTag({}))
+	test.isFalse(pp.hasCellTag(undefined))
+}
+
+TestHasLongReadAligner := func() {
+	test.isTrue(pp.hasLongReadAligner({ align: { parameters: { longReadsParameters: { windowSize: 1500 } } } }))
+	test.isFalse(pp.hasLongReadAligner({ align: { parameters: { vParameters: {} } } }))
+	test.isFalse(pp.hasLongReadAligner({ align: { parameters: { longReadsParameters: undefined } } }))
+	test.isFalse(pp.hasLongReadAligner({ align: {} }))
+	test.isFalse(pp.hasLongReadAligner(undefined))
 }

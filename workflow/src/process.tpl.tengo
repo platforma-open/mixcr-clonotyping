@@ -155,9 +155,8 @@ self.body(func(inputs) {
 		},
 		name: "qc"
 	}, {
-		// One stream per MiXCR command. Bulk amplicon presets without UMIs run align, assemble
-		// and qc as separate execs; every other preset runs one `analyze` command and fills the
-		// single "analyze" key.
+		// One stream per MiXCR command, keyed by step. A preset that stays one `analyze`
+		// command fills the single "analyze" key.
 		type: "ResourceMap",
 		spec: {
 			kind: "PColumn",

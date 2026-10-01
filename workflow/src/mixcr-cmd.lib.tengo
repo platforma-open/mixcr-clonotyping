@@ -1,0 +1,37 @@
+// The exec shape every MiXCR command of :run-mixcr and :chain-mixcr shares.
+
+exec := import("@platforma-sdk/workflow-tengo:exec")
+
+PROGRESS_PREFIX := "[==PROGRESS==]"
+
+// builder starts a MiXCR command with its license, CA store and progress prefix, and saves
+// stdout with stderr merged in, so the log column carries the command's failure text.
+builder := func(mixcrSw) {
+	return exec.builder().
+		printErrStreamToStdout().
+		saveStdoutStream().
+		env("MI_USE_SYSTEM_CA", "true").
+		env("MI_PROGRESS_PREFIX", PROGRESS_PREFIX).
+		software(mixcrSw).
+		secret("MI_LICENSE", "MI_LICENSE").
+		env("MI_LICENSE_DEBUG", "MI_LICENSE_DEBUG")
+}
+
+// applyResources requests `ram` on the CPU queue. `res` carries the "Advanced Settings"
+// overrides and the scratch request: { perProcessMemGB, perProcessCPUs, scratchFreeSpace }.
+// perProcessMemGB replaces `ram`; perProcessCPUs defaults to 16.
+applyResources := func(cmd, ram, res) {
+	onCPU := { cpu: is_undefined(res.perProcessCPUs) ? 16 : res.perProcessCPUs }
+	onCPU.ram = is_undefined(res.perProcessMemGB) ? ram : string(res.perProcessMemGB) + "GiB"
+	if !is_undefined(res.scratchFreeSpace) {
+		onCPU.scratchFreeSpace = res.scratchFreeSpace
+	}
+	cmd.resources({ onCPU: onCPU })
+	return cmd
+}
+
+export {
+	PROGRESS_PREFIX: PROGRESS_PREFIX,
+	builder: builder,
+	applyResources: applyResources
+}

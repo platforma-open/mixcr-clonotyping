@@ -64,37 +64,6 @@ TestMemFormula := func() {
 	test.isEqual(_gib(110), f.fallbackOf(mf.memFormula(110)))
 }
 
-// A resolved preset bundle carrying only the clone-assembler parameters the sizing reads.
-_presetWith := func(cloneAssemblerParameters) {
-	return {
-		pipeline: ["align", "assemble", "exportClones"],
-		assemble: { cloneAssemblerParameters: cloneAssemblerParameters }
-	}
-}
-
-TestAssemblingFeaturesTakesThePresetsOwnFeature := func() {
-	// A kit preset sets its feature through SetClonotypeAssemblingFeatures and leaves the user
-	// override undefined, so reading the override alone would size every such run as CDR3.
-	test.isEqual(["VDJRegion"],
-		mf.assemblingFeatures(_presetWith({ assemblingFeatures: ["VDJRegion"] }), undefined))
-	test.isEqual(["{CDR1Begin:CDR3End}"],
-		mf.assemblingFeatures(_presetWith({ assemblingFeatures: ["{CDR1Begin:CDR3End}"] }), undefined))
-}
-
-TestAssemblingFeaturesPrefersTheUserOverride := func() {
-	test.isEqual(["CDR3"],
-		mf.assemblingFeatures(_presetWith({ assemblingFeatures: ["VDJRegion"] }), "CDR3"))
-}
-
-TestAssemblingFeaturesFallsBackToCdr3WhenTheFieldIsFlagDriven := func() {
-	// assemble-base leaves assemblingFeatures null; generic amplicon presets inherit that and
-	// assemble by CDR3 unless a flag says otherwise.
-	test.isEqual(["CDR3"], mf.assemblingFeatures(_presetWith({ assemblingFeatures: undefined }), undefined))
-	test.isEqual(["CDR3"], mf.assemblingFeatures(_presetWith({}), undefined))
-	test.isEqual(["CDR3"], mf.assemblingFeatures({}, undefined))
-}
-
-
 // An align report carrying the estimate of initialClonesCreated.
 _alignReportWith := func(estimate) {
 	return {
@@ -131,10 +100,12 @@ TestAssembleRamGiB := func() {
 	test.isEqual(10,  mf.assembleRamGiB(0))
 }
 
-// Evaluate a resource formula against a fake ".vdjca" input of sizeBytes.
-_evalVdjca := func(node, sizeBytes) {
-	fileName := "aligned.vdjca"
-	resolved := f.resolveAst(node, { "vdjca": [fileName] }, [fileName])
+// Evaluate a split step's resource formula against a fake staged input of sizeBytes.
+_evalInput := func(node, sizeBytes) {
+	fileName := "input.bin"
+	inputs := {}
+	inputs[mf.INPUT_TAG] = [fileName]
+	resolved := f.resolveAst(node, inputs, [fileName])
 	resolver := {
 		size:      func(files) { return sizeBytes },
 		lineCount: func(files) { return 0 }
@@ -142,17 +113,17 @@ _evalVdjca := func(node, sizeBytes) {
 	return f.evaluateResource(resolved, resolver, "test")
 }
 
-TestAssembleFallbackRam := func() {
+TestUntaggedAssembleRam := func() {
 	// ram = clamp(ceil(4 GiB + 21.9 x size(vdjca)), 64 GiB, 256 GiB), whole GiB.
-	test.isEqual(_gib(64),  _evalVdjca(mf.assembleFallbackRam(), 0))
-	test.isEqual(_gib(64),  _evalVdjca(mf.assembleFallbackRam(), _gib(2)))
+	test.isEqual(_gib(64),  _evalInput(mf.stepRam("untaggedAssemble"), 0))
+	test.isEqual(_gib(64),  _evalInput(mf.stepRam("untaggedAssemble"), _gib(2)))
 	// The dense 7.39 M-clone library: .vdjca 5.05 GiB, bisected floor 80 GiB.
 	// 4 + 21.9 x 5.05 = 114.6, rounded up to 115.
-	test.isEqual(_gib(115), _evalVdjca(mf.assembleFallbackRam(), _gib(505) / 100))
+	test.isEqual(_gib(115), _evalInput(mf.stepRam("untaggedAssemble"), _gib(505) / 100))
 	// 4 + 21.9 x 8 = 179.2, rounded up to 180.
-	test.isEqual(_gib(180), _evalVdjca(mf.assembleFallbackRam(), _gib(8)))
-	test.isEqual(_gib(256), _evalVdjca(mf.assembleFallbackRam(), _gib(12)))
-	test.isEqual(_gib(64),  f.fallbackOf(mf.assembleFallbackRam()))
+	test.isEqual(_gib(180), _evalInput(mf.stepRam("untaggedAssemble"), _gib(8)))
+	test.isEqual(_gib(256), _evalInput(mf.stepRam("untaggedAssemble"), _gib(12)))
+	test.isEqual(_gib(64),  f.fallbackOf(mf.stepRam("untaggedAssemble")))
 }
 
 TestExportRam := func() {
@@ -210,87 +181,67 @@ TestExportRam := func() {
 
 TestRefineRam := func() {
 	// ram = min(ceil(6 GiB + 2.1 x size(vdjca)), 256 GiB), whole GiB.
-	test.isEqual(_gib(7),   _evalVdjca(mf.refineRam(), _gib(39) / 100))
-	test.isEqual(_gib(24),  _evalVdjca(mf.refineRam(), _gib(813) / 100))
-	test.isEqual(_gib(27),  _evalVdjca(mf.refineRam(), _gib(954) / 100))
-	test.isEqual(_gib(6),   _evalVdjca(mf.refineRam(), 0))
-	test.isEqual(_gib(256), _evalVdjca(mf.refineRam(), _gib(200)))
-	test.isEqual(_gib(64),  f.fallbackOf(mf.refineRam()))
+	test.isEqual(_gib(7),   _evalInput(mf.stepRam("refineTagsAndSort"), _gib(39) / 100))
+	test.isEqual(_gib(24),  _evalInput(mf.stepRam("refineTagsAndSort"), _gib(813) / 100))
+	test.isEqual(_gib(27),  _evalInput(mf.stepRam("refineTagsAndSort"), _gib(954) / 100))
+	test.isEqual(_gib(6),   _evalInput(mf.stepRam("refineTagsAndSort"), 0))
+	test.isEqual(_gib(256), _evalInput(mf.stepRam("refineTagsAndSort"), _gib(200)))
+	test.isEqual(_gib(64),  f.fallbackOf(mf.stepRam("refineTagsAndSort")))
 }
 
 TestUmiAssembleRam := func() {
 	// ram = clamp(ceil(0.86 x size(vdjca)), 16 GiB, 256 GiB), whole GiB.
-	test.isEqual(_gib(16),  _evalVdjca(mf.umiAssembleRam(), _gib(1)))
-	test.isEqual(_gib(16),  _evalVdjca(mf.umiAssembleRam(), _gib(186) / 10))
-	test.isEqual(_gib(26),  _evalVdjca(mf.umiAssembleRam(), _gib(30)))
-	test.isEqual(_gib(256), _evalVdjca(mf.umiAssembleRam(), _gib(400)))
-	test.isEqual(_gib(64),  f.fallbackOf(mf.umiAssembleRam()))
+	test.isEqual(_gib(16),  _evalInput(mf.stepRam("umiAssemble"), _gib(1)))
+	test.isEqual(_gib(16),  _evalInput(mf.stepRam("umiAssemble"), _gib(186) / 10))
+	test.isEqual(_gib(26),  _evalInput(mf.stepRam("umiAssemble"), _gib(30)))
+	test.isEqual(_gib(256), _evalInput(mf.stepRam("umiAssemble"), _gib(400)))
+	test.isEqual(_gib(64),  f.fallbackOf(mf.stepRam("umiAssemble")))
 }
 
 TestCellAssembleRam := func() {
 	// ram = clamp(ceil(4.1 x size(vdjca)), 16 GiB, 256 GiB), whole GiB.
-	test.isEqual(_gib(16),  _evalVdjca(mf.cellAssembleRam(), _gib(1)))
-	test.isEqual(_gib(16),  _evalVdjca(mf.cellAssembleRam(), _gib(39) / 10))
-	test.isEqual(_gib(41),  _evalVdjca(mf.cellAssembleRam(), _gib(10)))
-	test.isEqual(_gib(256), _evalVdjca(mf.cellAssembleRam(), _gib(100)))
-	test.isEqual(_gib(64),  f.fallbackOf(mf.cellAssembleRam()))
-}
-
-// Evaluate a resource formula against a fake input of sizeBytes, staged under tag.
-_evalTagged := func(node, tag, sizeBytes) {
-	fileName := "input.bin"
-	inputs := {}
-	inputs[tag] = [fileName]
-	resolved := f.resolveAst(node, inputs, [fileName])
-	resolver := {
-		size:      func(files) { return sizeBytes },
-		lineCount: func(files) { return 0 }
-	}
-	return f.evaluateResource(resolved, resolver, "test")
+	test.isEqual(_gib(16),  _evalInput(mf.stepRam("cellAssemble"), _gib(1)))
+	test.isEqual(_gib(16),  _evalInput(mf.stepRam("cellAssemble"), _gib(39) / 10))
+	test.isEqual(_gib(41),  _evalInput(mf.stepRam("cellAssemble"), _gib(10)))
+	test.isEqual(_gib(256), _evalInput(mf.stepRam("cellAssemble"), _gib(100)))
+	test.isEqual(_gib(64),  f.fallbackOf(mf.stepRam("cellAssemble")))
 }
 
 TestCellStepRam := func() {
-	// ram = clamp(ceil(2 x size(stepInput)), 8 GiB, 256 GiB), whole GiB.
-	test.isEqual(_gib(8),   _evalTagged(mf.cellStepRam(), "stepInput", _gib(1)))
-	test.isEqual(_gib(8),   _evalTagged(mf.cellStepRam(), "stepInput", _gib(4)))
-	test.isEqual(_gib(20),  _evalTagged(mf.cellStepRam(), "stepInput", _gib(10)))
-	test.isEqual(_gib(256), _evalTagged(mf.cellStepRam(), "stepInput", _gib(200)))
-	test.isEqual(_gib(64),  f.fallbackOf(mf.cellStepRam()))
+	// ram = clamp(ceil(2 x size(input)), 8 GiB, 256 GiB), whole GiB.
+	test.isEqual(_gib(8),   _evalInput(mf.stepRam("cellStep"), _gib(1)))
+	test.isEqual(_gib(8),   _evalInput(mf.stepRam("cellStep"), _gib(4)))
+	test.isEqual(_gib(20),  _evalInput(mf.stepRam("cellStep"), _gib(10)))
+	test.isEqual(_gib(256), _evalInput(mf.stepRam("cellStep"), _gib(200)))
+	test.isEqual(_gib(64),  f.fallbackOf(mf.stepRam("cellStep")))
 }
 
 TestMitoolStepRam := func() {
 	// Placeholder: ram = clamp(ceil(2 x size(mic)), 16 GiB, 256 GiB), whole GiB.
-	test.isEqual(_gib(16),  _evalTagged(mf.mitoolStepRam(), "mic", _gib(1)))
-	test.isEqual(_gib(16),  _evalTagged(mf.mitoolStepRam(), "mic", _gib(8)))
-	test.isEqual(_gib(21),  _evalTagged(mf.mitoolStepRam(), "mic", _gib(105) / 10))
-	test.isEqual(_gib(256), _evalTagged(mf.mitoolStepRam(), "mic", _gib(200)))
-	test.isEqual(_gib(64),  f.fallbackOf(mf.mitoolStepRam()))
-	test.isEqual(16, mf.MITOOL_PARSE_RAM_GIB)
+	test.isEqual(_gib(16),  _evalInput(mf.stepRam("mitoolStep"), _gib(1)))
+	test.isEqual(_gib(16),  _evalInput(mf.stepRam("mitoolStep"), _gib(8)))
+	test.isEqual(_gib(21),  _evalInput(mf.stepRam("mitoolStep"), _gib(105) / 10))
+	test.isEqual(_gib(256), _evalInput(mf.stepRam("mitoolStep"), _gib(200)))
+	test.isEqual(_gib(64),  f.fallbackOf(mf.stepRam("mitoolStep")))
+	test.isEqual("16GiB", mf.stepRam("mitoolParse"))
 }
 
-TestHasCellTag := func() {
-	_withPattern := func(p) { return { align: { tagPattern: p } } }
-	test.isTrue(mf.hasCellTag(_withPattern("^(CELL1:N{9})aatg(CELL2:N{9})ccac(CELL3:N{9})(UMI:N{8})\\^(R2:*)")))
-	test.isTrue(mf.hasCellTag(_withPattern("^(CELL:N{16})(UMI:N{12})\\^(R2:*)")))
-	test.isFalse(mf.hasCellTag(_withPattern("^N{0:2}(UMI:N{12})\\^(R2:*)")))
-	test.isFalse(mf.hasCellTag(_withPattern("^(R1:*)\\^(R2:*)")))
-	test.isFalse(mf.hasCellTag({ align: {} }))
-	test.isFalse(mf.hasCellTag({}))
-	test.isFalse(mf.hasCellTag(undefined))
-}
 
 TestLongReadAssembleRam := func() {
 	// ram = min(ceil(6 GiB + 5.8 x size(vdjca)), 256 GiB), whole GiB.
-	test.isEqual(_gib(12),  _evalVdjca(mf.longReadAssembleRam(), _gib(1)))
-	test.isEqual(_gib(50),  _evalVdjca(mf.longReadAssembleRam(), _gib(75) / 10))
-	test.isEqual(_gib(256), _evalVdjca(mf.longReadAssembleRam(), _gib(432) / 10))
-	test.isEqual(_gib(64),  f.fallbackOf(mf.longReadAssembleRam()))
+	test.isEqual(_gib(12),  _evalInput(mf.stepRam("longReadAssemble"), _gib(1)))
+	test.isEqual(_gib(50),  _evalInput(mf.stepRam("longReadAssemble"), _gib(75) / 10))
+	test.isEqual(_gib(256), _evalInput(mf.stepRam("longReadAssemble"), _gib(432) / 10))
+	test.isEqual(_gib(64),  f.fallbackOf(mf.stepRam("longReadAssemble")))
 }
 
-TestHasLongReadAligner := func() {
-	test.isTrue(mf.hasLongReadAligner({ align: { parameters: { longReadsParameters: { windowSize: 1500 } } } }))
-	test.isFalse(mf.hasLongReadAligner({ align: { parameters: { vParameters: {} } } }))
-	test.isFalse(mf.hasLongReadAligner({ align: { parameters: { longReadsParameters: undefined } } }))
-	test.isFalse(mf.hasLongReadAligner({ align: {} }))
-	test.isFalse(mf.hasLongReadAligner(undefined))
+TestBulkAssembleTakesTheEstimateWhenThereIsOne := func() {
+	test.isEqual("18GiB", mf.stepRam("bulkAssemble", 550000))
+	// No estimate: the untagged bound on the .vdjca.
+	test.isEqual(_gib(115), _evalInput(mf.stepRam("bulkAssemble", undefined), _gib(505) / 100))
+	test.isEqual(_gib(115), _evalInput(mf.stepRam("bulkAssemble"), _gib(505) / 100))
+}
+
+TestAlignGrantIsFlat := func() {
+	test.isEqual("24GiB", mf.stepRam("align"))
 }

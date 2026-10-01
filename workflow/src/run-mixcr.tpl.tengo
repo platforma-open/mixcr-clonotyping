@@ -1,25 +1,16 @@
-// Identity of this template for the platform's deduplication. Changing this value means
-// "re-run every sample on the next block update" — see the longer note in :mixcr-analyze.
-// Rotated whenever the template graph below it changes; reusing the old value would serve
-// cache hits from a different computation.
-//tengo:hash_override 79DA8B7F-D419-4AC6-8617-CC3C2C12762B
+// Identity of this template for the platform's deduplication. While :mixcr-analyze, above this
+// template, carries an override of its own, this value has no effect: rotate that one when
+// the computation changes. It must never equal the one another template uses, as a
+// shared value declares two templates interchangeable.
+//tengo:hash_override 857A0480-F04D-4BAB-8697-E262BD515AD6
 
 // Runs MiXCR on one measured sample.
 //
-// Every step runs as its own exec, so each step carries its own memory grant instead of
-// sharing the worst step's:
-//
-//   - `align, assemble, exportClones`: `assemble` is sized from the clonotype estimate the
-//     align report carries, which a template can only read after the align command has
-//     finished, so `assemble` and `qc` live in :assemble-mixcr.
-//   - Every other pipeline :pipeline-plan accepts, built-in or from a preset file: MiTool steps,
-//     `align`, then the chain up to the final .clns. Each step is sized through exec.formula
-//     from the one file it stages, so the whole chain runs here. :pipeline-plan names the
-//     assemble rule.
-//
-// The in-chain `exportClones` and `exportCloneGroups` are dropped rather than reproduced: the
-// block saves nothing from them and re-exports from the .clns with its own argv in
-// :mixcr-export.
+// A pipeline :pipeline-plan accepts runs one exec per step, so each step carries its own memory
+// grant instead of sharing the worst step's: the MiTool steps and `align` here, the rest and
+// `qc` in :chain-mixcr, which can read the align report to size `assemble`. The in-chain
+// `exportClones` and `exportCloneGroups` are dropped: the block saves nothing from them and
+// re-exports from the .clns with its own argv in :mixcr-export.
 //
 // A pipeline :pipeline-plan rejects keeps the single `analyze` command.
 
@@ -28,13 +19,13 @@ smart := import("@platforma-sdk/workflow-tengo:smart")
 render := import("@platforma-sdk/workflow-tengo:render")
 pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 ll := import("@platforma-sdk/workflow-tengo:ll")
-exec := import("@platforma-sdk/workflow-tengo:exec")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 pcolumn := import("@platforma-sdk/workflow-tengo:pframes.pcolumn")
 times := import("times")
 text := import("text")
 maps := import("@platforma-sdk/workflow-tengo:maps")
 memf := import(":mem-formula")
+mixcrCmd := import(":mixcr-cmd")
 readStats := import(":read-stats")
 pipelinePlan := import(":pipeline-plan")
 
@@ -43,50 +34,13 @@ json := import("json")
 self.defineOutputs("qc", "reports", "log", "clns")
 
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
-assembleMixcrTpl := assets.importTemplate(":assemble-mixcr")
-
-progressPrefix := "[==PROGRESS==]"
+chainMixcrTpl := assets.importTemplate(":chain-mixcr")
 
 CACHE_PERIOD := 48 * times.hour
-
-// The one pipeline split outside :pipeline-plan, matched whole.
-PIPELINE_BULK := ["align", "assemble", "exportClones"]
-
-// Flat `align` grant of a split run. `align` streams its input, so the grant does not scale
-// with the sample.
-ALIGN_RAM_GIB := 24
-
-// `mixcr qc` reads the reports in the .clns footer; it holds no clones. NEEDS VERIFICATION: no
-// bisected floor for `qc` exists.
-QC_MEM := "4GiB"
-
-_sameSteps := func(pipeline, steps) {
-	if len(pipeline) != len(steps) {
-		return false
-	}
-	for i, step in steps {
-		if pipeline[i] != step {
-			return false
-		}
-	}
-	return true
-}
 
 self.body(func(inputs) {
 	inputData := inputs[pConstants.VALUE_FIELD_NAME]
 	aggregationAxesNames := inputs[pConstants.AGGREGATION_AXES_NAMES_FIELD_NAME]
-
-	// Disposable disk space for MiXCR's temporary files. TMPDIR points at a volume of this
-	// size, which is why --use-local-temp is gone: it wrote into the working directory on the
-	// shared workspace storage, where the I/O is slower and billed. The SDK guarantees TMPDIR
-	// on every backend now - it stages a wrapper script where the backend cannot - so there is
-	// no version of Platforma left that needs the old flag.
-	// 'undefined' when :mixcr-analyze found no read end to measure.
-	//
-	// One number covers every step of a split run. :read-stats folds the sequence-volume term
-	// and the read-length term into a single max and exposes no way to separate them, so the
-	// step that needs the smaller of the two over-requests disk.
-	mixcrScratchSpace := readStats.scratchFreeSpaceFor(inputs.readStats)
 
 	preset := inputs.preset
 	library := inputs.library
@@ -99,8 +53,6 @@ self.body(func(inputs) {
 	materialType := params.materialType
 	tagPattern := params.tagPattern
 	assembleClonesBy := params.assembleClonesBy
-	perProcessMemGB := inputs.perProcessMemGB
-	perProcessCPUs := inputs.perProcessCPUs
 	fileExtension := params.fileExtension
 	reports := params.reports
 	isLibraryFileGzipped := params.isLibraryFileGzipped
@@ -113,74 +65,16 @@ self.body(func(inputs) {
 
 	inputDataMeta := inputData.getDataAsJson()
 
-	hasAssembleContigs := false
-	hasAssembleCells := false
-	hasMiToolSteps := false
-	for stage in presetContent.pipeline {
-		if stage == "assembleContigs" {
-			hasAssembleContigs = true
-		} else if stage == "assembleCells" {
-			hasAssembleCells = true
-		} else if text.has_prefix(stage, "mitool-") {
-			hasMiToolSteps = true
-		}
-	}
-
-	splitBulk := _sameSteps(presetContent.pipeline, PIPELINE_BULK)
-	longRead := memf.hasLongReadAligner(presetContent)
-
-	clnsFileName := "result.clns"
-	if hasAssembleContigs {
-		clnsFileName = "result.contigs.clns"
-	}
-	if hasAssembleCells {
-		clnsFileName = "result.assembledCells.clns"
-	}
-
-	// 'undefined' when the pipeline stays one `analyze` command.
-	stepPlan := splitBulk ? undefined : pipelinePlan.plan(presetContent, clnsFileName)
-
-	// CPUs number per process
-	perProcessCPUsResolved := is_undefined(perProcessCPUs) ? 16 : perProcessCPUs
-
-	baseMemGiB := memf.baseMemGiB(hasMiToolSteps, hasAssembleContigs, hasAssembleCells)
-
-	newMixcrBuilder := func() {
-		return exec.builder().
-			printErrStreamToStdout().
-			saveStdoutStream().
-			env("MI_USE_SYSTEM_CA", "true").
-			env("MI_PROGRESS_PREFIX", progressPrefix).
-			software(mixcrSw).
-			secret("MI_LICENSE", "MI_LICENSE").
-			env("MI_LICENSE_DEBUG", "MI_LICENSE_DEBUG")
-	}
-
-	// Memory limit per process. `ram` is the step's own grant. `analyze` passes
-	//     mem = clamp(4 * size("reads"), baseMemGiB, 256 GiB)
-	// size("reads") sums the stored (compressed) blob size of the sample's R1+R2 FASTQ
-	// via getBlobSize — a metadata read, no pre-exec — so it tracks total input volume
-	// (read count and read length) without decompressing.
-	// baseMemGiB is a TOTAL-memory floor for the analysis, so it acts as the lower bound
-	// rather than a base to add data on top of. It is 64 GiB, rising to 110 or 192 for
-	// contig/cell and single-cell+MiTool pipelines, which need that headroom whatever the
-	// input size. The linear term scales with input volume, and the 256 GiB cap bounds
-	// the largest runs.
-	// An "Advanced Settings" memory override takes precedence. On backends that cannot
-	// evaluate resource formulas, the formula's static fallback is the baseline.
-	applyResources := func(builder, ram) {
-		onCPUResources := { cpu: perProcessCPUsResolved }
-		if !is_undefined(perProcessMemGB) {
-			// memory per process was set in "Advanced Settings" block directly
-			onCPUResources.ram = string(perProcessMemGB) + "GiB"
-		} else {
-			onCPUResources.ram = ram
-		}
-		if !is_undefined(mixcrScratchSpace) {
-			onCPUResources.scratchFreeSpace = mixcrScratchSpace
-		}
-		builder.resources({ onCPU: onCPUResources })
-		return builder
+	// The "Advanced Settings" overrides, and the disposable disk space for MiXCR's temporary
+	// files. TMPDIR points at a volume of that size, so MiXCR no longer writes temporary files
+	// to the shared workspace storage. 'undefined' when :mixcr-analyze found no read end to
+	// measure. One number covers every step of a split run: :read-stats folds the
+	// sequence-volume and read-length terms into a single max, so the step that needs the
+	// smaller of the two over-requests disk.
+	res := {
+		perProcessMemGB: inputs.perProcessMemGB,
+		perProcessCPUs: inputs.perProcessCPUs,
+		scratchFreeSpace: readStats.scratchFreeSpaceFor(inputs.readStats)
 	}
 
 	// Preset selection and every mixin that shapes the resolved parameter bundle. `align`
@@ -305,9 +199,34 @@ self.body(func(inputs) {
 	// step in one JVM and contributes a single entry.
 	logs := pcolumn.resourceMapBuilder( /* keyLength */ 1 )
 
-	if !splitBulk && is_undefined(stepPlan) {
-		mixcrCmdBuilder := newMixcrBuilder().arg("analyze")
-		applyResources(mixcrCmdBuilder, memf.memFormula(baseMemGiB))
+	stepPlan := pipelinePlan.plan(presetContent)
+
+	if is_undefined(stepPlan) {
+		hasAssembleContigs := false
+		hasAssembleCells := false
+		hasMiToolSteps := false
+		for stage in presetContent.pipeline {
+			if stage == "assembleContigs" {
+				hasAssembleContigs = true
+			} else if stage == "assembleCells" {
+				hasAssembleCells = true
+			} else if text.has_prefix(stage, "mitool-") {
+				hasMiToolSteps = true
+			}
+		}
+
+		// `analyze` names its output after the last clns-writing step.
+		clnsFileName := "result.clns"
+		if hasAssembleContigs {
+			clnsFileName = "result.contigs.clns"
+		}
+		if hasAssembleCells {
+			clnsFileName = "result.assembledCells.clns"
+		}
+
+		mixcrCmdBuilder := mixcrCmd.builder(mixcrSw).arg("analyze")
+		mixcrCmd.applyResources(mixcrCmdBuilder,
+			memf.memFormula(memf.baseMemGiB(hasMiToolSteps, hasAssembleContigs, hasAssembleCells)), res)
 
 		if !is_undefined(limitInput) {
 			mixcrCmdBuilder.arg("--limit-input").arg(string(limitInput))
@@ -327,21 +246,21 @@ self.body(func(inputs) {
 			mixcrCmdBuilder.saveFile(report.fileTxt)
 		}
 
-		mixcrCmd := mixcrCmdBuilder.cache(CACHE_PERIOD).run()
+		mixcrRun := mixcrCmdBuilder.cache(CACHE_PERIOD).run()
 
 		reportsMap := pcolumn.resourceMapBuilder( /* keyLength */ 2 )
 		for report in reports {
-			reportsMap.add([report.id, "json"], mixcrCmd.getFile(report.fileJson))
-			reportsMap.add([report.id, "txt"], mixcrCmd.getFile(report.fileTxt))
+			reportsMap.add([report.id, "json"], mixcrRun.getFile(report.fileJson))
+			reportsMap.add([report.id, "txt"], mixcrRun.getFile(report.fileTxt))
 		}
 
-		logs.add(["analyze"], mixcrCmd.getStdoutStream())
+		logs.add(["analyze"], mixcrRun.getStdoutStream())
 
 		return {
-			qc: mixcrCmd.getFile("result.qc.json"),
+			qc: mixcrRun.getFile("result.qc.json"),
 			log: logs.build(),
 			reports: reportsMap.build(),
-			clns: mixcrCmd.getFile(clnsFileName)
+			clns: mixcrRun.getFile(clnsFileName)
 		}
 	}
 
@@ -351,39 +270,31 @@ self.body(func(inputs) {
 	// later step, `align` included, reads them from there.
 	micFile := undefined
 	micFileName := undefined
-	if !is_undefined(stepPlan) {
-		for step in stepPlan.mitool {
-			builder := newMixcrBuilder().arg("mitool").arg(step.command)
-			if step.command == "parse" {
-				builder.
-					arg("--preset").arg("local:mitool_preset").
-					writeFile("mitool_preset.yaml", presetContent.mitool)
-				applyResources(builder, string(memf.MITOOL_PARSE_RAM_GIB) + "GiB")
-				applyInputFiles(builder)
-			} else {
-				builder.addFile(micFileName, micFile, { tag: "mic" }).arg(micFileName)
-				applyResources(builder, memf.mitoolStepRam())
-			}
-			cmd := builder.
-				arg(step.outName).
-				saveFile(step.outName).
-				cache(CACHE_PERIOD).
-				run()
-			logs.add([step.logKey], cmd.getStdoutStream())
-			micFileName = step.outName
-			micFile = cmd.getFile(step.outName)
+	for step in stepPlan.mitool {
+		cmd := mixcrCmd.builder(mixcrSw).arg("mitool").arg(step.command)
+		if step.command == "parse" {
+			cmd.arg("--preset").arg("local:mitool_preset").
+				writeFile("mitool_preset.yaml", presetContent.mitool)
+			applyInputFiles(cmd)
+		} else {
+			cmd.addFile(micFileName, micFile, { tag: memf.INPUT_TAG }).arg(micFileName)
 		}
+		mixcrCmd.applyResources(cmd, memf.stepRam(step.grant), res)
+		run := cmd.arg(step.outName).saveFile(step.outName).cache(CACHE_PERIOD).run()
+		logs.add([step.logKey], run.getStdoutStream())
+		micFileName = step.outName
+		micFile = run.getFile(step.outName)
 	}
 
 	alignReportJson := "result.align.report.json"
 	alignReportTxt := "result.align.report.txt"
 	alignedFile := "result.vdjca"
 
-	alignBuilder := newMixcrBuilder().arg("align").arg("-f")
-	applyResources(alignBuilder, string(ALIGN_RAM_GIB) + "GiB")
+	alignBuilder := mixcrCmd.builder(mixcrSw).arg("align").arg("-f")
+	mixcrCmd.applyResources(alignBuilder, memf.stepRam("align"), res)
 
-	// `--threads` exists on align alone of the three steps. Reading the granted count back
-	// from the placeholder keeps the flag and the request from diverging.
+	// `--threads` exists on align alone of the MiXCR steps. Reading the granted count back from
+	// the placeholder keeps the flag and the request from diverging.
 	alignBuilder.arg("--threads").argExpr("{system.cpu}")
 
 	if !is_undefined(limitInput) {
@@ -403,8 +314,8 @@ self.body(func(inputs) {
 	}
 
 	// The report is saved twice: as a file, which is what the reports p-column carries, and
-	// as content, which is the only form :assemble-mixcr can decode to size itself.
-	alignCmd := alignBuilder.
+	// as content, which is the only form :chain-mixcr can decode to size `assemble`.
+	alignRun := alignBuilder.
 		arg(alignedFile).
 		saveFile(alignedFile).
 		saveFile(alignReportJson).
@@ -413,152 +324,36 @@ self.body(func(inputs) {
 		cache(CACHE_PERIOD).
 		run()
 
-	logs.add(["align"], alignCmd.getStdoutStream())
+	logs.add(["align"], alignRun.getStdoutStream())
 
-	// Kept out of the deduplication key for the same reason :mixcr-analyze keeps them out of
-	// this template's: a run is recovered across a change of the CPU or memory override. The
-	// scratch request rides along; it never changes what the step produces.
-	childMetaInputs := {
-		perProcessMemGB: perProcessMemGB,
-		perProcessCPUs: perProcessCPUs,
-		scratchFreeSpace: mixcrScratchSpace
-	}
-
-	if !is_undefined(stepPlan) {
-		rule := pipelinePlan.assembleRule(presetContent)
-		assembleRam := undefined
-		if rule == "longRead" {
-			assembleRam = memf.longReadAssembleRam()
-		} else if rule == "cell" {
-			assembleRam = memf.cellAssembleRam()
-		} else if rule == "umi" {
-			assembleRam = memf.umiAssembleRam()
-		} else {
-			assembleRam = memf.assembleFallbackRam()
-		}
-
-		assembleReportJson := "result.assemble.report.json"
-		assembleReportTxt := "result.assemble.report.txt"
-
-		inName := alignedFile
-		inFile := alignCmd.getFile(alignedFile)
-		assembleCmd := undefined
-		for link in stepPlan.chain {
-			step := link.step
-
-			inTag := "stepInput"
-			ram := undefined
-			if step == "refineTagsAndSort" {
-				inTag = "vdjca"
-				ram = memf.refineRam()
-			} else if step == "assemble" {
-				inTag = "vdjca"
-				ram = assembleRam
-			} else {
-				ram = memf.cellStepRam()
-			}
-
-			builder := newMixcrBuilder().arg(step).arg("-f")
-			if step == "assemble" {
-				builder.
-					arg("--report").arg(assembleReportTxt).
-					arg("--json-report").arg(assembleReportJson).
-					saveFile(assembleReportJson).
-					saveFile(assembleReportTxt)
-			}
-			builder.
-				addFile(inName, inFile, { tag: inTag }).
-				arg(inName).
-				arg(link.outName)
-			applyResources(builder, ram)
-			cmd := builder.saveFile(link.outName).cache(CACHE_PERIOD).run()
-			logs.add([link.logKey], cmd.getStdoutStream())
-
-			if step == "assemble" {
-				assembleCmd = cmd
-			}
-			inName = link.outName
-			inFile = cmd.getFile(link.outName)
-		}
-
-		clnsFile := inFile
-
-		qcTxtFile := "result.qc.txt"
-		qcJsonFile := "result.qc.json"
-
-		qcMem := QC_MEM
-		if !is_undefined(perProcessMemGB) {
-			// memory per process was set in "Advanced Settings" block directly
-			qcMem = string(perProcessMemGB) + "GiB"
-		}
-
-		qcCmd := exec.builder().
-			printErrStreamToStdout().
-			saveStdoutStream().
-			env("MI_USE_SYSTEM_CA", "true").
-			software(mixcrSw).
-			secret("MI_LICENSE", "MI_LICENSE").
-			env("MI_LICENSE_DEBUG", "MI_LICENSE_DEBUG").
-			arg("qc").
-			arg("--print-to-stdout").
-			arg("-f").
-			addFile(clnsFileName, clnsFile).
-			arg(clnsFileName).
-			arg(qcTxtFile).
-			arg(qcJsonFile).
-			inLightQueue().
-			cpu(1).
-			mem(qcMem).
-			saveFile(qcJsonFile).
-			cache(CACHE_PERIOD).
-			run()
-		logs.add(["qc"], qcCmd.getStdoutStream())
-
-		// The reports p-column carries the ids :process lists.
-		reportsMap := pcolumn.resourceMapBuilder( /* keyLength */ 2 )
-		for report in reports {
-			if report.id == "align" {
-				reportsMap.add([report.id, "json"], alignCmd.getFile(alignReportJson))
-				reportsMap.add([report.id, "txt"], alignCmd.getFile(alignReportTxt))
-			} else if report.id == "assemble" {
-				reportsMap.add([report.id, "json"], assembleCmd.getFile(assembleReportJson))
-				reportsMap.add([report.id, "txt"], assembleCmd.getFile(assembleReportTxt))
-			} else {
-				ll.panic("unexpected report id %v", report.id)
-			}
-		}
-
-		return {
-			qc: qcCmd.getFile(qcJsonFile),
-			log: logs.build(),
-			reports: reportsMap.build(),
-			clns: clnsFile
-		}
-	}
-
-	assembleRun := render.create(
-		assembleMixcrTpl,
+	// The overrides go in as metaInputs, out of the deduplication key, for the same reason
+	// :mixcr-analyze keeps them out of this template's: a run is recovered across a change of
+	// the CPU or memory override. The scratch request never changes what a step produces.
+	chainRun := render.create(
+		chainMixcrTpl,
 		{
-			vdjca: alignCmd.getFile(alignedFile),
-			alignReport: alignCmd.getFileContent(alignReportJson),
-			alignReportJson: alignCmd.getFile(alignReportJson),
-			alignReportTxt: alignCmd.getFile(alignReportTxt),
-
-			clnsFileName: clnsFileName,
-			reports: reports,
-			assemblingFeatures: memf.assemblingFeatures(presetContent, assembleClonesBy),
-			longRead: longRead
+			vdjca: alignRun.getFile(alignedFile),
+			alignReport: alignRun.getFileContent(alignReportJson),
+			alignReportJson: alignRun.getFile(alignReportJson),
+			alignReportTxt: alignRun.getFile(alignReportTxt),
+			chain: stepPlan.chain,
+			reports: reports
 		},
-		{ metaInputs: childMetaInputs }
+		{ metaInputs: res }
 	)
 
-	logs.add(["assemble"], assembleRun.output("log", CACHE_PERIOD))
-	logs.add(["qc"], assembleRun.output("qcLog", CACHE_PERIOD))
+	// The child's log map has one entry per chain step plus `qc`; each is lifted into this
+	// template's map under the same key, so the UI sees every step's stream as it starts.
+	chainLogs := chainRun.output("log", CACHE_PERIOD)
+	for link in stepPlan.chain {
+		logs.add([link.logKey], chainLogs.buildFutureField(string(json.encode([link.logKey]))))
+	}
+	logs.add(["qc"], chainLogs.buildFutureField(string(json.encode(["qc"]))))
 
 	return {
-		qc: assembleRun.output("qc", CACHE_PERIOD),
+		qc: chainRun.output("qc", CACHE_PERIOD),
 		log: logs.build(),
-		reports: assembleRun.output("reports", CACHE_PERIOD),
-		clns: assembleRun.output("clns", CACHE_PERIOD)
+		reports: chainRun.output("reports", CACHE_PERIOD),
+		clns: chainRun.output("clns", CACHE_PERIOD)
 	}
 })

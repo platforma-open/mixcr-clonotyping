@@ -1,6 +1,6 @@
-// Turns a resolved preset into the list of per-step commands a split run executes, or
-// 'undefined' when the pipeline carries a step the split does not know, and the run stays one
-// `analyze` command.
+// Turns a resolved preset into the list of per-step commands a split run executes, each with the
+// name of its memory grant in :mem-formula, or 'undefined' when the pipeline carries a step the
+// split does not know, and the run stays one `analyze` command.
 //
 // The plan reads only the resolved bundle `mixcr exportPreset` writes, so a preset from a file
 // is planned the same way as a built-in one.
@@ -15,7 +15,10 @@
 //
 // The last step must write a .clns, and `assemble` must be present.
 
-memf := import(":mem-formula")
+text := import("text")
+
+// The file the last step writes.
+CLNS_FILE_NAME := "result.clns"
 
 _EXPORT_STEPS := { exportClones: true, exportCloneGroups: true }
 
@@ -44,8 +47,31 @@ _contains := func(list, value) {
 	return false
 }
 
-// mitoolSteps lists the MiTool commands in run order: [{ command, logKey, outName }]. Each
-// `consensus` round is its own command. 'undefined' when the MiTool part is malformed.
+// hasCellTag reports whether the resolved preset's tag pattern captures a cell barcode (CELL,
+// CELL1, CELL2, ...). `mixcr exportPreset` applies the user's --tag-pattern before writing the
+// bundle, so `align.tagPattern` is the pattern the run aligns with.
+hasCellTag := func(presetContent) {
+	if !is_map(presetContent) || !is_map(presetContent.align) {
+		return false
+	}
+	tagPattern := presetContent.align.tagPattern
+	if !is_string(tagPattern) {
+		return false
+	}
+	return text.contains(tagPattern, "(CELL")
+}
+
+// hasLongReadAligner reports whether the resolved preset aligns with the long-read aligner:
+// only presets built on `align-long-read` carry `align.parameters.longReadsParameters`.
+hasLongReadAligner := func(presetContent) {
+	if !is_map(presetContent) || !is_map(presetContent.align) || !is_map(presetContent.align.parameters) {
+		return false
+	}
+	return is_map(presetContent.align.parameters.longReadsParameters)
+}
+
+// _mitoolSteps lists the MiTool commands in run order: [{ command, logKey, outName, grant }].
+// Each `consensus` round is its own command. 'undefined' when the MiTool part is malformed.
 _mitoolSteps := func(presetContent, names) {
 	steps := []
 	for i, name in names {
@@ -54,7 +80,8 @@ _mitoolSteps := func(presetContent, names) {
 			return undefined
 		}
 		if command != "consensus" {
-			steps = append(steps, { command: command, logKey: name, outName: command + ".mic" })
+			grant := command == "parse" ? "mitoolParse" : "mitoolStep"
+			steps = append(steps, { command: command, logKey: name, outName: command + ".mic", grant: grant })
 			continue
 		}
 		rounds := is_map(presetContent.mitool) ? presetContent.mitool.consensus : undefined
@@ -65,16 +92,34 @@ _mitoolSteps := func(presetContent, names) {
 			steps = append(steps, {
 				command: command,
 				logKey: name + "." + string(r),
-				outName: command + "." + string(r) + ".mic"
+				outName: command + "." + string(r) + ".mic",
+				grant: "mitoolStep"
 			})
 		}
 	}
 	return steps
 }
 
-// plan returns { mitool: [...], chain: [{ step, logKey, outName }] }, or 'undefined'.
-// clnsFileName names the last step's output.
-plan := func(presetContent, clnsFileName) {
+// _assembleGrant names the grant `assemble` takes. Only the plain bulk run, where `assemble`
+// reads the untagged .vdjca `align` wrote, is sized from the align report's clone estimate.
+_assembleGrant := func(presetContent, mitool, chainSteps) {
+	if hasLongReadAligner(presetContent) {
+		return "longReadAssemble"
+	}
+	if hasCellTag(presetContent) || _contains(chainSteps, "assembleCells") {
+		return "cellAssemble"
+	}
+	if _contains(chainSteps, "refineTagsAndSort") {
+		return "umiAssemble"
+	}
+	if len(mitool) == 0 && len(chainSteps) == 1 && chainSteps[0] == "assemble" {
+		return "bulkAssemble"
+	}
+	return "untaggedAssemble"
+}
+
+// plan returns { mitool: [...], chain: [{ step, logKey, outName, grant }] }, or 'undefined'.
+plan := func(presetContent) {
 	if !is_map(presetContent) || !is_array(presetContent.pipeline) {
 		return undefined
 	}
@@ -96,6 +141,13 @@ plan := func(presetContent, clnsFileName) {
 		return undefined
 	}
 
+	chainSteps := []
+	for step in pipeline[alignAt + 1:] {
+		if !_EXPORT_STEPS[step] {
+			chainSteps = append(chainSteps, step)
+		}
+	}
+
 	assemblePartialRounds := 1
 	if is_map(presetContent.assemblePartial) {
 		repeats := int(presetContent.assemblePartial.repeats)
@@ -104,14 +156,12 @@ plan := func(presetContent, clnsFileName) {
 		}
 	}
 	clnaOutput := is_map(presetContent.assemble) && presetContent.assemble.clnaOutput == true
+	assembleGrant := _assembleGrant(presetContent, mitool, chainSteps)
 
 	links := []
 	kind := "vdjca"
 	hasAssemble := false
-	for step in pipeline[alignAt + 1:] {
-		if _EXPORT_STEPS[step] {
-			continue
-		}
+	for step in chainSteps {
 		def := _CHAIN_STEPS[step]
 		if is_undefined(def) || !_contains(def.from, kind) {
 			return undefined
@@ -122,13 +172,22 @@ plan := func(presetContent, clnsFileName) {
 		} else if def.out != "same" {
 			kind = def.out
 		}
+
+		grant := "cellStep"
+		if step == "assemble" {
+			grant = assembleGrant
+		} else if step == "refineTagsAndSort" {
+			grant = "refineTagsAndSort"
+		}
+
 		rounds := step == "assemblePartial" ? assemblePartialRounds : 1
 		for r := 1; r <= rounds; r++ {
 			suffix := rounds > 1 ? "." + string(r) : ""
 			links = append(links, {
 				step: step,
 				logKey: step + suffix,
-				outName: step + suffix + "." + kind
+				outName: step + suffix + "." + kind,
+				grant: grant
 			})
 		}
 	}
@@ -136,29 +195,13 @@ plan := func(presetContent, clnsFileName) {
 		return undefined
 	}
 	last := links[len(links) - 1]
-	last.outName = clnsFileName
+	last.outName = CLNS_FILE_NAME
 
 	return { mitool: mitool, chain: links }
 }
 
-// assembleRule names the grant `assemble` takes in a split run: "longRead" for the long-read
-// aligner, "cell" when the run is cell-barcoded, "umi" when the run refines tags, and
-// "fallback" otherwise, which is the bulk rule sized from the .vdjca alone.
-assembleRule := func(presetContent) {
-	if memf.hasLongReadAligner(presetContent) {
-		return "longRead"
-	}
-	pipeline := presetContent.pipeline
-	if memf.hasCellTag(presetContent) || _contains(pipeline, "assembleCells") {
-		return "cell"
-	}
-	if _contains(pipeline, "refineTagsAndSort") {
-		return "umi"
-	}
-	return "fallback"
-}
-
 export {
 	plan: plan,
-	assembleRule: assembleRule
+	hasCellTag: hasCellTag,
+	hasLongReadAligner: hasLongReadAligner
 }

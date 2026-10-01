@@ -1,21 +1,25 @@
-// Single source of truth for the `mixcr analyze` memory request.
+// Memory grants of every MiXCR command the block runs.
 //
-//     mem = clamp(4 x size("reads"), baseMemGiB, 256 GiB)
-//
-// baseMemGiB is a TOTAL-memory value for the analysis, selected by which steps the
-// preset runs, so it acts as the lower bound rather than a base to add data on top of.
-// size("reads") is the stored (compressed) blob size of the sample's FASTQs, read from
-// metadata with no pre-exec pass, so the formula resolves on backends that expose blob
-// size and falls back to the bare floor on those that do not.
+// A split run asks for one grant per step through stepRam, by the name :pipeline-plan gives the
+// step. A run that stays one `analyze` command takes memFormula. :mixcr-export takes exportRam.
 
 exec := import("@platforma-sdk/workflow-tengo:exec")
+ll := import("@platforma-sdk/workflow-tengo:ll")
 
 math := import("math")
-text := import("text")
 
 f := exec.formula
 
-// baseMemGiB picks the per-analysis memory floor from the preset's step set.
+// The single-command grant:
+//
+//     mem = clamp(4 x size("reads"), baseMemGiB, 256 GiB)
+//
+// baseMemGiB is a TOTAL-memory value for the analysis, selected by which steps the preset runs,
+// so it acts as the lower bound rather than a base to add data on top of. size("reads") is the
+// stored (compressed) blob size of the sample's FASTQs, read from metadata with no pre-exec
+// pass, so the formula resolves on backends that expose blob size and falls back to the bare
+// floor on those that do not.
+//
 // mitool steps dominate; contig or cell assembly is the middle tier.
 baseMemGiB := func(hasMiToolSteps, hasAssembleContigs, hasAssembleCells) {
 	if hasMiToolSteps {
@@ -27,7 +31,6 @@ baseMemGiB := func(hasMiToolSteps, hasAssembleContigs, hasAssembleCells) {
 	return 64
 }
 
-// memFormula builds the fluent exec.formula node for `.resources({onCPU:{ram}})`.
 // between() supplies `base` as the lower bound, so no explicit max() is needed.
 memFormula := func(base) {
 	return f.size("reads").times(4).
@@ -35,48 +38,10 @@ memFormula := func(base) {
 		staticFallback(f.gib(base))
 }
 
-// _cloneAssemblerParameters reads `assemble.cloneAssemblerParameters` out of the resolved
-// preset bundle that `mixcr exportPreset` writes. 'undefined' when any level is missing.
-_cloneAssemblerParameters := func(presetContent) {
-	if !is_map(presetContent) {
-		return undefined
-	}
-	assemble := presetContent.assemble
-	if !is_map(assemble) {
-		return undefined
-	}
-	params := assemble.cloneAssemblerParameters
-	if !is_map(params) {
-		return undefined
-	}
-	return params
-}
+// The tag every split step puts on the one file it stages and is sized from.
+INPUT_TAG := "input"
 
-// assemblingFeatures resolves the gene features the run assembles by, as MiXCR feature strings
-// (brace forms included).
-//
-// `assembleClonesBy` is the user override from "Advanced Settings" and is undefined on every
-// run that does not set it, including kit presets that carry a feature of their own. Those
-// presets set it through the SetClonotypeAssemblingFeatures mixin, which lands in the resolved
-// bundle as `assemble.cloneAssemblerParameters.assemblingFeatures` — takara VDJRegion, biomed2
-// `{CDR1Begin:CDR3End}`, and the same for qiaseq, idt, neb, illumina, abhelix and vasa.
-//
-// The field is null in `assemble-base`, which every generic amplicon preset inherits: those
-// runs pick the feature from a flag at runtime and assemble by CDR3 when no flag is given.
-_DEFAULT_ASSEMBLING_FEATURE := "CDR3"
-
-assemblingFeatures := func(presetContent, assembleClonesBy) {
-	if !is_undefined(assembleClonesBy) {
-		return [assembleClonesBy]
-	}
-
-	params := _cloneAssemblerParameters(presetContent)
-	if !is_undefined(params) && is_array(params.assemblingFeatures) && len(params.assemblingFeatures) > 0 {
-		return params.assemblingFeatures
-	}
-
-	return [_DEFAULT_ASSEMBLING_FEATURE]
-}
+_CAP_GIB := 256
 
 // assembleEstimate reads the estimate of `initialClonesCreated` the `align` step reports: the
 // distinct clonal keys (assembling-feature tuple plus the split genes' best hits) among reads
@@ -88,7 +53,7 @@ assemblingFeatures := func(presetContent, assembleClonesBy) {
 // assembles with, so no cross-check against the preset is needed here.
 //
 // Returns 'undefined' when the field is missing or unreadable: a MiXCR pin older than the sketch
-// writes no field at all. That takes the caller's fallback rule.
+// writes no field at all.
 assembleEstimate := func(alignReport) {
 	if !is_map(alignReport) {
 		return undefined
@@ -104,7 +69,7 @@ assembleEstimate := func(alignReport) {
 	return count
 }
 
-// assembleRamGiB sizes the `assemble` grant of a bulk run without UMIs from that estimate:
+// assembleRamGiB sizes `assemble` of a bulk run without tags from that estimate:
 //
 //     ram = clamp(ceil(1.35 x (7 + 10.8 x est_M)), 4 GiB, 256 GiB)
 //
@@ -115,7 +80,6 @@ _ASSEMBLE_MARGIN := 1.35
 _ASSEMBLE_INTERCEPT_GIB := 7.0
 _ASSEMBLE_GIB_PER_M := 10.8
 _ASSEMBLE_FLOOR_GIB := 4
-_ASSEMBLE_CAP_GIB := 256
 
 assembleRamGiB := func(estimatedClonotypes) {
 	millions := float(estimatedClonotypes) / 1000000.0
@@ -123,133 +87,71 @@ assembleRamGiB := func(estimatedClonotypes) {
 	if grant < _ASSEMBLE_FLOOR_GIB {
 		return _ASSEMBLE_FLOOR_GIB
 	}
-	if grant > _ASSEMBLE_CAP_GIB {
-		return _ASSEMBLE_CAP_GIB
+	if grant > _CAP_GIB {
+		return _CAP_GIB
 	}
 	return grant
 }
 
-// assembleFallbackRam sizes `assemble` when the align report carries no estimate, which is
-// every run on a MiXCR pin older than the sketch and every run that splits clones by gene.
+// _fileRam builds a grant fitted linearly on the size of the file a step stages:
 //
-//     ram = clamp(ceil(4 GiB + 21.9 x size("vdjca")), 64 GiB, 256 GiB)
-//
-// exec.formula sizes only files the command stages, and `assemble` stages the aligned file
-// alone, so the volume term reads the `.vdjca` and not the FASTQs. Every bisected bulk
-// `assemble` floor is at most 3 + 16.2 x vdjca_GiB; 4 + 21.9 is that bound times 1.35.
-//
-// The caller must tag its `.vdjca` input `{ tag: "vdjca" }`.
-_FALLBACK_INTERCEPT_GIB := 4
-_FALLBACK_PER_BYTE_TENTHS := 219
-_FALLBACK_FLOOR_GIB := 64
-
-assembleFallbackRam := func() {
-	return f.gib(_FALLBACK_INTERCEPT_GIB).
-		plus(f.size("vdjca").times(_FALLBACK_PER_BYTE_TENTHS).dividedBy(10)).
-		dividedBy(f.gib(1)).times(f.gib(1)).
-		between(f.gib(_FALLBACK_FLOOR_GIB), f.gib(_ASSEMBLE_CAP_GIB)).
-		staticFallback(f.gib(_FALLBACK_FLOOR_GIB))
-}
-
-// hasCellTag reports whether the resolved preset's tag pattern captures a cell barcode (CELL,
-// CELL1, CELL2, ...). `mixcr exportPreset` applies the user's --tag-pattern before writing the
-// bundle, so `align.tagPattern` is the pattern the run aligns with.
-hasCellTag := func(presetContent) {
-	if !is_map(presetContent) || !is_map(presetContent.align) {
-		return false
-	}
-	tagPattern := presetContent.align.tagPattern
-	if !is_string(tagPattern) {
-		return false
-	}
-	return text.contains(tagPattern, "(CELL")
-}
-
-// hasLongReadAligner reports whether the resolved preset aligns with the long-read aligner:
-// only presets built on `align-long-read` carry `align.parameters.longReadsParameters`.
-hasLongReadAligner := func(presetContent) {
-	if !is_map(presetContent) || !is_map(presetContent.align) || !is_map(presetContent.align.parameters) {
-		return false
-	}
-	return is_map(presetContent.align.parameters.longReadsParameters)
-}
-
-// _fileRam builds a grant fitted linearly on the size of the file a step reads:
-//
-//     ram = clamp(ceil(interceptGiB + perByteHundredths / 100 x size(tag)), floorGiB, 256 GiB)
+//     ram = clamp(ceil(interceptGiB + perByteHundredths / 100 x size(INPUT_TAG)), floorGiB, 256 GiB)
 //
 // rounded up to a whole GiB. Backends that cannot evaluate formulas get fallbackGiB.
-//
-// The caller must tag that input `{ tag: tag }`.
-_fileRam := func(tag, interceptGiB, perByteHundredths, floorGiB, fallbackGiB) {
+_fileRam := func(interceptGiB, perByteHundredths, floorGiB, fallbackGiB) {
 	return f.gib(interceptGiB).
-		plus(f.size(tag).times(perByteHundredths).dividedBy(100)).
+		plus(f.size(INPUT_TAG).times(perByteHundredths).dividedBy(100)).
 		dividedBy(f.gib(1)).times(f.gib(1)).
-		between(f.gib(floorGiB), f.gib(_ASSEMBLE_CAP_GIB)).
+		between(f.gib(floorGiB), f.gib(_CAP_GIB)).
 		staticFallback(f.gib(fallbackGiB))
 }
 
-// The caller must tag its `.vdjca` input `{ tag: "vdjca" }`.
-_vdjcaRam := func(interceptGiB, perByteHundredths, floorGiB, fallbackGiB) {
-	return _fileRam("vdjca", interceptGiB, perByteHundredths, floorGiB, fallbackGiB)
-}
-
-// The grant `analyze` gets on these pipelines, kept for backends that cannot evaluate formulas.
+// The grant `analyze` gets on tagged pipelines, kept for backends that cannot evaluate formulas.
 _TAGGED_FALLBACK_GIB := 64
 
-// refineRam sizes `refineTagsAndSort` from the aligned `.vdjca`:
-//
-//     ram = min(ceil(6 GiB + 2.1 x size("vdjca")), 256 GiB)
-refineRam := func() {
-	return _vdjcaRam(6, 210, 0, _TAGGED_FALLBACK_GIB)
+// Every bisected bulk `assemble` floor is at most 3 + 16.2 x vdjca_GiB; 4 + 21.9 is that bound
+// times 1.35.
+_untaggedAssembleRam := func() {
+	return _fileRam(4, 2190, 64, 64)
 }
 
-// umiAssembleRam sizes `assemble` of a bulk UMI or barcode run from the refined `.vdjca`:
-//
-//     ram = clamp(ceil(0.86 x size("vdjca")), 16 GiB, 256 GiB)
-umiAssembleRam := func() {
-	return _vdjcaRam(0, 86, 16, _TAGGED_FALLBACK_GIB)
+// PLACEHOLDER, NOT MEASURED: the MiTool grants. They stand until a profiling run replaces them.
+// `mitool parse` streams reads and holds only per-sample counts.
+_GRANTS := {
+	// `align` streams its input, so the grant does not scale with the sample.
+	align: func() { return "24GiB" },
+	mitoolParse: func() { return "16GiB" },
+	// `mitool refine-tags` and each `mitool consensus` round, from the .mic they read.
+	mitoolStep: func() { return _fileRam(0, 200, 16, _TAGGED_FALLBACK_GIB) },
+	refineTagsAndSort: func() { return _fileRam(6, 210, 0, _TAGGED_FALLBACK_GIB) },
+	// `assemblePartial`, `extend`, `assembleContigs` and `assembleCells`, from the .vdjca, .clna
+	// or .clns they read.
+	cellStep: func() { return _fileRam(0, 200, 8, _TAGGED_FALLBACK_GIB) },
+	// `assemble` of a bulk run with UMIs or barcodes, from the refined .vdjca.
+	umiAssemble: func() { return _fileRam(0, 86, 16, _TAGGED_FALLBACK_GIB) },
+	// `assemble` of a cell-barcoded run, from the refined .vdjca.
+	cellAssemble: func() { return _fileRam(0, 410, 16, _TAGGED_FALLBACK_GIB) },
+	// `assemble` on the long-read aligner, from the .vdjca.
+	longReadAssemble: func() { return _fileRam(6, 580, 0, _TAGGED_FALLBACK_GIB) },
+	// `assemble` of an untagged run that is not plain bulk (rna-seq, exome-seq, ONT without
+	// UMIs): no rule is fitted for them, so they take the bulk bound on the .vdjca.
+	untaggedAssemble: _untaggedAssembleRam
 }
 
-// cellAssembleRam sizes `assemble` of a cell-barcoded run from the refined `.vdjca`:
-//
-//     ram = clamp(ceil(4.1 x size("vdjca")), 16 GiB, 256 GiB)
-cellAssembleRam := func() {
-	return _vdjcaRam(0, 410, 16, _TAGGED_FALLBACK_GIB)
-}
-
-// longReadAssembleRam sizes `assemble` of a run on the long-read aligner from the `.vdjca` it
-// reads, in either split pipeline:
-//
-//     ram = min(ceil(6 GiB + 5.8 x size("vdjca")), 256 GiB)
-longReadAssembleRam := func() {
-	return _vdjcaRam(6, 580, 0, _TAGGED_FALLBACK_GIB)
-}
-
-// cellStepRam sizes `assemblePartial`, `extend`, `assembleContigs` and `assembleCells` of a
-// single-cell run from the one file the step reads (.vdjca, .clna or .clns):
-//
-//     ram = clamp(ceil(2 x size("stepInput")), 8 GiB, 256 GiB)
-//
-// The caller must tag that input `{ tag: "stepInput" }`.
-cellStepRam := func() {
-	return _fileRam("stepInput", 0, 200, 8, _TAGGED_FALLBACK_GIB)
-}
-
-// PLACEHOLDER, NOT MEASURED. The MiTool steps have no bisected floor yet. These grants stand
-// until a profiling run replaces them.
-//
-// `mitool parse` streams reads and holds only per-sample counts: flat 16 GiB.
-MITOOL_PARSE_RAM_GIB := 16
-
-// mitoolStepRam sizes `mitool refine-tags` and each `mitool consensus` round from the `.mic`
-// the step reads:
-//
-//     ram = clamp(ceil(2 x size("mic")), 16 GiB, 256 GiB)
-//
-// The caller must tag its `.mic` input `{ tag: "mic" }`.
-mitoolStepRam := func() {
-	return _fileRam("mic", 0, 200, 16, _TAGGED_FALLBACK_GIB)
+// stepRam returns the grant named `grant`. Only "bulkAssemble" takes estimatedClonotypes, the
+// align report's clone estimate: it sizes from the estimate when there is one, and from the
+// .vdjca otherwise.
+stepRam := func(grant, ...estimate) {
+	if grant == "bulkAssemble" {
+		estimatedClonotypes := len(estimate) > 0 ? estimate[0] : undefined
+		if is_undefined(estimatedClonotypes) {
+			return _untaggedAssembleRam()
+		}
+		return string(assembleRamGiB(estimatedClonotypes)) + "GiB"
+	}
+	rule := _GRANTS[grant]
+	ll.assert(!is_undefined(rule), "unknown memory grant %v", grant)
+	return rule()
 }
 
 // exportRam builds the exec.formula node for an `exportClones` step.
@@ -299,18 +201,9 @@ exportRam := func(perProcessMemGB, floorGiB, perByte) {
 export {
 	baseMemGiB: baseMemGiB,
 	memFormula: memFormula,
-	assemblingFeatures: assemblingFeatures,
+	INPUT_TAG: INPUT_TAG,
 	assembleEstimate: assembleEstimate,
 	assembleRamGiB: assembleRamGiB,
-	assembleFallbackRam: assembleFallbackRam,
-	hasCellTag: hasCellTag,
-	hasLongReadAligner: hasLongReadAligner,
-	longReadAssembleRam: longReadAssembleRam,
-	refineRam: refineRam,
-	umiAssembleRam: umiAssembleRam,
-	cellAssembleRam: cellAssembleRam,
-	cellStepRam: cellStepRam,
-	MITOOL_PARSE_RAM_GIB: MITOOL_PARSE_RAM_GIB,
-	mitoolStepRam: mitoolStepRam,
+	stepRam: stepRam,
 	exportRam: exportRam
 }
