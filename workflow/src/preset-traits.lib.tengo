@@ -1,0 +1,98 @@
+// What the block reads off the resolved preset `mixcr exportPreset` writes, so a preset from a
+// file is read the same way as a built-in one: the class :resources sizes the steps by, and the
+// two properties that make the block reject a preset.
+
+text := import("text")
+
+_contains := func(list, value) {
+	for v in list {
+		if v == value {
+			return true
+		}
+	}
+	return false
+}
+
+// hasCellTag reports whether the resolved preset's tag pattern captures a cell barcode (CELL,
+// CELL1, CELL2, ...). `mixcr exportPreset` applies the user's --tag-pattern before writing the
+// bundle, so `align.tagPattern` is the pattern the run aligns with.
+hasCellTag := func(presetContent) {
+	if !is_map(presetContent) || !is_map(presetContent.align) {
+		return false
+	}
+	tagPattern := presetContent.align.tagPattern
+	if !is_string(tagPattern) {
+		return false
+	}
+	return text.contains(tagPattern, "(CELL")
+}
+
+// hasLongReadAligner reports whether the resolved preset aligns with the long-read aligner:
+// only presets built on `align-long-read` carry `align.parameters.longReadsParameters`.
+hasLongReadAligner := func(presetContent) {
+	if !is_map(presetContent) || !is_map(presetContent.align) || !is_map(presetContent.align.parameters) {
+		return false
+	}
+	return is_map(presetContent.align.parameters.longReadsParameters)
+}
+
+// _hasSampleTag reports whether a tag pattern names a sample tag: MiTool takes every tag whose
+// name starts with "S" as one (mitool `TagType.inferType`).
+_hasSampleTag := func(pattern) {
+	if !is_string(pattern) {
+		return false
+	}
+	for match in text.re_find("\\(([A-Za-z][A-Za-z0-9_]*):", pattern, -1) {
+		if text.has_prefix(text.to_upper(match[1].text), "S") {
+			return true
+		}
+	}
+	return false
+}
+
+// splitsBySample reports whether `mitool parse` or `align` writes one file per sample: the step
+// has splitBySample set, MiXCR's default, and its tag pattern names a sample tag. The block
+// rejects these runs.
+splitsBySample := func(presetContent) {
+	if !is_map(presetContent) {
+		return false
+	}
+	mitool := is_map(presetContent.mitool) ? presetContent.mitool.parse : undefined
+	if is_map(mitool) && mitool.splitBySample != false && _hasSampleTag(mitool.pattern) {
+		return true
+	}
+	align := presetContent.align
+	return is_map(align) && align.splitBySample != false && _hasSampleTag(align.tagPattern)
+}
+
+// hasQcChecks reports whether the preset carries qc checks. `analyze` runs `qc` only then, and the block
+// rejects a run without them.
+hasQcChecks := func(presetContent) {
+	return is_map(presetContent) && is_map(presetContent.qc) && is_array(presetContent.qc.checks) &&
+		len(presetContent.qc.checks) > 0
+}
+
+// stepClass names the class :resources sizes a run's steps by, first match winning: "longRead"
+// for the long-read aligner, "cell" when the tag pattern captures a cell barcode or the pipeline
+// assembles cells, "umi" when it refines tags, and "none" otherwise.
+stepClass := func(presetContent) {
+	if hasLongReadAligner(presetContent) {
+		return "longRead"
+	}
+	pipeline := is_map(presetContent) && is_array(presetContent.pipeline) ? presetContent.pipeline : []
+	if hasCellTag(presetContent) || _contains(pipeline, "assembleCells") {
+		return "cell"
+	}
+	if _contains(pipeline, "refineTagsAndSort") {
+		return "umi"
+	}
+	return "none"
+}
+
+export {
+	stepClass: stepClass,
+	hasCellTag: hasCellTag,
+	hasLongReadAligner: hasLongReadAligner,
+	splitsBySample: splitsBySample,
+	hasQcChecks: hasQcChecks
+}
