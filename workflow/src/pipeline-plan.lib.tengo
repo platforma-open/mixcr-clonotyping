@@ -13,7 +13,8 @@
 //   - exportClones and exportCloneGroups anywhere after `align`. They are dropped: the block
 //     saves nothing from them, and they read a file without changing it.
 //
-// The last step must write a .clns, and `assemble` must be present.
+// The last step must write a .clns, and `assemble` must be present. The preset must carry qc
+// checks, and no step may split the reads by sample.
 
 text := import("text")
 
@@ -114,6 +115,42 @@ hasLongReadAligner := func(presetContent) {
 	return is_map(presetContent.align.parameters.longReadsParameters)
 }
 
+// _hasSampleTag reports whether a tag pattern names a sample tag: MiTool takes every tag whose
+// name starts with "S" as one (mitool `TagType.inferType`).
+_hasSampleTag := func(pattern) {
+	if !is_string(pattern) {
+		return false
+	}
+	for match in text.re_find("\\(([A-Za-z][A-Za-z0-9_]*):", pattern, -1) {
+		if text.has_prefix(text.to_upper(match[1].text), "S") {
+			return true
+		}
+	}
+	return false
+}
+
+// splitsBySample reports whether `mitool parse` or `align` writes one file per sample: the step
+// has splitBySample set, MiXCR's default, and its tag pattern names a sample tag. The split
+// rejects these runs.
+splitsBySample := func(presetContent) {
+	if !is_map(presetContent) {
+		return false
+	}
+	mitool := is_map(presetContent.mitool) ? presetContent.mitool.parse : undefined
+	if is_map(mitool) && mitool.splitBySample != false && _hasSampleTag(mitool.pattern) {
+		return true
+	}
+	align := presetContent.align
+	return is_map(align) && align.splitBySample != false && _hasSampleTag(align.tagPattern)
+}
+
+// hasQcChecks reports whether the preset carries qc checks. `analyze` runs `qc` only then, and the
+// split rejects a run without them.
+hasQcChecks := func(presetContent) {
+	return is_map(presetContent) && is_map(presetContent.qc) && is_array(presetContent.qc.checks) &&
+		len(presetContent.qc.checks) > 0
+}
+
 // _mitoolSteps lists the MiTool commands in run order: [{ step, command, logKey, outName }].
 // Each `consensus` round is its own command. 'undefined' when the MiTool part is malformed.
 _mitoolSteps := func(presetContent, names) {
@@ -165,6 +202,9 @@ stepClass := func(presetContent) {
 // steps add command and outName.
 plan := func(presetContent) {
 	if !is_map(presetContent) || !is_array(presetContent.pipeline) {
+		return undefined
+	}
+	if splitsBySample(presetContent) || !hasQcChecks(presetContent) {
 		return undefined
 	}
 	pipeline := _sortByStepOrder(presetContent.pipeline)
@@ -251,6 +291,8 @@ plan := func(presetContent) {
 export {
 	plan: plan,
 	stepClass: stepClass,
+	splitsBySample: splitsBySample,
+	hasQcChecks: hasQcChecks,
 	hasCellTag: hasCellTag,
 	hasLongReadAligner: hasLongReadAligner
 }

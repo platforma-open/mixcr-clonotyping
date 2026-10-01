@@ -2,6 +2,16 @@ test := import("@platforma-sdk/workflow-tengo:test")
 pp := import(":pipeline-plan")
 text := import("text")
 
+// Every preset the split takes carries qc checks.
+_withQc := func(preset) {
+	if is_map(preset) && is_undefined(preset.qc) {
+		preset.qc = { checks: [{}] }
+	}
+	return preset
+}
+
+_plan := func(preset) { return pp.plan(_withQc(preset)) }
+
 _steps := func(plan) {
 	out := []
 	for link in plan.chain {
@@ -25,7 +35,7 @@ TestTenXMiToolPipelineSplitsEveryStep := func() {
 		mitool: { consensus: [{}, {}, {}, {}] },
 		assemble: { clnaOutput: true }
 	}
-	plan := pp.plan(preset)
+	plan := _plan(preset)
 	test.isEqual(["parse>parse.mic", "refine-tags>refine-tags.mic", "consensus>consensus.1.mic",
 		"consensus>consensus.2.mic", "consensus>consensus.3.mic", "consensus>consensus.4.mic"], _mitool(plan))
 	test.isEqual("06:mitool-consensus.4", plan.mitool[5].logKey)
@@ -38,7 +48,7 @@ TestTenXMiToolPipelineSplitsEveryStep := func() {
 }
 
 TestUmiPipelineHasNoMiToolSteps := func() {
-	plan := pp.plan({ pipeline: ["align", "refineTagsAndSort", "assemble", "exportClones"] })
+	plan := _plan({ pipeline: ["align", "refineTagsAndSort", "assemble", "exportClones"] })
 	test.isEqual([], plan.mitool)
 	test.isEqual(["01:align", "02:refineTagsAndSort", "03:assemble", "04:qc"],
 		[plan.align.logKey, plan.chain[0].logKey, plan.chain[1].logKey, plan.qc.logKey])
@@ -53,7 +63,7 @@ TestAssemblePartialRepeatsAreRounds := func() {
 	}
 	test.isEqual(["assemblePartial.1>assemblePartial.1.vdjca", "assemblePartial.2>assemblePartial.2.vdjca",
 		"extend>extend.vdjca", "assemble>assemble.clna", "assembleContigs>result.clns"],
-		_steps(pp.plan(preset)))
+		_steps(_plan(preset)))
 }
 
 TestExportsBeforeTheLastStepAreDropped := func() {
@@ -63,30 +73,30 @@ TestExportsBeforeTheLastStepAreDropped := func() {
 			"exportClones", "exportCloneGroups", "assembleCells"],
 		assemble: { clnaOutput: true }
 	}
-	steps := _steps(pp.plan(preset))
+	steps := _steps(_plan(preset))
 	test.isEqual(6, len(steps))
 	test.isEqual("assembleCells>result.clns", steps[5])
 }
 
 TestUnknownStepFallsBackToAnalyze := func() {
-	test.isTrue(is_undefined(pp.plan({ pipeline: ["align", "assemble", "findAlleles", "exportClones"] })))
-	test.isTrue(is_undefined(pp.plan({ pipeline: ["mitool-parse", "mitool-slice", "align", "assemble"], mitool: {} })))
+	test.isTrue(is_undefined(_plan({ pipeline: ["align", "assemble", "findAlleles", "exportClones"] })))
+	test.isTrue(is_undefined(_plan({ pipeline: ["mitool-parse", "mitool-slice", "align", "assemble"], mitool: {} })))
 }
 
 TestMalformedPipelinesFallBackToAnalyze := func() {
 	// No align.
-	test.isTrue(is_undefined(pp.plan({ pipeline: ["assemble", "exportClones"] })))
+	test.isTrue(is_undefined(_plan({ pipeline: ["assemble", "exportClones"] })))
 	// No assemble.
-	test.isTrue(is_undefined(pp.plan({ pipeline: ["align", "refineTagsAndSort", "exportClones"] })))
+	test.isTrue(is_undefined(_plan({ pipeline: ["align", "refineTagsAndSort", "exportClones"] })))
 	// MiTool not starting with parse.
-	test.isTrue(is_undefined(pp.plan({ pipeline: ["mitool-consensus", "align", "assemble"], mitool: { consensus: [{}] } })))
+	test.isTrue(is_undefined(_plan({ pipeline: ["mitool-consensus", "align", "assemble"], mitool: { consensus: [{}] } })))
 	// MiTool consensus with no rounds.
-	test.isTrue(is_undefined(pp.plan({ pipeline: ["mitool-parse", "mitool-consensus", "align", "assemble"], mitool: { consensus: [] } })))
+	test.isTrue(is_undefined(_plan({ pipeline: ["mitool-parse", "mitool-consensus", "align", "assemble"], mitool: { consensus: [] } })))
 	// assembleContigs needs a .clna.
-	test.isTrue(is_undefined(pp.plan({ pipeline: ["align", "assemble", "assembleContigs"], assemble: { clnaOutput: false } })))
+	test.isTrue(is_undefined(_plan({ pipeline: ["align", "assemble", "assembleContigs"], assemble: { clnaOutput: false } })))
 	// The last step must write a .clns.
-	test.isTrue(is_undefined(pp.plan({ pipeline: ["align", "assemble"], assemble: { clnaOutput: true } })))
-	test.isTrue(is_undefined(pp.plan(undefined)))
+	test.isTrue(is_undefined(_plan({ pipeline: ["align", "assemble"], assemble: { clnaOutput: true } })))
+	test.isTrue(is_undefined(_plan(undefined)))
 }
 
 TestStepClass := func() {
@@ -106,7 +116,7 @@ TestEveryStepNamesItsResourcesRow := func() {
 		pipeline: ["mitool-parse", "mitool-consensus", "align", "refineTagsAndSort", "extend", "assemble"],
 		mitool: { consensus: [{}, {}] }
 	}
-	plan := pp.plan(preset)
+	plan := _plan(preset)
 	test.isEqual(["mitool-parse", "mitool-consensus", "mitool-consensus"],
 		[plan.mitool[0].step, plan.mitool[1].step, plan.mitool[2].step])
 	test.isEqual(["align", "refineTagsAndSort", "extend", "assemble", "qc"],
@@ -139,6 +149,24 @@ TestStepsRunInMiXCROrderWhateverTheListOrder := func() {
 		assemble: { clnaOutput: true }
 	}
 	test.isEqual(["refineTagsAndSort>refineTagsAndSort.vdjca", "extend>extend.vdjca",
-		"assemble>assemble.clna", "assembleContigs>result.clns"], _steps(pp.plan(preset)))
-	test.isEqual("01:align", pp.plan(preset).align.logKey)
+		"assemble>assemble.clna", "assembleContigs>result.clns"], _steps(_plan(preset)))
+	test.isEqual("01:align", _plan(preset).align.logKey)
+}
+
+TestRunsWithoutQcChecksFallBackToAnalyze := func() {
+	test.isTrue(is_undefined(pp.plan({ pipeline: ["align", "assemble"], qc: { checks: [] } })))
+	test.isTrue(is_undefined(pp.plan({ pipeline: ["align", "assemble"] })))
+	test.isFalse(is_undefined(_plan({ pipeline: ["align", "assemble"] })))
+}
+
+TestSampleSplittingRunsFallBackToAnalyze := func() {
+	miltenyi := { pipeline: ["align", "refineTagsAndSort", "assemble"],
+		align: { splitBySample: true, tagPattern: "^N{0:12}tggtatcaacgcagagt(SMPL:N{5})(UMI:N{14})N{21}(R1:)\\^N{20}(R2:)" } }
+	test.isTrue(pp.splitsBySample(miltenyi))
+	test.isTrue(is_undefined(_plan(miltenyi)))
+	// splitBySample off, or no sample tag: no split.
+	test.isFalse(pp.splitsBySample({ align: { splitBySample: false, tagPattern: "^(SMPL:N{5})(R1:*)" } }))
+	test.isFalse(pp.splitsBySample({ align: { splitBySample: true, tagPattern: "^(R1F:N{0:2}(C:ggg)(R1:*))\\^(R2F:(UMI:NNNN)(R2:*))" } }))
+	// A MiTool parse pattern with a sample tag splits too.
+	test.isTrue(pp.splitsBySample({ mitool: { parse: { splitBySample: true, pattern: "^(CELL:N{16})(SAMPLE:N{8})\\^(R2:*)" } } }))
 }
