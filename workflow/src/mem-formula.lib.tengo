@@ -117,15 +117,17 @@ _untaggedAssembleRam := func() {
 	return _fileRam(4, 2190, 64, 64)
 }
 
-// PLACEHOLDER, NOT MEASURED: the MiTool grants. They stand until a profiling run replaces them.
-// `mitool parse` streams reads and holds only per-sample counts.
+// PLACEHOLDER, NOT MEASURED: the MiTool grants, set to what `analyze` gets on a MiTool pipeline.
+// They stand until a profiling run replaces them.
 _GRANTS := {
 	// `align` streams its input, so the grant does not scale with the sample.
 	align: func() { return "24GiB" },
-	mitoolParse: func() { return "16GiB" },
+	// Sized from the FASTQs, which `mitool parse` stages under the "reads" tag.
+	mitoolParse: func() { return memFormula(192) },
 	// `mitool refine-tags` and each `mitool consensus` round, from the .mic they read.
-	mitoolStep: func() { return _fileRam(0, 200, 16, _TAGGED_FALLBACK_GIB) },
-	refineTagsAndSort: func() { return _fileRam(6, 210, 0, _TAGGED_FALLBACK_GIB) },
+	mitoolStep: func() { return _fileRam(0, 400, 192, 192) },
+	// PLACEHOLDER floor: refine needs 12 GiB on 2-tag GEM-X at 25 % of reads, above the line.
+	refineTagsAndSort: func() { return _fileRam(6, 210, 16, _TAGGED_FALLBACK_GIB) },
 	// `assemblePartial`, `extend`, `assembleContigs` and `assembleCells`, from the .vdjca, .clna
 	// or .clns they read.
 	cellStep: func() { return _fileRam(0, 200, 8, _TAGGED_FALLBACK_GIB) },

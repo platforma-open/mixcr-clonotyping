@@ -180,11 +180,11 @@ TestExportRam := func() {
 }
 
 TestRefineRam := func() {
-	// ram = min(ceil(6 GiB + 2.1 x size(vdjca)), 256 GiB), whole GiB.
-	test.isEqual(_gib(7),   _evalInput(mf.stepRam("refineTagsAndSort"), _gib(39) / 100))
+	// ram = clamp(ceil(6 GiB + 2.1 x size(input)), 16 GiB, 256 GiB), whole GiB.
+	test.isEqual(_gib(16),  _evalInput(mf.stepRam("refineTagsAndSort"), 0))
+	test.isEqual(_gib(16),  _evalInput(mf.stepRam("refineTagsAndSort"), _gib(39) / 100))
 	test.isEqual(_gib(24),  _evalInput(mf.stepRam("refineTagsAndSort"), _gib(813) / 100))
 	test.isEqual(_gib(27),  _evalInput(mf.stepRam("refineTagsAndSort"), _gib(954) / 100))
-	test.isEqual(_gib(6),   _evalInput(mf.stepRam("refineTagsAndSort"), 0))
 	test.isEqual(_gib(256), _evalInput(mf.stepRam("refineTagsAndSort"), _gib(200)))
 	test.isEqual(_gib(64),  f.fallbackOf(mf.stepRam("refineTagsAndSort")))
 }
@@ -217,13 +217,14 @@ TestCellStepRam := func() {
 }
 
 TestMitoolStepRam := func() {
-	// Placeholder: ram = clamp(ceil(2 x size(mic)), 16 GiB, 256 GiB), whole GiB.
-	test.isEqual(_gib(16),  _evalInput(mf.stepRam("mitoolStep"), _gib(1)))
-	test.isEqual(_gib(16),  _evalInput(mf.stepRam("mitoolStep"), _gib(8)))
-	test.isEqual(_gib(21),  _evalInput(mf.stepRam("mitoolStep"), _gib(105) / 10))
+	// Placeholder: ram = clamp(ceil(4 x size(input)), 192 GiB, 256 GiB), whole GiB.
+	test.isEqual(_gib(192), _evalInput(mf.stepRam("mitoolStep"), _gib(8)))
+	test.isEqual(_gib(200), _evalInput(mf.stepRam("mitoolStep"), _gib(50)))
 	test.isEqual(_gib(256), _evalInput(mf.stepRam("mitoolStep"), _gib(200)))
-	test.isEqual(_gib(64),  f.fallbackOf(mf.stepRam("mitoolStep")))
-	test.isEqual("16GiB", mf.stepRam("mitoolParse"))
+	test.isEqual(_gib(192), f.fallbackOf(mf.stepRam("mitoolStep")))
+	// mitool parse takes the analyze rule on the FASTQs.
+	test.isEqual(_gib(192), _eval(mf.stepRam("mitoolParse"), _gib(10)))
+	test.isEqual(_gib(200), _eval(mf.stepRam("mitoolParse"), _gib(50)))
 }
 
 
