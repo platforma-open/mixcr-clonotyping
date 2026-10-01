@@ -1,10 +1,11 @@
 test := import("@platforma-sdk/workflow-tengo:test")
 pp := import(":pipeline-plan")
+text := import("text")
 
 _steps := func(plan) {
 	out := []
 	for link in plan.chain {
-		out = append(out, link.logKey + ">" + link.outName)
+		out = append(out, text.split(link.logKey, ":")[1] + ">" + link.outName)
 	}
 	return out
 }
@@ -27,7 +28,10 @@ TestTenXMiToolPipelineSplitsEveryStep := func() {
 	plan := pp.plan(preset)
 	test.isEqual(["parse>parse.mic", "refine-tags>refine-tags.mic", "consensus>consensus.1.mic",
 		"consensus>consensus.2.mic", "consensus>consensus.3.mic", "consensus>consensus.4.mic"], _mitool(plan))
-	test.isEqual("mitool-consensus.4", plan.mitool[5].logKey)
+	test.isEqual("06:mitool-consensus.4", plan.mitool[5].logKey)
+	test.isEqual("07:align", plan.align.logKey)
+	test.isEqual("12:assembleCells", plan.chain[4].logKey)
+	test.isEqual("13:qc", plan.qc.logKey)
 	test.isEqual(["refineTagsAndSort>refineTagsAndSort.vdjca", "extend>extend.vdjca",
 		"assemble>assemble.clna", "assembleContigs>assembleContigs.clns",
 		"assembleCells>result.clns"], _steps(plan))
@@ -36,6 +40,8 @@ TestTenXMiToolPipelineSplitsEveryStep := func() {
 TestUmiPipelineHasNoMiToolSteps := func() {
 	plan := pp.plan({ pipeline: ["align", "refineTagsAndSort", "assemble", "exportClones"] })
 	test.isEqual([], plan.mitool)
+	test.isEqual(["01:align", "02:refineTagsAndSort", "03:assemble", "04:qc"],
+		[plan.align.logKey, plan.chain[0].logKey, plan.chain[1].logKey, plan.qc.logKey])
 	test.isEqual(["refineTagsAndSort>refineTagsAndSort.vdjca", "assemble>result.clns"], _steps(plan))
 }
 

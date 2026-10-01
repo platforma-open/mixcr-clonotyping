@@ -324,7 +324,7 @@ self.body(func(inputs) {
 		cache(CACHE_PERIOD).
 		run()
 
-	logs.add(["align"], alignRun.getStdoutStream())
+	logs.add([stepPlan.align.logKey], alignRun.getStdoutStream())
 
 	// The overrides go in as metaInputs, out of the deduplication key, for the same reason
 	// :mixcr-analyze keeps them out of this template's: a run is recovered across a change of
@@ -337,6 +337,7 @@ self.body(func(inputs) {
 			alignReportJson: alignRun.getFile(alignReportJson),
 			alignReportTxt: alignRun.getFile(alignReportTxt),
 			chain: stepPlan.chain,
+			qcLogKey: stepPlan.qc.logKey,
 			reports: reports
 		},
 		{ metaInputs: res }
@@ -345,10 +346,9 @@ self.body(func(inputs) {
 	// The child's log map has one entry per chain step plus `qc`; each is lifted into this
 	// template's map under the same key, so the UI sees every step's stream as it starts.
 	chainLogs := chainRun.output("log", CACHE_PERIOD)
-	for link in stepPlan.chain {
-		logs.add([link.logKey], chainLogs.buildFutureField(string(json.encode([link.logKey]))))
+	for step in append(stepPlan.chain, stepPlan.qc) {
+		logs.add([step.logKey], chainLogs.buildFutureField(string(json.encode([step.logKey]))))
 	}
-	logs.add(["qc"], chainLogs.buildFutureField(string(json.encode(["qc"]))))
 
 	return {
 		qc: chainRun.output("qc", CACHE_PERIOD),

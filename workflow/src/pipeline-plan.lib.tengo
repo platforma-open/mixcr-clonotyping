@@ -118,7 +118,8 @@ _assembleGrant := func(presetContent, mitool, chainSteps) {
 	return "untaggedAssemble"
 }
 
-// plan returns { mitool: [...], chain: [{ step, logKey, outName, grant }] }, or 'undefined'.
+// plan returns { mitool: [...], align: { logKey }, chain: [{ step, logKey, outName, grant }],
+// qc: { logKey } }, or 'undefined'.
 plan := func(presetContent) {
 	if !is_map(presetContent) || !is_array(presetContent.pipeline) {
 		return undefined
@@ -197,7 +198,17 @@ plan := func(presetContent) {
 	last := links[len(links) - 1]
 	last.outName = CLNS_FILE_NAME
 
-	return { mitool: mitool, chain: links }
+	// Log keys lead with the run position, zero-padded, so the step that has got furthest sorts
+	// last and the UI needs no list of steps.
+	align := { logKey: "align" }
+	qc := { logKey: "qc" }
+	position := 0
+	for step in append(append(append(mitool, align), links...), qc) {
+		position++
+		step.logKey = (position < 10 ? "0" : "") + string(position) + ":" + step.logKey
+	}
+
+	return { mitool: mitool, align: align, chain: links, qc: qc }
 }
 
 export {

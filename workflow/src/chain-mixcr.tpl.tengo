@@ -28,8 +28,9 @@ mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:
 
 CACHE_PERIOD := 48 * times.hour
 
-// `mixcr qc` reads the reports in the .clns footer; it holds no clones. NEEDS VERIFICATION: no
-// bisected floor for `qc` exists.
+// `mixcr qc` reads the reports in the .clns footer; it holds no clones, so the "Advanced
+// Settings" memory override, which sizes the steps that do, does not apply to it. NEEDS
+// VERIFICATION: no bisected floor for `qc` exists.
 QC_MEM := "4GiB"
 
 self.body(func(inputs) {
@@ -84,7 +85,6 @@ self.body(func(inputs) {
 
 	// One invocation writes both report formats: the command takes 0..2 output paths and picks
 	// the writer by extension.
-	qcMem := is_undefined(res.perProcessMemGB) ? QC_MEM : string(res.perProcessMemGB) + "GiB"
 	qcTxtFile := "result.qc.txt"
 	qcJsonFile := "result.qc.json"
 	qcCmd := mixcrCmd.builder(mixcrSw).
@@ -97,11 +97,11 @@ self.body(func(inputs) {
 		arg(qcJsonFile).
 		inLightQueue().
 		cpu(1).
-		mem(qcMem).
+		mem(QC_MEM).
 		saveFile(qcJsonFile).
 		cache(CACHE_PERIOD).
 		run()
-	logs.add(["qc"], qcCmd.getStdoutStream())
+	logs.add([inputs.qcLogKey], qcCmd.getStdoutStream())
 
 	// The align pair arrives as resources because the command that wrote it ran in :run-mixcr.
 	reportsMap := pcolumn.resourceMapBuilder( /* keyLength */ 2 )

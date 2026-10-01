@@ -20,7 +20,9 @@ f := exec.formula
 // pass, so the formula resolves on backends that expose blob size and falls back to the bare
 // floor on those that do not.
 //
-// mitool steps dominate; contig or cell assembly is the middle tier.
+// mitool steps dominate; contig or cell assembly is the middle tier. Only a pipeline with a step
+// :pipeline-plan does not know runs as one command, from a built-in preset or a preset file alike;
+// on MiXCR develop that is one test-only built-in.
 baseMemGiB := func(hasMiToolSteps, hasAssembleContigs, hasAssembleCells) {
 	if hasMiToolSteps {
 		return 192

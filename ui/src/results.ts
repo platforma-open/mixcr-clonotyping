@@ -14,47 +14,21 @@ const reactiveFileContent = ReactiveFileContent.useGlobal();
 
 // MiXCR runs either as a single `analyze` command or as one command per step. Logs and
 // progress arrive keyed by (sampleId, step); the log panel and the progress column each show
-// one value per sample, so both take the step that has got furthest. Order is the order the
-// commands run in. A step that runs several rounds is keyed `<step>.<round>`.
-const STEP_ORDER = [
-  "analyze",
-  "mitool-parse",
-  "mitool-refine-tags",
-  "mitool-consensus",
-  "align",
-  "refineTagsAndSort",
-  "assemblePartial",
-  "extend",
-  "assemble",
-  "assembleContigs",
-  "assembleCells",
-  "qc",
-];
-const MAX_ROUNDS = 100;
+// one value per sample, so both take the step that has got furthest. The workflow leads each
+// step key with its zero-padded run position (`05:assemble`), so the furthest step sorts last.
 
-function stepRank(step: unknown): number {
-  if (typeof step !== "string") return -1;
-  const [name, round] = step.split(".");
-  const index = STEP_ORDER.indexOf(name);
-  if (index < 0) return -1;
-  return index * MAX_ROUNDS + (round === undefined ? 0 : Number(round));
-}
-
-/** Keeps the entry of the most advanced step seen so far for each sample. */
-function furthestStep<T>(
-  entries: { key: unknown[]; value?: T }[],
-): Map<string, { step: string; value: T }> {
-  const best = new Map<string, { rank: number; step: string; value: T }>();
+/** Keeps the value of the furthest step seen for each sample. */
+function furthestStep<T>(entries: { key: unknown[]; value?: T }[]): Map<string, T> {
+  const best = new Map<string, { step: string; value: T }>();
   for (const entry of entries) {
     if (entry.value === undefined) continue;
     const sampleId = entry.key[0] as string;
     const step = String(entry.key[1]);
-    const rank = stepRank(step);
     const current = best.get(sampleId);
-    if (current !== undefined && rank < current.rank) continue;
-    best.set(sampleId, { rank, step, value: entry.value });
+    if (current !== undefined && step < current.step) continue;
+    best.set(sampleId, { step, value: entry.value });
   }
-  return new Map([...best].map(([sampleId, e]) => [sampleId, { step: e.step, value: e.value }]));
+  return new Map([...best].map(([sampleId, e]) => [sampleId, e.value]));
 }
 
 export type MiXCRResult = {
@@ -100,9 +74,9 @@ export const MiXCRResultsMap = computed(() => {
 
   const logs = app.model.outputs.logs;
   if (logs)
-    for (const [sampleId, entry] of furthestStep(logs.data)) {
+    for (const [sampleId, logHandle] of furthestStep(logs.data)) {
       const result = resultMap.get(sampleId);
-      if (result) result.logHandle = entry.value;
+      if (result) result.logHandle = logHandle;
     }
 
   const reports = app.model.outputs.reports;
@@ -156,10 +130,9 @@ export const MiXCRResultsFull = computed<MiXCRResult[] | undefined>(() => {
   // blank the column, so the last step that did report one stands until the next one speaks.
   // `qc` never reports one at all.
   const reported = progress.data.filter((p) => p.value !== "");
-  for (const [sampleId, entry] of furthestStep(reported)) {
+  for (const [sampleId, line] of furthestStep(reported)) {
     const result = resultMap.get(sampleId);
-    if (result)
-      result.progress = done.has(sampleId) ? "Done" : entry.value.replace(ProgressPrefix, "");
+    if (result) result.progress = done.has(sampleId) ? "Done" : line.replace(ProgressPrefix, "");
   }
 
   return [...resultMap.values()];
