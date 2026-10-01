@@ -14,7 +14,7 @@
 // `queue: "light"`, and `override: false`, which keeps the "Advanced Settings" overrides off
 // that step.
 //
-// The class comes from :pipeline-plan: "none", "umi", "cell" or "longRead". A step takes its
+// The class comes from :preset-traits: "none", "umi", "cell" or "longRead". A step takes its
 // (step, class) row, then its (step, "any") row, then DEFAULT.
 
 exec := import("@platforma-sdk/workflow-tengo:exec")
@@ -55,6 +55,10 @@ _ROWS := [
 	{ step: "assemble", class: "umi", floor: 16, intercept: 0, slope: 0.86 },
 	{ step: "assemble", class: "cell", floor: 16, intercept: 0, slope: 4.1 },
 	{ step: "assemble", class: "longRead", floor: 6, intercept: 6, slope: 5.8 },
+
+	// PLACEHOLDER: `analyze --dry-run-json` resolves the preset and writes the step list; it
+	// reads no data.
+	{ step: "plan", class: "any", floor: 8, intercept: 0, slope: 0, cpuIntercept: 1, queue: "light", override: false },
 
 	// PLACEHOLDER: `qc` reads the reports in the .clns footer and holds no clones.
 	{ step: "qc", class: "any", floor: 4, intercept: 0, slope: 0, cpuIntercept: 1, queue: "light", override: false }
@@ -113,13 +117,12 @@ cpu := func(row) {
 		staticFallback(intercept)
 }
 
-// apply sets the CPU, memory, scratch and queue of `cmd` from `row`. A row carrying a ready `ram`
-// request uses it as-is; the single `analyze` command passes its own that way. `res` carries the
+// apply sets the CPU, memory, scratch and queue of `cmd` from `row`. `res` carries the
 // "Advanced Settings" overrides and the scratch request: { perProcessMemGB, perProcessCPUs,
 // scratchFreeSpace }. A row with `override: false` ignores both overrides.
 apply := func(cmd, row, res) {
 	useOverrides := row.override != false
-	onCPU := { cpu: cpu(row), ram: is_undefined(row.ram) ? ram(row) : row.ram }
+	onCPU := { cpu: cpu(row), ram: ram(row) }
 	if useOverrides && !is_undefined(res.perProcessCPUs) {
 		onCPU.cpu = res.perProcessCPUs
 	}

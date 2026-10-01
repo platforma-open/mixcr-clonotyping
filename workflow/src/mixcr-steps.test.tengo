@@ -1,0 +1,86 @@
+test := import("@platforma-sdk/workflow-tengo:test")
+ms := import(":mixcr-steps")
+
+// The step lists `mixcr analyze --dry-run-json` writes with milaboratory/mixcr#2156 for the reads
+// `input_{{R}}.fastq.gz` and the output prefix `result`.
+_UMI := [
+	["align", "--report", "result.align.report.txt", "--json-report", "result.align.report.json", "--preset", "mikelov-et-al-2021", "--species", "hs", "input_{{R}}.fastq.gz", "result.alignments.vdjca"],
+	["refineTagsAndSort", "--report", "result.refine.report.txt", "--json-report", "result.refine.report.json", "result.alignments.vdjca", "result.refined.vdjca"],
+	["assemble", "--report", "result.assemble.report.txt", "--json-report", "result.assemble.report.json", "result.refined.vdjca", "result.clns"],
+	["qc", "--print-to-stdout", "result.clns", "result.qc.txt", "result.qc.json"],
+	["exportClones", "result.clns", "result.clones.tsv"]
+]
+
+_TENX := [
+	["mitool", "parse", "--report", "result.parse.report.txt", "--preset", "local:result.MiTool.preset", "--save-output-file-names", "result.parse.list.tsv", "input_{{R}}.fastq.gz", "result.parsed.mic"],
+	["mitool", "refine-tags", "--report", "result.refineTags.report.txt", "result.parsed.mic", "result.refined.mic"],
+	["mitool", "consensus", "--report", "result.consensus.1.report.txt", "result.refined.mic", "result.consensus.1.mic"],
+	["mitool", "consensus", "--report", "result.consensus.2.report.txt", "result.consensus.1.mic", "result.consensus.2.mic"],
+	["mitool", "consensus", "--report", "result.consensus.3.report.txt", "result.consensus.2.mic", "result.consensus.3.mic"],
+	["mitool", "consensus", "--report", "result.consensus.4.report.txt", "result.consensus.3.mic", "result.consensus.4.mic"],
+	["align", "--report", "result.align.report.txt", "--json-report", "result.align.report.json", "--preset", "10x-sc-xcr-vdj", "--species", "hs", "result.consensus.4.mic", "result.alignments.vdjca"],
+	["refineTagsAndSort", "--report", "result.refine.report.txt", "--json-report", "result.refine.report.json", "result.alignments.vdjca", "result.refined.vdjca"],
+	["extend", "--report", "result.extend.report.txt", "--json-report", "result.extend.report.json", "result.refined.vdjca", "result.extended.vdjca"],
+	["assemble", "--report", "result.assemble.report.txt", "--json-report", "result.assemble.report.json", "result.extended.vdjca", "result.clna"],
+	["assembleContigs", "--report", "result.assembleContigs.report.txt", "--json-report", "result.assembleContigs.report.json", "result.clna", "result.contigs.clns"],
+	["assembleCells", "--report", "result.assembleCells.report.txt", "--json-report", "result.assembleCells.report.json", "result.contigs.clns", "result.assembledCells.clns"],
+	["qc", "--print-to-stdout", "result.assembledCells.clns", "result.qc.txt", "result.qc.json"],
+	["exportClones", "result.assembledCells.clns", "result.clones.tsv"],
+	["exportCloneGroups", "result.assembledCells.clns", "result.clone.groups.tsv"]
+]
+
+_READS := { "input_R1.fastq.gz": true, "input_R2.fastq.gz": true }
+
+_keys := func(plan) {
+	out := []
+	for c in plan.commands {
+		out = append(out, c.logKey)
+	}
+	return out
+}
+
+TestUmiStepsChainTheirFiles := func() {
+	plan := ms.commands(_UMI, _READS, "input_{{R}}.fastq.gz")
+	test.isEqual(["01:align", "02:refineTagsAndSort", "03:assemble", "04:qc"], _keys(plan))
+	align := plan.commands[0]
+	test.isTrue(align.stageReads)
+	test.isEqual(["result.align.report.txt", "result.align.report.json", "result.alignments.vdjca"], align.save)
+	test.isEqual(["result.alignments.vdjca"], plan.commands[1].stageSteps)
+	test.isEqual("result.clns", plan.clns)
+	test.isEqual("result.qc.json", plan.qcJson)
+}
+
+TestTenXRunsEveryMiToolRound := func() {
+	blockFiles := { "input_R1.fastq.gz": true, "input_R2.fastq.gz": true, "result.MiTool.preset.yaml": true }
+	plan := ms.commands(_TENX, blockFiles, "input_{{R}}.fastq.gz")
+	test.isEqual(13, len(plan.commands))
+	test.isEqual("01:mitool-parse", plan.commands[0].logKey)
+	test.isEqual(["result.MiTool.preset.yaml"], plan.commands[0].stageBlock)
+	test.isEqual("06:mitool-consensus", plan.commands[5].logKey)
+	test.isEqual(["result.consensus.3.mic"], plan.commands[5].stageSteps)
+	test.isEqual(["result.consensus.4.mic"], plan.commands[6].stageSteps)
+	test.isEqual("07:align", plan.commands[6].logKey)
+	test.isEqual("13:qc", plan.commands[12].logKey)
+	test.isEqual("result.assembledCells.clns", plan.clns)
+}
+
+TestExportStepsAreDropped := func() {
+	for c in ms.commands(_TENX, _READS, "input_{{R}}.fastq.gz").commands {
+		test.isFalse(c.key == "exportClones" || c.key == "exportCloneGroups")
+	}
+}
+
+TestBlockFilesAreStagedByName := func() {
+	steps := [["align", "--preset", "local#input_preset", "--library", "library.json.gz", "input.fastq.gz", "result.vdjca"],
+		["assemble", "result.vdjca", "result.clns"], ["qc", "result.clns", "result.qc.json"]]
+	files := { "input.fastq.gz": true, "input_preset.yaml": true, "library.json.gz": true }
+	align := ms.commands(steps, files, "input.fastq.gz").commands[0]
+	test.isEqual(["input_preset.yaml", "library.json.gz"], align.stageBlock)
+	test.isTrue(align.stageReads)
+	test.isEqual(["result.vdjca"], align.save)
+}
+
+TestKeyNamesTheResourcesRow := func() {
+	test.isEqual("mitool-refine-tags", ms.key(["mitool", "refine-tags", "a", "b"]))
+	test.isEqual("assemble", ms.key(["assemble", "a", "b"]))
+}

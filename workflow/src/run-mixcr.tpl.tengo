@@ -4,15 +4,13 @@
 // shared value declares two templates interchangeable.
 //tengo:hash_override 857A0480-F04D-4BAB-8697-E262BD515AD6
 
-// Runs MiXCR on one measured sample.
+// Runs MiXCR on one measured sample, one exec per step.
 //
-// A pipeline :pipeline-plan accepts runs one exec per step, so each step carries its own CPU and
-// memory from :resources instead of sharing the worst step's: the MiTool steps, `align`, the
-// chain up to the final .clns, then `qc`. The in-chain `exportClones` and `exportCloneGroups` are
-// dropped: the block saves nothing from them and re-exports from the .clns with its own argv in
-// :mixcr-export.
+// `mixcr analyze --dry-run-json` plans the run with the arguments `analyze` would get, and
+// :run-steps runs the steps it lists, each with its CPU and memory from :resources. Any preset of
+// the pinned MiXCR, built-in or from a file, so runs the steps `analyze` would run, in its order.
 //
-// A pipeline :pipeline-plan rejects keeps the single `analyze` command.
+// The block rejects a preset that splits the reads by a sample tag, and one with no qc checks.
 
 self := import("@platforma-sdk/workflow-tengo:tpl")
 smart := import("@platforma-sdk/workflow-tengo:smart")
@@ -21,19 +19,20 @@ ll := import("@platforma-sdk/workflow-tengo:ll")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 pcolumn := import("@platforma-sdk/workflow-tengo:pframes.pcolumn")
 times := import("times")
-text := import("text")
+render := import("@platforma-sdk/workflow-tengo:render")
 maps := import("@platforma-sdk/workflow-tengo:maps")
-memf := import(":mem-formula")
 mixcrCmd := import(":mixcr-cmd")
 resources := import(":resources")
 readStats := import(":read-stats")
-pipelinePlan := import(":pipeline-plan")
+presetTraits := import(":preset-traits")
+mixcrSteps := import(":mixcr-steps")
 
 json := import("json")
 
 self.defineOutputs("qc", "reports", "log", "clns")
 
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
+runStepsTpl := assets.importTemplate(":run-steps")
 
 CACHE_PERIOD := 48 * times.hour
 
@@ -76,14 +75,10 @@ self.body(func(inputs) {
 		scratchFreeSpace: readStats.scratchFreeSpaceFor(inputs.readStats)
 	}
 
-	// Preset selection and every mixin that shapes the resolved parameter bundle. `align`
-	// packs that bundle into the .vdjca header, and the later steps read it from there, so
-	// this whole group belongs to the first command of the run whichever shape it takes.
-	//
-	// `analyze` takes the preset as its first positional; `align` takes it as `--preset`.
-	// Every mixin below is an option on both, because align declares the same mixin groups
-	// (AlignMiXCRMixins, AssembleMiXCRMixins, GenericMiXCRMixins) that analyze does.
-	applyPresetArgs := func(builder, presetAsOption) {
+	// Preset selection and every mixin that shapes the resolved parameter bundle. `analyze` hands
+	// them to the first step of its plan, which packs the bundle into its output's header; every
+	// later step reads it from there.
+	applyPresetArgs := func(builder) {
 		if library {
 			builder.arg("--species").arg(species)
 			if isLibraryFileGzipped {
@@ -97,9 +92,6 @@ self.body(func(inputs) {
 			builder.arg("--species").arg(species)
 		}
 
-		if presetAsOption {
-			builder.arg("--preset")
-		}
 		if smart.isResource(preset) /* file */ {
 			builder.
 				arg("local#input_preset").
@@ -143,8 +135,11 @@ self.body(func(inputs) {
 		return builder
 	}
 
-	// Stages the sample's read files under `tag` and adds the positional pattern that names them.
-	applyInputFiles := func(builder, tag) {
+	// The sample's read files by the names the plan and the steps stage them under, and the
+	// pattern that names them all.
+	readFiles := func() {
+		files := {}
+		pattern := undefined
 		inputMap := inputData.inputs()
 		if inputDataMeta.keyLength == 0 {
 			ll.assert(aggregationAxesNames == [], "unexpected aggregation axes names")
@@ -152,8 +147,8 @@ self.body(func(inputs) {
 			inputFile := inputMap["[]"]
 			ll.assert(!is_undefined(inputFile), "unexpected agg group structure")
 			inputFileName := "input." + fileExtension
-			builder.addFile(inputFileName, inputFile, { tag: tag })
-			builder.arg(inputFileName)
+			files[inputFileName] = inputFile
+			pattern = inputFileName
 		} else if inputDataMeta.keyLength == 1 {
 			ll.assert(aggregationAxesNames == ["pl7.app/sequencing/readIndex"], "unexpected aggregation axes names")
 			for sKey in maps.getKeys(inputMap) {
@@ -166,9 +161,9 @@ self.body(func(inputs) {
 				if (r[0] != 'R' && r[0] != "I") || (r[1] != '1' && r[1] != '2') || len(r) != 2 {
 					ll.panic("malformed read index: %v", r)
 				}
-				builder.addFile("input_" + r + "." + fileExtension, inputFile, { tag: tag })
+				files["input_" + r + "." + fileExtension] = inputFile
 			}
-			builder.arg("input_{{R}}." + fileExtension)
+			pattern = "input_{{R}}." + fileExtension
 		} else if inputDataMeta.keyLength == 2 {
 			ll.assert(aggregationAxesNames == ["pl7.app/sequencing/lane", "pl7.app/sequencing/readIndex"], "unexpected aggregation axes names")
 			for sKey in maps.getKeys(inputMap) {
@@ -185,209 +180,74 @@ self.body(func(inputs) {
 				if is_undefined(int(lane)) {
 					ll.panic("malformed lane: %v", lane)
 				}
-				builder.addFile("input_L" + lane + "_" + r + "." + fileExtension, inputFile, { tag: tag })
+				files["input_L" + lane + "_" + r + "." + fileExtension] = inputFile
 			}
-			builder.arg("input_L{{n}}_{{R}}." + fileExtension)
+			pattern = "input_L{{n}}_{{R}}." + fileExtension
 		} else {
 			ll.panic("too many axes / not supported")
 		}
-		return builder
+		return { files: files, names: maps.getKeys(files), pattern: pattern }
 	}
 
-	// One stdout stream per command, keyed by the step that wrote it. `analyze` runs every
-	// step in one JVM and contributes a single entry.
-	logs := pcolumn.resourceMapBuilder( /* keyLength */ 1 )
-
-	stepPlan := pipelinePlan.plan(presetContent)
-
-	if is_undefined(stepPlan) {
-		hasAssembleContigs := false
-		hasAssembleCells := false
-		hasMiToolSteps := false
-		for stage in presetContent.pipeline {
-			if stage == "assembleContigs" {
-				hasAssembleContigs = true
-			} else if stage == "assembleCells" {
-				hasAssembleCells = true
-			} else if text.has_prefix(stage, "mitool-") {
-				hasMiToolSteps = true
-			}
-		}
-
-		// `analyze` names its output after the last clns-writing step.
-		clnsFileName := "result.clns"
-		if hasAssembleContigs {
-			clnsFileName = "result.contigs.clns"
-		}
-		if hasAssembleCells {
-			clnsFileName = "result.assembledCells.clns"
-		}
-
-		mixcrCmdBuilder := mixcrCmd.builder(mixcrSw).arg("analyze")
-		resources.apply(mixcrCmdBuilder,
-			{ ram: memf.memFormula(memf.baseMemGiB(hasMiToolSteps, hasAssembleContigs, hasAssembleCells)) }, res)
-
-		if !is_undefined(limitInput) {
-			mixcrCmdBuilder.arg("--limit-input").arg(string(limitInput))
-		}
-
-		applyPresetArgs(mixcrCmdBuilder, false)
-		applyInputFiles(mixcrCmdBuilder, "reads")
-
-		mixcrCmdBuilder.arg("result")
-		mixcrCmdBuilder.arg("--force-overwrite")
-
-		mixcrCmdBuilder.saveFile("result.qc.json")
-		mixcrCmdBuilder.saveFile(clnsFileName)
-
-		for report in reports {
-			mixcrCmdBuilder.saveFile(report.fileJson)
-			mixcrCmdBuilder.saveFile(report.fileTxt)
-		}
-
-		mixcrRun := mixcrCmdBuilder.cache(CACHE_PERIOD).run()
-
-		reportsMap := pcolumn.resourceMapBuilder( /* keyLength */ 2 )
-		for report in reports {
-			reportsMap.add([report.id, "json"], mixcrRun.getFile(report.fileJson))
-			reportsMap.add([report.id, "txt"], mixcrRun.getFile(report.fileTxt))
-		}
-
-		logs.add(["analyze"], mixcrRun.getStdoutStream())
-
-		return {
-			qc: mixcrRun.getFile("result.qc.json"),
-			log: logs.build(),
-			reports: reportsMap.build(),
-			clns: mixcrRun.getFile(clnsFileName)
-		}
+	if presetTraits.splitsBySample(presetContent) {
+		ll.panic("the preset splits the reads by a sample tag, which the block does not support")
+	}
+	if !presetTraits.hasQcChecks(presetContent) {
+		ll.panic("the preset carries no qc checks, which the block needs for its QC report")
 	}
 
-	// Every step below takes its CPU and memory from its :resources row, by the step and the run's
-	// class.
-	runStep := func(cmd, step) {
-		resources.apply(cmd, resources.lookup(step.step, stepPlan.class), res)
-		run := cmd.cache(CACHE_PERIOD).run()
-		logs.add([step.logKey], run.getStdoutStream())
-		return run
+	reads := readFiles()
+
+	// The block files the steps may stage by name: the reads, the preset file and the library.
+	files := smart.mapBuilder()
+	for name in reads.names {
+		files.addRef(name, reads.files[name])
 	}
 
-	// MiTool steps: parse extracts the cell and UMI tags into a .mic, refine-tags corrects them
-	// against the whitelists, and each consensus round collapses reads per tag group. Only parse
-	// takes the preset. It packs the resolved MiTool parameters into the .mic header, and every
-	// later step, `align` included, reads them from there. Each consensus round reads its own
-	// parameters by counting the rounds already recorded in that header.
-	inName := undefined
-	inFile := undefined
-	for step in stepPlan.mitool {
-		cmd := mixcrCmd.builder(mixcrSw).arg("mitool").arg(step.command)
-		if step.command == "parse" {
-			cmd.arg("--preset").arg("local:mitool_preset").
-				writeFile("mitool_preset.yaml", presetContent.mitool)
-			applyInputFiles(cmd, resources.INPUT_TAG)
-		} else {
-			cmd.addFile(inName, inFile, { tag: resources.INPUT_TAG }).arg(inName)
-		}
-		run := runStep(cmd.arg(step.outName).saveFile(step.outName), step)
-		inName = step.outName
-		inFile = run.getFile(step.outName)
-	}
-
-	alignReportJson := "result.align.report.json"
-	alignReportTxt := "result.align.report.txt"
-	alignedFile := "result.vdjca"
-
-	alignBuilder := mixcrCmd.builder(mixcrSw).arg("align").arg("-f")
-
-	// `--threads` exists on align alone of the MiXCR steps. Reading the granted count back from
-	// the placeholder keeps the flag and the request from diverging.
-	alignBuilder.arg("--threads").argExpr("{system.cpu}")
-
+	// The planning command reads the reads only to check that they exist, so empty files under
+	// their names stand in for them.
+	planCmd := mixcrCmd.builder(mixcrSw).
+		arg("analyze").
+		arg("--dry-run-json").arg(mixcrSteps.STEPS_FILE)
 	if !is_undefined(limitInput) {
-		alignBuilder.arg("--limit-input").arg(string(limitInput))
+		planCmd.arg("--limit-input").arg(string(limitInput))
+	}
+	applyPresetArgs(planCmd)
+	for name in reads.names {
+		planCmd.writeFile(name, "")
+	}
+	planCmd.arg(reads.pattern).arg(mixcrSteps.OUTPUT_PREFIX).saveFileContent(mixcrSteps.STEPS_FILE)
+	resources.apply(planCmd, resources.lookup("plan", "any"), res)
+	planRun := planCmd.cache(CACHE_PERIOD).run()
+
+	if smart.isResource(preset) {
+		files.addRef("input_preset.yaml", preset)
+	}
+	if library {
+		files.addRef(isLibraryFileGzipped ? "library.json.gz" : "library.json", library)
 	}
 
-	applyPresetArgs(alignBuilder, true)
-
-	alignBuilder.
-		arg("--report").arg(alignReportTxt).
-		arg("--json-report").arg(alignReportJson)
-
-	if is_undefined(inFile) {
-		applyInputFiles(alignBuilder, resources.INPUT_TAG)
-	} else {
-		alignBuilder.addFile(inName, inFile, { tag: resources.INPUT_TAG }).arg(inName)
-	}
-
-	alignRun := runStep(alignBuilder.
-		arg(alignedFile).
-		saveFile(alignedFile).
-		saveFile(alignReportJson).
-		saveFile(alignReportTxt), stepPlan.align)
-
-	// The rest of the chain: each step reads the file the one before it wrote. The clone-clustering
-	// overrides are not repeated: `align` wrote the resolved parameter bundle into the .vdjca header
-	// and every later step reads it from there. `mixcr assemble` takes no -M option of its own.
-	assembleReportJson := "result.assemble.report.json"
-	assembleReportTxt := "result.assemble.report.txt"
-
-	inName = alignedFile
-	inFile = alignRun.getFile(alignedFile)
-	assembleRun := undefined
-	for link in stepPlan.chain {
-		cmd := mixcrCmd.builder(mixcrSw).arg(link.step).arg("-f")
-		if link.step == "assemble" {
-			cmd.arg("--report").arg(assembleReportTxt).
-				arg("--json-report").arg(assembleReportJson).
-				saveFile(assembleReportJson).
-				saveFile(assembleReportTxt)
-		}
-		cmd.addFile(inName, inFile, { tag: resources.INPUT_TAG }).
-			arg(inName).
-			arg(link.outName).
-			saveFile(link.outName)
-		run := runStep(cmd, link)
-		if link.step == "assemble" {
-			assembleRun = run
-		}
-		inName = link.outName
-		inFile = run.getFile(link.outName)
-	}
-	clnsFile := inFile
-
-	// `qc` is in no preset pipeline: `analyze` appends it at runtime whenever the preset carries
-	// qc checks. Dropping it would empty outputs.qc and kill the QC tab. One invocation writes both
-	// report formats: the command takes 0..2 output paths and picks the writer by extension.
-	qcTxtFile := "result.qc.txt"
-	qcJsonFile := "result.qc.json"
-	qcRun := runStep(mixcrCmd.builder(mixcrSw).
-		arg("qc").
-		arg("--print-to-stdout").
-		arg("-f").
-		addFile(inName, clnsFile).
-		arg(inName).
-		arg(qcTxtFile).
-		arg(qcJsonFile).
-		saveFile(qcJsonFile), stepPlan.qc)
-
-	// The reports p-column carries the ids :process lists.
-	reportsMap := pcolumn.resourceMapBuilder( /* keyLength */ 2 )
-	for report in reports {
-		if report.id == "align" {
-			reportsMap.add([report.id, "json"], alignRun.getFile(alignReportJson))
-			reportsMap.add([report.id, "txt"], alignRun.getFile(alignReportTxt))
-		} else if report.id == "assemble" {
-			reportsMap.add([report.id, "json"], assembleRun.getFile(assembleReportJson))
-			reportsMap.add([report.id, "txt"], assembleRun.getFile(assembleReportTxt))
-		} else {
-			ll.panic("unexpected report id %v", report.id)
-		}
-	}
+	// The overrides go in as metaInputs, out of the deduplication key, for the same reason
+	// :mixcr-analyze keeps them out of this template's: a run is recovered across a change of
+	// the CPU or memory override. The scratch request never changes what a step produces.
+	stepsRun := render.create(
+		runStepsTpl,
+		{
+			steps: planRun.getFileContent(mixcrSteps.STEPS_FILE),
+			files: files.lockAndBuild(),
+			readNames: reads.names,
+			readsPattern: reads.pattern,
+			mitoolPreset: presetContent.mitool,
+			stepClass: presetTraits.stepClass(presetContent),
+			reports: reports
+		},
+		{ metaInputs: res }
+	)
 
 	return {
-		qc: qcRun.getFile(qcJsonFile),
-		log: logs.build(),
-		reports: reportsMap.build(),
-		clns: clnsFile
+		qc: stepsRun.output("qc", CACHE_PERIOD),
+		log: stepsRun.output("log", CACHE_PERIOD),
+		reports: stepsRun.output("reports", CACHE_PERIOD),
+		clns: stepsRun.output("clns", CACHE_PERIOD)
 	}
 })

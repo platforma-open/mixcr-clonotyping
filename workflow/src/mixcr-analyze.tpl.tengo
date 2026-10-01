@@ -8,9 +8,9 @@
 // An override replaces the identity of the WHOLE subtree, not of this file: the backend
 // renders an overridden template as a `TengoTemplateOverride` resource carrying the UUID
 // alone, with the real template on a Service field. So a rotated UUID in a template this one
-// renders — :run-mixcr — has no effect while this UUID stands. Rotate here
+// renders — :run-mixcr, :run-steps — has no effect while this UUID stands. Rotate here
 // whenever the computation below changes.
-//tengo:hash_override E2020505-700A-4F8C-BEFC-7543249CF82D
+//tengo:hash_override 5206AE44-1F0D-4B06-A578-8C64FD3506A4
 
 // Measures the reads of one sample, then runs MiXCR on them.
 //
@@ -19,8 +19,9 @@
 // of a command it started itself, so the run lives in :run-mixcr and this template only
 // feeds it. See :read-stats for what is measured and how the size follows from it.
 //
-// The override was rotated when MiXCR stopped running as one `analyze` command, so every
-// sample is analysed again on the next block update.
+// The override was rotated when MiXCR stopped running as one `analyze` command and the block
+// started running the steps `analyze --dry-run-json` plans, so every sample is analysed again on
+// the next block update.
 
 self := import("@platforma-sdk/workflow-tengo:tpl")
 render := import("@platforma-sdk/workflow-tengo:render")
