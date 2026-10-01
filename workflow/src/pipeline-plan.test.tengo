@@ -139,3 +139,13 @@ TestHasLongReadAligner := func() {
 	test.isFalse(pp.hasLongReadAligner({ align: {} }))
 	test.isFalse(pp.hasLongReadAligner(undefined))
 }
+
+TestStepsRunInMiXCROrderWhateverTheListOrder := func() {
+	preset := {
+		pipeline: ["exportClones", "assembleContigs", "assemble", "extend", "align", "refineTagsAndSort"],
+		assemble: { clnaOutput: true }
+	}
+	test.isEqual(["refineTagsAndSort>refineTagsAndSort.vdjca", "extend>extend.vdjca",
+		"assemble>assemble.clna", "assembleContigs>result.clns"], _steps(pp.plan(preset)))
+	test.isEqual("01:align", pp.plan(preset).align.logKey)
+}

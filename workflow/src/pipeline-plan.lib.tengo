@@ -32,6 +32,50 @@ _CHAIN_STEPS := {
 	assembleCells: { from: ["clns"], out: "clns" }
 }
 
+// MiXCR's run order of each step the split knows, from the `order` of each command descriptor in
+// mixcr-algo `MiXCRCommandDescriptor.kt`. `analyze` sorts the pipeline by these values, so the
+// plan does too, whatever order the preset lists its steps in.
+_STEP_ORDER := {
+	"mitool-parse": -1000,
+	"mitool-refine-tags": -900,
+	"mitool-consensus": -800,
+	align: 0,
+	refineTagsAndSort: 100,
+	assemblePartial: 300,
+	extend: 400,
+	assemble: 500,
+	assembleContigs: 600,
+	assembleCells: 650,
+	exportClones: 700,
+	exportCloneGroups: 800
+}
+
+// _sortByStepOrder returns the steps in MiXCR's run order, or 'undefined' when one has no order.
+_sortByStepOrder := func(steps) {
+	sorted := []
+	for step in steps {
+		order := _STEP_ORDER[step]
+		if is_undefined(order) {
+			return undefined
+		}
+		// Stable insertion: the new step goes after every step whose order is not greater.
+		next := []
+		placed := false
+		for s in sorted {
+			if !placed && _STEP_ORDER[s] > order {
+				next = append(next, step)
+				placed = true
+			}
+			next = append(next, s)
+		}
+		if !placed {
+			next = append(next, step)
+		}
+		sorted = next
+	}
+	return sorted
+}
+
 _MITOOL_COMMANDS := {
 	"mitool-parse": "parse",
 	"mitool-refine-tags": "refine-tags",
@@ -124,7 +168,10 @@ plan := func(presetContent) {
 	if !is_map(presetContent) || !is_array(presetContent.pipeline) {
 		return undefined
 	}
-	pipeline := presetContent.pipeline
+	pipeline := _sortByStepOrder(presetContent.pipeline)
+	if is_undefined(pipeline) {
+		return undefined
+	}
 
 	alignAt := -1
 	for i, step in pipeline {
