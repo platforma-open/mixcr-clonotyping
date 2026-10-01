@@ -4,8 +4,9 @@ exec := import("@platforma-sdk/workflow-tengo:exec")
 
 PROGRESS_PREFIX := "[==PROGRESS==]"
 
-// builder starts a MiXCR command with its license, CA store and progress prefix, and saves
-// stdout with stderr merged in, so the log column carries the command's failure text.
+// builder starts a MiXCR command: the MI_LICENSE secret, the system CA store and the progress
+// prefix go in as environment variables, and stdout is saved with stderr merged in, so the log
+// column carries the command's failure text.
 builder := func(mixcrSw) {
 	return exec.builder().
 		printErrStreamToStdout().

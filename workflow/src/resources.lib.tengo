@@ -5,9 +5,14 @@
 //     ram = max(floor, intercept + slope x input GiB), rounded up to a whole GiB
 //     ram = min(ram, cap)   only when the row sets cap
 //
-// where `input GiB` is the stored size of the one file the step stages under INPUT_TAG. A row
-// may also set `cpu` (16 otherwise), `queue: "light"`, and `override: false`, which keeps the
-// "Advanced Settings" overrides off that step.
+// where `input GiB` is the stored size of the one file the step stages under INPUT_TAG. CPU has
+// the same shape:
+//
+//     cpu = cpuIntercept + cpuSlope x input GiB, rounded up
+//
+// with cpuIntercept 16 and cpuSlope 0 unless the row sets them. A row may also set
+// `queue: "light"`, and `override: false`, which keeps the "Advanced Settings" overrides off
+// that step.
 //
 // The class comes from :pipeline-plan: "none", "umi", "cell" or "longRead". A step takes its
 // (step, class) row, then its (step, "any") row, then DEFAULT.
@@ -20,7 +25,7 @@ f := exec.formula
 // The tag every split step puts on the file it is sized from.
 INPUT_TAG := "input"
 
-_DEFAULT_CPU := 16
+_DEFAULT_CPU_INTERCEPT := 16
 
 // Backends that cannot evaluate resource formulas get max(floor, this).
 _FALLBACK_GIB := 64
@@ -52,7 +57,7 @@ _ROWS := [
 	{ step: "assemble", class: "longRead", floor: 6, intercept: 6, slope: 5.8 },
 
 	// PLACEHOLDER: `qc` reads the reports in the .clns footer and holds no clones.
-	{ step: "qc", class: "any", floor: 4, intercept: 0, slope: 0, cpu: 1, queue: "light", override: false }
+	{ step: "qc", class: "any", floor: 4, intercept: 0, slope: 0, cpuIntercept: 1, queue: "light", override: false }
 ]
 
 DEFAULT := { step: "default", class: "any", floor: 64, intercept: 0, slope: 4 }
@@ -94,13 +99,27 @@ ram := func(row) {
 	return formula.staticFallback(f.gib(fallback))
 }
 
+// cpu returns the CPU request of a row: a fixed count when its cpuSlope is 0, an exec.formula
+// over the INPUT_TAG file otherwise.
+cpu := func(row) {
+	intercept := is_undefined(row.cpuIntercept) ? _DEFAULT_CPU_INTERCEPT : row.cpuIntercept
+	slope := is_undefined(row.cpuSlope) ? 0 : row.cpuSlope
+	if slope == 0 {
+		return intercept
+	}
+	slopeHundredths := int(slope * 100 + 0.5)
+	return f.size(INPUT_TAG).times(slopeHundredths).dividedBy(f.gib(100)).
+		plus(intercept).
+		staticFallback(intercept)
+}
+
 // apply sets the CPU, memory, scratch and queue of `cmd` from `row`. A row carrying a ready `ram`
 // request uses it as-is; the single `analyze` command passes its own that way. `res` carries the
 // "Advanced Settings" overrides and the scratch request: { perProcessMemGB, perProcessCPUs,
 // scratchFreeSpace }. A row with `override: false` ignores both overrides.
 apply := func(cmd, row, res) {
 	useOverrides := row.override != false
-	onCPU := { cpu: is_undefined(row.cpu) ? _DEFAULT_CPU : row.cpu, ram: is_undefined(row.ram) ? ram(row) : row.ram }
+	onCPU := { cpu: cpu(row), ram: is_undefined(row.ram) ? ram(row) : row.ram }
 	if useOverrides && !is_undefined(res.perProcessCPUs) {
 		onCPU.cpu = res.perProcessCPUs
 	}
@@ -122,5 +141,6 @@ export {
 	DEFAULT: DEFAULT,
 	lookup: lookup,
 	ram: ram,
+	cpu: cpu,
 	apply: apply
 }

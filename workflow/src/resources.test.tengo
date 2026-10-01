@@ -81,3 +81,20 @@ TestCapAppliesOnlyWhenARowSetsIt := func() {
 	resolver := { size: func(files) { return _gib(100) }, lineCount: func(files) { return 0 } }
 	test.isEqual(_gib(10), f.evaluateResource(resolved, resolver, "test"))
 }
+
+TestCpuIsTheInterceptWhileTheSlopeIs0 := func() {
+	test.isEqual(16, rs.cpu(rs.lookup("assemble", "umi")))
+	test.isEqual(16, rs.cpu(rs.DEFAULT))
+	test.isEqual(1, rs.cpu(rs.lookup("qc", "none")))
+}
+
+TestCpuSlopeScalesWithTheInput := func() {
+	node := rs.cpu({ step: "x", class: "any", floor: 8, intercept: 0, slope: 0, cpuIntercept: 4, cpuSlope: 0.5 })
+	fileName := "input.bin"
+	inputs := {}
+	inputs[rs.INPUT_TAG] = [fileName]
+	resolved := f.resolveAst(node, inputs, [fileName])
+	resolver := { size: func(files) { return _gib(10) }, lineCount: func(files) { return 0 } }
+	test.isEqual(9, f.evaluateResource(resolved, resolver, "test"))
+	test.isEqual(4, f.fallbackOf(node))
+}
