@@ -108,6 +108,8 @@ export const platforma = BlockModelV3.create({ dataModel, kind })
     if (data.runMode === "dry" && data.limitInput == null)
       throw new Error("Read limit is required for Preview mode");
     if (!BlockArgsValid.safeParse(data).success) return undefined;
+    // A preset file carries its own settings; built-in preset flags must not override it.
+    const builtIn = data.preset.type === "name";
     return {
       defaultBlockLabel: data.defaultBlockLabel ?? "",
       customBlockLabel: data.customBlockLabel ?? "",
@@ -118,14 +120,15 @@ export const platforma = BlockModelV3.create({ dataModel, kind })
       inputLibrary: data.inputLibrary,
       libraryFile: data.libraryFile,
       isLibraryFileGzipped: data.isLibraryFileGzipped,
-      species: data.species,
+      species: builtIn ? data.species : undefined,
       customSpecies: data.customSpecies,
-      materialType: data.materialType,
-      leftAlignmentMode: data.leftAlignmentMode,
-      rightAlignmentMode: data.rightAlignmentMode,
-      tagPattern: data.tagPattern,
-      assembleClonesBy: data.assembleClonesBy,
-      imputeGermline: data.assembleClonesBy !== undefined ? data.imputeGermline : undefined,
+      materialType: builtIn ? data.materialType : undefined,
+      leftAlignmentMode: builtIn ? data.leftAlignmentMode : undefined,
+      rightAlignmentMode: builtIn ? data.rightAlignmentMode : undefined,
+      tagPattern: builtIn ? data.tagPattern : undefined,
+      assembleClonesBy: builtIn ? data.assembleClonesBy : undefined,
+      imputeGermline:
+        builtIn && data.assembleClonesBy !== undefined ? data.imputeGermline : undefined,
       limitInput: data.runMode === "dry" ? data.limitInput : undefined,
       perProcessMemGB: data.perProcessMemGB,
       perProcessCPUs: data.perProcessCPUs,
