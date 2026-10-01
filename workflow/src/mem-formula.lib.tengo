@@ -1,10 +1,7 @@
-// Memory grants of every MiXCR command the block runs.
-//
-// A split run asks for one grant per step through stepRam, by the name :pipeline-plan gives the
-// step. A run that stays one `analyze` command takes memFormula. :mixcr-export takes exportRam.
+// Memory grants of the MiXCR commands sized outside :resources: a run that stays one `analyze`
+// command takes memFormula, and :mixcr-export takes exportRam.
 
 exec := import("@platforma-sdk/workflow-tengo:exec")
-ll := import("@platforma-sdk/workflow-tengo:ll")
 
 math := import("math")
 
@@ -38,124 +35,6 @@ memFormula := func(base) {
 	return f.size("reads").times(4).
 		between(f.gib(base), f.gib(256)).
 		staticFallback(f.gib(base))
-}
-
-// The tag every split step puts on the one file it stages and is sized from.
-INPUT_TAG := "input"
-
-_CAP_GIB := 256
-
-// assembleEstimate reads the estimate of `initialClonesCreated` the `align` step reports: the
-// distinct clonal keys (assembling-feature tuple plus the split genes' best hits) among reads
-// with no base below `badQualityThreshold`, which is the number of accumulators `assemble`
-// holds at its peak.
-//
-// The field is `estimatedClonotypes: { assemblingFeatures, splitBy, qualityThreshold,
-// initialClones, cdr3 }`. `align` computes it under the same assembler parameters the run
-// assembles with, so no cross-check against the preset is needed here.
-//
-// Returns 'undefined' when the field is missing or unreadable: a MiXCR pin older than the sketch
-// writes no field at all.
-assembleEstimate := func(alignReport) {
-	if !is_map(alignReport) {
-		return undefined
-	}
-	estimate := alignReport.estimatedClonotypes
-	if !is_map(estimate) {
-		return undefined
-	}
-	count := int(estimate.initialClones)
-	if is_undefined(count) || count < 0 {
-		return undefined
-	}
-	return count
-}
-
-// assembleRamGiB sizes `assemble` of a bulk run without tags from that estimate:
-//
-//     ram = clamp(ceil(1.35 x (7 + 10.8 x est_M)), 4 GiB, 256 GiB)
-//
-// est_M is the estimate in millions. 7 + 10.8 x est_M is a grant fitted on bisected `assemble`
-// floors under `memory-from-limits`, measured on MiXCR 4.7.0 with milib 3.5.0-31 (mixcr #2147).
-// 1.35 is the release margin over that fit. The floors were measured with clone clustering off.
-_ASSEMBLE_MARGIN := 1.35
-_ASSEMBLE_INTERCEPT_GIB := 7.0
-_ASSEMBLE_GIB_PER_M := 10.8
-_ASSEMBLE_FLOOR_GIB := 4
-
-assembleRamGiB := func(estimatedClonotypes) {
-	millions := float(estimatedClonotypes) / 1000000.0
-	grant := int(math.ceil(_ASSEMBLE_MARGIN * (_ASSEMBLE_INTERCEPT_GIB + _ASSEMBLE_GIB_PER_M * millions)))
-	if grant < _ASSEMBLE_FLOOR_GIB {
-		return _ASSEMBLE_FLOOR_GIB
-	}
-	if grant > _CAP_GIB {
-		return _CAP_GIB
-	}
-	return grant
-}
-
-// _fileRam builds a grant fitted linearly on the size of the file a step stages:
-//
-//     ram = clamp(ceil(interceptGiB + perByteHundredths / 100 x size(INPUT_TAG)), floorGiB, 256 GiB)
-//
-// rounded up to a whole GiB. Backends that cannot evaluate formulas get fallbackGiB.
-_fileRam := func(interceptGiB, perByteHundredths, floorGiB, fallbackGiB) {
-	return f.gib(interceptGiB).
-		plus(f.size(INPUT_TAG).times(perByteHundredths).dividedBy(100)).
-		dividedBy(f.gib(1)).times(f.gib(1)).
-		between(f.gib(floorGiB), f.gib(_CAP_GIB)).
-		staticFallback(f.gib(fallbackGiB))
-}
-
-// The grant `analyze` gets on tagged pipelines, kept for backends that cannot evaluate formulas.
-_TAGGED_FALLBACK_GIB := 64
-
-// Every bisected bulk `assemble` floor is at most 3 + 16.2 x vdjca_GiB; 4 + 21.9 is that bound
-// times 1.35.
-_untaggedAssembleRam := func() {
-	return _fileRam(4, 2190, 64, 64)
-}
-
-// PLACEHOLDER, NOT MEASURED: the MiTool grants, set to what `analyze` gets on a MiTool pipeline.
-// They stand until a profiling run replaces them.
-_GRANTS := {
-	// `align` streams its input, so the grant does not scale with the sample.
-	align: func() { return "24GiB" },
-	// Sized from the FASTQs, which `mitool parse` stages under the "reads" tag.
-	mitoolParse: func() { return memFormula(192) },
-	// `mitool refine-tags` and each `mitool consensus` round, from the .mic they read.
-	mitoolStep: func() { return _fileRam(0, 400, 192, 192) },
-	// PLACEHOLDER floor: refine needs 12 GiB on 2-tag GEM-X at 25 % of reads, above the line.
-	refineTagsAndSort: func() { return _fileRam(6, 210, 16, _TAGGED_FALLBACK_GIB) },
-	// `assemblePartial`, `extend`, `assembleContigs` and `assembleCells`, from the .vdjca, .clna
-	// or .clns they read.
-	cellStep: func() { return _fileRam(0, 200, 8, _TAGGED_FALLBACK_GIB) },
-	// `assemble` of a bulk run with UMIs or barcodes, from the refined .vdjca.
-	umiAssemble: func() { return _fileRam(0, 86, 16, _TAGGED_FALLBACK_GIB) },
-	// `assemble` of a cell-barcoded run, from the refined .vdjca.
-	cellAssemble: func() { return _fileRam(0, 410, 16, _TAGGED_FALLBACK_GIB) },
-	// `assemble` on the long-read aligner, from the .vdjca.
-	longReadAssemble: func() { return _fileRam(6, 580, 0, _TAGGED_FALLBACK_GIB) },
-	// `assemble` of an untagged run that is not plain bulk (rna-seq, exome-seq, ONT without
-	// UMIs): no rule is fitted for them, so they take the bulk bound on the .vdjca.
-	untaggedAssemble: _untaggedAssembleRam
-}
-
-// stepRam returns the grant named `grant`. Only "bulkAssemble" takes estimatedClonotypes, the
-// align report's clone estimate: it sizes from the estimate when there is one, and from the
-// .vdjca otherwise.
-stepRam := func(grant, ...estimate) {
-	if grant == "bulkAssemble" {
-		estimatedClonotypes := len(estimate) > 0 ? estimate[0] : undefined
-		if is_undefined(estimatedClonotypes) {
-			return _untaggedAssembleRam()
-		}
-		return string(assembleRamGiB(estimatedClonotypes)) + "GiB"
-	}
-	rule := _GRANTS[grant]
-	ll.assert(!is_undefined(rule), "unknown memory grant %v", grant)
-	return rule()
 }
 
 // exportRam builds the exec.formula node for an `exportClones` step.
@@ -205,9 +84,5 @@ exportRam := func(perProcessMemGB, floorGiB, perByte) {
 export {
 	baseMemGiB: baseMemGiB,
 	memFormula: memFormula,
-	INPUT_TAG: INPUT_TAG,
-	assembleEstimate: assembleEstimate,
-	assembleRamGiB: assembleRamGiB,
-	stepRam: stepRam,
 	exportRam: exportRam
 }

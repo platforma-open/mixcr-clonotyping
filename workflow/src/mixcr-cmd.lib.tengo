@@ -1,4 +1,4 @@
-// The exec shape every MiXCR command of :run-mixcr and :chain-mixcr shares.
+// The exec shape every MiXCR command of :run-mixcr shares.
 
 exec := import("@platforma-sdk/workflow-tengo:exec")
 
@@ -17,21 +17,7 @@ builder := func(mixcrSw) {
 		env("MI_LICENSE_DEBUG", "MI_LICENSE_DEBUG")
 }
 
-// applyResources requests `ram` on the CPU queue. `res` carries the "Advanced Settings"
-// overrides and the scratch request: { perProcessMemGB, perProcessCPUs, scratchFreeSpace }.
-// perProcessMemGB replaces `ram`; perProcessCPUs defaults to 16.
-applyResources := func(cmd, ram, res) {
-	onCPU := { cpu: is_undefined(res.perProcessCPUs) ? 16 : res.perProcessCPUs }
-	onCPU.ram = is_undefined(res.perProcessMemGB) ? ram : string(res.perProcessMemGB) + "GiB"
-	if !is_undefined(res.scratchFreeSpace) {
-		onCPU.scratchFreeSpace = res.scratchFreeSpace
-	}
-	cmd.resources({ onCPU: onCPU })
-	return cmd
-}
-
 export {
 	PROGRESS_PREFIX: PROGRESS_PREFIX,
-	builder: builder,
-	applyResources: applyResources
+	builder: builder
 }

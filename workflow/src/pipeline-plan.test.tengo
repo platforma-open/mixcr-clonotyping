@@ -89,36 +89,29 @@ TestMalformedPipelinesFallBackToAnalyze := func() {
 	test.isTrue(is_undefined(pp.plan(undefined)))
 }
 
-_assembleGrant := func(preset) {
-	for link in pp.plan(preset).chain {
-		if link.step == "assemble" {
-			return link.grant
-		}
-	}
-}
-
-TestAssembleGrant := func() {
-	test.isEqual("longReadAssemble", _assembleGrant({ pipeline: ["align", "assemble", "exportClones"],
+TestStepClass := func() {
+	test.isEqual("longRead", pp.stepClass({ pipeline: ["align", "assemble"],
 		align: { parameters: { longReadsParameters: {} } } }))
-	test.isEqual("cellAssemble", _assembleGrant({ pipeline: ["align", "refineTagsAndSort", "assemble"],
+	test.isEqual("cell", pp.stepClass({ pipeline: ["align", "refineTagsAndSort", "assemble"],
 		align: { tagPattern: "^(CELL:N{16})(UMI:N{10})\\^(R2:*)" } }))
-	test.isEqual("cellAssemble", _assembleGrant({ pipeline: ["align", "refineTagsAndSort", "assemble", "assembleCells"],
+	test.isEqual("cell", pp.stepClass({ pipeline: ["align", "refineTagsAndSort", "assemble", "assembleCells"],
 		align: { tagPattern: "^(UMI:N{10})\\^(R2:*)" } }))
-	test.isEqual("umiAssemble", _assembleGrant({ pipeline: ["align", "refineTagsAndSort", "assemble"],
+	test.isEqual("umi", pp.stepClass({ pipeline: ["align", "refineTagsAndSort", "assemble"],
 		align: { tagPattern: "^(UMI:N{10})\\^(R2:*)" } }))
-	test.isEqual("bulkAssemble", _assembleGrant({ pipeline: ["align", "assemble", "exportClones"], align: {} }))
-	test.isEqual("untaggedAssemble", _assembleGrant({ pipeline: ["align", "assemblePartial", "extend", "assemble"], align: {} }))
+	test.isEqual("none", pp.stepClass({ pipeline: ["align", "assemblePartial", "extend", "assemble"], align: {} }))
 }
 
-TestStepGrants := func() {
+TestEveryStepNamesItsResourcesRow := func() {
 	preset := {
 		pipeline: ["mitool-parse", "mitool-consensus", "align", "refineTagsAndSort", "extend", "assemble"],
-		mitool: { consensus: [{}] }
+		mitool: { consensus: [{}, {}] }
 	}
 	plan := pp.plan(preset)
-	test.isEqual(["mitoolParse", "mitoolStep"], [plan.mitool[0].grant, plan.mitool[1].grant])
-	test.isEqual(["refineTagsAndSort", "cellStep", "umiAssemble"],
-		[plan.chain[0].grant, plan.chain[1].grant, plan.chain[2].grant])
+	test.isEqual(["mitool-parse", "mitool-consensus", "mitool-consensus"],
+		[plan.mitool[0].step, plan.mitool[1].step, plan.mitool[2].step])
+	test.isEqual(["align", "refineTagsAndSort", "extend", "assemble", "qc"],
+		[plan.align.step, plan.chain[0].step, plan.chain[1].step, plan.chain[2].step, plan.qc.step])
+	test.isEqual("umi", plan.class)
 }
 
 TestHasCellTag := func() {

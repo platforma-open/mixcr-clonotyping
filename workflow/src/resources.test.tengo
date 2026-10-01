@@ -1,0 +1,83 @@
+test := import("@platforma-sdk/workflow-tengo:test")
+exec := import("@platforma-sdk/workflow-tengo:exec")
+rs := import(":resources")
+
+f := exec.formula
+
+_gib := func(n) { return n * 1073741824 }
+
+// Evaluate a row's memory against a fake staged input of sizeBytes.
+_ram := func(step, cls, sizeBytes) {
+	node := rs.ram(rs.lookup(step, cls))
+	if is_string(node) {
+		return node
+	}
+	fileName := "input.bin"
+	inputs := {}
+	inputs[rs.INPUT_TAG] = [fileName]
+	resolved := f.resolveAst(node, inputs, [fileName])
+	resolver := {
+		size:      func(files) { return sizeBytes },
+		lineCount: func(files) { return 0 }
+	}
+	return f.evaluateResource(resolved, resolver, "test")
+}
+
+TestLookupPrefersTheClassRowThenTheStepRowThenTheDefault := func() {
+	test.isEqual("umi", rs.lookup("assemble", "umi").class)
+	test.isEqual("any", rs.lookup("refineTagsAndSort", "cell").class)
+	test.isEqual("default", rs.lookup("findAlleles", "none").step)
+}
+
+TestFlatRowsAreFixedRequests := func() {
+	test.isEqual("24GiB", _ram("align", "none", _gib(100)))
+	test.isEqual("4GiB", _ram("qc", "cell", _gib(100)))
+}
+
+TestBulkAssembleIsSizedFromTheVdjcaWithNoCap := func() {
+	// max(64, 4 + 21.9 x GiB), rounded up.
+	test.isEqual(_gib(64),  _ram("assemble", "none", _gib(2)))
+	test.isEqual(_gib(115), _ram("assemble", "none", _gib(505) / 100))
+	test.isEqual(_gib(267), _ram("assemble", "none", _gib(12)))
+}
+
+TestTaggedAssembleRows := func() {
+	test.isEqual(_gib(16), _ram("assemble", "umi", _gib(186) / 10))
+	test.isEqual(_gib(26), _ram("assemble", "umi", _gib(30)))
+	test.isEqual(_gib(41), _ram("assemble", "cell", _gib(10)))
+	test.isEqual(_gib(50), _ram("assemble", "longRead", _gib(75) / 10))
+}
+
+TestRefineHasA16GiBFloor := func() {
+	test.isEqual(_gib(16), _ram("refineTagsAndSort", "umi", _gib(39) / 100))
+	test.isEqual(_gib(27), _ram("refineTagsAndSort", "umi", _gib(954) / 100))
+}
+
+TestMiToolRowsMatchTheAnalyzeGrant := func() {
+	test.isEqual(_gib(192), _ram("mitool-parse", "cell", _gib(10)))
+	test.isEqual(_gib(200), _ram("mitool-consensus", "cell", _gib(50)))
+	test.isEqual(_gib(400), _ram("mitool-refine-tags", "cell", _gib(100)))
+}
+
+TestCellStepsAndTheDefault := func() {
+	test.isEqual(_gib(8),  _ram("extend", "cell", _gib(1)))
+	test.isEqual(_gib(20), _ram("assembleContigs", "cell", _gib(10)))
+	test.isEqual(_gib(64), _ram("findAlleles", "none", _gib(10)))
+	test.isEqual(_gib(80), _ram("findAlleles", "none", _gib(20)))
+}
+
+TestStaticFallbackIsTheFloorOr64 := func() {
+	test.isEqual(_gib(64),  f.fallbackOf(rs.ram(rs.lookup("refineTagsAndSort", "umi"))))
+	test.isEqual(_gib(192), f.fallbackOf(rs.ram(rs.lookup("mitool-consensus", "cell"))))
+}
+
+TestCapAppliesOnlyWhenARowSetsIt := func() {
+	row := { step: "x", class: "any", floor: 8, intercept: 0, slope: 2, cap: 10 }
+	node := rs.ram(row)
+	fileName := "input.bin"
+	inputs := {}
+	inputs[rs.INPUT_TAG] = [fileName]
+	resolved := f.resolveAst(node, inputs, [fileName])
+	resolver := { size: func(files) { return _gib(100) }, lineCount: func(files) { return 0 } }
+	test.isEqual(_gib(10), f.evaluateResource(resolved, resolver, "test"))
+}

@@ -1,0 +1,126 @@
+// CPU and memory of each step of a split run, as one table keyed by step and class.
+//
+// Every row grants
+//
+//     ram = max(floor, intercept + slope x input GiB), rounded up to a whole GiB
+//     ram = min(ram, cap)   only when the row sets cap
+//
+// where `input GiB` is the stored size of the one file the step stages under INPUT_TAG. A row
+// may also set `cpu` (16 otherwise), `queue: "light"`, and `override: false`, which keeps the
+// "Advanced Settings" overrides off that step.
+//
+// The class comes from :pipeline-plan: "none", "umi", "cell" or "longRead". A step takes its
+// (step, class) row, then its (step, "any") row, then DEFAULT.
+
+exec := import("@platforma-sdk/workflow-tengo:exec")
+ll := import("@platforma-sdk/workflow-tengo:ll")
+
+f := exec.formula
+
+// The tag every split step puts on the file it is sized from.
+INPUT_TAG := "input"
+
+_DEFAULT_CPU := 16
+
+// Backends that cannot evaluate resource formulas get max(floor, this).
+_FALLBACK_GIB := 64
+
+// PLACEHOLDER rows are unmeasured and stand until profiling replaces them.
+_ROWS := [
+	// PLACEHOLDER: the grant `analyze` gets on a MiTool pipeline. `mitool parse` is sized from the
+	// FASTQs it stages.
+	{ step: "mitool-parse", class: "any", floor: 192, intercept: 0, slope: 4 },
+	{ step: "mitool-refine-tags", class: "any", floor: 192, intercept: 0, slope: 4 },
+	{ step: "mitool-consensus", class: "any", floor: 192, intercept: 0, slope: 4 },
+
+	// `align` streams its input, so the grant does not grow with the sample.
+	{ step: "align", class: "any", floor: 24, intercept: 0, slope: 0 },
+
+	// PLACEHOLDER floor: 2-tag GEM-X needs 12 GiB at 25 % of reads, CELL-only 13.
+	{ step: "refineTagsAndSort", class: "any", floor: 16, intercept: 6, slope: 2.1 },
+
+	{ step: "assemblePartial", class: "any", floor: 8, intercept: 0, slope: 2 },
+	{ step: "extend", class: "any", floor: 8, intercept: 0, slope: 2 },
+	{ step: "assembleContigs", class: "any", floor: 8, intercept: 0, slope: 2 },
+	{ step: "assembleCells", class: "any", floor: 8, intercept: 0, slope: 2 },
+
+	// Sized from the .vdjca. A clone-count estimate from the align report will replace this row
+	// once one is fitted.
+	{ step: "assemble", class: "none", floor: 64, intercept: 4, slope: 21.9 },
+	{ step: "assemble", class: "umi", floor: 16, intercept: 0, slope: 0.86 },
+	{ step: "assemble", class: "cell", floor: 16, intercept: 0, slope: 4.1 },
+	{ step: "assemble", class: "longRead", floor: 6, intercept: 6, slope: 5.8 },
+
+	// PLACEHOLDER: `qc` reads the reports in the .clns footer and holds no clones.
+	{ step: "qc", class: "any", floor: 4, intercept: 0, slope: 0, cpu: 1, queue: "light", override: false }
+]
+
+DEFAULT := { step: "default", class: "any", floor: 64, intercept: 0, slope: 4 }
+
+_byKey := {}
+for row in _ROWS {
+	_byKey[row.step + "/" + row.class] = row
+}
+
+// lookup returns the row a step of the given class takes.
+lookup := func(step, cls) {
+	row := _byKey[step + "/" + cls]
+	if is_undefined(row) {
+		row = _byKey[step + "/any"]
+	}
+	if is_undefined(row) {
+		ll.print("step %v used the default grant", step)
+		row = DEFAULT
+	}
+	return row
+}
+
+// ram returns the memory request of a row: a fixed amount when its slope is 0, an exec.formula
+// over the INPUT_TAG file otherwise.
+ram := func(row) {
+	if row.slope == 0 {
+		gib := row.intercept > row.floor ? row.intercept : row.floor
+		return string(gib) + "GiB"
+	}
+	slopeHundredths := int(row.slope * 100 + 0.5)
+	formula := f.gib(row.intercept).
+		plus(f.size(INPUT_TAG).times(slopeHundredths).dividedBy(100)).
+		dividedBy(f.gib(1)).times(f.gib(1)).
+		atLeast(f.gib(row.floor))
+	if !is_undefined(row.cap) {
+		formula = formula.atMost(f.gib(row.cap))
+	}
+	fallback := row.floor > _FALLBACK_GIB ? row.floor : _FALLBACK_GIB
+	return formula.staticFallback(f.gib(fallback))
+}
+
+// apply sets the CPU, memory, scratch and queue of `cmd` from `row`. A row carrying a ready `ram`
+// request uses it as-is; the single `analyze` command passes its own that way. `res` carries the
+// "Advanced Settings" overrides and the scratch request: { perProcessMemGB, perProcessCPUs,
+// scratchFreeSpace }. A row with `override: false` ignores both overrides.
+apply := func(cmd, row, res) {
+	useOverrides := row.override != false
+	onCPU := { cpu: is_undefined(row.cpu) ? _DEFAULT_CPU : row.cpu, ram: is_undefined(row.ram) ? ram(row) : row.ram }
+	if useOverrides && !is_undefined(res.perProcessCPUs) {
+		onCPU.cpu = res.perProcessCPUs
+	}
+	if useOverrides && !is_undefined(res.perProcessMemGB) {
+		onCPU.ram = string(res.perProcessMemGB) + "GiB"
+	}
+	// A light-queue step gets no scratch volume.
+	if row.queue == "light" {
+		cmd.inLightQueue()
+	} else if !is_undefined(res.scratchFreeSpace) {
+		onCPU.scratchFreeSpace = res.scratchFreeSpace
+	}
+	cmd.resources({ onCPU: onCPU })
+	return cmd
+}
+
+export {
+	INPUT_TAG: INPUT_TAG,
+	DEFAULT: DEFAULT,
+	lookup: lookup,
+	ram: ram,
+	apply: apply
+}

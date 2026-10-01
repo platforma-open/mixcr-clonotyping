@@ -1,6 +1,6 @@
-// Turns a resolved preset into the list of per-step commands a split run executes, each with the
-// name of its memory grant in :mem-formula, or 'undefined' when the pipeline carries a step the
-// split does not know, and the run stays one `analyze` command.
+// Turns a resolved preset into the list of per-step commands a split run executes, and the class
+// :resources sizes them by, or 'undefined' when the pipeline carries a step the split does not
+// know, and the run stays one `analyze` command.
 //
 // The plan reads only the resolved bundle `mixcr exportPreset` writes, so a preset from a file
 // is planned the same way as a built-in one.
@@ -114,7 +114,7 @@ hasLongReadAligner := func(presetContent) {
 	return is_map(presetContent.align.parameters.longReadsParameters)
 }
 
-// _mitoolSteps lists the MiTool commands in run order: [{ command, logKey, outName, grant }].
+// _mitoolSteps lists the MiTool commands in run order: [{ step, command, logKey, outName }].
 // Each `consensus` round is its own command. 'undefined' when the MiTool part is malformed.
 _mitoolSteps := func(presetContent, names) {
 	steps := []
@@ -124,8 +124,7 @@ _mitoolSteps := func(presetContent, names) {
 			return undefined
 		}
 		if command != "consensus" {
-			grant := command == "parse" ? "mitoolParse" : "mitoolStep"
-			steps = append(steps, { command: command, logKey: name, outName: command + ".mic", grant: grant })
+			steps = append(steps, { step: name, command: command, logKey: name, outName: command + ".mic" })
 			continue
 		}
 		rounds := is_map(presetContent.mitool) ? presetContent.mitool.consensus : undefined
@@ -134,36 +133,36 @@ _mitoolSteps := func(presetContent, names) {
 		}
 		for r := 1; r <= len(rounds); r++ {
 			steps = append(steps, {
+				step: name,
 				command: command,
 				logKey: name + "." + string(r),
-				outName: command + "." + string(r) + ".mic",
-				grant: "mitoolStep"
+				outName: command + "." + string(r) + ".mic"
 			})
 		}
 	}
 	return steps
 }
 
-// _assembleGrant names the grant `assemble` takes. Only the plain bulk run, where `assemble`
-// reads the untagged .vdjca `align` wrote, is sized from the align report's clone estimate.
-_assembleGrant := func(presetContent, mitool, chainSteps) {
+// stepClass names the class :resources sizes a run's steps by, first match winning: "longRead"
+// for the long-read aligner, "cell" when the tag pattern captures a cell barcode or the pipeline
+// assembles cells, "umi" when it refines tags, and "none" otherwise.
+stepClass := func(presetContent) {
 	if hasLongReadAligner(presetContent) {
-		return "longReadAssemble"
+		return "longRead"
 	}
-	if hasCellTag(presetContent) || _contains(chainSteps, "assembleCells") {
-		return "cellAssemble"
+	pipeline := is_map(presetContent) && is_array(presetContent.pipeline) ? presetContent.pipeline : []
+	if hasCellTag(presetContent) || _contains(pipeline, "assembleCells") {
+		return "cell"
 	}
-	if _contains(chainSteps, "refineTagsAndSort") {
-		return "umiAssemble"
+	if _contains(pipeline, "refineTagsAndSort") {
+		return "umi"
 	}
-	if len(mitool) == 0 && len(chainSteps) == 1 && chainSteps[0] == "assemble" {
-		return "bulkAssemble"
-	}
-	return "untaggedAssemble"
+	return "none"
 }
 
-// plan returns { mitool: [...], align: { logKey }, chain: [{ step, logKey, outName, grant }],
-// qc: { logKey } }, or 'undefined'.
+// plan returns { class, mitool: [...], align, chain: [...], qc }, or 'undefined'. Every step is
+// { step, logKey, ... }: `step` is its :resources row, the chain links add outName, the MiTool
+// steps add command and outName.
 plan := func(presetContent) {
 	if !is_map(presetContent) || !is_array(presetContent.pipeline) {
 		return undefined
@@ -204,7 +203,6 @@ plan := func(presetContent) {
 		}
 	}
 	clnaOutput := is_map(presetContent.assemble) && presetContent.assemble.clnaOutput == true
-	assembleGrant := _assembleGrant(presetContent, mitool, chainSteps)
 
 	links := []
 	kind := "vdjca"
@@ -221,21 +219,13 @@ plan := func(presetContent) {
 			kind = def.out
 		}
 
-		grant := "cellStep"
-		if step == "assemble" {
-			grant = assembleGrant
-		} else if step == "refineTagsAndSort" {
-			grant = "refineTagsAndSort"
-		}
-
 		rounds := step == "assemblePartial" ? assemblePartialRounds : 1
 		for r := 1; r <= rounds; r++ {
 			suffix := rounds > 1 ? "." + string(r) : ""
 			links = append(links, {
 				step: step,
 				logKey: step + suffix,
-				outName: step + suffix + "." + kind,
-				grant: grant
+				outName: step + suffix + "." + kind
 			})
 		}
 	}
@@ -247,19 +237,20 @@ plan := func(presetContent) {
 
 	// Log keys lead with the run position, zero-padded, so the step that has got furthest sorts
 	// last and the UI needs no list of steps.
-	align := { logKey: "align" }
-	qc := { logKey: "qc" }
+	align := { step: "align", logKey: "align" }
+	qc := { step: "qc", logKey: "qc" }
 	position := 0
 	for step in append(append(append(mitool, align), links...), qc) {
 		position++
 		step.logKey = (position < 10 ? "0" : "") + string(position) + ":" + step.logKey
 	}
 
-	return { mitool: mitool, align: align, chain: links, qc: qc }
+	return { class: stepClass(presetContent), mitool: mitool, align: align, chain: links, qc: qc }
 }
 
 export {
 	plan: plan,
+	stepClass: stepClass,
 	hasCellTag: hasCellTag,
 	hasLongReadAligner: hasLongReadAligner
 }

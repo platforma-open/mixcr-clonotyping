@@ -8,9 +8,9 @@
 // An override replaces the identity of the WHOLE subtree, not of this file: the backend
 // renders an overridden template as a `TengoTemplateOverride` resource carrying the UUID
 // alone, with the real template on a Service field. So a rotated UUID in a template this one
-// renders — :run-mixcr, :chain-mixcr — has no effect while this UUID stands. Rotate here
+// renders — :run-mixcr — has no effect while this UUID stands. Rotate here
 // whenever the computation below changes.
-//tengo:hash_override 71DF4AA6-D7E8-4D74-A9DF-340C28229422
+//tengo:hash_override E2020505-700A-4F8C-BEFC-7543249CF82D
 
 // Measures the reads of one sample, then runs MiXCR on them.
 //
