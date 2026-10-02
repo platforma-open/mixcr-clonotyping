@@ -11,14 +11,19 @@
 //     cpu = cpuIntercept + cpuSlope x input GiB, rounded up
 //
 // with cpuIntercept 16 and cpuSlope 0 unless the row sets them. A row may also set
-// `queue: "light"`, and `override: false`, which keeps the "Advanced Settings" overrides off
-// that step.
+// `queue: "light"`, `scratch: true`, which gives the step the scratch request :read-stats
+// measures from the reads, and `override: false`, which keeps the "Advanced Settings" overrides
+// off that step.
+//
+// The memory override raises the floor of a row and does not replace the rule. The CPU override
+// replaces the row's CPU.
 //
 // The class comes from :preset-traits: "none", "umi", "cell" or "longRead". A step takes its
 // (step, class) row, then its (step, "any") row, then DEFAULT.
 
 exec := import("@platforma-sdk/workflow-tengo:exec")
 ll := import("@platforma-sdk/workflow-tengo:ll")
+math := import("math")
 
 f := exec.formula
 
@@ -34,37 +39,37 @@ _FALLBACK_GIB := 64
 _ROWS := [
 	// PLACEHOLDER: the grant `analyze` gets on a MiTool pipeline. `mitool parse` is sized from the
 	// FASTQs it stages.
-	{ step: "mitool-parse", class: "any", floor: 192, intercept: 0, slope: 4 },
-	{ step: "mitool-refine-tags", class: "any", floor: 192, intercept: 0, slope: 4 },
-	{ step: "mitool-consensus", class: "any", floor: 192, intercept: 0, slope: 4 },
+	{ step: "mitool-parse", class: "any", floor: 192, intercept: 0, slope: 4, scratch: true },
+	{ step: "mitool-refine-tags", class: "any", floor: 192, intercept: 0, slope: 4, scratch: true },
+	{ step: "mitool-consensus", class: "any", floor: 192, intercept: 0, slope: 4, scratch: true },
 
 	// `align` streams its input, so the grant does not grow with the sample.
-	{ step: "align", class: "any", floor: 24, intercept: 0, slope: 0 },
+	{ step: "align", class: "any", floor: 24, intercept: 0, slope: 0, cpuIntercept: 24, scratch: true },
 
 	// PLACEHOLDER floor: 2-tag GEM-X needs 12 GiB at 25 % of reads, CELL-only 13.
-	{ step: "refineTagsAndSort", class: "any", floor: 16, intercept: 6, slope: 2.1 },
+	{ step: "refineTagsAndSort", class: "any", floor: 16, intercept: 6, slope: 2.1, scratch: true },
 
-	{ step: "assemblePartial", class: "any", floor: 8, intercept: 0, slope: 2 },
-	{ step: "extend", class: "any", floor: 8, intercept: 0, slope: 2 },
-	{ step: "assembleContigs", class: "any", floor: 8, intercept: 0, slope: 2 },
-	{ step: "assembleCells", class: "any", floor: 8, intercept: 0, slope: 2 },
+	{ step: "assemblePartial", class: "any", floor: 8, intercept: 0, slope: 2, scratch: true },
+	{ step: "extend", class: "any", floor: 8, intercept: 0, slope: 2, scratch: true },
+	{ step: "assembleContigs", class: "any", floor: 8, intercept: 0, slope: 2, scratch: true },
+	{ step: "assembleCells", class: "any", floor: 8, intercept: 0, slope: 2, scratch: true },
 
 	// Sized from the .vdjca. A clone-count estimate from the align report will replace this row
 	// once one is fitted.
-	{ step: "assemble", class: "none", floor: 64, intercept: 4, slope: 21.9 },
-	{ step: "assemble", class: "umi", floor: 16, intercept: 0, slope: 0.86 },
-	{ step: "assemble", class: "cell", floor: 16, intercept: 0, slope: 4.1 },
-	{ step: "assemble", class: "longRead", floor: 6, intercept: 6, slope: 5.8 },
+	{ step: "assemble", class: "none", floor: 64, intercept: 4, slope: 21.9, cpuIntercept: 24, scratch: true },
+	{ step: "assemble", class: "umi", floor: 16, intercept: 0, slope: 0.86, cpuIntercept: 24, scratch: true },
+	{ step: "assemble", class: "cell", floor: 16, intercept: 0, slope: 4.1, cpuIntercept: 24, scratch: true },
+	{ step: "assemble", class: "longRead", floor: 6, intercept: 6, slope: 5.8, cpuIntercept: 24, scratch: true },
 
 	// PLACEHOLDER: `analyze --dry-run-json` resolves the preset and writes the step list; it
 	// reads no data.
-	{ step: "plan", class: "any", floor: 8, intercept: 0, slope: 0, cpuIntercept: 1, queue: "light", override: false },
+	{ step: "plan", class: "any", floor: 8, intercept: 0, slope: 0, cpuIntercept: 1, queue: "light", scratch: false, override: false },
 
 	// PLACEHOLDER: `qc` reads the reports in the .clns footer and holds no clones.
-	{ step: "qc", class: "any", floor: 4, intercept: 0, slope: 0, cpuIntercept: 1, queue: "light", override: false }
+	{ step: "qc", class: "any", floor: 4, intercept: 0, slope: 0, cpuIntercept: 1, queue: "light", scratch: false, override: false }
 ]
 
-DEFAULT := { step: "default", class: "any", floor: 64, intercept: 0, slope: 4 }
+DEFAULT := { step: "default", class: "any", floor: 64, intercept: 0, slope: 4, scratch: true }
 
 _byKey := {}
 for row in _ROWS {
@@ -122,18 +127,22 @@ cpu := func(row) {
 // scratchFreeSpace }. A row with `override: false` ignores both overrides.
 apply := func(cmd, row, res) {
 	useOverrides := row.override != false
+	if useOverrides && !is_undefined(res.perProcessMemGB) {
+		floor := int(math.ceil(res.perProcessMemGB))
+		if floor > row.floor {
+			row = copy(row)
+			row.floor = floor
+		}
+	}
 	onCPU := { cpu: cpu(row), ram: ram(row) }
 	if useOverrides && !is_undefined(res.perProcessCPUs) {
 		onCPU.cpu = res.perProcessCPUs
 	}
-	if useOverrides && !is_undefined(res.perProcessMemGB) {
-		onCPU.ram = string(res.perProcessMemGB) + "GiB"
+	if row.scratch && !is_undefined(res.scratchFreeSpace) {
+		onCPU.scratchFreeSpace = res.scratchFreeSpace
 	}
-	// A light-queue step gets no scratch volume.
 	if row.queue == "light" {
 		cmd.inLightQueue()
-	} else if !is_undefined(res.scratchFreeSpace) {
-		onCPU.scratchFreeSpace = res.scratchFreeSpace
 	}
 	cmd.resources({ onCPU: onCPU })
 	return cmd

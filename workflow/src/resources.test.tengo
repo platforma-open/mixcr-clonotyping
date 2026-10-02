@@ -83,7 +83,9 @@ TestCapAppliesOnlyWhenARowSetsIt := func() {
 }
 
 TestCpuIsTheInterceptWhileTheSlopeIs0 := func() {
-	test.isEqual(16, rs.cpu(rs.lookup("assemble", "umi")))
+	test.isEqual(24, rs.cpu(rs.lookup("align", "none")))
+	test.isEqual(24, rs.cpu(rs.lookup("assemble", "umi")))
+	test.isEqual(16, rs.cpu(rs.lookup("refineTagsAndSort", "umi")))
 	test.isEqual(16, rs.cpu(rs.DEFAULT))
 	test.isEqual(1, rs.cpu(rs.lookup("qc", "none")))
 }
@@ -97,4 +99,36 @@ TestCpuSlopeScalesWithTheInput := func() {
 	resolver := { size: func(files) { return _gib(10) }, lineCount: func(files) { return 0 } }
 	test.isEqual(9, f.evaluateResource(resolved, resolver, "test"))
 	test.isEqual(4, f.fallbackOf(node))
+}
+
+// A command stand-in that records what apply sets on it.
+_fakeCmd := func() {
+	cmd := { light: false }
+	cmd.inLightQueue = func() { cmd.light = true; return cmd }
+	cmd.resources = func(r) { cmd.onCPU = r.onCPU; return cmd }
+	return cmd
+}
+
+TestTheMemoryOverrideRaisesTheFloor := func() {
+	res := { perProcessMemGB: 100 }
+	test.isEqual("100GiB", rs.apply(_fakeCmd(), rs.lookup("align", "none"), res).onCPU.ram)
+	// Below the row's own floor the override has no effect.
+	test.isEqual("24GiB", rs.apply(_fakeCmd(), rs.lookup("align", "none"), { perProcessMemGB: 8 }).onCPU.ram)
+	// The data term still applies above the override.
+	test.isEqual(_gib(100), f.fallbackOf(rs.apply(_fakeCmd(), rs.lookup("assemble", "none"), res).onCPU.ram))
+	// A row with override: false keeps its own grant.
+	test.isEqual("4GiB", rs.apply(_fakeCmd(), rs.lookup("qc", "none"), res).onCPU.ram)
+}
+
+TestTheCpuOverrideReplacesTheRow := func() {
+	test.isEqual(8, rs.apply(_fakeCmd(), rs.lookup("align", "none"), { perProcessCPUs: 8 }).onCPU.cpu)
+}
+
+TestScratchGoesOnlyToRowsThatAskForIt := func() {
+	res := { scratchFreeSpace: "44GiB" }
+	test.isEqual("44GiB", rs.apply(_fakeCmd(), rs.lookup("assemble", "umi"), res).onCPU.scratchFreeSpace)
+	test.isEqual("44GiB", rs.apply(_fakeCmd(), rs.DEFAULT, res).onCPU.scratchFreeSpace)
+	cmd := rs.apply(_fakeCmd(), rs.lookup("qc", "none"), res)
+	test.isTrue(is_undefined(cmd.onCPU.scratchFreeSpace))
+	test.isTrue(cmd.light)
 }
