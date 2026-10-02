@@ -29,7 +29,7 @@ mixcrSteps := import(":mixcr-steps")
 
 json := import("json")
 
-self.defineOutputs("qc", "reports", "log", "clns")
+self.defineOutputs("qc", "reports", "log", "stepLog", "clns")
 
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
 runStepsTpl := assets.importTemplate(":run-steps")
@@ -247,6 +247,7 @@ self.body(func(inputs) {
 	return {
 		qc: stepsRun.output("qc", CACHE_PERIOD),
 		log: stepsRun.output("log", CACHE_PERIOD),
+		stepLog: stepsRun.output("stepLog", CACHE_PERIOD),
 		reports: stepsRun.output("reports", CACHE_PERIOD),
 		clns: stepsRun.output("clns", CACHE_PERIOD)
 	}

@@ -19,11 +19,13 @@ mixcrCmd := import(":mixcr-cmd")
 mixcrSteps := import(":mixcr-steps")
 resources := import(":resources")
 
-self.defineOutputs("qc", "reports", "log", "clns")
+self.defineOutputs("qc", "reports", "log", "stepLog", "clns")
 
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
 
 CACHE_PERIOD := 48 * times.hour
+// The steps that write no final output: the clones or the qc result.
+INTERMEDIATE_CACHE_PERIOD := 36 * times.hour
 
 self.body(func(inputs) {
 	// The template base turns a map input whose fields are already set into a plain map of
@@ -52,7 +54,8 @@ self.body(func(inputs) {
 	plan := mixcrSteps.commands(inputs.steps.getDataAsJson().steps, blockFiles, inputs.readsPattern)
 
 	written := {}
-	logs := pcolumn.resourceMapBuilder( /* keyLength */ 1 )
+	stepLogs := pcolumn.resourceMapBuilder( /* keyLength */ 1 )
+	lastLog := undefined
 	for c in plan.commands {
 		cmd := mixcrCmd.builder(mixcrSw)
 		for i, arg in c.args {
@@ -78,12 +81,17 @@ self.body(func(inputs) {
 				cmd.addFile(name, files[name])
 			}
 		}
+		cachePeriod := INTERMEDIATE_CACHE_PERIOD
 		for name in c.save {
 			cmd.saveFile(name)
+			if name == plan.clns || name == plan.qcJson {
+				cachePeriod = CACHE_PERIOD
+			}
 		}
 		resources.apply(cmd, resources.lookup(c.key, inputs.stepClass), res)
-		run := cmd.cache(CACHE_PERIOD).run()
-		logs.add([c.logKey], run.getStdoutStream())
+		run := cmd.cache(cachePeriod).run()
+		lastLog = run.getStdoutStream()
+		stepLogs.add([c.logKey], lastLog)
 		for name in c.save {
 			written[name] = run.getFile(name)
 		}
@@ -101,7 +109,9 @@ self.body(func(inputs) {
 
 	return {
 		qc: written[plan.qcJson],
-		log: logs.build(),
+		// The single log of a run before the split; it now carries the last step.
+		log: lastLog,
+		stepLog: stepLogs.build(),
 		reports: reportsMap.build(),
 		clns: written[plan.clns]
 	}
