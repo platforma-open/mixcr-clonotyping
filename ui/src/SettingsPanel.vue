@@ -46,6 +46,9 @@ const speciesOptions: ListOption[] = [
   { label: "Rat", value: "rat" },
   { label: "Sheep", value: "sheep" },
   { label: "Spalax", value: "spalax" },
+  { label: "Dog", value: "dog" },
+  { label: "Pig", value: "pig" },
+  { label: "Salmon", value: "salmon" },
 ];
 
 const presetSourceOptions: ListOption<Preset["type"]>[] = [
