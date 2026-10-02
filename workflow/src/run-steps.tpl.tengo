@@ -26,7 +26,12 @@ mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:
 CACHE_PERIOD := 48 * times.hour
 
 self.body(func(inputs) {
-	files := inputs.files.inputs()
+	// The template base turns a map input whose fields are already set into a plain map of
+	// name -> file; a map whose fields are still pending arrives as the resource.
+	files := inputs.files
+	if !is_map(files) {
+		files = files.inputs()
+	}
 	readNames := inputs.readNames
 	mitoolPreset := inputs.mitoolPreset
 	mitoolPresetFile := mixcrSteps.OUTPUT_PREFIX + ".MiTool.preset.yaml"
