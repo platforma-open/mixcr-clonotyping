@@ -12,10 +12,11 @@ import { useApp } from "./app";
 
 const reactiveFileContent = ReactiveFileContent.useGlobal();
 
-// MiXCR runs either as a single `analyze` command or as one command per step. Logs and
-// progress arrive keyed by (sampleId, step); the log panel and the progress column each show
-// one value per sample, so both take the step that has got furthest. The workflow leads each
-// step key with its zero-padded run position (`05:assemble`), so the furthest step sorts last.
+// MiXCR runs as one command per step. Step logs and progress arrive keyed by (sampleId, step);
+// the log panel and the progress column each show one value per sample, so both take the step
+// that has got furthest. The workflow leads each step key with its zero-padded run position
+// (`05:assemble`), so the furthest step sorts last. A result from before the split has only
+// the single log, keyed by sampleId.
 
 /** Keeps the value of the furthest step seen for each sample. */
 function furthestStep<T>(entries: { key: unknown[]; value?: T }[]): Map<string, T> {
@@ -74,7 +75,14 @@ export const MiXCRResultsMap = computed(() => {
 
   const logs = app.model.outputs.logs;
   if (logs)
-    for (const [sampleId, logHandle] of furthestStep(logs.data)) {
+    for (const logData of logs.data) {
+      const result = resultMap.get(logData.key[0] as string);
+      if (result && logData.value !== undefined) result.logHandle = logData.value;
+    }
+
+  const stepLogs = app.model.outputs.stepLogs;
+  if (stepLogs)
+    for (const [sampleId, logHandle] of furthestStep(stepLogs.data)) {
       const result = resultMap.get(sampleId);
       if (result) result.logHandle = logHandle;
     }
@@ -129,8 +137,14 @@ export const MiXCRResultsFull = computed<MiXCRResult[] | undefined>(() => {
   // A step whose stdout carries no progress line yet reports the empty string. Taking it would
   // blank the column, so the last step that did report one stands until the next one speaks.
   // `qc` never reports one at all.
-  const reported = progress.data.filter((p) => p.value !== "");
-  for (const [sampleId, line] of furthestStep(reported)) {
+  const lines = new Map<string, string>();
+  for (const p of progress.data)
+    if (p.value !== undefined && p.value !== "") lines.set(p.key[0] as string, p.value);
+  const stepProgress = app.model.outputs.stepProgress;
+  if (stepProgress)
+    for (const [sampleId, line] of furthestStep(stepProgress.data.filter((p) => p.value !== "")))
+      lines.set(sampleId, line);
+  for (const [sampleId, line] of lines) {
     const result = resultMap.get(sampleId);
     if (result) result.progress = done.has(sampleId) ? "Done" : line.replace(ProgressPrefix, "");
   }

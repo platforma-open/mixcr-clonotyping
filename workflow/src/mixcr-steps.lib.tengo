@@ -1,0 +1,126 @@
+// Turns the step list `mixcr analyze --dry-run-json` writes into the commands the block runs.
+//
+// Each step in the list is the argument list to pass to `mixcr`, with no mark on which argument
+// is a file. This library tells them apart by name:
+//
+//   - an argument that an earlier step wrote is staged from that step;
+//   - the argument that names the reads (the pattern the plan was made with) stages the reads;
+//   - a block file (the library, a preset file) is staged by its name, and a preset argument
+//     `local:NAME` or `local#NAME` stages NAME.yaml;
+//   - a custom library is staged for every MiXCR step, named in its arguments or not;
+//   - any other argument under OUTPUT_PREFIX is a file the step writes, and is saved.
+//
+// Export steps are dropped: the block saves nothing from them and re-exports from the .clns.
+
+text := import("text")
+ll := import("@platforma-sdk/workflow-tengo:ll")
+
+// The output prefix the plan is made with; every file a step writes starts with it.
+OUTPUT_PREFIX := "result"
+
+// The file the planning command writes the step list to.
+STEPS_FILE := "steps.json"
+
+// key names the :resources row of a step: the command, or `mitool-<command>` for MiTool.
+key := func(args) {
+	if args[0] == "mitool" {
+		return "mitool-" + args[1]
+	}
+	return args[0]
+}
+
+// The names the block gives a custom library.
+LIBRARY_FILES := ["library.json", "library.json.gz"]
+
+_contains := func(list, value) {
+	for v in list {
+		if v == value {
+			return true
+		}
+	}
+	return false
+}
+
+_presetFile := func(arg) {
+	for scheme in ["local:", "local#"] {
+		if text.has_prefix(arg, scheme) {
+			return text.trim_prefix(arg, scheme) + ".yaml"
+		}
+	}
+	return undefined
+}
+
+// commands returns { commands, clns, qcJson } for a step list.
+//
+// Each command is { key, logKey, args, stageSteps, stageReads, stageBlock, save }: stageSteps and
+// stageBlock list file names, stageReads is true when the step reads the reads, save lists the
+// files the step writes. logKey leads with the run position, zero-padded, so the step that has
+// got furthest sorts last. clns is the file `qc` reads, qcJson the report `qc` writes.
+//
+// blockFiles is the set of file names the block provides, readsPattern the argument that names
+// the reads.
+commands := func(steps, blockFiles, readsPattern) {
+	ll.assert(is_array(steps) && len(steps) > 0, "the MiXCR step list is empty")
+
+	written := {}
+	result := []
+	clns := undefined
+	qcJson := undefined
+	for args in steps {
+		k := key(args)
+		if text.has_prefix(k, "export") {
+			continue
+		}
+
+		c := { key: k, args: args, stageSteps: [], stageReads: false, stageBlock: [], save: [] }
+		for arg in args {
+			preset := _presetFile(arg)
+			if written[arg] {
+				c.stageSteps = append(c.stageSteps, arg)
+			} else if arg == readsPattern {
+				c.stageReads = true
+			} else if blockFiles[arg] {
+				c.stageBlock = append(c.stageBlock, arg)
+			} else if !is_undefined(preset) && blockFiles[preset] {
+				c.stageBlock = append(c.stageBlock, preset)
+			} else if text.has_prefix(arg, OUTPUT_PREFIX + ".") {
+				c.save = append(c.save, arg)
+			}
+		}
+		// A MiXCR file names its library but does not carry it, so every MiXCR step reads it again.
+		if args[0] != "mitool" {
+			for name in LIBRARY_FILES {
+				if blockFiles[name] && !_contains(c.stageBlock, name) {
+					c.stageBlock = append(c.stageBlock, name)
+				}
+			}
+		}
+		for name in c.save {
+			written[name] = true
+		}
+
+		if k == "qc" {
+			ll.assert(len(c.stageSteps) == 1, "qc reads %v files, expected one .clns", len(c.stageSteps))
+			clns = c.stageSteps[0]
+			for name in c.save {
+				if text.has_suffix(name, ".qc.json") {
+					qcJson = name
+				}
+			}
+		}
+
+		position := len(result) + 1
+		c.logKey = (position < 10 ? "0" : "") + string(position) + ":" + k
+		result = append(result, c)
+	}
+	ll.assert(!is_undefined(clns) && !is_undefined(qcJson), "the MiXCR step list has no qc step")
+
+	return { commands: result, clns: clns, qcJson: qcJson }
+}
+
+export {
+	OUTPUT_PREFIX: OUTPUT_PREFIX,
+	STEPS_FILE: STEPS_FILE,
+	key: key,
+	commands: commands
+}

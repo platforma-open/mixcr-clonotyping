@@ -1,0 +1,118 @@
+// Identity of this template for the platform's deduplication. While :mixcr-analyze, above this
+// template, carries an override of its own, this value has no effect: rotate that one when
+// the computation changes. It must never equal the one another template uses, as a
+// shared value declares two templates interchangeable.
+//tengo:hash_override 0E53B0CD-37CB-4740-BE98-3195AE3C96F8
+
+// Runs the steps `mixcr analyze --dry-run-json` planned for one sample, one exec per step, each
+// with its CPU and memory from :resources.
+//
+// A template cannot read the result of a command it started, so the planning command runs in
+// :run-mixcr and this template reads back the step list it wrote.
+
+self := import("@platforma-sdk/workflow-tengo:tpl")
+ll := import("@platforma-sdk/workflow-tengo:ll")
+assets := import("@platforma-sdk/workflow-tengo:assets")
+pcolumn := import("@platforma-sdk/workflow-tengo:pframes.pcolumn")
+times := import("times")
+mixcrCmd := import(":mixcr-cmd")
+mixcrSteps := import(":mixcr-steps")
+resources := import(":resources")
+
+self.defineOutputs("qc", "reports", "log", "stepLog", "clns")
+
+mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
+
+CACHE_PERIOD := 48 * times.hour
+// The steps that write no final output: the clones or the qc result.
+INTERMEDIATE_CACHE_PERIOD := 36 * times.hour
+
+self.body(func(inputs) {
+	// The template base turns a map input whose fields are already set into a plain map of
+	// name -> file; a map whose fields are still pending arrives as the resource.
+	files := inputs.files
+	if !is_map(files) {
+		files = files.inputs()
+	}
+	readNames := inputs.readNames
+	mitoolPreset := inputs.mitoolPreset
+	mitoolPresetFile := mixcrSteps.OUTPUT_PREFIX + ".MiTool.preset.yaml"
+	res := {
+		perProcessMemGB: inputs.perProcessMemGB,
+		perProcessCPUs: inputs.perProcessCPUs,
+		scratchFreeSpace: inputs.scratchFreeSpace
+	}
+
+	blockFiles := {}
+	for name, _ in files {
+		blockFiles[name] = true
+	}
+	if !is_undefined(mitoolPreset) {
+		blockFiles[mitoolPresetFile] = true
+	}
+
+	plan := mixcrSteps.commands(inputs.steps.getDataAsJson().steps, blockFiles, inputs.readsPattern)
+
+	written := {}
+	stepLogs := pcolumn.resourceMapBuilder( /* keyLength */ 1 )
+	lastLog := undefined
+	for c in plan.commands {
+		cmd := mixcrCmd.builder(mixcrSw)
+		for i, arg in c.args {
+			cmd.arg(arg)
+			// `--threads` reads the granted count back from the placeholder, so the flag and the
+			// request cannot diverge. `analyze` prints it only when it is given one.
+			if i == 0 && c.key == "align" {
+				cmd.arg("--threads").argExpr("{system.cpu}")
+			}
+		}
+		for name in c.stageSteps {
+			cmd.addFile(name, written[name], { tag: resources.INPUT_TAG })
+		}
+		if c.stageReads {
+			for name in readNames {
+				cmd.addFile(name, files[name], { tag: resources.INPUT_TAG })
+			}
+		}
+		for name in c.stageBlock {
+			if name == mitoolPresetFile {
+				cmd.writeFile(name, mitoolPreset)
+			} else {
+				cmd.addFile(name, files[name])
+			}
+		}
+		cachePeriod := INTERMEDIATE_CACHE_PERIOD
+		for name in c.save {
+			cmd.saveFile(name)
+			if name == plan.clns || name == plan.qcJson {
+				cachePeriod = CACHE_PERIOD
+			}
+		}
+		resources.apply(cmd, resources.lookup(c.key, inputs.stepClass), res)
+		run := cmd.cache(cachePeriod).run()
+		lastLog = run.getStdoutStream()
+		stepLogs.add([c.logKey], lastLog)
+		for name in c.save {
+			written[name] = run.getFile(name)
+		}
+	}
+
+	// The reports p-column carries the ids :process lists, under the names `analyze` gives them.
+	reportsMap := pcolumn.resourceMapBuilder( /* keyLength */ 2 )
+	for report in inputs.reports {
+		for name in [report.fileJson, report.fileTxt] {
+			ll.assert(!is_undefined(written[name]), "no MiXCR step writes the %v report %v", report.id, name)
+		}
+		reportsMap.add([report.id, "json"], written[report.fileJson])
+		reportsMap.add([report.id, "txt"], written[report.fileTxt])
+	}
+
+	return {
+		qc: written[plan.qcJson],
+		// The single log of a run before the split; it now carries the last step.
+		log: lastLog,
+		stepLog: stepLogs.build(),
+		reports: reportsMap.build(),
+		clns: written[plan.clns]
+	}
+})

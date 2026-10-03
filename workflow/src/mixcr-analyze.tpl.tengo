@@ -8,9 +8,8 @@
 // An override replaces the identity of the WHOLE subtree, not of this file: the backend
 // renders an overridden template as a `TengoTemplateOverride` resource carrying the UUID
 // alone, with the real template on a Service field. So a rotated UUID in a template this one
-// renders — :run-mixcr — has no effect while this UUID stands. Rotate here
-// whenever the computation below changes.
-//tengo:hash_override E2020505-700A-4F8C-BEFC-7543249CF82D
+// renders — :run-mixcr, :run-steps — has no effect while this UUID stands.
+//tengo:hash_override D70EDB25-6FF6-4615-966D-B79B04B5751C
 
 // Measures the reads of one sample, then runs MiXCR on them.
 //
@@ -19,8 +18,11 @@
 // of a command it started itself, so the run lives in :run-mixcr and this template only
 // feeds it. See :read-stats for what is measured and how the size follows from it.
 //
-// The override was rotated when MiXCR stopped running as one `analyze` command, so every
-// sample is analysed again on the next block update.
+// The hash override is the one this template has always carried, and the inputs are the ones
+// pframes.processColumn has always passed, so an analysis that already finished still
+// deduplicates to its result instead of running again. That holds across the move from one
+// `analyze` command to one exec per step: the steps give the same clone tables, and only the
+// command lines in the file footers differ. A result from before the move has no `stepLog`.
 
 self := import("@platforma-sdk/workflow-tengo:tpl")
 render := import("@platforma-sdk/workflow-tengo:render")
@@ -29,7 +31,7 @@ pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 
 readStats := import(":read-stats")
 
-self.defineOutputs("qc", "reports", "log", "clns")
+self.defineOutputs("qc", "reports", "log", "stepLog", "clns")
 
 runMixcrTpl := assets.importTemplate(":run-mixcr")
 
@@ -63,6 +65,7 @@ self.body(func(inputs) {
 	return {
 		qc: runMixcr.output("qc", readStats.CACHE_PERIOD),
 		log: runMixcr.output("log", readStats.CACHE_PERIOD),
+		stepLog: runMixcr.output("stepLog", readStats.CACHE_PERIOD),
 		reports: runMixcr.output("reports", readStats.CACHE_PERIOD),
 		clns: runMixcr.output("clns", readStats.CACHE_PERIOD)
 	}

@@ -1,0 +1,50 @@
+test := import("@platforma-sdk/workflow-tengo:test")
+pt := import(":preset-traits")
+
+TestStepClass := func() {
+	test.isEqual("longRead", pt.stepClass({ pipeline: ["align", "assemble"],
+		align: { parameters: { longReadsParameters: {} } } }))
+	test.isEqual("cell", pt.stepClass({ pipeline: ["align", "refineTagsAndSort", "assemble"],
+		align: { tagPattern: "^(CELL:N{16})(UMI:N{10})\\^(R2:*)" } }))
+	test.isEqual("cell", pt.stepClass({ pipeline: ["align", "refineTagsAndSort", "assemble", "assembleCells"],
+		align: { tagPattern: "^(UMI:N{10})\\^(R2:*)" } }))
+	test.isEqual("umi", pt.stepClass({ pipeline: ["align", "refineTagsAndSort", "assemble"],
+		align: { tagPattern: "^(UMI:N{10})\\^(R2:*)" } }))
+	test.isEqual("none", pt.stepClass({ pipeline: ["align", "assemblePartial", "extend", "assemble"], align: {} }))
+}
+
+TestHasCellTag := func() {
+	_withPattern := func(p) { return { align: { tagPattern: p } } }
+	test.isTrue(pt.hasCellTag(_withPattern("^(CELL1:N{9})aatg(CELL2:N{9})ccac(CELL3:N{9})(UMI:N{8})\\^(R2:*)")))
+	test.isTrue(pt.hasCellTag(_withPattern("^(CELL:N{16})(UMI:N{12})\\^(R2:*)")))
+	test.isFalse(pt.hasCellTag(_withPattern("^N{0:2}(UMI:N{12})\\^(R2:*)")))
+	test.isFalse(pt.hasCellTag(_withPattern("^(R1:*)\\^(R2:*)")))
+	test.isFalse(pt.hasCellTag({ align: {} }))
+	test.isFalse(pt.hasCellTag({}))
+	test.isFalse(pt.hasCellTag(undefined))
+}
+
+TestHasLongReadAligner := func() {
+	test.isTrue(pt.hasLongReadAligner({ align: { parameters: { longReadsParameters: { windowSize: 1500 } } } }))
+	test.isFalse(pt.hasLongReadAligner({ align: { parameters: { vParameters: {} } } }))
+	test.isFalse(pt.hasLongReadAligner({ align: { parameters: { longReadsParameters: undefined } } }))
+	test.isFalse(pt.hasLongReadAligner({ align: {} }))
+	test.isFalse(pt.hasLongReadAligner(undefined))
+}
+
+TestSplitsBySample := func() {
+	miltenyi := { pipeline: ["align", "refineTagsAndSort", "assemble"],
+		align: { splitBySample: true, tagPattern: "^N{0:12}tggtatcaacgcagagt(SMPL:N{5})(UMI:N{14})N{21}(R1:)\\^N{20}(R2:)" } }
+	test.isTrue(pt.splitsBySample(miltenyi))
+	// splitBySample off, or no sample tag: no split.
+	test.isFalse(pt.splitsBySample({ align: { splitBySample: false, tagPattern: "^(SMPL:N{5})(R1:*)" } }))
+	test.isFalse(pt.splitsBySample({ align: { splitBySample: true, tagPattern: "^(R1F:N{0:2}(C:ggg)(R1:*))\\^(R2F:(UMI:NNNN)(R2:*))" } }))
+	// A MiTool parse pattern with a sample tag splits too.
+	test.isTrue(pt.splitsBySample({ mitool: { parse: { splitBySample: true, pattern: "^(CELL:N{16})(SAMPLE:N{8})\\^(R2:*)" } } }))
+}
+
+TestHasQcChecks := func() {
+	test.isTrue(pt.hasQcChecks({ qc: { checks: [{}] } }))
+	test.isFalse(pt.hasQcChecks({ qc: { checks: [] } }))
+	test.isFalse(pt.hasQcChecks({}))
+}

@@ -188,6 +188,23 @@ export const platforma = BlockModelV3.create({ dataModel, kind })
       : undefined;
   })
 
+  // One log per MiXCR step, keyed by (sampleId, step). A result from before the split has none.
+  .output("stepLogs", (ctx) => {
+    return ctx.outputs !== undefined
+      ? parseResourceMap(ctx.outputs?.resolve("stepLogs"), (acc) => acc.getLogHandle(), false)
+      : undefined;
+  })
+
+  .output("stepProgress", (ctx) => {
+    return ctx.outputs !== undefined
+      ? parseResourceMap(
+          ctx.outputs?.resolve("stepLogs"),
+          (acc) => acc.getProgressLog(ProgressPrefix),
+          false,
+        )
+      : undefined;
+  })
+
   .output("started", (ctx) => ctx.outputs !== undefined)
 
   .output("done", (ctx) => {
