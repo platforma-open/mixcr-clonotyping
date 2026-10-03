@@ -80,6 +80,18 @@ TestBlockFilesAreStagedByName := func() {
 	test.isEqual(["result.vdjca"], align.save)
 }
 
+TestEveryMiXCRStepGetsTheLibrary := func() {
+	steps := [["mitool", "parse", "input.fastq.gz", "result.parsed.mic"],
+		["align", "--library", "library.json", "result.parsed.mic", "result.vdjca"],
+		["assemble", "result.vdjca", "result.clns"], ["qc", "result.clns", "result.qc.json"]]
+	files := { "input.fastq.gz": true, "library.json": true }
+	cmds := ms.commands(steps, files, "input.fastq.gz").commands
+	test.isEqual([], cmds[0].stageBlock)
+	test.isEqual(["library.json"], cmds[1].stageBlock)
+	test.isEqual(["library.json"], cmds[2].stageBlock)
+	test.isEqual(["library.json"], cmds[3].stageBlock)
+}
+
 TestKeyNamesTheResourcesRow := func() {
 	test.isEqual("mitool-refine-tags", ms.key(["mitool", "refine-tags", "a", "b"]))
 	test.isEqual("assemble", ms.key(["assemble", "a", "b"]))

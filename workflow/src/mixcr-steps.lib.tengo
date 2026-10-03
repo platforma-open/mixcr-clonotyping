@@ -7,6 +7,7 @@
 //   - the argument that names the reads (the pattern the plan was made with) stages the reads;
 //   - a block file (the library, a preset file) is staged by its name, and a preset argument
 //     `local:NAME` or `local#NAME` stages NAME.yaml;
+//   - a custom library is staged for every MiXCR step, named in its arguments or not;
 //   - any other argument under OUTPUT_PREFIX is a file the step writes, and is saved.
 //
 // Export steps are dropped: the block saves nothing from them and re-exports from the .clns.
@@ -26,6 +27,18 @@ key := func(args) {
 		return "mitool-" + args[1]
 	}
 	return args[0]
+}
+
+// The names the block gives a custom library.
+LIBRARY_FILES := ["library.json", "library.json.gz"]
+
+_contains := func(list, value) {
+	for v in list {
+		if v == value {
+			return true
+		}
+	}
+	return false
 }
 
 _presetFile := func(arg) {
@@ -72,6 +85,14 @@ commands := func(steps, blockFiles, readsPattern) {
 				c.stageBlock = append(c.stageBlock, preset)
 			} else if text.has_prefix(arg, OUTPUT_PREFIX + ".") {
 				c.save = append(c.save, arg)
+			}
+		}
+		// A MiXCR file names its library but does not carry it, so every MiXCR step reads it again.
+		if args[0] != "mitool" {
+			for name in LIBRARY_FILES {
+				if blockFiles[name] && !_contains(c.stageBlock, name) {
+					c.stageBlock = append(c.stageBlock, name)
+				}
 			}
 		}
 		for name in c.save {
