@@ -83,8 +83,8 @@ TestCapAppliesOnlyWhenARowSetsIt := func() {
 }
 
 TestCpuIsTheInterceptWhileTheSlopeIs0 := func() {
-	test.isEqual(24, rs.cpu(rs.lookup("align", "none")))
-	test.isEqual(24, rs.cpu(rs.lookup("assemble", "umi")))
+	test.isEqual(16, rs.cpu(rs.lookup("align", "none")))
+	test.isEqual(16, rs.cpu(rs.lookup("assemble", "umi")))
 	test.isEqual(16, rs.cpu(rs.lookup("refineTagsAndSort", "umi")))
 	test.isEqual(16, rs.cpu(rs.DEFAULT))
 	test.isEqual(1, rs.cpu(rs.lookup("qc", "none")))

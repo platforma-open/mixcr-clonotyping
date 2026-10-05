@@ -44,7 +44,7 @@ _ROWS := [
 	{ step: "mitool-consensus", class: "any", floor: 192, intercept: 0, slope: 4 },
 
 	// `align` streams its input, so the grant does not grow with the sample.
-	{ step: "align", class: "any", floor: 24, intercept: 0, slope: 0, cpuIntercept: 24 },
+	{ step: "align", class: "any", floor: 24, intercept: 0, slope: 0 },
 
 	// PLACEHOLDER floor: 2-tag GEM-X needs 12 GiB at 25 % of reads, CELL-only 13.
 	{ step: "refineTagsAndSort", class: "any", floor: 16, intercept: 6, slope: 2.1 },
@@ -56,10 +56,10 @@ _ROWS := [
 
 	// Sized from the .vdjca. A clone-count estimate from the align report will replace this row
 	// once one is fitted.
-	{ step: "assemble", class: "none", floor: 64, intercept: 4, slope: 21.9, cpuIntercept: 24 },
-	{ step: "assemble", class: "umi", floor: 16, intercept: 0, slope: 0.86, cpuIntercept: 24 },
-	{ step: "assemble", class: "cell", floor: 16, intercept: 0, slope: 4.1, cpuIntercept: 24 },
-	{ step: "assemble", class: "longRead", floor: 6, intercept: 6, slope: 5.8, cpuIntercept: 24 },
+	{ step: "assemble", class: "none", floor: 64, intercept: 4, slope: 21.9 },
+	{ step: "assemble", class: "umi", floor: 16, intercept: 0, slope: 0.86 },
+	{ step: "assemble", class: "cell", floor: 16, intercept: 0, slope: 4.1 },
+	{ step: "assemble", class: "longRead", floor: 6, intercept: 6, slope: 5.8 },
 
 	// PLACEHOLDER: `analyze --dry-run-json` resolves the preset and writes the step list; it
 	// reads no data.
