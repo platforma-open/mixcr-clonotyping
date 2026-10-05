@@ -6,8 +6,7 @@
 // `mixcr analyze --dry-run-json` plans the run with the arguments `analyze` would get, and
 // :run-steps runs the steps it lists, each with its CPU and memory from :resources. Any preset of
 // the pinned MiXCR, built-in or from a file, so runs the steps `analyze` would run, in its order.
-//
-// The block rejects a preset that splits the reads by a sample tag, and one with no qc checks.
+// :process has already rejected a preset that splits the reads by a sample tag, or has no qc checks.
 
 self := import("@platforma-sdk/workflow-tengo:tpl")
 smart := import("@platforma-sdk/workflow-tengo:smart")
@@ -186,12 +185,6 @@ self.body(func(inputs) {
 		return { files: files, names: maps.getKeys(files), pattern: pattern }
 	}
 
-	if presetTraits.splitsBySample(presetContent) {
-		ll.panic("the preset splits the reads by a sample tag, which the block does not support")
-	}
-	if !presetTraits.hasQcChecks(presetContent) {
-		ll.panic("the preset carries no qc checks, which the block needs for its QC report")
-	}
 	stepClass := presetTraits.stepClass(presetContent)
 
 	reads := readFiles()

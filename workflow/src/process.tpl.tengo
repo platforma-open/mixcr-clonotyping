@@ -12,6 +12,7 @@ sets := import("@platforma-sdk/workflow-tengo:sets")
 anonymize := import("@platforma-sdk/workflow-tengo:anonymize")
 
 calculateExportSpecs := import(":calculate-export-specs")
+presetTraits := import(":preset-traits")
 
 json := import("json")
 text := import("text")
@@ -78,6 +79,16 @@ self.body(func(inputs) {
 
 	if is_undefined(presetSpecForBack) {
 		ll.panic("no presetSpecForBack")
+	}
+
+	// The resolved preset is the same for every sample, so a preset the block cannot run is
+	// rejected once here, before any sample template renders.
+	resolvedPreset := presetContent.getDataAsJson()
+	if presetTraits.splitsBySample(resolvedPreset) {
+		ll.panic("the preset splits the reads by a sample tag, which the block does not support")
+	}
+	if !presetTraits.hasQcChecks(resolvedPreset) {
+		ll.panic("the preset carries no qc checks, which the block needs for its QC report")
 	}
 
 	reports := []
