@@ -166,6 +166,8 @@ self.body(func(inputs) {
 		},
 		name: "qc"
 	}, {
+		// Per sample: one stream for a run from before the split, or a map of streams keyed by
+		// step (`07:align`) for a split run. Never exported.
 		type: "Resource",
 		spec: {
 			kind: "PColumn",
@@ -176,25 +178,6 @@ self.body(func(inputs) {
 			valueType: "Log"
 		},
 		name: "log"
-	}, {
-		// One stream per MiXCR step, keyed by its run position and name (`07:align`).
-		type: "ResourceMap",
-		spec: {
-			kind: "PColumn",
-			name: "pl7.app/log",
-			domain: {
-				"pl7.app/vdj/clonotypingRunId": blockId
-			},
-			valueType: "Log",
-			axesSpec: [ {
-				type: "String",
-				name: "pl7.app/vdj/mixcrStep",
-				annotations: {
-					"pl7.app/label": "MiXCR step"
-				}
-			} ]
-		},
-		name: "stepLog"
 	}, {
 		type: "Resource",
 		spec: {
@@ -960,9 +943,6 @@ self.body(func(inputs) {
 
 		"logs.spec": mixcrResults.outputSpec("log"),
 		"logs.data": mixcrResults.outputData("log"),
-
-		"stepLogs.spec": mixcrResults.outputSpec("stepLog"),
-		"stepLogs.data": mixcrResults.outputData("stepLog"),
 
 		"reports.spec": mixcrResults.outputSpec("reports"),
 		"reports.data": mixcrResults.outputData("reports"),

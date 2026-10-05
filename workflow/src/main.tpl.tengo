@@ -182,7 +182,6 @@ wf.body(func(args) {
 		qc: pframes.exportColumnData(runMixcr.output("qc.data")),
 		reports: pframes.exportColumnData(runMixcr.output("reports.data")),
 		logs: runMixcr.output("logs.data"),
-		stepLogs: runMixcr.output("stepLogs.data"),
 		clns: runMixcr.output("clns.data"),
 		clonotypes: pframes.exportFrame(runMixcr.output("clonotypes")),
 		clonotypeTables: pframes.exportFrame(runMixcr.output("clonotypeTables")),

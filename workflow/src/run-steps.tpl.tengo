@@ -16,7 +16,7 @@ mixcrCmd := import(":mixcr-cmd")
 mixcrSteps := import(":mixcr-steps")
 resources := import(":resources")
 
-self.defineOutputs("qc", "reports", "log", "stepLog", "clns")
+self.defineOutputs("qc", "reports", "log", "clns")
 
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
 
@@ -37,8 +37,9 @@ self.body(func(inputs) {
 	plan := mixcrSteps.commands(inputs.steps.getDataAsJson().steps, files, inputs.readsPattern)
 
 	written := {}
+	// One stream per step, keyed by its run position and name (`07:align`). Carried as the
+	// sample's `log` output: a run from before the split holds a single stream there instead.
 	stepLogs := pcolumn.resourceMapBuilder( /* keyLength */ 1 )
-	lastLog := undefined
 	for c in plan.commands {
 		cmd := mixcrCmd.builder(mixcrSw).arg(c.args[0])
 		if c.key == "align" {
@@ -65,8 +66,7 @@ self.body(func(inputs) {
 		}
 		resources.apply(cmd, resources.lookup(c.key, inputs.stepClass), res)
 		run := cmd.cache(c.writesFinalOutput ? CACHE_PERIOD : INTERMEDIATE_CACHE_PERIOD).run()
-		lastLog = run.getStdoutStream()
-		stepLogs.add([c.logKey], lastLog)
+		stepLogs.add([c.logKey], run.getStdoutStream())
 		for name in c.save {
 			written[name] = run.getFile(name)
 		}
@@ -84,9 +84,7 @@ self.body(func(inputs) {
 
 	return {
 		qc: written[plan.qcJson],
-		// The single log of a run before the split; it now carries the last step.
-		log: lastLog,
-		stepLog: stepLogs.build(),
+		log: stepLogs.build(),
 		reports: reportsMap.build(),
 		clns: written[plan.clns]
 	}

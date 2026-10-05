@@ -1,4 +1,5 @@
-// Inert while :mixcr-analyze carries its own override; must stay unique across templates.
+// Must stay unique across templates. :mixcr-analyze is the deduplication boundary: when a
+// sample is recovered, this template is never rendered.
 //tengo:hash_override 857A0480-F04D-4BAB-8697-E262BD515AD6
 
 // Runs MiXCR on one measured sample, one exec per step.
@@ -24,7 +25,7 @@ mixcrSteps := import(":mixcr-steps")
 
 json := import("json")
 
-self.defineOutputs("qc", "reports", "log", "stepLog", "clns")
+self.defineOutputs("qc", "reports", "log", "clns")
 
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
 runStepsTpl := assets.importTemplate(":run-steps")
@@ -239,7 +240,6 @@ self.body(func(inputs) {
 	return {
 		qc: stepsRun.output("qc", CACHE_PERIOD),
 		log: stepsRun.output("log", CACHE_PERIOD),
-		stepLog: stepsRun.output("stepLog", CACHE_PERIOD),
 		reports: stepsRun.output("reports", CACHE_PERIOD),
 		clns: stepsRun.output("clns", CACHE_PERIOD)
 	}

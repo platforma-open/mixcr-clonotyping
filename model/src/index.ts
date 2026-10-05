@@ -11,10 +11,13 @@ import {
   isImportFileHandleIndex,
   isPColumnSpec,
   parseResourceMap,
+  RT_RESOURCE_MAP,
   type ColumnData,
   type ImportFileHandle,
   type ImportFileHandleIndex,
   type InferOutputsType,
+  type PColumnKey,
+  type PColumnResourceMapData,
 } from "@platforma-sdk/model";
 import type { BlockParams as KindBlockParams } from "@platforma-open/milaboratories.mixcr-clonotyping-2.kind";
 import { kind } from "@platforma-open/milaboratories.mixcr-clonotyping-2.kind";
@@ -49,6 +52,38 @@ const dataModel = new DataModelBuilder({ kind })
     tableState: createPlDataTableStateV2(),
     runMode: params?.runMode ?? "full",
   }));
+
+/**
+ * Reads the per-sample `logs` column. A sample's value is one log stream, or a map of streams
+ * keyed by MiXCR step for a run split into one command per step. Entries are keyed [sampleId]
+ * or [sampleId, step].
+ */
+function parseSampleLogs<T>(
+  acc: TreeNodeAccessor | undefined,
+  parse: (acc: TreeNodeAccessor) => T | undefined,
+): PColumnResourceMapData<NonNullable<T>> | undefined {
+  if (acc === undefined) return undefined;
+  const data: { key: PColumnKey; value: NonNullable<T> }[] = [];
+  let isComplete = acc.getInputsLocked();
+  for (const sampleKey of acc.listInputFields()) {
+    const sample = acc.resolve({ field: sampleKey, assertFieldType: "Input" });
+    if (sample === undefined) {
+      isComplete = false;
+      continue;
+    }
+    const key = JSON.parse(sampleKey) as PColumnKey;
+    if (sample.resourceType.name === RT_RESOURCE_MAP) {
+      const steps = parseResourceMap(sample, parse, false);
+      isComplete &&= steps.isComplete;
+      for (const step of steps.data) data.push({ key: [...key, ...step.key], value: step.value });
+    } else {
+      const value = parse(sample);
+      if (value === undefined || value === null) isComplete = false;
+      else data.push({ key, value });
+    }
+  }
+  return { isComplete, data };
+}
 
 export const platforma = BlockModelV3.create({ dataModel, kind })
 
@@ -175,36 +210,17 @@ export const platforma = BlockModelV3.create({ dataModel, kind })
     parseResourceMap(ctx.outputs?.resolve("reports"), (acc) => acc.getFileHandle(), false),
   )
 
+  // Keys are [sampleId] for the single log of a result from before the split, and
+  // [sampleId, step] for a split run.
   .output("logs", (ctx) => {
     return ctx.outputs !== undefined
-      ? parseResourceMap(ctx.outputs?.resolve("logs"), (acc) => acc.getLogHandle(), false)
+      ? parseSampleLogs(ctx.outputs?.resolve("logs"), (acc) => acc.getLogHandle())
       : undefined;
   })
 
   .output("progress", (ctx) => {
     return ctx.outputs !== undefined
-      ? parseResourceMap(
-          ctx.outputs?.resolve("logs"),
-          (acc) => acc.getProgressLog(ProgressPrefix),
-          false,
-        )
-      : undefined;
-  })
-
-  // One log per MiXCR step, keyed by (sampleId, step). A result from before the split has none.
-  .output("stepLogs", (ctx) => {
-    return ctx.outputs !== undefined
-      ? parseResourceMap(ctx.outputs?.resolve("stepLogs"), (acc) => acc.getLogHandle(), false)
-      : undefined;
-  })
-
-  .output("stepProgress", (ctx) => {
-    return ctx.outputs !== undefined
-      ? parseResourceMap(
-          ctx.outputs?.resolve("stepLogs"),
-          (acc) => acc.getProgressLog(ProgressPrefix),
-          false,
-        )
+      ? parseSampleLogs(ctx.outputs?.resolve("logs"), (acc) => acc.getProgressLog(ProgressPrefix))
       : undefined;
   })
 
