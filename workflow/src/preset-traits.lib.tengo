@@ -3,15 +3,7 @@
 // two properties that make the block reject a preset.
 
 text := import("text")
-
-_contains := func(list, value) {
-	for v in list {
-		if v == value {
-			return true
-		}
-	}
-	return false
-}
+slices := import("@platforma-sdk/workflow-tengo:slices")
 
 // hasCellTag reports whether the resolved preset's tag pattern captures a cell barcode (CELL,
 // CELL1, CELL2, ...). `mixcr exportPreset` applies the user's --tag-pattern before writing the
@@ -80,10 +72,10 @@ stepClass := func(presetContent) {
 		return "longRead"
 	}
 	pipeline := is_map(presetContent) && is_array(presetContent.pipeline) ? presetContent.pipeline : []
-	if hasCellTag(presetContent) || _contains(pipeline, "assembleCells") {
+	if hasCellTag(presetContent) || slices.hasElement(pipeline, "assembleCells") {
 		return "cell"
 	}
-	if _contains(pipeline, "refineTagsAndSort") {
+	if slices.hasElement(pipeline, "refineTagsAndSort") {
 		return "umi"
 	}
 	return "none"

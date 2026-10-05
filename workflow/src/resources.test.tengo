@@ -124,7 +124,7 @@ TestTheCpuOverrideReplacesTheRow := func() {
 	test.isEqual(8, rs.apply(_fakeCmd(), rs.lookup("align", "none"), { perProcessCPUs: 8 }).onCPU.cpu)
 }
 
-TestScratchGoesOnlyToRowsThatAskForIt := func() {
+TestScratchIsOffOnlyWhereARowOptsOut := func() {
 	res := { scratchFreeSpace: "44GiB" }
 	test.isEqual("44GiB", rs.apply(_fakeCmd(), rs.lookup("assemble", "umi"), res).onCPU.scratchFreeSpace)
 	test.isEqual("44GiB", rs.apply(_fakeCmd(), rs.DEFAULT, res).onCPU.scratchFreeSpace)

@@ -1,7 +1,4 @@
-// Identity of this template for the platform's deduplication. While :mixcr-analyze, above this
-// template, carries an override of its own, this value has no effect: rotate that one when
-// the computation changes. It must never equal the one another template uses, as a
-// shared value declares two templates interchangeable.
+// Inert while :mixcr-analyze carries its own override; must stay unique across templates.
 //tengo:hash_override 857A0480-F04D-4BAB-8697-E262BD515AD6
 
 // Runs MiXCR on one measured sample, one exec per step.
@@ -17,7 +14,6 @@ smart := import("@platforma-sdk/workflow-tengo:smart")
 pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 ll := import("@platforma-sdk/workflow-tengo:ll")
 assets := import("@platforma-sdk/workflow-tengo:assets")
-pcolumn := import("@platforma-sdk/workflow-tengo:pframes.pcolumn")
 times := import("times")
 render := import("@platforma-sdk/workflow-tengo:render")
 maps := import("@platforma-sdk/workflow-tengo:maps")
@@ -41,6 +37,7 @@ self.body(func(inputs) {
 	aggregationAxesNames := inputs[pConstants.AGGREGATION_AXES_NAMES_FIELD_NAME]
 
 	preset := inputs.preset
+	presetIsFile := smart.isResource(preset)
 	library := inputs.library
 
 	params := inputs.params
@@ -92,7 +89,7 @@ self.body(func(inputs) {
 			builder.arg("--species").arg(species)
 		}
 
-		if smart.isResource(preset) /* file */ {
+		if presetIsFile {
 			builder.
 				arg("local#input_preset").
 				addFile("input_preset.yaml", preset)
@@ -195,6 +192,7 @@ self.body(func(inputs) {
 	if !presetTraits.hasQcChecks(presetContent) {
 		ll.panic("the preset carries no qc checks, which the block needs for its QC report")
 	}
+	stepClass := presetTraits.stepClass(presetContent)
 
 	reads := readFiles()
 
@@ -217,19 +215,18 @@ self.body(func(inputs) {
 		planCmd.writeFile(name, "")
 	}
 	planCmd.arg(reads.pattern).arg(mixcrSteps.OUTPUT_PREFIX).saveFileContent(mixcrSteps.STEPS_FILE)
-	resources.apply(planCmd, resources.lookup("plan", "any"), res)
+	resources.apply(planCmd, resources.lookup("plan", stepClass), res)
 	planRun := planCmd.cache(CACHE_PERIOD).run()
 
-	if smart.isResource(preset) {
+	if presetIsFile {
 		files.addRef("input_preset.yaml", preset)
 	}
 	if library {
 		files.addRef(isLibraryFileGzipped ? "library.json.gz" : "library.json", library)
 	}
 
-	// The overrides go in as metaInputs, out of the deduplication key, for the same reason
-	// :mixcr-analyze keeps them out of this template's: a run is recovered across a change of
-	// the CPU or memory override. The scratch request never changes what a step produces.
+	// The overrides and the scratch request go in as metaInputs, out of the deduplication key:
+	// a change to them must not re-run the sample.
 	stepsRun := render.create(
 		runStepsTpl,
 		{
@@ -238,7 +235,7 @@ self.body(func(inputs) {
 			readNames: reads.names,
 			readsPattern: reads.pattern,
 			mitoolPreset: presetContent.mitool,
-			stepClass: presetTraits.stepClass(presetContent),
+			stepClass: stepClass,
 			reports: reports
 		},
 		{ metaInputs: res }

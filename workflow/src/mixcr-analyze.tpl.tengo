@@ -18,11 +18,9 @@
 // of a command it started itself, so the run lives in :run-mixcr and this template only
 // feeds it. See :read-stats for what is measured and how the size follows from it.
 //
-// The hash override is the one this template has always carried, and the inputs are the ones
-// pframes.processColumn has always passed, so an analysis that already finished still
-// deduplicates to its result instead of running again. That holds across the move from one
-// `analyze` command to one exec per step: the steps give the same clone tables, and only the
-// command lines in the file footers differ. A result from before the move has no `stepLog`.
+// The override and the inputs pframes.processColumn passes are unchanged since the single
+// `analyze` build, so a finished analysis deduplicates to its result. A result from before the
+// split has no `stepLog`.
 
 self := import("@platforma-sdk/workflow-tengo:tpl")
 render := import("@platforma-sdk/workflow-tengo:render")

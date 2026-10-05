@@ -1,7 +1,4 @@
-// Identity of this template for the platform's deduplication. While :mixcr-analyze, above this
-// template, carries an override of its own, this value has no effect: rotate that one when
-// the computation changes. It must never equal the one another template uses, as a
-// shared value declares two templates interchangeable.
+// Inert while :mixcr-analyze carries its own override; must stay unique across templates.
 //tengo:hash_override 0E53B0CD-37CB-4740-BE98-3195AE3C96F8
 
 // Runs the steps `mixcr analyze --dry-run-json` planned for one sample, one exec per step, each
@@ -53,14 +50,14 @@ self.body(func(inputs) {
 	stepLogs := pcolumn.resourceMapBuilder( /* keyLength */ 1 )
 	lastLog := undefined
 	for c in plan.commands {
-		cmd := mixcrCmd.builder(mixcrSw)
-		for i, arg in c.args {
-			cmd.arg(arg)
+		cmd := mixcrCmd.builder(mixcrSw).arg(c.args[0])
+		if c.key == "align" {
 			// `--threads` reads the granted count back from the placeholder, so the flag and the
 			// request cannot diverge. `analyze` prints it only when it is given one.
-			if i == 0 && c.key == "align" {
-				cmd.arg("--threads").argExpr("{system.cpu}")
-			}
+			cmd.arg("--threads").argExpr("{system.cpu}")
+		}
+		for arg in c.args[1:] {
+			cmd.arg(arg)
 		}
 		for name in c.stageSteps {
 			cmd.addFile(name, written[name], { tag: resources.INPUT_TAG })

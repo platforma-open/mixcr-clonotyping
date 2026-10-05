@@ -8,12 +8,16 @@
 //   - a block file (the library, a preset file) is staged by its name, and a preset argument
 //     `local:NAME` or `local#NAME` stages NAME.yaml;
 //   - a custom library is staged for every MiXCR step, named in its arguments or not;
-//   - any other argument under OUTPUT_PREFIX is a file the step writes, and is saved.
+//   - any other argument under OUTPUT_PREFIX is a file the step writes, and is saved: every
+//     output, not only the ones a later step or the block reads.
 //
 // Export steps are dropped: the block saves nothing from them and re-exports from the .clns.
+// No step gets `-f`: each runs in an empty work directory.
 
+fmt := import("fmt")
 text := import("text")
 ll := import("@platforma-sdk/workflow-tengo:ll")
+slices := import("@platforma-sdk/workflow-tengo:slices")
 
 // The output prefix the plan is made with; every file a step writes starts with it.
 OUTPUT_PREFIX := "result"
@@ -31,15 +35,6 @@ key := func(args) {
 
 // The names the block gives a custom library.
 LIBRARY_FILES := ["library.json", "library.json.gz"]
-
-_contains := func(list, value) {
-	for v in list {
-		if v == value {
-			return true
-		}
-	}
-	return false
-}
 
 _presetFile := func(arg) {
 	for scheme in ["local:", "local#"] {
@@ -90,7 +85,7 @@ commands := func(steps, blockFiles, readsPattern) {
 		// A MiXCR file names its library but does not carry it, so every MiXCR step reads it again.
 		if args[0] != "mitool" {
 			for name in LIBRARY_FILES {
-				if blockFiles[name] && !_contains(c.stageBlock, name) {
+				if blockFiles[name] && !slices.hasElement(c.stageBlock, name) {
 					c.stageBlock = append(c.stageBlock, name)
 				}
 			}
@@ -109,8 +104,7 @@ commands := func(steps, blockFiles, readsPattern) {
 			}
 		}
 
-		position := len(result) + 1
-		c.logKey = (position < 10 ? "0" : "") + string(position) + ":" + k
+		c.logKey = fmt.sprintf("%02d:%s", len(result) + 1, k)
 		result = append(result, c)
 	}
 	ll.assert(!is_undefined(clns) && !is_undefined(qcJson), "the MiXCR step list has no qc step")
