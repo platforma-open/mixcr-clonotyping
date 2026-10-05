@@ -71,7 +71,7 @@ TestStaticFallbackIsTheFloorOr64 := func() {
 }
 
 TestCapAppliesOnlyWhenARowSetsIt := func() {
-	row := { step: "x", class: "any", floor: 8, intercept: 0, slope: 2, cap: 10 }
+	row := { step: "x", class: "any", memFloor: 8, memIntercept: 0, memSlope: 2, cap: 10 }
 	test.isEqual(_gib(10), _evalSize(rs.ram(row), _gib(100)))
 }
 
@@ -84,7 +84,7 @@ TestCpuIsTheInterceptWhileTheSlopeIs0 := func() {
 }
 
 TestCpuSlopeScalesWithTheInput := func() {
-	node := rs.cpu({ step: "x", class: "any", floor: 8, intercept: 0, slope: 0, cpuIntercept: 4, cpuSlope: 0.5 })
+	node := rs.cpu({ step: "x", class: "any", memFloor: 8, memIntercept: 0, memSlope: 0, cpuIntercept: 4, cpuSlope: 0.5 })
 	test.isEqual(9, _evalSize(node, _gib(10)))
 	test.isEqual(4, f.fallbackOf(node))
 }

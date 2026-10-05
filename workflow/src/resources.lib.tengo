@@ -2,7 +2,7 @@
 //
 // Every row grants
 //
-//     ram = max(floor, intercept + slope x input GiB), rounded up to a whole GiB
+//     ram = max(memFloor, memIntercept + memSlope x input GiB), rounded up to a whole GiB
 //     ram = min(ram, cap)   only when the row sets cap
 //
 // where `input GiB` is the stored size of the files the step stages under INPUT_TAG, summed.
@@ -37,37 +37,37 @@ _FALLBACK_GIB := 64
 _ROWS := [
 	// PLACEHOLDER: the grant `analyze` gets on a MiTool pipeline. `mitool parse` is sized from the
 	// FASTQs it stages.
-	{ step: "mitool-parse", class: "any", cpuIntercept: 16, floor: 192, intercept: 0, slope: 4 },
-	{ step: "mitool-refine-tags", class: "any", cpuIntercept: 16, floor: 192, intercept: 0, slope: 4 },
-	{ step: "mitool-consensus", class: "any", cpuIntercept: 16, floor: 192, intercept: 0, slope: 4 },
+	{ step: "mitool-parse", class: "any", cpuIntercept: 16, memFloor: 192, memIntercept: 0, memSlope: 4 },
+	{ step: "mitool-refine-tags", class: "any", cpuIntercept: 16, memFloor: 192, memIntercept: 0, memSlope: 4 },
+	{ step: "mitool-consensus", class: "any", cpuIntercept: 16, memFloor: 192, memIntercept: 0, memSlope: 4 },
 
 	// `align` streams its input, so the grant does not grow with the sample.
-	{ step: "align", class: "any", cpuIntercept: 16, floor: 24, intercept: 0, slope: 0 },
+	{ step: "align", class: "any", cpuIntercept: 16, memFloor: 24, memIntercept: 0, memSlope: 0 },
 
 	// PLACEHOLDER floor: 2-tag GEM-X needs 12 GiB at 25 % of reads, CELL-only 13.
-	{ step: "refineTagsAndSort", class: "any", cpuIntercept: 16, floor: 16, intercept: 6, slope: 2.1 },
+	{ step: "refineTagsAndSort", class: "any", cpuIntercept: 16, memFloor: 16, memIntercept: 6, memSlope: 2.1 },
 
-	{ step: "assemblePartial", class: "any", cpuIntercept: 16, floor: 8, intercept: 0, slope: 2 },
-	{ step: "extend", class: "any", cpuIntercept: 16, floor: 8, intercept: 0, slope: 2 },
-	{ step: "assembleContigs", class: "any", cpuIntercept: 16, floor: 8, intercept: 0, slope: 2 },
-	{ step: "assembleCells", class: "any", cpuIntercept: 16, floor: 8, intercept: 0, slope: 2 },
+	{ step: "assemblePartial", class: "any", cpuIntercept: 16, memFloor: 8, memIntercept: 0, memSlope: 2 },
+	{ step: "extend", class: "any", cpuIntercept: 16, memFloor: 8, memIntercept: 0, memSlope: 2 },
+	{ step: "assembleContigs", class: "any", cpuIntercept: 16, memFloor: 8, memIntercept: 0, memSlope: 2 },
+	{ step: "assembleCells", class: "any", cpuIntercept: 16, memFloor: 8, memIntercept: 0, memSlope: 2 },
 
 	// Sized from the .vdjca. A clone-count estimate from the align report will replace this row
 	// once one is fitted.
-	{ step: "assemble", class: "none", cpuIntercept: 16, floor: 64, intercept: 4, slope: 21.9 },
-	{ step: "assemble", class: "umi", cpuIntercept: 16, floor: 16, intercept: 0, slope: 0.86 },
-	{ step: "assemble", class: "cell", cpuIntercept: 16, floor: 16, intercept: 0, slope: 4.1 },
-	{ step: "assemble", class: "longRead", cpuIntercept: 16, floor: 6, intercept: 6, slope: 5.8 },
+	{ step: "assemble", class: "none", cpuIntercept: 16, memFloor: 64, memIntercept: 4, memSlope: 21.9 },
+	{ step: "assemble", class: "umi", cpuIntercept: 16, memFloor: 16, memIntercept: 0, memSlope: 0.86 },
+	{ step: "assemble", class: "cell", cpuIntercept: 16, memFloor: 16, memIntercept: 0, memSlope: 4.1 },
+	{ step: "assemble", class: "longRead", cpuIntercept: 16, memFloor: 6, memIntercept: 6, memSlope: 5.8 },
 
 	// PLACEHOLDER: `analyze --dry-run-json` resolves the preset and writes the step list; it
 	// reads no data.
-	{ step: "plan", class: "any", cpuIntercept: 1, floor: 8, intercept: 0, slope: 0, queue: "light", scratch: false, override: false },
+	{ step: "plan", class: "any", cpuIntercept: 1, memFloor: 8, memIntercept: 0, memSlope: 0, queue: "light", scratch: false, override: false },
 
 	// PLACEHOLDER: `qc` reads the reports in the .clns footer and holds no clones.
-	{ step: "qc", class: "any", cpuIntercept: 1, floor: 4, intercept: 0, slope: 0, queue: "light", scratch: false, override: false }
+	{ step: "qc", class: "any", cpuIntercept: 1, memFloor: 4, memIntercept: 0, memSlope: 0, queue: "light", scratch: false, override: false }
 ]
 
-DEFAULT := { step: "default", class: "any", cpuIntercept: 16, floor: 64, intercept: 0, slope: 4 }
+DEFAULT := { step: "default", class: "any", cpuIntercept: 16, memFloor: 64, memIntercept: 0, memSlope: 4 }
 
 _byKey := {}
 for row in _ROWS {
@@ -90,20 +90,20 @@ lookup := func(step, cls) {
 // ram returns the memory request of a row: a fixed amount when its slope is 0, an exec.formula
 // over the INPUT_TAG file otherwise.
 ram := func(row) {
-	if row.slope == 0 {
-		gib := row.intercept > row.floor ? row.intercept : row.floor
+	if row.memSlope == 0 {
+		gib := row.memIntercept > row.memFloor ? row.memIntercept : row.memFloor
 		return string(gib) + "GiB"
 	}
 	// The formula takes integers only, so the slope goes in as hundredths.
-	slopeHundredths := int(row.slope * 100 + 0.5)
-	formula := f.gib(row.intercept).
+	slopeHundredths := int(row.memSlope * 100 + 0.5)
+	formula := f.gib(row.memIntercept).
 		plus(f.size(INPUT_TAG).times(slopeHundredths).dividedBy(100)).
 		dividedBy(f.gib(1)).times(f.gib(1)). // dividedBy ceils, so this rounds up to a whole GiB
-		atLeast(f.gib(row.floor))
+		atLeast(f.gib(row.memFloor))
 	if !is_undefined(row.cap) {
 		formula = formula.atMost(f.gib(row.cap))
 	}
-	fallback := row.floor > _FALLBACK_GIB ? row.floor : _FALLBACK_GIB
+	fallback := row.memFloor > _FALLBACK_GIB ? row.memFloor : _FALLBACK_GIB
 	return formula.staticFallback(f.gib(fallback))
 }
 
@@ -128,9 +128,9 @@ apply := func(cmd, row, res) {
 	useOverrides := row.override != false
 	if useOverrides && !is_undefined(res.perProcessMemGB) {
 		floor := int(math.ceil(res.perProcessMemGB))
-		if floor > row.floor {
+		if floor > row.memFloor {
 			row = copy(row)
-			row.floor = floor
+			row.memFloor = floor
 		}
 	}
 	onCPU := { cpu: cpu(row), ram: ram(row) }
