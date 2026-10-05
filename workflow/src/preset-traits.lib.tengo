@@ -5,29 +5,31 @@
 text := import("text")
 slices := import("@platforma-sdk/workflow-tengo:slices")
 
-// _tagPatterns lists the patterns a resolved preset tags reads with: `align.tagPattern` and,
-// on a MiTool pipeline, `mitool.parse.pattern`. `mixcr exportPreset` applies the user's
-// --tag-pattern to both before writing the bundle; a preset file may set either alone.
-_tagPatterns := func(presetContent) {
+// _tagSections lists the steps of a resolved preset that tag reads, each as { pattern,
+// splitBySample }: `align`, and `mitool parse` on a MiTool pipeline. `mixcr exportPreset`
+// applies the user's --tag-pattern to both before writing the bundle; a preset file may set
+// either alone.
+_tagSections := func(presetContent) {
 	if !is_map(presetContent) {
 		return []
 	}
-	patterns := []
-	if is_map(presetContent.align) && is_string(presetContent.align.tagPattern) {
-		patterns = append(patterns, presetContent.align.tagPattern)
+	sections := []
+	align := presetContent.align
+	if is_map(align) && is_string(align.tagPattern) {
+		sections = append(sections, { pattern: align.tagPattern, splitBySample: align.splitBySample })
 	}
-	if is_map(presetContent.mitool) && is_map(presetContent.mitool.parse) &&
-		is_string(presetContent.mitool.parse.pattern) {
-		patterns = append(patterns, presetContent.mitool.parse.pattern)
+	parse := is_map(presetContent.mitool) ? presetContent.mitool.parse : undefined
+	if is_map(parse) && is_string(parse.pattern) {
+		sections = append(sections, { pattern: parse.pattern, splitBySample: parse.splitBySample })
 	}
-	return patterns
+	return sections
 }
 
 // hasCellTag reports whether a tag pattern of the resolved preset captures a cell barcode
 // (CELL, CELL1, CELL2, ...).
 hasCellTag := func(presetContent) {
-	for pattern in _tagPatterns(presetContent) {
-		if text.contains(pattern, "(CELL") {
+	for s in _tagSections(presetContent) {
+		if text.contains(s.pattern, "(CELL") {
 			return true
 		}
 	}
@@ -46,9 +48,6 @@ hasLongReadAligner := func(presetContent) {
 // _hasSampleTag reports whether a tag pattern names a sample tag: MiTool takes every tag whose
 // name starts with "S" as one (mitool `TagType.inferType`).
 _hasSampleTag := func(pattern) {
-	if !is_string(pattern) {
-		return false
-	}
 	for match in text.re_find("\\(([A-Za-z][A-Za-z0-9_]*):", pattern, -1) {
 		if text.has_prefix(text.to_upper(match[1].text), "S") {
 			return true
@@ -61,15 +60,12 @@ _hasSampleTag := func(pattern) {
 // has splitBySample set, MiXCR's default, and its tag pattern names a sample tag. The block
 // rejects these runs.
 splitsBySample := func(presetContent) {
-	if !is_map(presetContent) {
-		return false
+	for s in _tagSections(presetContent) {
+		if s.splitBySample != false && _hasSampleTag(s.pattern) {
+			return true
+		}
 	}
-	mitool := is_map(presetContent.mitool) ? presetContent.mitool.parse : undefined
-	if is_map(mitool) && mitool.splitBySample != false && _hasSampleTag(mitool.pattern) {
-		return true
-	}
-	align := presetContent.align
-	return is_map(align) && align.splitBySample != false && _hasSampleTag(align.tagPattern)
+	return false
 }
 
 // hasQcChecks reports whether the preset carries qc checks. `analyze` runs `qc` only then, and the block

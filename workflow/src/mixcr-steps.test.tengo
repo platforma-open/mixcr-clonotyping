@@ -48,6 +48,9 @@ TestUmiStepsChainTheirFiles := func() {
 	test.isEqual(["result.alignments.vdjca"], plan.commands[1].stageSteps)
 	test.isEqual("result.clns", plan.clns)
 	test.isEqual("result.qc.json", plan.qcJson)
+	// assemble writes the clones and qc its report; the steps before write intermediates only.
+	test.isEqual([false, false, true, true], [plan.commands[0].writesFinalOutput, plan.commands[1].writesFinalOutput,
+		plan.commands[2].writesFinalOutput, plan.commands[3].writesFinalOutput])
 }
 
 TestTenXRunsEveryMiToolRound := func() {

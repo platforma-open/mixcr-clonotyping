@@ -96,10 +96,11 @@ ram := func(row) {
 		gib := row.intercept > row.floor ? row.intercept : row.floor
 		return string(gib) + "GiB"
 	}
+	// The formula takes integers only, so the slope goes in as hundredths.
 	slopeHundredths := int(row.slope * 100 + 0.5)
 	formula := f.gib(row.intercept).
 		plus(f.size(INPUT_TAG).times(slopeHundredths).dividedBy(100)).
-		dividedBy(f.gib(1)).times(f.gib(1)).
+		dividedBy(f.gib(1)).times(f.gib(1)). // dividedBy ceils, so this rounds up to a whole GiB
 		atLeast(f.gib(row.floor))
 	if !is_undefined(row.cap) {
 		formula = formula.atMost(f.gib(row.cap))

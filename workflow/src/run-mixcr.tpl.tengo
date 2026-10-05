@@ -49,7 +49,7 @@ self.body(func(inputs) {
 	assembleClonesBy := params.assembleClonesBy
 	fileExtension := params.fileExtension
 	reports := params.reports
-	isLibraryFileGzipped := params.isLibraryFileGzipped
+	libraryFile := params.isLibraryFileGzipped ? "library.json.gz" : "library.json"
 
 	presetContent := inputs.presetContent.getDataAsJson()
 
@@ -76,14 +76,8 @@ self.body(func(inputs) {
 	// later step reads it from there.
 	applyPresetArgs := func(builder) {
 		if library {
-			builder.arg("--species").arg(species)
-			if isLibraryFileGzipped {
-				builder.arg("--library").arg("library.json.gz").
-				addFile("library.json.gz", library)
-			} else {
-				builder.arg("--library").arg("library.json").
-				addFile("library.json", library)
-			}
+			builder.arg("--species").arg(species).
+				arg("--library").arg(libraryFile).addFile(libraryFile, library)
 		} else if !is_undefined(species) {
 			builder.arg("--species").arg(species)
 		}
@@ -189,13 +183,6 @@ self.body(func(inputs) {
 
 	reads := readFiles()
 
-	// The block files the steps may stage by name: the reads, the preset file, the library and,
-	// on a MiTool pipeline, the MiTool preset the plan writes.
-	files := smart.mapBuilder()
-	for name in reads.names {
-		files.addRef(name, reads.files[name])
-	}
-
 	// The planning command reads the reads only to check that they exist, so empty files under
 	// their names stand in for them.
 	planCmd := mixcrCmd.builder(mixcrSw).
@@ -218,14 +205,20 @@ self.body(func(inputs) {
 	resources.apply(planCmd, resources.lookup("plan", stepClass), res)
 	planRun := planCmd.cache(CACHE_PERIOD).run()
 
-	if hasMiTool {
-		files.addRef(mixcrSteps.MITOOL_PRESET_FILE, planRun.getFile(mixcrSteps.MITOOL_PRESET_FILE))
+	// The block files the steps may stage by name: the reads, the preset file, the library and,
+	// on a MiTool pipeline, the MiTool preset the plan wrote.
+	files := smart.mapBuilder()
+	for name in reads.names {
+		files.addRef(name, reads.files[name])
 	}
 	if presetIsFile {
 		files.addRef("input_preset.yaml", preset)
 	}
 	if library {
-		files.addRef(isLibraryFileGzipped ? "library.json.gz" : "library.json", library)
+		files.addRef(libraryFile, library)
+	}
+	if hasMiTool {
+		files.addRef(mixcrSteps.MITOOL_PRESET_FILE, planRun.getFile(mixcrSteps.MITOOL_PRESET_FILE))
 	}
 
 	// The overrides and the scratch request go in as metaInputs, out of the deduplication key:

@@ -21,7 +21,7 @@ self.defineOutputs("qc", "reports", "log", "stepLog", "clns")
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
 
 CACHE_PERIOD := 48 * times.hour
-// The steps that write no final output: the clones or the qc result.
+// For the steps that write no final output (the clones or the qc result).
 INTERMEDIATE_CACHE_PERIOD := 36 * times.hour
 
 self.body(func(inputs) {
@@ -34,12 +34,7 @@ self.body(func(inputs) {
 		scratchFreeSpace: inputs.scratchFreeSpace
 	}
 
-	blockFiles := {}
-	for name, _ in files {
-		blockFiles[name] = true
-	}
-
-	plan := mixcrSteps.commands(inputs.steps.getDataAsJson().steps, blockFiles, inputs.readsPattern)
+	plan := mixcrSteps.commands(inputs.steps.getDataAsJson().steps, files, inputs.readsPattern)
 
 	written := {}
 	stepLogs := pcolumn.resourceMapBuilder( /* keyLength */ 1 )
@@ -65,15 +60,11 @@ self.body(func(inputs) {
 		for name in c.stageBlock {
 			cmd.addFile(name, files[name])
 		}
-		cachePeriod := INTERMEDIATE_CACHE_PERIOD
 		for name in c.save {
 			cmd.saveFile(name)
-			if name == plan.clns || name == plan.qcJson {
-				cachePeriod = CACHE_PERIOD
-			}
 		}
 		resources.apply(cmd, resources.lookup(c.key, inputs.stepClass), res)
-		run := cmd.cache(cachePeriod).run()
+		run := cmd.cache(c.writesFinalOutput ? CACHE_PERIOD : INTERMEDIATE_CACHE_PERIOD).run()
 		lastLog = run.getStdoutStream()
 		stepLogs.add([c.logKey], lastLog)
 		for name in c.save {

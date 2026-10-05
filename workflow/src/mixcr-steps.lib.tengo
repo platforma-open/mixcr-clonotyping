@@ -49,15 +49,46 @@ _presetFile := func(arg) {
 	return undefined
 }
 
+// _command sorts the arguments of one step into what to stage and what to save. `written` is
+// the set of files earlier steps wrote; `blockFiles` is keyed by the files the block provides.
+_command := func(args, written, blockFiles, readsPattern) {
+	c := { key: key(args), args: args, stageSteps: [], stageReads: false, stageBlock: [], save: [] }
+	for arg in args {
+		preset := _presetFile(arg)
+		if written[arg] {
+			c.stageSteps = append(c.stageSteps, arg)
+		} else if arg == readsPattern {
+			c.stageReads = true
+		} else if !is_undefined(blockFiles[arg]) {
+			c.stageBlock = append(c.stageBlock, arg)
+		} else if !is_undefined(preset) && !is_undefined(blockFiles[preset]) {
+			c.stageBlock = append(c.stageBlock, preset)
+		} else if text.has_prefix(arg, OUTPUT_PREFIX + ".") {
+			c.save = append(c.save, arg)
+		}
+	}
+	// A MiXCR file names its library but does not carry it, so every MiXCR step reads it again.
+	if args[0] != "mitool" {
+		for name in LIBRARY_FILES {
+			if !is_undefined(blockFiles[name]) && !slices.hasElement(c.stageBlock, name) {
+				c.stageBlock = append(c.stageBlock, name)
+			}
+		}
+	}
+	return c
+}
+
 // commands returns { commands, clns, qcJson } for a step list.
 //
-// Each command is { key, logKey, args, stageSteps, stageReads, stageBlock, save }: stageSteps and
-// stageBlock list file names, stageReads is true when the step reads the reads, save lists the
-// files the step writes. logKey leads with the run position, zero-padded, so the step that has
-// got furthest sorts last. clns is the file `qc` reads, qcJson the report `qc` writes.
+// Each command is { key, logKey, args, stageSteps, stageReads, stageBlock, save,
+// writesFinalOutput }: stageSteps and stageBlock list file names, stageReads is true when the
+// step reads the reads, save lists the files the step writes, and writesFinalOutput is true when
+// one of them is the clones or the qc result. logKey leads with the run position, zero-padded,
+// so the step that has got furthest sorts last. clns is the file `qc` reads, qcJson the report
+// `qc` writes.
 //
-// blockFiles is the set of file names the block provides, readsPattern the argument that names
-// the reads.
+// blockFiles is keyed by the file names the block provides; readsPattern is the argument that
+// names the reads.
 commands := func(steps, blockFiles, readsPattern) {
 	ll.assert(is_array(steps) && len(steps) > 0, "the MiXCR step list is empty")
 
@@ -66,39 +97,14 @@ commands := func(steps, blockFiles, readsPattern) {
 	clns := undefined
 	qcJson := undefined
 	for args in steps {
-		k := key(args)
-		if text.has_prefix(k, "export") {
+		if text.has_prefix(key(args), "export") {
 			continue
 		}
-
-		c := { key: k, args: args, stageSteps: [], stageReads: false, stageBlock: [], save: [] }
-		for arg in args {
-			preset := _presetFile(arg)
-			if written[arg] {
-				c.stageSteps = append(c.stageSteps, arg)
-			} else if arg == readsPattern {
-				c.stageReads = true
-			} else if blockFiles[arg] {
-				c.stageBlock = append(c.stageBlock, arg)
-			} else if !is_undefined(preset) && blockFiles[preset] {
-				c.stageBlock = append(c.stageBlock, preset)
-			} else if text.has_prefix(arg, OUTPUT_PREFIX + ".") {
-				c.save = append(c.save, arg)
-			}
-		}
-		// A MiXCR file names its library but does not carry it, so every MiXCR step reads it again.
-		if args[0] != "mitool" {
-			for name in LIBRARY_FILES {
-				if blockFiles[name] && !slices.hasElement(c.stageBlock, name) {
-					c.stageBlock = append(c.stageBlock, name)
-				}
-			}
-		}
+		c := _command(args, written, blockFiles, readsPattern)
 		for name in c.save {
 			written[name] = true
 		}
-
-		if k == "qc" {
+		if c.key == "qc" {
 			ll.assert(len(c.stageSteps) == 1, "qc reads %v files, expected one .clns", len(c.stageSteps))
 			clns = c.stageSteps[0]
 			for name in c.save {
@@ -107,11 +113,13 @@ commands := func(steps, blockFiles, readsPattern) {
 				}
 			}
 		}
-
-		c.logKey = fmt.sprintf("%02d:%s", len(result) + 1, k)
+		c.logKey = fmt.sprintf("%02d:%s", len(result) + 1, c.key)
 		result = append(result, c)
 	}
 	ll.assert(!is_undefined(clns) && !is_undefined(qcJson), "the MiXCR step list has no qc step")
+	for c in result {
+		c.writesFinalOutput = slices.hasElement(c.save, clns) || slices.hasElement(c.save, qcJson)
+	}
 
 	return { commands: result, clns: clns, qcJson: qcJson }
 }

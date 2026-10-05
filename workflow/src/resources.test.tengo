@@ -6,21 +6,20 @@ f := exec.formula
 
 _gib := func(n) { return n * 1073741824 }
 
-// Evaluate a row's memory against a fake staged input of sizeBytes.
-_ram := func(step, cls, sizeBytes) {
-	node := rs.ram(rs.lookup(step, cls))
-	if is_string(node) {
-		return node
-	}
+// Evaluates a formula node against a fake staged input of sizeBytes.
+_evalSize := func(node, sizeBytes) {
 	fileName := "input.bin"
 	inputs := {}
 	inputs[rs.INPUT_TAG] = [fileName]
 	resolved := f.resolveAst(node, inputs, [fileName])
-	resolver := {
-		size:      func(files) { return sizeBytes },
-		lineCount: func(files) { return 0 }
-	}
+	resolver := { size: func(files) { return sizeBytes }, lineCount: func(files) { return 0 } }
 	return f.evaluateResource(resolved, resolver, "test")
+}
+
+// A row's memory for a fake staged input of sizeBytes: a string for a flat row, bytes otherwise.
+_ram := func(step, cls, sizeBytes) {
+	node := rs.ram(rs.lookup(step, cls))
+	return is_string(node) ? node : _evalSize(node, sizeBytes)
 }
 
 TestLookupPrefersTheClassRowThenTheStepRowThenTheDefault := func() {
@@ -73,13 +72,7 @@ TestStaticFallbackIsTheFloorOr64 := func() {
 
 TestCapAppliesOnlyWhenARowSetsIt := func() {
 	row := { step: "x", class: "any", floor: 8, intercept: 0, slope: 2, cap: 10 }
-	node := rs.ram(row)
-	fileName := "input.bin"
-	inputs := {}
-	inputs[rs.INPUT_TAG] = [fileName]
-	resolved := f.resolveAst(node, inputs, [fileName])
-	resolver := { size: func(files) { return _gib(100) }, lineCount: func(files) { return 0 } }
-	test.isEqual(_gib(10), f.evaluateResource(resolved, resolver, "test"))
+	test.isEqual(_gib(10), _evalSize(rs.ram(row), _gib(100)))
 }
 
 TestCpuIsTheInterceptWhileTheSlopeIs0 := func() {
@@ -92,12 +85,7 @@ TestCpuIsTheInterceptWhileTheSlopeIs0 := func() {
 
 TestCpuSlopeScalesWithTheInput := func() {
 	node := rs.cpu({ step: "x", class: "any", floor: 8, intercept: 0, slope: 0, cpuIntercept: 4, cpuSlope: 0.5 })
-	fileName := "input.bin"
-	inputs := {}
-	inputs[rs.INPUT_TAG] = [fileName]
-	resolved := f.resolveAst(node, inputs, [fileName])
-	resolver := { size: func(files) { return _gib(10) }, lineCount: func(files) { return 0 } }
-	test.isEqual(9, f.evaluateResource(resolved, resolver, "test"))
+	test.isEqual(9, _evalSize(node, _gib(10)))
 	test.isEqual(4, f.fallbackOf(node))
 }
 
