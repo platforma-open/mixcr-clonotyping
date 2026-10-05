@@ -6,7 +6,9 @@ import type {
 import {
   AlignReport,
   AssembleReport,
+  parseGrant,
   Qc,
+  ResourcesPrefix,
   // SupportedPresetList is used in commented-out prerun assertions below
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   SupportedPresetList,
@@ -143,6 +145,7 @@ const bulkProjectTest = (
   assetPrefix: string,
   preset: string,
   chains: BlockData["chains"],
+  stepResources?: BlockData["stepResources"],
 ) =>
   blockTest(name, { timeout: 150000 }, async ({ rawPrj: project, ml, helpers, expect }) => {
     const { sndBlockId, sample1Id, r1Handle, r2Handle } = await addBulkSample(
@@ -197,6 +200,7 @@ const bulkProjectTest = (
         cloneClusteringMode: "default",
         runMode: "full",
         tableState: createPlDataTableStateV2(),
+        stepResources,
       } satisfies BlockData,
     });
 
@@ -285,6 +289,40 @@ const bulkProjectTest = (
     ).toHaveProperty("pl7.app/vdj/clonotypeKey/structure");
 
     expect(clonesPfColumnList).length.to.greaterThanOrEqual(7);
+
+    // Every step reports what it requested and opens its log with what it was granted. The grant
+    // is read from a log stream, which settles after the block is done, so it is polled for.
+    const requests = outputs3.stepRequests!.data.filter((e) => e.key[0] === sample1Id);
+    expect(requests.length).toBeGreaterThanOrEqual(3);
+    // The grant is read with the log driver's search, as the UI reads it; the log settles after
+    // the block is done, so it is polled for.
+    const logs = outputs3.logs!.data.filter((e) => e.key[0] === sample1Id && e.key.length === 2);
+    const grants = new Map<string, ReturnType<typeof parseGrant>>();
+    for (let attempt = 0; attempt < 30 && grants.size < logs.length; attempt++) {
+      for (const { key, value: handle } of logs) {
+        if (grants.has(String(key[1]))) continue;
+        const response = await ml.driverKit.logDriver.readText(handle!, 1, 0, ResourcesPrefix);
+        if (response.shouldUpdateHandle) continue;
+        const grant = parseGrant(new TextDecoder().decode(response.data));
+        if (grant !== undefined) grants.set(String(key[1]), grant);
+      }
+      if (grants.size < logs.length) await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+    for (const { key, value: request } of requests) {
+      expect(request!.inputBytes).toBeGreaterThan(0);
+      expect(request!.ramBytes).toBeGreaterThan(0);
+      const grant = grants.get(String(key[1]));
+      expect(grant, `grant line of ${String(key[1])}`).toBeDefined();
+      // A backend may grant less than the request (a local one caps CPU at its cores), never more.
+      expect(grant!.cpu).toBeGreaterThan(0);
+      expect(grant!.cpu).toBeLessThanOrEqual(request!.cpu);
+      expect(grant!.ramMiB * 1024 ** 2).toBeLessThanOrEqual(request!.ramBytes);
+    }
+    for (const [step, override] of Object.entries(stepResources ?? {})) {
+      const request = requests.find((e) => String(e.key[1]).endsWith(":" + step))!.value!;
+      expect(request.source.memFloor).toEqual("step");
+      expect(request.rule.memFloor).toEqual(override.memFloor);
+    }
   });
 
 bulkProjectTest("simple project", "small_data", "milab-human-dna-xcr-7genes-multiplex", [
@@ -294,7 +332,10 @@ bulkProjectTest("simple project", "small_data", "milab-human-dna-xcr-7genes-mult
 
 // Pipeline `align, refineTagsAndSort, assemble, exportClones`. The reads are MiXCR's own UMI
 // fixture (tools/mixcr src/test/resources/sequences/umi_ig_data_2_subset_*).
-bulkProjectTest("umi project", "umi_ig_data_2_subset", "mikelov-et-al-2021", ["IGHeavy"]);
+// A lowered assemble floor shows the per-step override reaching the step's request and grant.
+bulkProjectTest("umi project", "umi_ig_data_2_subset", "mikelov-et-al-2021", ["IGHeavy"], {
+  assemble: { memFloor: 4 },
+});
 
 // The published block ran one `mixcr analyze` per sample; this build runs one exec per step.
 // A sample analysed by the published block must be recovered on update, not run again:

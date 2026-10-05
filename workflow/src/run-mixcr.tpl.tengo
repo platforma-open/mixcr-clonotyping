@@ -22,10 +22,11 @@ resources := import(":resources")
 readStats := import(":read-stats")
 presetTraits := import(":preset-traits")
 mixcrSteps := import(":mixcr-steps")
+presetArgs := import(":preset-args")
 
 json := import("json")
 
-self.defineOutputs("qc", "reports", "log", "clns")
+self.defineOutputs("qc", "reports", "log", "stepRequest", "clns")
 
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
 runStepsTpl := assets.importTemplate(":run-steps")
@@ -41,13 +42,7 @@ self.body(func(inputs) {
 	library := inputs.library
 
 	params := inputs.params
-	species := params.species
 	limitInput := params.limitInput
-	leftAlignmentMode := params.leftAlignmentMode
-	rightAlignmentMode := params.rightAlignmentMode
-	materialType := params.materialType
-	tagPattern := params.tagPattern
-	assembleClonesBy := params.assembleClonesBy
 	fileExtension := params.fileExtension
 	reports := params.reports
 	libraryFile := params.isLibraryFileGzipped ? "library.json.gz" : "library.json"
@@ -69,62 +64,10 @@ self.body(func(inputs) {
 	res := {
 		perProcessMemGB: inputs.perProcessMemGB,
 		perProcessCPUs: inputs.perProcessCPUs,
+		stepResources: inputs.stepResources,
 		scratchFreeSpace: readStats.scratchFreeSpaceFor(inputs.readStats)
 	}
 
-	// Preset selection and every mixin that shapes the resolved parameter bundle. `analyze` hands
-	// them to the first step of its plan, which packs the bundle into its output's header; every
-	// later step reads it from there.
-	applyPresetArgs := func(builder) {
-		if library {
-			builder.arg("--species").arg(species).
-				arg("--library").arg(libraryFile).addFile(libraryFile, library)
-		} else if !is_undefined(species) {
-			builder.arg("--species").arg(species)
-		}
-
-		if presetIsFile {
-			builder.
-				arg("local#input_preset").
-				addFile("input_preset.yaml", preset)
-		} else {
-			ll.assert(!is_undefined(preset.name), "undefined preset name")
-			builder.
-				arg(preset.name)
-		}
-
-		// Optional preset-specific parameters (order matters if preset requires positional values)
-		if !is_undefined(leftAlignmentMode) {
-			builder.arg(leftAlignmentMode)
-		}
-		if !is_undefined(rightAlignmentMode) {
-			builder.arg(rightAlignmentMode)
-		}
-		if !is_undefined(materialType) {
-			builder.arg(materialType)
-		}
-		if !is_undefined(tagPattern) {
-			builder.arg("--tag-pattern").arg(tagPattern)
-		}
-		if !is_undefined(assembleClonesBy) {
-			builder.arg("--assemble-clonotypes-by").arg(assembleClonesBy)
-		}
-		// Clone clustering tuning
-		cloneClusteringMode := params.cloneClusteringMode
-		if is_undefined(cloneClusteringMode) {
-			cloneClusteringMode = "default"
-		}
-		if cloneClusteringMode == "relaxed" {
-			builder.
-				arg("-Massemble.cloneAssemblerParameters.minimalQuality=20").
-				arg("-Massemble.cloneAssemblerParameters.badQualityThreshold=10").
-				arg("-Massemble.cloneAssemblerParameters.cloneClusteringParameters.searchParameters=oneMismatchOrIndel").
-				arg("-Massemble.cloneAssemblerParameters.cloneClusteringParameters.searchDepth=1")
-		} else if cloneClusteringMode == "off" {
-			builder.arg("-Massemble.cloneAssemblerParameters.cloneClusteringParameters=null")
-		}
-		return builder
-	}
 
 	// The sample's read files by the names the plan and the steps stage them under, and the
 	// pattern that names them all.
@@ -192,7 +135,7 @@ self.body(func(inputs) {
 	if !is_undefined(limitInput) {
 		planCmd.arg("--limit-input").arg(string(limitInput))
 	}
-	applyPresetArgs(planCmd)
+	presetArgs.apply(planCmd, preset, params, library)
 	for name in reads.names {
 		planCmd.writeFile(name, "")
 	}
@@ -240,6 +183,7 @@ self.body(func(inputs) {
 	return {
 		qc: stepsRun.output("qc", CACHE_PERIOD),
 		log: stepsRun.output("log", CACHE_PERIOD),
+		stepRequest: stepsRun.output("stepRequest", CACHE_PERIOD),
 		reports: stepsRun.output("reports", CACHE_PERIOD),
 		clns: stepsRun.output("clns", CACHE_PERIOD)
 	}

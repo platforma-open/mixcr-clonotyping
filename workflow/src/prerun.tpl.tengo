@@ -10,6 +10,7 @@ file := import("@platforma-sdk/workflow-tengo:file")
 
 listPresetsTpl := assets.importTemplate(":list-presets")
 calculatePresetInfoTpl := assets.importTemplate(":calculate-preset-info")
+planStepsTpl := assets.importTemplate(":plan-steps")
 
 wf.body(func(args) {
 
@@ -62,6 +63,28 @@ wf.body(func(args) {
 				}
 			})
 			outputs.preset = presetInfoResult.output("presetSpecForBack", 24 * 60 * 60 * 1000)
+
+			// The steps the "Per-step resources" settings list, planned only once the operator
+			// asks for them. A generic preset needs a tag pattern to plan, so it takes the one
+			// above until the operator sets their own.
+			if args.listSteps {
+				genericTagPattern := isGenericPreset ? "^(R1:*)\\^(R2:*)" : undefined
+				genericAssembleBy := isGenericPreset ? "CDR3" : undefined
+				planSteps := render.create(planStepsTpl, {
+					preset: presetResource,
+					params: {
+						species: args.species,
+						leftAlignmentMode: args.leftAlignmentMode,
+						rightAlignmentMode: args.rightAlignmentMode,
+						materialType: args.materialType,
+						tagPattern: is_undefined(args.tagPattern) ? genericTagPattern : args.tagPattern,
+						assembleClonesBy: is_undefined(args.assembleClonesBy) ? genericAssembleBy : args.assembleClonesBy,
+						cloneClusteringMode: args.cloneClusteringMode
+					},
+					presetContent: presetInfoResult.output("preset", 24 * 60 * 60 * 1000)
+				})
+				outputs.stepDefaults = planSteps.output("stepDefaults", 24 * 60 * 60 * 1000)
+			}
 		}
 	}
 

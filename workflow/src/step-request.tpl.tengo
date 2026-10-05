@@ -1,0 +1,88 @@
+// The CPU and memory one split step requests, for display beside the grant the step logs.
+//
+// The exec evaluates a resource formula inside the SDK and exposes the result nowhere. This
+// template evaluates the same formula over the same files with the same evaluator, so it
+// reports the number the exec asks the backend for. It runs no command, and nothing reads its
+// output but the block's UI.
+//
+// The template reads the files only once they exist, so the report of a step appears when the
+// step before it finishes, which is before the step itself starts.
+
+self := import("@platforma-sdk/workflow-tengo:tpl")
+ll := import("@platforma-sdk/workflow-tengo:ll")
+smart := import("@platforma-sdk/workflow-tengo:smart")
+exec := import("@platforma-sdk/workflow-tengo:exec")
+maps := import("@platforma-sdk/workflow-tengo:maps")
+text := import("text")
+resources := import(":resources")
+
+f := exec.formula
+
+_GIB := 1073741824
+
+self.defineOutputs("request")
+
+self.body(func(inputs) {
+	files := inputs.files
+	if !is_map(files) {
+		files = files.inputs()
+	}
+	names := maps.getKeys(files)
+	tagMap := {}
+	tagMap[resources.INPUT_TAG] = names
+
+	resolver := {
+		size: func(fileNames) {
+			total := 0
+			for name in fileNames {
+				total += ll.getBlobSize(files[name].id)
+			}
+			return total
+		},
+		lineCount: func(fileNames) {
+			ll.panic("the :resources rows use no lineCount metric")
+		}
+	}
+
+	// A static request is an int (CPU) or a "<n>GiB" string (memory); a formula is evaluated.
+	evaluate := func(request, label) {
+		if is_int(request) {
+			return request
+		}
+		if is_string(request) {
+			return int(text.trim_suffix(request, "GiB")) * _GIB
+		}
+		return f.evaluateResource(f.resolveAst(request, tagMap, names), resolver, label)
+	}
+
+	e := resources.effective(inputs.row, inputs.overrides)
+
+	return {
+		request: smart.createJsonResource({
+			step: inputs.step,
+			class: e.row.class,
+			inputFiles: names,
+			inputBytes: resolver.size(names),
+			ramBytes: evaluate(resources.ram(e.row), "ram"),
+			cpu: evaluate(resources.cpu(e.row), "cpu"),
+			rule: {
+				memFloor: e.row.memFloor,
+				memIntercept: e.row.memIntercept,
+				memSlope: e.row.memSlope,
+				cap: e.row.cap,
+				cpuIntercept: e.row.cpuIntercept,
+				cpuSlope: e.row.cpuSlope
+			},
+			source: e.source,
+			// The row before any override, which the settings show as placeholders.
+			defaultRule: {
+				memFloor: inputs.row.memFloor,
+				memIntercept: inputs.row.memIntercept,
+				memSlope: inputs.row.memSlope,
+				cap: inputs.row.cap,
+				cpuIntercept: inputs.row.cpuIntercept,
+				cpuSlope: inputs.row.cpuSlope
+			}
+		})
+	}
+})

@@ -9,6 +9,7 @@ import { PlBtnGroup } from "@platforma-sdk/ui-vue";
 import SampleReportPanelReports from "./SampleReportPanelReports.vue";
 import SampleReportPanelQc from "./SampleReportPanelQc.vue";
 import SampleReportPanelVisualReport from "./SampleReportPanelVisualReport.vue";
+import SampleReportPanelResources from "./SampleReportPanelResources.vue";
 
 const sampleId = defineModel<PlId | undefined>();
 
@@ -18,7 +19,7 @@ const sampleData = computed(() => {
   return resultMap.value.get(sampleId.value);
 });
 
-type TabId = "visualReport" | "qc" | "logs" | "reports";
+type TabId = "visualReport" | "qc" | "logs" | "reports" | "resources";
 
 const data = reactive<{
   currentTab: TabId;
@@ -31,6 +32,7 @@ const tabOptions: SimpleOption<TabId>[] = [
   { value: "qc", text: "Quality Checks" },
   { value: "logs", text: "Log" },
   { value: "reports", text: "Reports" },
+  { value: "resources", text: "Resources" },
 ];
 </script>
 
@@ -48,6 +50,12 @@ const tabOptions: SimpleOption<TabId>[] = [
       :sample-data="sampleData"
     />
     <SampleReportPanelReports v-else-if="data.currentTab === 'reports'" :sample-id="sampleId" />
+    <SampleReportPanelResources
+      v-else-if="data.currentTab === 'resources'"
+      :key="sampleId"
+      :sample-id="sampleId"
+      :sample-data="sampleData"
+    />
   </div>
   <div v-else>No sample selected</div>
 </template>

@@ -25,7 +25,8 @@ _ram := func(step, cls, sizeBytes) {
 TestLookupPrefersTheClassRowThenTheStepRowThenTheDefault := func() {
 	test.isEqual("umi", rs.lookup("assemble", "umi").class)
 	test.isEqual("any", rs.lookup("refineTagsAndSort", "cell").class)
-	test.isEqual("default", rs.lookup("findAlleles", "none").step)
+	test.isEqual(rs.DEFAULT.memFloor, rs.lookup("findAlleles", "none").memFloor)
+	test.isEqual("findAlleles", rs.lookup("findAlleles", "none").step)
 }
 
 TestFlatRowsAreFixedRequests := func() {
@@ -122,4 +123,45 @@ TestScratchIsOffOnlyWhereARowOptsOut := func() {
 	test.isTrue(is_undefined(cmd.onCPU.scratchFreeSpace))
 	test.isEqual("light", cmd.queue)
 	test.isEqual("heavy", rs.apply(_fakeCmd(), rs.DEFAULT, res).queue)
+}
+
+TestAStepOverrideReplacesOnlyTheFieldsItSets := func() {
+	res := { stepResources: { assemble: { memFloor: 100, memSlope: 1.5 } } }
+	e := rs.effective(rs.lookup("assemble", "umi"), res)
+	test.isEqual(100, e.row.memFloor)
+	test.isEqual(1.5, e.row.memSlope)
+	test.isEqual(0, e.row.memIntercept)
+	test.isEqual("step", e.source.memFloor)
+	test.isEqual("default", e.source.memIntercept)
+	// Another step is untouched.
+	test.isEqual(24, rs.effective(rs.lookup("align", "none"), res).row.memFloor)
+}
+
+TestAStepOverrideBeatsTheGlobalOverrides := func() {
+	res := { perProcessMemGB: 200, perProcessCPUs: 8, stepResources: { assemble: { memFloor: 50, cpuIntercept: 32 } } }
+	e := rs.effective(rs.lookup("assemble", "umi"), res)
+	test.isEqual(50, e.row.memFloor)
+	test.isEqual(32, e.row.cpuIntercept)
+	// Steps without their own value still take the global overrides.
+	a := rs.effective(rs.lookup("align", "none"), res)
+	test.isEqual(200, a.row.memFloor)
+	test.isEqual("global", a.source.memFloor)
+	test.isEqual(8, a.row.cpuIntercept)
+}
+
+TestAStepOverrideReachesAStepOnTheDefaultRow := func() {
+	res := { stepResources: { findAlleles: { memFloor: 99 } } }
+	test.isEqual(99, rs.effective(rs.lookup("findAlleles", "none"), res).row.memFloor)
+}
+
+TestStepOverrideValuesBecomeWholeGiB := func() {
+	res := { stepResources: { assemble: { memFloor: 16.2, cap: 40.0 } } }
+	e := rs.effective(rs.lookup("assemble", "umi"), res)
+	test.isEqual(17, e.row.memFloor)
+	test.isEqual(40, e.row.cap)
+}
+
+TestRowsWithoutOverridesIgnoreStepOverrides := func() {
+	res := { stepResources: { qc: { memFloor: 64 } } }
+	test.isEqual(4, rs.effective(rs.lookup("qc", "none"), res).row.memFloor)
 }

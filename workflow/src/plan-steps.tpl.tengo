@@ -1,0 +1,52 @@
+// Plans the steps of a run before any run, so the "Per-step resources" settings can list them
+// with their default rules. The prerun renders this only once the operator asks for the list.
+//
+// It runs the planning command :run-mixcr runs, `analyze --dry-run-json` with the same preset
+// arguments, on empty read files: the command checks that the reads exist and reads none of
+// them. The reads are named as a paired-end sample's are; the step list does not depend on them.
+//
+// A template cannot read the result of a command it started, so :step-defaults reads the step
+// list back.
+
+self := import("@platforma-sdk/workflow-tengo:tpl")
+assets := import("@platforma-sdk/workflow-tengo:assets")
+render := import("@platforma-sdk/workflow-tengo:render")
+times := import("times")
+mixcrCmd := import(":mixcr-cmd")
+mixcrSteps := import(":mixcr-steps")
+presetArgs := import(":preset-args")
+resources := import(":resources")
+
+self.defineOutputs("stepDefaults")
+
+mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
+stepDefaultsTpl := assets.importTemplate(":step-defaults")
+
+READS_PATTERN := "input_{{R}}.fastq.gz"
+READ_NAMES := ["input_R1.fastq.gz", "input_R2.fastq.gz"]
+
+CACHE_PERIOD := 24 * times.hour
+
+self.body(func(inputs) {
+	cmd := mixcrCmd.builder(mixcrSw).
+		arg("analyze").
+		arg("--dry-run-json").arg(mixcrSteps.STEPS_FILE)
+	presetArgs.apply(cmd, inputs.preset, inputs.params, false)
+	for name in READ_NAMES {
+		cmd.writeFile(name, "")
+	}
+	cmd.arg(READS_PATTERN).arg(mixcrSteps.OUTPUT_PREFIX).saveFileContent(mixcrSteps.STEPS_FILE)
+	resources.apply(cmd, resources.lookup("plan", "any"), {})
+	run := cmd.cache(CACHE_PERIOD).run()
+
+	defaults := render.create(stepDefaultsTpl, {
+		steps: run.getFileContent(mixcrSteps.STEPS_FILE),
+		presetContent: inputs.presetContent,
+		readNames: READ_NAMES,
+		readsPattern: READS_PATTERN
+	})
+
+	return {
+		stepDefaults: defaults.output("stepDefaults", CACHE_PERIOD)
+	}
+})

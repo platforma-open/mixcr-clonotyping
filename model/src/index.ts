@@ -24,10 +24,14 @@ import { kind } from "@platforma-open/milaboratories.mixcr-clonotyping-2.kind";
 import type { BlockArgs } from "./args";
 import { BlockArgsValid } from "./args";
 import { ProgressPrefix } from "./progress";
+import type { StepDefaults, StepRequest } from "./step-resources";
+import { dropEmptyOverrides } from "./step-resources";
 
 export type BlockData = BlockArgs & {
   tableState: PlDataTableStateV2;
   runMode: "dry" | "full";
+  /** Set once the operator asks the "Per-step resources" settings to list the steps. */
+  listSteps?: boolean;
 };
 
 type LegacyUiState = {
@@ -132,6 +136,16 @@ export const platforma = BlockModelV3.create({ dataModel, kind })
     rightAlignmentMode: data.rightAlignmentMode,
     materialType: data.materialType,
     isGenericPreset: data.isGenericPreset,
+    // The fields that shape the step list reach the prerun only once the list is asked for, so
+    // editing them does not re-plan for an operator who never opens the per-step settings.
+    ...(data.listSteps
+      ? {
+          listSteps: true,
+          tagPattern: data.tagPattern,
+          assembleClonesBy: data.assembleClonesBy,
+          cloneClusteringMode: data.cloneClusteringMode,
+        }
+      : {}),
   }))
 
   .args((data) => {
@@ -167,6 +181,7 @@ export const platforma = BlockModelV3.create({ dataModel, kind })
       limitInput: data.runMode === "dry" ? data.limitInput : undefined,
       perProcessMemGB: data.perProcessMemGB,
       perProcessCPUs: data.perProcessCPUs,
+      stepResources: dropEmptyOverrides(data.stepResources),
       cloneClusteringMode: data.cloneClusteringMode,
       presetCommonName: data.presetCommonName,
       isGenericPreset: data.isGenericPreset,
@@ -186,6 +201,13 @@ export const platforma = BlockModelV3.create({ dataModel, kind })
     ctx.prerun
       ?.resolve({ field: "preset", assertFieldType: "Input", allowPermanentAbsence: true })
       ?.getDataAsJson<string>(),
+  )
+
+  // The steps of the selected preset with their default rules, planned before any run.
+  .output("stepDefaults", (ctx) =>
+    ctx.prerun
+      ?.resolve({ field: "stepDefaults", assertFieldType: "Input", allowPermanentAbsence: true })
+      ?.getDataAsJson<StepDefaults>(),
   )
 
   .retentiveOutput("libraryOptions", (ctx) =>
@@ -221,6 +243,17 @@ export const platforma = BlockModelV3.create({ dataModel, kind })
   .output("progress", (ctx) => {
     return ctx.outputs !== undefined
       ? parseSampleLogs(ctx.outputs?.resolve("logs"), (acc) => acc.getProgressLog(ProgressPrefix))
+      : undefined;
+  })
+
+  // What each MiXCR step requested, keyed by (sampleId, step).
+  .output("stepRequests", (ctx) => {
+    return ctx.outputs !== undefined
+      ? parseResourceMap(
+          ctx.outputs?.resolve("stepRequests"),
+          (acc) => acc.getDataAsJson<StepRequest>(),
+          false,
+        )
       : undefined;
   })
 
@@ -399,6 +432,7 @@ export * from "./preset";
 export * from "./progress";
 export * from "./qc";
 export * from "./reports";
+export * from "./step-resources";
 export { BlockArgs };
 
 // ---------------------------------------------------------------------------

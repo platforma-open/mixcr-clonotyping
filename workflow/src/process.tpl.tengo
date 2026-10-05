@@ -68,6 +68,7 @@ self.body(func(inputs) {
 	limitInput := params.limitInput
 	perProcessMemGB := params.perProcessMemGB
 	perProcessCPUs := params.perProcessCPUs
+	stepResources := params.stepResources
 
 	blockId := params.blockId
 	libraryId := params.libraryId
@@ -178,6 +179,25 @@ self.body(func(inputs) {
 			valueType: "Log"
 		},
 		name: "log"
+	}, {
+		// What each MiXCR step requested, as :step-request evaluates it, keyed by step as the logs are.
+		type: "ResourceMap",
+		spec: {
+			kind: "PColumn",
+			name: "mixcr.com/stepRequest",
+			domain: {
+				"pl7.app/vdj/clonotypingRunId": blockId
+			},
+			valueType: "Json",
+			axesSpec: [ {
+				type: "String",
+				name: "pl7.app/vdj/mixcrStep",
+				annotations: {
+					"pl7.app/label": "MiXCR step"
+				}
+			} ]
+		},
+		name: "stepRequest"
 	}, {
 		type: "Resource",
 		spec: {
@@ -305,7 +325,8 @@ self.body(func(inputs) {
 			// to pick up the results from executions with different values for CPU and Memory overrides
             metaExtra: {
                 perProcessMemGB: perProcessMemGB,
-                perProcessCPUs: perProcessCPUs
+                perProcessCPUs: perProcessCPUs,
+                stepResources: stepResources
             }
 		}
 	)
@@ -943,6 +964,9 @@ self.body(func(inputs) {
 
 		"logs.spec": mixcrResults.outputSpec("log"),
 		"logs.data": mixcrResults.outputData("log"),
+
+		"stepRequests.spec": mixcrResults.outputSpec("stepRequest"),
+		"stepRequests.data": mixcrResults.outputData("stepRequest"),
 
 		"reports.spec": mixcrResults.outputSpec("reports"),
 		"reports.data": mixcrResults.outputData("reports"),

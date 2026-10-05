@@ -61,6 +61,7 @@ wf.body(func(args) {
 	limitInput := args.limitInput
 	perProcessMemGB := args.perProcessMemGB
 	perProcessCPUs := args.perProcessCPUs
+	stepResources := args.stepResources
 	isLibraryFileGzipped := false
 
 	library := false
@@ -124,6 +125,7 @@ wf.body(func(args) {
 			limitInput: limitInput,
 			perProcessMemGB: perProcessMemGB,
 			perProcessCPUs: perProcessCPUs,
+			stepResources: stepResources,
 				cloneClusteringMode: args.cloneClusteringMode,
 			blockId: blockId,
 			libraryId: libraryId,
@@ -182,6 +184,7 @@ wf.body(func(args) {
 		qc: pframes.exportColumnData(runMixcr.output("qc.data")),
 		reports: pframes.exportColumnData(runMixcr.output("reports.data")),
 		logs: runMixcr.output("logs.data"),
+		stepRequests: runMixcr.output("stepRequests.data"),
 		clns: runMixcr.output("clns.data"),
 		clonotypes: pframes.exportFrame(runMixcr.output("clonotypes")),
 		clonotypeTables: pframes.exportFrame(runMixcr.output("clonotypeTables")),

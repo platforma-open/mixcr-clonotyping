@@ -25,6 +25,7 @@ import {
 import { computed, reactive, watch } from "vue";
 import { useApp } from "./app";
 import { retentive } from "./retentive";
+import StepResourcesSettings from "./StepResourcesSettings.vue";
 
 const app = useApp();
 
@@ -828,6 +829,10 @@ watch(stopCodonSelection, (selected) => {
       :minValue="1"
       :maxValue="999999"
     />
+
+    <PlAccordionSection label="Per-step resources">
+      <StepResourcesSettings />
+    </PlAccordionSection>
   </PlAccordionSection>
 </template>
 
