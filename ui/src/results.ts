@@ -18,8 +18,10 @@ const reactiveFileContent = ReactiveFileContent.useGlobal();
 // (`05:assemble`), so the furthest step sorts last. A result from before the split has only
 // the single log, keyed by sampleId.
 
+type Entries<T> = { key: unknown[]; value?: T }[];
+
 /** Keeps the value of the furthest step seen for each sample. */
-function furthestStep<T>(entries: { key: unknown[]; value?: T }[]): Map<string, T> {
+function furthestStep<T>(entries: Entries<T>): Map<string, T> {
   const best = new Map<string, { step: string; value: T }>();
   for (const entry of entries) {
     if (entry.value === undefined) continue;
@@ -30,6 +32,15 @@ function furthestStep<T>(entries: { key: unknown[]; value?: T }[]): Map<string, 
     best.set(sampleId, { step, value: entry.value });
   }
   return new Map([...best].map(([sampleId, e]) => [sampleId, e.value]));
+}
+
+/** One value per sample: the single-log entry, replaced by the furthest step's where one exists. */
+function latestPerSample<T>(single: Entries<T> | undefined, perStep: Entries<T> | undefined): Map<string, T> {
+  const out = new Map<string, T>();
+  if (single)
+    for (const e of single) if (e.value !== undefined) out.set(e.key[0] as string, e.value);
+  if (perStep) for (const [sampleId, value] of furthestStep(perStep)) out.set(sampleId, value);
+  return out;
 }
 
 export type MiXCRResult = {
@@ -73,19 +84,11 @@ export const MiXCRResultsMap = computed(() => {
     result.qc = reactiveFileContent.getContentJson(qcData.value.handle, Qc).value;
   }
 
-  const logs = app.model.outputs.logs;
-  if (logs)
-    for (const logData of logs.data) {
-      const result = resultMap.get(logData.key[0] as string);
-      if (result && logData.value !== undefined) result.logHandle = logData.value;
-    }
-
-  const stepLogs = app.model.outputs.stepLogs;
-  if (stepLogs)
-    for (const [sampleId, logHandle] of furthestStep(stepLogs.data)) {
-      const result = resultMap.get(sampleId);
-      if (result) result.logHandle = logHandle;
-    }
+  const logs = latestPerSample(app.model.outputs.logs?.data, app.model.outputs.stepLogs?.data);
+  for (const [sampleId, logHandle] of logs) {
+    const result = resultMap.get(sampleId);
+    if (result) result.logHandle = logHandle;
+  }
 
   const reports = app.model.outputs.reports;
 
@@ -137,13 +140,8 @@ export const MiXCRResultsFull = computed<MiXCRResult[] | undefined>(() => {
   // A step whose stdout carries no progress line yet reports the empty string. Taking it would
   // blank the column, so the last step that did report one stands until the next one speaks.
   // `qc` never reports one at all.
-  const lines = new Map<string, string>();
-  for (const p of progress.data)
-    if (p.value !== undefined && p.value !== "") lines.set(p.key[0] as string, p.value);
-  const stepProgress = app.model.outputs.stepProgress;
-  if (stepProgress)
-    for (const [sampleId, line] of furthestStep(stepProgress.data.filter((p) => p.value !== "")))
-      lines.set(sampleId, line);
+  const reported = (entries: Entries<string> | undefined) => entries?.filter((p) => p.value !== "");
+  const lines = latestPerSample(reported(progress.data), reported(app.model.outputs.stepProgress?.data));
   for (const [sampleId, line] of lines) {
     const result = resultMap.get(sampleId);
     if (result) result.progress = done.has(sampleId) ? "Done" : line.replace(ProgressPrefix, "");
