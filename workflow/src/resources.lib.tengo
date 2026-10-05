@@ -10,7 +10,7 @@
 //
 //     cpu = cpuIntercept + cpuSlope x input GiB, rounded up
 //
-// with cpuIntercept 16 and cpuSlope 0 unless the row sets them. Every step gets the scratch
+// where every row sets cpuIntercept, and cpuSlope is 0 unless the row sets it. Every step gets the scratch
 // request :read-stats measures from the reads unless its row sets `scratch: false`. A row may
 // also set `queue: "light"`, and `override: false`, which keeps the "Advanced Settings"
 // overrides off that step.
@@ -30,8 +30,6 @@ f := exec.formula
 // The tag every split step puts on the file it is sized from.
 INPUT_TAG := "input"
 
-_DEFAULT_CPU_INTERCEPT := 16
-
 // Backends that cannot evaluate resource formulas get max(floor, this).
 _FALLBACK_GIB := 64
 
@@ -39,37 +37,37 @@ _FALLBACK_GIB := 64
 _ROWS := [
 	// PLACEHOLDER: the grant `analyze` gets on a MiTool pipeline. `mitool parse` is sized from the
 	// FASTQs it stages.
-	{ step: "mitool-parse", class: "any", floor: 192, intercept: 0, slope: 4 },
-	{ step: "mitool-refine-tags", class: "any", floor: 192, intercept: 0, slope: 4 },
-	{ step: "mitool-consensus", class: "any", floor: 192, intercept: 0, slope: 4 },
+	{ step: "mitool-parse", class: "any", cpuIntercept: 16, floor: 192, intercept: 0, slope: 4 },
+	{ step: "mitool-refine-tags", class: "any", cpuIntercept: 16, floor: 192, intercept: 0, slope: 4 },
+	{ step: "mitool-consensus", class: "any", cpuIntercept: 16, floor: 192, intercept: 0, slope: 4 },
 
 	// `align` streams its input, so the grant does not grow with the sample.
-	{ step: "align", class: "any", floor: 24, intercept: 0, slope: 0 },
+	{ step: "align", class: "any", cpuIntercept: 16, floor: 24, intercept: 0, slope: 0 },
 
 	// PLACEHOLDER floor: 2-tag GEM-X needs 12 GiB at 25 % of reads, CELL-only 13.
-	{ step: "refineTagsAndSort", class: "any", floor: 16, intercept: 6, slope: 2.1 },
+	{ step: "refineTagsAndSort", class: "any", cpuIntercept: 16, floor: 16, intercept: 6, slope: 2.1 },
 
-	{ step: "assemblePartial", class: "any", floor: 8, intercept: 0, slope: 2 },
-	{ step: "extend", class: "any", floor: 8, intercept: 0, slope: 2 },
-	{ step: "assembleContigs", class: "any", floor: 8, intercept: 0, slope: 2 },
-	{ step: "assembleCells", class: "any", floor: 8, intercept: 0, slope: 2 },
+	{ step: "assemblePartial", class: "any", cpuIntercept: 16, floor: 8, intercept: 0, slope: 2 },
+	{ step: "extend", class: "any", cpuIntercept: 16, floor: 8, intercept: 0, slope: 2 },
+	{ step: "assembleContigs", class: "any", cpuIntercept: 16, floor: 8, intercept: 0, slope: 2 },
+	{ step: "assembleCells", class: "any", cpuIntercept: 16, floor: 8, intercept: 0, slope: 2 },
 
 	// Sized from the .vdjca. A clone-count estimate from the align report will replace this row
 	// once one is fitted.
-	{ step: "assemble", class: "none", floor: 64, intercept: 4, slope: 21.9 },
-	{ step: "assemble", class: "umi", floor: 16, intercept: 0, slope: 0.86 },
-	{ step: "assemble", class: "cell", floor: 16, intercept: 0, slope: 4.1 },
-	{ step: "assemble", class: "longRead", floor: 6, intercept: 6, slope: 5.8 },
+	{ step: "assemble", class: "none", cpuIntercept: 16, floor: 64, intercept: 4, slope: 21.9 },
+	{ step: "assemble", class: "umi", cpuIntercept: 16, floor: 16, intercept: 0, slope: 0.86 },
+	{ step: "assemble", class: "cell", cpuIntercept: 16, floor: 16, intercept: 0, slope: 4.1 },
+	{ step: "assemble", class: "longRead", cpuIntercept: 16, floor: 6, intercept: 6, slope: 5.8 },
 
 	// PLACEHOLDER: `analyze --dry-run-json` resolves the preset and writes the step list; it
 	// reads no data.
-	{ step: "plan", class: "any", floor: 8, intercept: 0, slope: 0, cpuIntercept: 1, queue: "light", scratch: false, override: false },
+	{ step: "plan", class: "any", cpuIntercept: 1, floor: 8, intercept: 0, slope: 0, queue: "light", scratch: false, override: false },
 
 	// PLACEHOLDER: `qc` reads the reports in the .clns footer and holds no clones.
-	{ step: "qc", class: "any", floor: 4, intercept: 0, slope: 0, cpuIntercept: 1, queue: "light", scratch: false, override: false }
+	{ step: "qc", class: "any", cpuIntercept: 1, floor: 4, intercept: 0, slope: 0, queue: "light", scratch: false, override: false }
 ]
 
-DEFAULT := { step: "default", class: "any", floor: 64, intercept: 0, slope: 4 }
+DEFAULT := { step: "default", class: "any", cpuIntercept: 16, floor: 64, intercept: 0, slope: 4 }
 
 _byKey := {}
 for row in _ROWS {
@@ -112,7 +110,7 @@ ram := func(row) {
 // cpu returns the CPU request of a row: a fixed count when its cpuSlope is 0, an exec.formula
 // over the INPUT_TAG file otherwise.
 cpu := func(row) {
-	intercept := is_undefined(row.cpuIntercept) ? _DEFAULT_CPU_INTERCEPT : row.cpuIntercept
+	intercept := row.cpuIntercept
 	slope := is_undefined(row.cpuSlope) ? 0 : row.cpuSlope
 	if slope == 0 {
 		return intercept
