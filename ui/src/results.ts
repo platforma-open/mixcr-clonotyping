@@ -35,7 +35,10 @@ function furthestStep<T>(entries: Entries<T>): Map<string, T> {
 }
 
 /** One value per sample: the single-log entry, replaced by the furthest step's where one exists. */
-function latestPerSample<T>(single: Entries<T> | undefined, perStep: Entries<T> | undefined): Map<string, T> {
+function latestPerSample<T>(
+  single: Entries<T> | undefined,
+  perStep: Entries<T> | undefined,
+): Map<string, T> {
   const out = new Map<string, T>();
   if (single)
     for (const e of single) if (e.value !== undefined) out.set(e.key[0] as string, e.value);
@@ -48,7 +51,10 @@ function latestPerSample<T>(single: Entries<T> | undefined, perStep: Entries<T> 
 export type StepLog = { key: string; label?: string; handle: AnyLogHandle };
 
 /** Each sample's step logs in run order, or its single log when it has no step logs. */
-function logsPerSample(single: Entries<AnyLogHandle> | undefined, perStep: Entries<AnyLogHandle> | undefined): Map<string, StepLog[]> {
+function logsPerSample(
+  single: Entries<AnyLogHandle> | undefined,
+  perStep: Entries<AnyLogHandle> | undefined,
+): Map<string, StepLog[]> {
   const out = new Map<string, StepLog[]>();
   if (perStep) {
     const ordered = [...perStep].sort((a, b) => String(a.key[1]).localeCompare(String(b.key[1])));
@@ -67,7 +73,8 @@ function logsPerSample(single: Entries<AnyLogHandle> | undefined, perStep: Entri
   if (single)
     for (const e of single) {
       const sampleId = e.key[0] as string;
-      if (e.value !== undefined && !out.has(sampleId)) out.set(sampleId, [{ key: "analyze", handle: e.value }]);
+      if (e.value !== undefined && !out.has(sampleId))
+        out.set(sampleId, [{ key: "analyze", handle: e.value }]);
     }
   return out;
 }
@@ -171,7 +178,10 @@ export const MiXCRResultsFull = computed<MiXCRResult[] | undefined>(() => {
   // blank the column, so the last step that did report one stands until the next one speaks.
   // `qc` never reports one at all.
   const reported = (entries: Entries<string> | undefined) => entries?.filter((p) => p.value !== "");
-  const lines = latestPerSample(reported(progress.data), reported(app.model.outputs.stepProgress?.data));
+  const lines = latestPerSample(
+    reported(progress.data),
+    reported(app.model.outputs.stepProgress?.data),
+  );
   for (const [sampleId, line] of lines) {
     const result = resultMap.get(sampleId);
     if (result) result.progress = done.has(sampleId) ? "Done" : line.replace(ProgressPrefix, "");
