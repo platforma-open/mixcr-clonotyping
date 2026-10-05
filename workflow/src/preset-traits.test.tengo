@@ -19,6 +19,9 @@ TestHasCellTag := func() {
 	test.isTrue(pt.hasCellTag(_withPattern("^(CELL:N{16})(UMI:N{12})\\^(R2:*)")))
 	test.isFalse(pt.hasCellTag(_withPattern("^N{0:2}(UMI:N{12})\\^(R2:*)")))
 	test.isFalse(pt.hasCellTag(_withPattern("^(R1:*)\\^(R2:*)")))
+	// A preset file may carry the pattern in the MiTool section alone.
+	test.isTrue(pt.hasCellTag({ align: {}, mitool: { parse: { pattern: "^(CELL:N{16})(UMI:N{10})\\^(R2:*)" } } }))
+	test.isFalse(pt.hasCellTag({ align: {}, mitool: { parse: { pattern: "^(UMI:N{10})\\^(R2:*)" } } }))
 	test.isFalse(pt.hasCellTag({ align: {} }))
 	test.isFalse(pt.hasCellTag({}))
 	test.isFalse(pt.hasCellTag(undefined))

@@ -5,18 +5,33 @@
 text := import("text")
 slices := import("@platforma-sdk/workflow-tengo:slices")
 
-// hasCellTag reports whether the resolved preset's tag pattern captures a cell barcode (CELL,
-// CELL1, CELL2, ...). `mixcr exportPreset` applies the user's --tag-pattern before writing the
-// bundle, so `align.tagPattern` is the pattern the run aligns with.
+// _tagPatterns lists the patterns a resolved preset tags reads with: `align.tagPattern` and,
+// on a MiTool pipeline, `mitool.parse.pattern`. `mixcr exportPreset` applies the user's
+// --tag-pattern to both before writing the bundle; a preset file may set either alone.
+_tagPatterns := func(presetContent) {
+	if !is_map(presetContent) {
+		return []
+	}
+	patterns := []
+	if is_map(presetContent.align) && is_string(presetContent.align.tagPattern) {
+		patterns = append(patterns, presetContent.align.tagPattern)
+	}
+	if is_map(presetContent.mitool) && is_map(presetContent.mitool.parse) &&
+		is_string(presetContent.mitool.parse.pattern) {
+		patterns = append(patterns, presetContent.mitool.parse.pattern)
+	}
+	return patterns
+}
+
+// hasCellTag reports whether a tag pattern of the resolved preset captures a cell barcode
+// (CELL, CELL1, CELL2, ...).
 hasCellTag := func(presetContent) {
-	if !is_map(presetContent) || !is_map(presetContent.align) {
-		return false
+	for pattern in _tagPatterns(presetContent) {
+		if text.contains(pattern, "(CELL") {
+			return true
+		}
 	}
-	tagPattern := presetContent.align.tagPattern
-	if !is_string(tagPattern) {
-		return false
-	}
-	return text.contains(tagPattern, "(CELL")
+	return false
 }
 
 // hasLongReadAligner reports whether the resolved preset aligns with the long-read aligner:
