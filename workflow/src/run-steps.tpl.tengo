@@ -28,8 +28,6 @@ self.body(func(inputs) {
 	// name -> file: the template base unmarshals the map input, set fields and pending alike.
 	files := inputs.files
 	readNames := inputs.readNames
-	mitoolPreset := inputs.mitoolPreset
-	mitoolPresetFile := mixcrSteps.OUTPUT_PREFIX + ".MiTool.preset.yaml"
 	res := {
 		perProcessMemGB: inputs.perProcessMemGB,
 		perProcessCPUs: inputs.perProcessCPUs,
@@ -39,9 +37,6 @@ self.body(func(inputs) {
 	blockFiles := {}
 	for name, _ in files {
 		blockFiles[name] = true
-	}
-	if !is_undefined(mitoolPreset) {
-		blockFiles[mitoolPresetFile] = true
 	}
 
 	plan := mixcrSteps.commands(inputs.steps.getDataAsJson().steps, blockFiles, inputs.readsPattern)
@@ -68,11 +63,7 @@ self.body(func(inputs) {
 			}
 		}
 		for name in c.stageBlock {
-			if name == mitoolPresetFile {
-				cmd.writeFile(name, mitoolPreset)
-			} else {
-				cmd.addFile(name, files[name])
-			}
+			cmd.addFile(name, files[name])
 		}
 		cachePeriod := INTERMEDIATE_CACHE_PERIOD
 		for name in c.save {

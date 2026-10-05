@@ -25,6 +25,10 @@ OUTPUT_PREFIX := "result"
 // The file the planning command writes the step list to.
 STEPS_FILE := "steps.json"
 
+// The MiTool preset the planning command writes on a MiTool pipeline, from the same resolved
+// bundle as the steps; the planned `mitool parse` reads it as `local:result.MiTool.preset`.
+MITOOL_PRESET_FILE := OUTPUT_PREFIX + ".MiTool.preset.yaml"
+
 // key names the :resources row of a step: the command, or `mitool-<command>` for MiTool.
 key := func(args) {
 	if args[0] == "mitool" {
@@ -115,6 +119,7 @@ commands := func(steps, blockFiles, readsPattern) {
 export {
 	OUTPUT_PREFIX: OUTPUT_PREFIX,
 	STEPS_FILE: STEPS_FILE,
+	MITOOL_PRESET_FILE: MITOOL_PRESET_FILE,
 	key: key,
 	commands: commands
 }

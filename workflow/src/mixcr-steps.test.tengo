@@ -55,7 +55,7 @@ TestTenXRunsEveryMiToolRound := func() {
 	plan := ms.commands(_TENX, blockFiles, "input_{{R}}.fastq.gz")
 	test.isEqual(13, len(plan.commands))
 	test.isEqual("01:mitool-parse", plan.commands[0].logKey)
-	test.isEqual(["result.MiTool.preset.yaml"], plan.commands[0].stageBlock)
+	test.isEqual([ms.MITOOL_PRESET_FILE], plan.commands[0].stageBlock)
 	test.isEqual("06:mitool-consensus", plan.commands[5].logKey)
 	test.isEqual(["result.consensus.3.mic"], plan.commands[5].stageSteps)
 	test.isEqual(["result.consensus.4.mic"], plan.commands[6].stageSteps)

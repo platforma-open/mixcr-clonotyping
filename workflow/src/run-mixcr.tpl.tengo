@@ -196,7 +196,8 @@ self.body(func(inputs) {
 
 	reads := readFiles()
 
-	// The block files the steps may stage by name: the reads, the preset file and the library.
+	// The block files the steps may stage by name: the reads, the preset file, the library and,
+	// on a MiTool pipeline, the MiTool preset the plan writes.
 	files := smart.mapBuilder()
 	for name in reads.names {
 		files.addRef(name, reads.files[name])
@@ -215,9 +216,18 @@ self.body(func(inputs) {
 		planCmd.writeFile(name, "")
 	}
 	planCmd.arg(reads.pattern).arg(mixcrSteps.OUTPUT_PREFIX).saveFileContent(mixcrSteps.STEPS_FILE)
+	// `analyze` writes the MiTool preset when the pipeline opens with `mitool parse`, and a dry
+	// run keeps the file.
+	hasMiTool := presetContent.pipeline[0] == "mitool-parse"
+	if hasMiTool {
+		planCmd.saveFile(mixcrSteps.MITOOL_PRESET_FILE)
+	}
 	resources.apply(planCmd, resources.lookup("plan", stepClass), res)
 	planRun := planCmd.cache(CACHE_PERIOD).run()
 
+	if hasMiTool {
+		files.addRef(mixcrSteps.MITOOL_PRESET_FILE, planRun.getFile(mixcrSteps.MITOOL_PRESET_FILE))
+	}
 	if presetIsFile {
 		files.addRef("input_preset.yaml", preset)
 	}
@@ -234,7 +244,6 @@ self.body(func(inputs) {
 			files: files.lockAndBuild(),
 			readNames: reads.names,
 			readsPattern: reads.pattern,
-			mitoolPreset: presetContent.mitool,
 			stepClass: stepClass,
 			reports: reports
 		},
