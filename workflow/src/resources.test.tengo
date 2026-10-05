@@ -91,9 +91,8 @@ TestCpuSlopeScalesWithTheInput := func() {
 
 // A command stand-in that records what apply sets on it.
 _fakeCmd := func() {
-	cmd := { light: false }
-	cmd.inLightQueue = func() { cmd.light = true; return cmd }
-	cmd.resources = func(r) { cmd.onCPU = r.onCPU; return cmd }
+	cmd := {}
+	cmd.resources = func(r) { cmd.queue = r.queue; cmd.onCPU = r.onCPU; return cmd }
 	return cmd
 }
 
@@ -118,5 +117,6 @@ TestScratchIsOffOnlyWhereARowOptsOut := func() {
 	test.isEqual("44GiB", rs.apply(_fakeCmd(), rs.DEFAULT, res).onCPU.scratchFreeSpace)
 	cmd := rs.apply(_fakeCmd(), rs.lookup("qc", "none"), res)
 	test.isTrue(is_undefined(cmd.onCPU.scratchFreeSpace))
-	test.isTrue(cmd.light)
+	test.isEqual("light", cmd.queue)
+	test.isEqual("heavy", rs.apply(_fakeCmd(), rs.DEFAULT, res).queue)
 }

@@ -38,7 +38,7 @@ _FALLBACK_GIB := 64
 //   memSlope      GiB per GiB of input; 0 makes the grant flat at max(memFloor, memIntercept)
 //   cpuSlope      CPUs per GiB of input                            	default 0
 //   cap           GiB, the most the step gets                     		default none
-//   queue         "heavy" or "light"                              		default "heavy"
+//   queue         "heavy", "medium" or "light"                              		default "heavy"
 //   scratch       the step gets the scratch request from the reads   	default true
 //   override      the "Advanced Settings" overrides apply          	default true
 //
@@ -149,10 +149,8 @@ apply := func(cmd, row, res) {
 	if row.scratch != false && !is_undefined(res.scratchFreeSpace) {
 		onCPU.scratchFreeSpace = res.scratchFreeSpace
 	}
-	if row.queue == "light" {
-		cmd.inLightQueue()
-	}
-	cmd.resources({ onCPU: onCPU })
+	queue := is_undefined(row.queue) ? "heavy" : row.queue
+	cmd.resources({ queue: queue, onCPU: onCPU })
 	return cmd
 }
 
