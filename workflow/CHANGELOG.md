@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.29.9
+
+### Patch Changes
+
+- 3fd4ca4: Bump mixcr to 4.7.0-403-develop. The `generic-ont` and `generic-ont-with-umi` presets now assemble contigs by VDJRegion instead of the longest possible contig.
+
 ## 3.29.8
 
 ### Patch Changes

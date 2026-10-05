@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.28.1
+
+### Patch Changes
+
+- 30380b6: Preset from file no longer inherits species, material type, alignment modes, tag pattern or assemble-by settings left over from a previously selected built-in preset
+
 ## 1.28.0
 
 ### Minor Changes

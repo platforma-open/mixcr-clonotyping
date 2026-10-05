@@ -1,5 +1,17 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.23.13
+
+### Patch Changes
+
+- 30380b6: Preset from file no longer inherits species, material type, alignment modes, tag pattern or assemble-by settings left over from a previously selected built-in preset
+
+## 2.23.12
+
+### Patch Changes
+
+- 3fd4ca4: Bump mixcr to 4.7.0-403-develop. The `generic-ont` and `generic-ont-with-umi` presets now assemble contigs by VDJRegion instead of the longest possible contig.
+
 ## 2.23.11
 
 ### Patch Changes
