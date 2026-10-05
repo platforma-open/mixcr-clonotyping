@@ -10,11 +10,6 @@
 //
 //     cpu = cpuIntercept + cpuSlope x input GiB, rounded up
 //
-// where every row sets cpuIntercept, and cpuSlope is 0 unless the row sets it. Every step gets the scratch
-// request :read-stats measures from the reads unless its row sets `scratch: false`. A row may
-// also set `queue: "light"`, and `override: false`, which keeps the "Advanced Settings"
-// overrides off that step.
-//
 // The memory override raises the floor of a row and does not replace the rule. The CPU override
 // replaces the row's CPU.
 //
@@ -33,6 +28,20 @@ INPUT_TAG := "input"
 // Backends that cannot evaluate resource formulas get max(floor, this).
 _FALLBACK_GIB := 64
 
+// The fields of a row. The first six are on every row; the rest take their default when absent.
+//
+//   step          the :mixcr-steps key: the MiXCR command, or `mitool-<command>`
+//   class         "none", "umi", "cell", "longRead", or "any" for every class
+//   cpuIntercept  CPUs
+//   memFloor      GiB, the least the step gets
+//   memIntercept  GiB, added to the data term
+//   memSlope      GiB per GiB of input; 0 makes the grant flat at max(memFloor, memIntercept)
+//   cpuSlope      CPUs per GiB of input                            	default 0
+//   cap           GiB, the most the step gets                     		default none
+//   queue         "heavy" or "light"                              		default "heavy"
+//   scratch       the step gets the scratch request from the reads   	default true
+//   override      the "Advanced Settings" overrides apply          	default true
+//
 // PLACEHOLDER rows are unmeasured and stand until profiling replaces them.
 _ROWS := [
 	// PLACEHOLDER: the grant `analyze` gets on a MiTool pipeline. `mitool parse` is sized from the
