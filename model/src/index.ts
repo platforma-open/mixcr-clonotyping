@@ -130,6 +130,8 @@ export const platforma = BlockModelV3.create({ dataModel, kind })
     limitInput: data.limitInput,
     perProcessMemGB: data.perProcessMemGB,
     perProcessCPUs: data.perProcessCPUs,
+    // `stepResources` and `reportStepRequests` stay out: a per-step override is tuned to one
+    // cluster, and a template may open on another; the report switch is a debug tool.
 
     defaultBlockLabel: data.defaultBlockLabel,
     customBlockLabel: data.customBlockLabel,
