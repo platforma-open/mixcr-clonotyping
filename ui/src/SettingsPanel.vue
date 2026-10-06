@@ -75,6 +75,13 @@ const presetOptions = computed(() => {
   );
 });
 
+// Why the block cannot run the selected built-in preset; undefined while it can, or is unknown.
+const unsupportedPresetReason = computed(() => {
+  if (app.model.data.preset?.type !== "name") return undefined;
+  const support = app.model.outputs.presetSupport;
+  return support?.supported === false ? support.reason : undefined;
+});
+
 const preset = computed(() => {
   const preset = app.model.data.preset;
   return preset?.type === "name"
@@ -559,6 +566,10 @@ watch(stopCodonSelection, (selected) => {
     clearable
     @update:model-value="setPresetFile"
   />
+
+  <PlAlert v-if="unsupportedPresetReason" type="error" icon>
+    {{ unsupportedPresetReason }} Pick another preset.
+  </PlAlert>
 
   <PlDropdown
     v-if="needSpecies"

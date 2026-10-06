@@ -25,11 +25,9 @@ self.body(func(inputs) {
 	presetContent := inputs.presetContent.getDataAsJson()
 
 	// The run rejects these presets, so there is no step list to show.
-	if presetTraits.splitsBySample(presetContent) {
-		return { stepDefaults: smart.createJsonResource({ "error": "The preset splits the reads by a sample tag, which the block does not support." }) }
-	}
-	if !presetTraits.hasQcChecks(presetContent) {
-		return { stepDefaults: smart.createJsonResource({ "error": "The preset carries no qc checks, which the block needs." }) }
+	unsupported := presetTraits.unsupportedReason(presetContent)
+	if !is_undefined(unsupported) {
+		return { stepDefaults: smart.createJsonResource({ "error": unsupported }) }
 	}
 
 	blockFiles := {}

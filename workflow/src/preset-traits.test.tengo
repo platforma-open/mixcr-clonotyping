@@ -1,5 +1,6 @@
 test := import("@platforma-sdk/workflow-tengo:test")
 pt := import(":preset-traits")
+text := import("text")
 
 TestStepClass := func() {
 	test.isEqual("longRead", pt.stepClass({ pipeline: ["align", "assemble"],
@@ -50,4 +51,11 @@ TestHasQcChecks := func() {
 	test.isTrue(pt.hasQcChecks({ qc: { checks: [{}] } }))
 	test.isFalse(pt.hasQcChecks({ qc: { checks: [] } }))
 	test.isFalse(pt.hasQcChecks({}))
+}
+
+TestUnsupportedReason := func() {
+	test.isTrue(is_undefined(pt.unsupportedReason({ align: { tagPattern: "^(R1:*)\\^(R2:*)" }, qc: { checks: [{}] } })))
+	split := { align: { splitBySample: true, tagPattern: "^(SMPL:N{5})(R1:*)" }, qc: { checks: [{}] } }
+	test.isTrue(text.contains(pt.unsupportedReason(split), "sample tag"))
+	test.isTrue(text.contains(pt.unsupportedReason({ align: {}, qc: { checks: [] } }), "qc checks"))
 }

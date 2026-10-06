@@ -11,6 +11,7 @@ file := import("@platforma-sdk/workflow-tengo:file")
 listPresetsTpl := assets.importTemplate(":list-presets")
 calculatePresetInfoTpl := assets.importTemplate(":calculate-preset-info")
 planStepsTpl := assets.importTemplate(":plan-steps")
+presetSupportTpl := assets.importTemplate(":preset-support")
 
 wf.body(func(args) {
 
@@ -63,6 +64,12 @@ wf.body(func(args) {
 				}
 			})
 			outputs.preset = presetInfoResult.output("presetSpecForBack", 24 * 60 * 60 * 1000)
+
+			// Whether the block runs this preset at all, shown beside the preset before any run.
+			presetSupport := render.create(presetSupportTpl, {
+				presetContent: presetInfoResult.output("preset", 24 * 60 * 60 * 1000)
+			})
+			outputs.presetSupport = presetSupport.output("presetSupport", 24 * 60 * 60 * 1000)
 
 			// The steps the "Per-step resources" settings list, planned only once the operator
 			// asks for them. A generic preset needs a tag pattern to plan, so it takes the one

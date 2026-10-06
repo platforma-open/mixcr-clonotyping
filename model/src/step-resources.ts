@@ -40,6 +40,11 @@ export type StepDefaults =
   | { steps: { step: string; class: string; defaultRule: StepRule }[]; error?: undefined }
   | { error: string; steps?: undefined };
 
+/** What `preset-support.tpl.tengo` reports: whether the block runs the selected preset. */
+export type PresetSupport =
+  | { supported: true; reason?: undefined }
+  | { supported: false; reason: string };
+
 export type StepGrant = { cpu: number; ramMiB: number };
 
 /** Reads `[==RESOURCES==]cpu=24;ramMiB=38912` out of the line the JVM echoes. */

@@ -24,7 +24,7 @@ import { kind } from "@platforma-open/milaboratories.mixcr-clonotyping-2.kind";
 import type { BlockArgs } from "./args";
 import { BlockArgsValid } from "./args";
 import { ProgressPrefix } from "./progress";
-import type { StepDefaults, StepRequest } from "./step-resources";
+import type { PresetSupport, StepDefaults, StepRequest } from "./step-resources";
 import { dropEmptyOverrides } from "./step-resources";
 
 export type ListStepsParams = Pick<
@@ -203,6 +203,14 @@ export const platforma = BlockModelV3.create({ dataModel, kind })
     ctx.prerun
       ?.resolve({ field: "preset", assertFieldType: "Input", allowPermanentAbsence: true })
       ?.getDataAsJson<string>(),
+  )
+
+  // Whether the block runs the selected built-in preset, known before any run. Absent for a
+  // preset file: the prerun does not resolve those.
+  .retentiveOutput("presetSupport", (ctx) =>
+    ctx.prerun
+      ?.resolve({ field: "presetSupport", assertFieldType: "Input", allowPermanentAbsence: true })
+      ?.getDataAsJson<PresetSupport>(),
   )
 
   // The steps of the selected preset with their default rules, planned before any run.
