@@ -110,7 +110,7 @@ const { gridOptions } = useAgGridOptions<Row>(({ column }) => ({
 
 <template>
   <div v-if="rows.length > 0 && !reportsRequests">
-    Requested resources show when "Debug: report requested resources" is on in Per-step resources.
+    Requested resources show when "Debug: Report requested resources" is on in Per-step resources.
   </div>
   <AgGridVue v-bind="gridOptions" />
 </template>

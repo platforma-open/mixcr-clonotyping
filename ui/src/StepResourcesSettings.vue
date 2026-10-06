@@ -127,7 +127,7 @@ function placeholder(rule: StepRule | undefined, key: Field): string {
     :model-value="app.model.data.reportStepRequests === true"
     @update:model-value="(v: boolean) => (app.model.data.reportStepRequests = v || undefined)"
   >
-    Debug: report requested resources (re-runs every sample)
+    <span>Debug: Report requested resources.<br />Requires full re-run.</span>
     <PlTooltip class="info" position="top">
       <template #tooltip>
         Shows what each step asked for in the Resources tab of a sample. It is a separate analysis,
