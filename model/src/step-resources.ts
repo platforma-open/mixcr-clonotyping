@@ -31,6 +31,7 @@ export type StepRequest = {
   rule: StepRule;
   source: Record<keyof StepRule, RuleSource>;
   defaultRule: StepRule;
+  overridable: boolean;
 };
 
 /** What `step-defaults.tpl.tengo` reports: the planned steps, or why there are none. */

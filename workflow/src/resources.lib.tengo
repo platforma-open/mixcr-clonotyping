@@ -105,6 +105,9 @@ lookup := func(step, cls) {
 ram := func(row) {
 	if row.memSlope == 0 {
 		gib := row.memIntercept > row.memFloor ? row.memIntercept : row.memFloor
+		if !is_undefined(row.cap) && gib > row.cap {
+			gib = row.cap
+		}
 		return string(gib) + "GiB"
 	}
 	// The formula takes integers only, so the slope goes in as hundredths.

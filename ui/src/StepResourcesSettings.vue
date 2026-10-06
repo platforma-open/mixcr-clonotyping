@@ -22,41 +22,49 @@ type Field = keyof StepRule;
 // Memory = max(floor, intercept + slope × input GiB), at most cap; CPU = CPU + CPU per input GiB
 // × input GiB. "Input" is the size of the files the step reads.
 const BLANK = "Leave blank (null) to use the default shown in grey.";
-const fields: { key: Field; label: string; step: number; tooltip: string }[] = [
+// min matches the model's schema (StepResourceOverride): a value below it would make the block
+// unable to run.
+const fields: { key: Field; label: string; step: number; min: number; tooltip: string }[] = [
   {
     key: "memFloor",
     label: "Memory floor GiB",
     step: 1,
+    min: 1,
     tooltip: `The least memory the step gets, whatever its input size. ${BLANK}`,
   },
   {
     key: "memIntercept",
     label: "Memory intercept GiB",
     step: 1,
+    min: 0,
     tooltip: `Memory added to the per-input-GiB term before the floor applies. ${BLANK}`,
   },
   {
     key: "memSlope",
     label: "Memory GiB per input GiB",
     step: 0.1,
+    min: 0,
     tooltip: `Memory per GiB of the files the step reads. 0 makes the request flat at the floor or intercept. ${BLANK}`,
   },
   {
     key: "cap",
     label: "Cap GiB",
     step: 1,
+    min: 1,
     tooltip: `The most memory the step gets. Leave blank (null) for no cap, unless a default is shown in grey.`,
   },
   {
     key: "cpuIntercept",
     label: "CPU",
     step: 1,
+    min: 1,
     tooltip: `The CPUs the step gets before the per-input-GiB term. Beats the CPU setting above for this step. ${BLANK}`,
   },
   {
     key: "cpuSlope",
     label: "CPU per input GiB",
     step: 0.1,
+    min: 0,
     tooltip: `CPUs added per GiB of the files the step reads. Leave blank (null) for none, unless a default is shown in grey.`,
   },
 ];
@@ -78,6 +86,15 @@ function reset(step: string) {
   const all = { ...app.model.data.stepResources };
   delete all[step];
   app.model.data.stepResources = Object.keys(all).length === 0 ? undefined : all;
+}
+
+// The one cross-field rule of the schema: a cap below the memory floor.
+function errorOf(step: string, key: Field): string | undefined {
+  if (key !== "cap") return undefined;
+  const o = app.model.data.stepResources?.[step];
+  if (o?.cap !== undefined && o.memFloor !== undefined && o.cap < o.memFloor)
+    return "Cap must be at least the memory floor";
+  return undefined;
 }
 
 function placeholder(rule: StepRule, key: Field): string {
@@ -136,7 +153,8 @@ function placeholder(rule: StepRule, key: Field): string {
         :label="f.label"
         :placeholder="placeholder(req.defaultRule, f.key)"
         :step="f.step"
-        :min-value="0"
+        :min-value="f.min"
+        :error-message="errorOf(req.step, f.key)"
         clearable
         @update:model-value="(v: number | undefined) => setValue(req.step, f.key, v)"
       >

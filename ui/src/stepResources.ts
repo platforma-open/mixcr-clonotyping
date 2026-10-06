@@ -50,12 +50,13 @@ export const StepResourcesBySample = computed(() => {
   return bySample;
 });
 
-/** One request per step name, in run order: the steps the settings editor lists. */
+/** One request per step name, in run order: the steps the settings editor lists. Steps whose
+ * row takes no override (`qc`) are left out, as the planned list leaves them out. */
 export const KnownSteps = computed(() => {
   const seen = new Map<string, StepRequest>();
   for (const rows of StepResourcesBySample.value.values())
     for (const r of rows)
-      if (r.request !== undefined && !seen.has(r.step)) seen.set(r.step, r.request);
+      if (r.request?.overridable && !seen.has(r.step)) seen.set(r.step, r.request);
   return [...seen.values()];
 });
 
@@ -96,9 +97,10 @@ export function useStepGrants(logs: Ref<StepLog[]>) {
         // A step that has not started has no log content yet; the next poll reads it.
       }
     }
-    const missing = logs.value.some(
-      (l) => l.label !== undefined && found.get(l.key)?.grant === undefined,
-    );
+    const missing = logs.value.some((l) => {
+      const info = found.get(l.key);
+      return l.label !== undefined && (info?.grant === undefined || info.heapBytes === undefined);
+    });
     if (missing && !disposed) timer = setTimeout(poll, 3000);
   };
 

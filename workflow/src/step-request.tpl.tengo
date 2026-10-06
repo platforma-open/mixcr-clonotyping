@@ -74,6 +74,8 @@ self.body(func(inputs) {
 				cpuSlope: e.row.cpuSlope
 			},
 			source: e.source,
+			// Whether per-step and global overrides reach the step at all.
+			overridable: inputs.row.override != false,
 			// The row before any override, which the settings show as placeholders.
 			defaultRule: {
 				memFloor: inputs.row.memFloor,

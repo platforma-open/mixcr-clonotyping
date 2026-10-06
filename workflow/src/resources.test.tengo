@@ -165,3 +165,10 @@ TestRowsWithoutOverridesIgnoreStepOverrides := func() {
 	res := { stepResources: { qc: { memFloor: 64 } } }
 	test.isEqual(4, rs.effective(rs.lookup("qc", "none"), res).row.memFloor)
 }
+
+TestCapAppliesToFlatRequestsToo := func() {
+	res := { stepResources: { align: { memIntercept: 32, cap: 24 } } }
+	test.isEqual("24GiB", rs.ram(rs.effective(rs.lookup("align", "none"), res).row))
+	// Below the cap a flat request is unchanged.
+	test.isEqual("24GiB", rs.ram(rs.effective(rs.lookup("align", "none"), { stepResources: { align: { cap: 100 } } }).row))
+}
