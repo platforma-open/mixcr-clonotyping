@@ -10,7 +10,7 @@ const props = defineProps<{
   sampleData: MiXCRResult;
 }>();
 
-const grants = useStepGrants(computed(() => props.sampleData.logs));
+const grantOf = useStepGrants(computed(() => props.sampleData.logs));
 
 const app = useApp();
 const reportsRequests = computed(() => app.model.data.reportStepRequests === true);
@@ -25,7 +25,7 @@ const rows = computed(() => {
     .map((log) => ({
       logKey: log.key,
       request: requests.get(log.key),
-      ...grants.get(log.key),
+      ...grantOf(log),
     }));
 });
 
