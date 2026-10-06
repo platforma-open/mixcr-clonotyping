@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import type { StepRule } from "@platforma-open/milaboratories.mixcr-clonotyping-2.model";
+import type {
+  StepGrant,
+  StepRequest,
+  StepRule,
+} from "@platforma-open/milaboratories.mixcr-clonotyping-2.model";
+import { useAgGridOptions } from "@platforma-sdk/ui-vue";
+import { AgGridVue } from "ag-grid-vue3";
 import { computed } from "vue";
 import { useApp } from "./app";
 import type { MiXCRResult } from "./results";
@@ -15,8 +21,10 @@ const grantOf = useStepGrants(computed(() => props.sampleData.logs));
 const app = useApp();
 const reportsRequests = computed(() => app.model.data.reportStepRequests === true);
 
+type Row = { logKey: string; request?: StepRequest; grant?: StepGrant; heapBytes?: number };
+
 // One row per step log; the request joins in when the block reports step requests.
-const rows = computed(() => {
+const rows = computed<Row[]>(() => {
   const requests = new Map(
     (StepResourcesBySample.value.get(props.sampleId) ?? []).map((r) => [r.logKey, r.request]),
   );
@@ -30,7 +38,7 @@ const rows = computed(() => {
 });
 
 // Granted is short of requested in either dimension: the backend shrank the request.
-function isShort(r: (typeof rows.value)[number]): boolean {
+function isShort(r: Row): boolean {
   if (r.request === undefined || r.grant === undefined) return false;
   return r.grant.cpu < r.request.cpu || r.grant.ramMiB * 1024 ** 2 < r.request.ramBytes;
 }
@@ -42,82 +50,74 @@ function ruleText(rule: StepRule): string {
       : `max(${rule.memFloor}, ${rule.memIntercept} + ${rule.memSlope} × input) GiB`;
   return rule.cap == null ? ram : `${ram}, cap ${rule.cap}`;
 }
+
+// The rule, and which of its fields an override set.
+function ruleCell(request: StepRequest | undefined): string {
+  if (request === undefined) return "";
+  const overridden = Object.entries(request.source)
+    .filter(([, s]) => s !== "default")
+    .map(([k, s]) => `${k} by ${s}`);
+  const text = ruleText(request.rule);
+  return overridden.length === 0 ? text : `${text} (overridden: ${overridden.join(", ")})`;
+}
+
+const allocation = (cpu: number | undefined, bytes: number | undefined) =>
+  cpu === undefined || bytes === undefined ? "–" : `${cpu} CPU, ${formatGiB(bytes)}`;
+
+const { gridOptions } = useAgGridOptions<Row>(({ column }) => ({
+  rowData: rows.value,
+  getRowId: (row) => row.data.logKey,
+  domLayout: "autoHeight",
+  defaultColDef: { sortable: false, suppressHeaderMenuButton: true, resizable: true },
+  noRowsText: "No step has reported its resources yet.",
+  columnDefs: [
+    column<string>({ colId: "step", headerName: "Step", field: "logKey" }),
+    column<string>({
+      colId: "input",
+      headerName: "Input",
+      valueGetter: (p) => formatGiB(p.data?.request?.inputBytes),
+    }),
+    column<string>({
+      colId: "requested",
+      headerName: "Requested",
+      valueGetter: (p) => allocation(p.data?.request?.cpu, p.data?.request?.ramBytes),
+    }),
+    column<string>({
+      colId: "granted",
+      headerName: "Granted",
+      valueGetter: (p) =>
+        allocation(
+          p.data?.grant?.cpu,
+          p.data?.grant === undefined ? undefined : p.data.grant.ramMiB * 1024 ** 2,
+        ),
+      // The backend granted less than the step asked for.
+      cellClass: (p) => (p.data !== undefined && isShort(p.data) ? "step-resources__short" : ""),
+    }),
+    column<string>({
+      colId: "heap",
+      headerName: "Heap",
+      valueGetter: (p) => formatGiB(p.data?.heapBytes),
+    }),
+    column<string>({
+      colId: "rule",
+      headerName: "Memory rule",
+      flex: 1,
+      valueGetter: (p) => ruleCell(p.data?.request),
+    }),
+  ],
+}));
 </script>
 
 <template>
-  <div v-if="rows.length === 0">No step has reported its resources yet.</div>
-  <template v-else>
-    <div v-if="!reportsRequests">
-      Requested resources show when "Debug: report requested resources" is on in Per-step resources.
-    </div>
-    <table class="step-resources">
-      <thead>
-        <tr>
-          <th>Step</th>
-          <th>Input</th>
-          <th>Requested</th>
-          <th>Granted</th>
-          <th>Heap</th>
-          <th>Memory rule</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="r in rows" :key="r.logKey">
-          <td>{{ r.logKey }}</td>
-          <td>{{ formatGiB(r.request?.inputBytes) }}</td>
-          <td>
-            <template v-if="r.request">
-              {{ r.request.cpu }} CPU, {{ formatGiB(r.request.ramBytes) }}
-            </template>
-            <template v-else>–</template>
-          </td>
-          <td :class="{ 'step-resources__short': isShort(r) }">
-            <template v-if="r.grant">
-              {{ r.grant.cpu }} CPU, {{ formatGiB(r.grant.ramMiB * 1024 ** 2) }}
-            </template>
-            <template v-else>–</template>
-          </td>
-          <td>{{ formatGiB(r.heapBytes) }}</td>
-          <td>
-            <template v-if="r.request">
-              {{ ruleText(r.request.rule) }}
-              <span
-                v-if="Object.values(r.request.source).some((s) => s !== 'default')"
-                class="step-resources__override"
-              >
-                (overridden:
-                {{
-                  Object.entries(r.request.source)
-                    .filter(([, s]) => s !== "default")
-                    .map(([k, s]) => `${k} by ${s}`)
-                    .join(", ")
-                }})
-              </span>
-            </template>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </template>
+  <div v-if="rows.length > 0 && !reportsRequests">
+    Requested resources show when "Debug: report requested resources" is on in Per-step resources.
+  </div>
+  <AgGridVue v-bind="gridOptions" />
 </template>
 
 <style scoped>
-.step-resources {
-  border-collapse: collapse;
-  font-size: 13px;
-}
-.step-resources th,
-.step-resources td {
-  text-align: left;
-  padding: 4px 10px 4px 0;
-  border-bottom: 1px solid var(--border-color-default, #e1e3eb);
-  white-space: nowrap;
-}
-.step-resources__short {
-  color: var(--txt-error, #d22);
+:deep(.step-resources__short) {
+  color: var(--txt-error);
   font-weight: 600;
-}
-.step-resources__override {
-  color: var(--txt-03, #888);
 }
 </style>
