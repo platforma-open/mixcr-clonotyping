@@ -75,6 +75,28 @@ hasQcChecks := func(presetContent) {
 		len(presetContent.qc.checks) > 0
 }
 
+// withTagPattern returns a copy of the resolved preset with the user's --tag-pattern applied the
+// way `mixcr exportPreset` applies it: to `align.tagPattern`, and to `mitool.parse.pattern` when
+// the preset has a MiTool parse section. For reading a preset that was resolved without the
+// pattern the run will carry.
+withTagPattern := func(presetContent, pattern) {
+	if !is_map(presetContent) || is_undefined(pattern) {
+		return presetContent
+	}
+	out := copy(presetContent)
+	align := is_map(out.align) ? copy(out.align) : {}
+	align.tagPattern = pattern
+	out.align = align
+	if is_map(out.mitool) && is_map(out.mitool.parse) {
+		mitool := copy(out.mitool)
+		parse := copy(mitool.parse)
+		parse.pattern = pattern
+		mitool.parse = parse
+		out.mitool = mitool
+	}
+	return out
+}
+
 // unsupportedReason returns why the block rejects a resolved preset, or undefined when it runs
 // it: the preset splits the reads by a sample tag, or carries no qc checks. :process rejects with
 // it, and the prerun reports it before any run.
@@ -111,5 +133,6 @@ export {
 	hasLongReadAligner: hasLongReadAligner,
 	splitsBySample: splitsBySample,
 	hasQcChecks: hasQcChecks,
-	unsupportedReason: unsupportedReason
+	unsupportedReason: unsupportedReason,
+	withTagPattern: withTagPattern
 }

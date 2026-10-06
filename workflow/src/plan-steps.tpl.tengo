@@ -40,9 +40,12 @@ self.body(func(inputs) {
 	resources.apply(cmd, resources.lookup("plan", "any"), {})
 	run := cmd.cache(CACHE_PERIOD).run()
 
+	// The preset the prerun resolved carries placeholder tags; the pattern the plan ran with is
+	// passed on so the steps are classed as the run will class them.
 	defaults := render.create(stepDefaultsTpl, {
 		steps: run.getFileContent(mixcrSteps.STEPS_FILE),
 		presetContent: inputs.presetContent,
+		tagPattern: inputs.params.tagPattern,
 		readNames: READ_NAMES,
 		readsPattern: READS_PATTERN
 	})

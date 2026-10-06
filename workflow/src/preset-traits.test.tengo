@@ -59,3 +59,15 @@ TestUnsupportedReason := func() {
 	test.isTrue(text.contains(pt.unsupportedReason(split), "sample tag"))
 	test.isTrue(text.contains(pt.unsupportedReason({ align: {}, qc: { checks: [] } }), "qc checks"))
 }
+
+TestWithTagPatternAppliesTheUserPattern := func() {
+	generic := { pipeline: ["align", "assemble"], align: { tagPattern: "^(R1:*)\\^(R2:*)", splitBySample: true }, qc: { checks: [{}] } }
+	cell := pt.withTagPattern(generic, "^(CELL:N{16})(UMI:N{10})\\^(R2:*)")
+	test.isEqual("cell", pt.stepClass(cell))
+	test.isEqual("none", pt.stepClass(generic))
+	test.isTrue(text.contains(pt.unsupportedReason(pt.withTagPattern(generic, "^(SMPL:N{5})(R1:*)")), "sample tag"))
+	// A MiTool parse section takes the pattern too; an absent pattern changes nothing.
+	tenx := { align: {}, mitool: { parse: { pattern: "^(R1:*)" } } }
+	test.isEqual("^(CELL:N{16})", pt.withTagPattern(tenx, "^(CELL:N{16})").mitool.parse.pattern)
+	test.isEqual(generic, pt.withTagPattern(generic, undefined))
+}
