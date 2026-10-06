@@ -77,31 +77,43 @@ export type KnownStep = { step: string; defaultRule?: StepRule };
 export type StepGrantInfo = { grant?: StepGrant; heapBytes?: number };
 
 /** A grant read from one log handle. A re-run gives the step a new handle under the same key, so
- * the handle is kept to tell a stale entry from a current one. */
-type FoundGrant = StepGrantInfo & { handle: AnyLogHandle };
+ * the handle is kept to tell a stale entry from a current one. `final` is set once the log can
+ * grow no more: whatever it lacks then, it will never have, so it is not read again. */
+type FoundGrant = StepGrantInfo & { handle: AnyLogHandle; final: boolean };
 
 const decoder = new TextDecoder();
 
-/** The first line of the log that contains `pattern`, or undefined while there is none. */
-async function findLine(handle: AnyLogHandle, pattern: string): Promise<string | undefined> {
+/** The first line of the log that contains `pattern`, and whether the log can still grow. No line
+ * while there is none, and `live` while the handle has to be issued again. */
+async function findLine(
+  handle: AnyLogHandle,
+  pattern: string,
+): Promise<{ line?: string; live: boolean }> {
   const platforma = getRawPlatformaInstance();
-  if (!platforma) return undefined;
+  if (!platforma) return { live: true };
   const response = await platforma.logDriver.readText(handle, 1, 0, pattern);
-  if (response.shouldUpdateHandle) return undefined;
+  if (response.shouldUpdateHandle) return { live: true };
   const line = decoder.decode(response.data);
-  return line.includes(pattern) ? line : undefined;
+  return { line: line.includes(pattern) ? line : undefined, live: response.live };
 }
+
+// The poll interval: every few seconds at first, then every ten once the tab has been open a
+// minute, since a step that has not printed its grant by then is waiting in a queue.
+const POLL_MS = 3000;
+const SLOW_POLL_MS = 10000;
+const SLOW_AFTER_MS = 60000;
 
 /**
  * logKey -> the grant and heap each step's log opens with. The lines are read with the log
- * driver's search, and read again every few seconds for the steps that have not printed them yet.
- * An entry read from a handle the step no longer has (the sample ran again) is dropped and read
- * again from the new one.
+ * driver's search, and read again every few seconds for the steps that have not printed them yet
+ * and whose log can still grow. An entry read from a handle the step no longer has (the sample ran
+ * again) is dropped and read again from the new one.
  */
 export function useStepGrants(logs: Ref<StepLog[]>) {
   const found = reactive(new Map<string, FoundGrant>());
   let timer: ReturnType<typeof setTimeout> | undefined;
   let disposed = false;
+  const startedAt = Date.now();
 
   // The entry for a log, or undefined when there is none or it was read from an earlier handle.
   const currentEntry = (log: StepLog): FoundGrant | undefined => {
@@ -109,25 +121,44 @@ export function useStepGrants(logs: Ref<StepLog[]>) {
     return entry?.handle === log.handle ? entry : undefined;
   };
 
+  // A log still worth reading: a step log that lacks a line it may yet print.
+  const pending = (log: StepLog): boolean => {
+    if (log.label === undefined) return false; // the single log of a result from before the split
+    const entry = currentEntry(log);
+    return (
+      entry === undefined ||
+      (!entry.final && (entry.grant === undefined || entry.heapBytes === undefined))
+    );
+  };
+
   const poll = async () => {
     timer = undefined;
     for (const log of logs.value) {
-      if (log.label === undefined) continue; // the single log of a result from before the split
-      const current = currentEntry(log) ?? { handle: log.handle };
-      if (current.grant !== undefined && current.heapBytes !== undefined) continue;
+      if (!pending(log)) continue;
+      const current = currentEntry(log);
       try {
-        const grant = current.grant ?? parseGrant(await findLine(log.handle, ResourcesPrefix));
-        const heapBytes = current.heapBytes ?? parseHeapBytes(await findLine(log.handle, HeapFlag));
-        found.set(log.key, { handle: log.handle, grant, heapBytes });
+        let live = false;
+        let grant = current?.grant;
+        if (grant === undefined) {
+          const r = await findLine(log.handle, ResourcesPrefix);
+          grant = parseGrant(r.line);
+          live ||= r.live;
+        }
+        let heapBytes = current?.heapBytes;
+        if (heapBytes === undefined) {
+          const r = await findLine(log.handle, HeapFlag);
+          heapBytes = parseHeapBytes(r.line);
+          live ||= r.live;
+        }
+        found.set(log.key, { handle: log.handle, grant, heapBytes, final: !live });
       } catch {
         // A step that has not started has no log content yet; the next poll reads it.
       }
     }
-    const missing = logs.value.some((l) => {
-      const info = currentEntry(l);
-      return l.label !== undefined && (info?.grant === undefined || info.heapBytes === undefined);
-    });
-    if (missing && !disposed) timer = setTimeout(poll, 3000);
+    if (logs.value.some(pending) && !disposed) {
+      const interval = Date.now() - startedAt < SLOW_AFTER_MS ? POLL_MS : SLOW_POLL_MS;
+      timer = setTimeout(poll, interval);
+    }
   };
 
   watch(
