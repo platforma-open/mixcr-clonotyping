@@ -4,6 +4,11 @@
 //
 // List of template's inputs + values of inputs + this hash decides whether an analysis is
 // repeated or needs to be run again.
+//
+// An override replaces the identity of the WHOLE subtree, not of this file: the backend
+// renders an overridden template as a `TengoTemplateOverride` resource carrying the UUID
+// alone, with the real template on a Service field. So a rotated UUID in a template this one
+// renders — :run-mixcr, :run-steps — has no effect while this UUID stands.
 //tengo:hash_override D70EDB25-6FF6-4615-966D-B79B04B5751C
 
 // Measures the reads of one sample, then runs MiXCR on them.
@@ -13,10 +18,9 @@
 // of a command it started itself, so the run lives in :run-mixcr and this template only
 // feeds it. See :read-stats for what is measured and how the size follows from it.
 //
-// The hash override is the one this template has always carried, and the inputs are the ones
-// pframes.processColumn has always passed, so an analysis that already finished still
-// deduplicates to its result instead of running again. That is safe because scratch space
-// changes only where MiXCR writes its temporary files, never what it produces.
+// The override, the inputs pframes.processColumn passes, and the output names must stay the
+// ones of the single `analyze` build, or every finished analysis runs again on update. A new
+// output name counts as a change. The step logs travel inside `log`.
 
 self := import("@platforma-sdk/workflow-tengo:tpl")
 render := import("@platforma-sdk/workflow-tengo:render")
@@ -51,7 +55,8 @@ self.body(func(inputs) {
 			// template: a run may be recovered across a change of the CPU or memory override.
 			metaInputs: {
 				perProcessMemGB: inputs.perProcessMemGB,
-				perProcessCPUs: inputs.perProcessCPUs
+				perProcessCPUs: inputs.perProcessCPUs,
+				stepResources: inputs.stepResources
 			}
 		}
 	)
