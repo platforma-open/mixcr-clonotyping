@@ -137,7 +137,7 @@ function placeholder(rule: StepRule | undefined, key: Field): string {
     </PlTooltip>
   </PlCheckbox>
   <PlBtnSecondary v-if="!isPresetFile" @click="listSteps">
-    {{ app.model.data.listStepsParams ? "Refresh the steps" : "List the steps of this preset" }}
+    {{ app.model.data.listStepsParams ? "Refresh Preset's Steps" : "List the steps of this preset" }}
   </PlBtnSecondary>
   <div v-if="planError" class="step-settings__empty">{{ planError }}</div>
   <div v-else-if="steps.length === 0" class="step-settings__empty">
