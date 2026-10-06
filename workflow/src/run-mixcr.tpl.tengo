@@ -130,6 +130,7 @@ self.body(func(inputs) {
 	// The planning command reads the reads only to check that they exist, so empty files under
 	// their names stand in for them.
 	planCmd := mixcrCmd.builder(mixcrSw).
+		name("mixcr plan").
 		arg("analyze").
 		arg("--dry-run-json").arg(mixcrSteps.STEPS_FILE)
 	if !is_undefined(limitInput) {

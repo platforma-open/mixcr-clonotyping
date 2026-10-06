@@ -29,6 +29,7 @@ CACHE_PERIOD := 24 * times.hour
 
 self.body(func(inputs) {
 	cmd := mixcrCmd.builder(mixcrSw).
+		name("mixcr plan").
 		arg("analyze").
 		arg("--dry-run-json").arg(mixcrSteps.STEPS_FILE)
 	presetArgs.apply(cmd, inputs.preset, inputs.params, false)

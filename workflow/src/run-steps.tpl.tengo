@@ -56,7 +56,8 @@ self.body(func(inputs) {
 	stepLogs := pcolumn.resourceMapBuilder( /* keyLength */ 1 )
 	stepRequests := pcolumn.resourceMapBuilder( /* keyLength */ 1 )
 	for c in plan.commands {
-		cmd := mixcrCmd.builder(mixcrSw).arg(c.args[0])
+		// The name is the job's label on the backend (the k8s job name, the failure message).
+		cmd := mixcrCmd.builder(mixcrSw).name("mixcr " + c.key).arg(c.args[0])
 		if c.key == "align" {
 			// `--threads` reads the granted count back from the placeholder, so the flag and the
 			// request cannot diverge. `analyze` prints it only when it is given one.
