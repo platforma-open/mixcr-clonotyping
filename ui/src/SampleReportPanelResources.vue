@@ -48,7 +48,7 @@ function ruleText(rule: StepRule): string {
   <div v-if="rows.length === 0">No step has reported its resources yet.</div>
   <template v-else>
     <div v-if="!reportsRequests">
-      Requested resources show when "Report requested resources" is on in Per-step resources.
+      Requested resources show when "Debug: report requested resources" is on in Per-step resources.
     </div>
     <table class="step-resources">
       <thead>
