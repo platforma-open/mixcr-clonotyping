@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PlAccordionSection, PlLogView } from "@platforma-sdk/ui-vue";
+import { PlAccordion, PlAccordionSection, PlLogView } from "@platforma-sdk/ui-vue";
 import { reactive } from "vue";
 import type { MiXCRResult } from "./results";
 
@@ -13,8 +13,9 @@ const collapsed = reactive<Record<string, boolean>>({});
 
 <template>
   <!-- One section per MiXCR step, in run order. A sample with one log, or none yet, shows the
-       single view as before the split. -->
-  <template v-if="sampleData.logs.length > 1">
+       single view as before the split. A section honours its model-value only inside a
+       PlAccordion with `multiple`; standalone it keeps its own closed state. -->
+  <PlAccordion v-if="sampleData.logs.length > 1" multiple>
     <PlAccordionSection
       v-for="log in sampleData.logs"
       :key="log.key"
@@ -24,6 +25,6 @@ const collapsed = reactive<Record<string, boolean>>({});
     >
       <PlLogView :log-handle="log.handle" />
     </PlAccordionSection>
-  </template>
+  </PlAccordion>
   <PlLogView v-else :log-handle="sampleData.logs[0]?.handle" />
 </template>
