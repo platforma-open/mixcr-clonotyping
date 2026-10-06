@@ -167,7 +167,7 @@ self.body(func(inputs) {
 		name: "qc"
 	}, {
 		// Per sample: one stream for a run from before the split, or a map of streams keyed by
-		// step (`07:align`) for a split run. Never exported.
+		// step (`007:align`) for a split run. Never exported.
 		type: "Resource",
 		spec: {
 			kind: "PColumn",

@@ -113,7 +113,7 @@ commands := func(steps, blockFiles, readsPattern) {
 				}
 			}
 		}
-		c.logKey = fmt.sprintf("%02d:%s", len(result) + 1, c.key)
+		c.logKey = fmt.sprintf("%03d:%s", len(result) + 1, c.key)
 		result = append(result, c)
 	}
 	ll.assert(!is_undefined(clns) && !is_undefined(qcJson), "the MiXCR step list has no qc step")

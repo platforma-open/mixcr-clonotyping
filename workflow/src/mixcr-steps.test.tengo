@@ -41,7 +41,7 @@ _keys := func(plan) {
 
 TestUmiStepsChainTheirFiles := func() {
 	plan := ms.commands(_UMI, _READS, "input_{{R}}.fastq.gz")
-	test.isEqual(["01:align", "02:refineTagsAndSort", "03:assemble", "04:qc"], _keys(plan))
+	test.isEqual(["001:align", "002:refineTagsAndSort", "003:assemble", "004:qc"], _keys(plan))
 	align := plan.commands[0]
 	test.isTrue(align.stageReads)
 	test.isEqual(["result.align.report.txt", "result.align.report.json", "result.alignments.vdjca"], align.save)
@@ -57,13 +57,13 @@ TestTenXRunsEveryMiToolRound := func() {
 	blockFiles := { "input_R1.fastq.gz": true, "input_R2.fastq.gz": true, "result.MiTool.preset.yaml": true }
 	plan := ms.commands(_TENX, blockFiles, "input_{{R}}.fastq.gz")
 	test.isEqual(13, len(plan.commands))
-	test.isEqual("01:mitool-parse", plan.commands[0].logKey)
+	test.isEqual("001:mitool-parse", plan.commands[0].logKey)
 	test.isEqual([ms.MITOOL_PRESET_FILE], plan.commands[0].stageBlock)
-	test.isEqual("06:mitool-consensus", plan.commands[5].logKey)
+	test.isEqual("006:mitool-consensus", plan.commands[5].logKey)
 	test.isEqual(["result.consensus.3.mic"], plan.commands[5].stageSteps)
 	test.isEqual(["result.consensus.4.mic"], plan.commands[6].stageSteps)
-	test.isEqual("07:align", plan.commands[6].logKey)
-	test.isEqual("13:qc", plan.commands[12].logKey)
+	test.isEqual("007:align", plan.commands[6].logKey)
+	test.isEqual("013:qc", plan.commands[12].logKey)
 	test.isEqual("result.assembledCells.clns", plan.clns)
 }
 

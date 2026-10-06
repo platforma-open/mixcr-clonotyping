@@ -13,7 +13,7 @@ import { useApp } from "./app";
 const reactiveFileContent = ReactiveFileContent.useGlobal();
 
 // MiXCR runs as one command per step. Step logs and progress arrive keyed by (sampleId, step).
-// The workflow leads each step key with its zero-padded run position (`05:assemble`), so the
+// The workflow leads each step key with its zero-padded run position (`005:assemble`), so the
 // keys sort in run order and the furthest step sorts last. The log panel shows every step's
 // log in that order; the progress column shows one line per sample, the furthest step's. A
 // result from before the split has only the single log, keyed by (sampleId); both kinds arrive
@@ -55,8 +55,10 @@ function latestPerSample<T>(entries: Entries<T> | undefined): Map<string, T> {
   return out;
 }
 
-/** One MiXCR step's log. `key` is the workflow's `05:assemble`; `label` is undefined for the
- * single log of a result from before the split, so that log shows as it always has. */
+/** One MiXCR step's log. `key` is the workflow's `005:assemble`; `label` keeps the run position
+ * (`005 assemble`), so a step the plan repeats, like the MiTool consensus rounds, reads apart.
+ * `label` is undefined for the single log of a result from before the split, so that log shows
+ * as it always has. */
 export type StepLog = { key: string; label?: string; handle: AnyLogHandle };
 
 /** Each sample's step logs in run order, or its single log when it has no step logs. */
@@ -73,7 +75,7 @@ function logsPerSample(entries: Entries<AnyLogHandle> | undefined): Map<string, 
       logs = [];
       out.set(sampleId, logs);
     }
-    logs.push({ key, label: key.replace(/^\d+:/, ""), handle: e.value });
+    logs.push({ key, label: key.replace(":", " "), handle: e.value });
   }
   for (const e of single) {
     const sampleId = e.key[0] as string;

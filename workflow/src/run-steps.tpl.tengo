@@ -37,7 +37,7 @@ self.body(func(inputs) {
 	plan := mixcrSteps.commands(inputs.steps.getDataAsJson().steps, files, inputs.readsPattern)
 
 	written := {}
-	// One stream per step, keyed by its run position and name (`07:align`). Carried as the
+	// One stream per step, keyed by its run position and name (`007:align`). Carried as the
 	// sample's `log` output: a run from before the split holds a single stream there instead.
 	stepLogs := pcolumn.resourceMapBuilder( /* keyLength */ 1 )
 	for c in plan.commands {
