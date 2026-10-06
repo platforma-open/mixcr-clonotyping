@@ -35,20 +35,20 @@ const data = reactive<{ presetType: Preset["type"] }>({
 });
 
 const speciesOptions: ListOption[] = [
-  { label: "Alpaca", value: "alpaca" },
-  { label: "Chicken", value: "gallus" },
-  { label: "Dog", value: "dog" },
-  { label: "Homo sapiens", value: "hsa" },
-  { label: "Lama glama", value: "lama" },
-  { label: "Macaca fascicularis", value: "mfas" },
-  { label: "Macaca mulatta", value: "mmul" },
-  { label: "Mus musculus", value: "mmu" },
-  { label: "Pig", value: "pig" },
-  { label: "Rabbit", value: "rabbit" },
-  { label: "Rat", value: "rat" },
-  { label: "Salmon", value: "salmon" },
-  { label: "Sheep", value: "sheep" },
-  { label: "Spalax", value: "spalax" },
+  { label: "Alpaca (Vicugna pacos)", value: "alpaca" },
+  { label: "Atlantic salmon (Salmo salar)", value: "salmon" },
+  { label: "Blind mole rat (Spalax)", value: "spalax" },
+  { label: "Chicken (Gallus gallus)", value: "gallus" },
+  { label: "Cynomolgus macaque (Macaca fascicularis)", value: "mfas" },
+  { label: "Dog (Canis lupus familiaris)", value: "dog" },
+  { label: "Human (Homo sapiens)", value: "hsa" },
+  { label: "Llama (Lama glama)", value: "lama" },
+  { label: "Mouse (Mus musculus)", value: "mmu" },
+  { label: "Pig (Sus scrofa)", value: "pig" },
+  { label: "Rabbit (Oryctolagus cuniculus)", value: "rabbit" },
+  { label: "Rat (Rattus norvegicus)", value: "rat" },
+  { label: "Rhesus macaque (Macaca mulatta)", value: "mmul" },
+  { label: "Sheep (Ovis aries)", value: "sheep" },
 ];
 
 const presetSourceOptions: ListOption<Preset["type"]>[] = [
