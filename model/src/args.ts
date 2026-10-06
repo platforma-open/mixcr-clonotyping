@@ -32,7 +32,7 @@ export const StopCodonReplacements = z
 export const StepResourceOverride = z
   .object({
     memFloor: z.number().int().gte(1).optional(),
-    memIntercept: z.number().gte(0).optional(),
+    memIntercept: z.number().int().gte(0).optional(),
     memSlope: z.number().gte(0).optional(),
     cap: z.number().int().gte(1).optional(),
     cpuIntercept: z.number().int().gte(1).optional(),
