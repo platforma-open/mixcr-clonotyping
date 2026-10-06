@@ -27,11 +27,18 @@ import { ProgressPrefix } from "./progress";
 import type { StepDefaults, StepRequest } from "./step-resources";
 import { dropEmptyOverrides } from "./step-resources";
 
+export type ListStepsParams = Pick<
+  BlockArgs,
+  "tagPattern" | "assembleClonesBy" | "cloneClusteringMode"
+>;
+
 export type BlockData = BlockArgs & {
   tableState: PlDataTableStateV2;
   runMode: "dry" | "full";
-  /** Set once the operator asks the "Per-step resources" settings to list the steps. */
-  listSteps?: boolean;
+  /** The fields the step list depends on, as they stood when the operator last asked the
+   * "Per-step resources" settings to list the steps. Absent until then. A snapshot, not the
+   * live fields: the plan runs once per click, not once per edit of the tag pattern. */
+  listStepsParams?: ListStepsParams;
 };
 
 type LegacyUiState = {
@@ -136,16 +143,9 @@ export const platforma = BlockModelV3.create({ dataModel, kind })
     rightAlignmentMode: data.rightAlignmentMode,
     materialType: data.materialType,
     isGenericPreset: data.isGenericPreset,
-    // The fields that shape the step list reach the prerun only once the list is asked for, so
-    // editing them does not re-plan for an operator who never opens the per-step settings.
-    ...(data.listSteps
-      ? {
-          listSteps: true,
-          tagPattern: data.tagPattern,
-          assembleClonesBy: data.assembleClonesBy,
-          cloneClusteringMode: data.cloneClusteringMode,
-        }
-      : {}),
+    // The fields that shape the step list reach the prerun as the snapshot taken when the list
+    // was asked for, so the plan runs once per click and never for an operator who did not ask.
+    ...(data.listStepsParams ? { listSteps: true, ...data.listStepsParams } : {}),
   }))
 
   .args((data) => {

@@ -45,6 +45,9 @@ self.body(func(inputs) {
 		}
 	}
 
+	// :step-request renders only when the block reports step requests; off, the output is null.
+	reportStepRequests := inputs.reportStepRequests == true
+
 	plan := mixcrSteps.commands(inputs.steps.getDataAsJson().steps, files, inputs.readsPattern)
 
 	written := {}
@@ -86,13 +89,15 @@ self.body(func(inputs) {
 		run := cmd.cache(cachePeriod).run()
 		stepLogs.add([c.logKey], run.getStdoutStream())
 
-		request := render.create(stepRequestTpl, {
-			step: c.key,
-			files: sizedFiles.lockAndBuild(),
-			row: row,
-			overrides: overrides
-		})
-		stepRequests.add([c.logKey], request.output("request", cachePeriod))
+		if reportStepRequests {
+			request := render.create(stepRequestTpl, {
+				step: c.key,
+				files: sizedFiles.lockAndBuild(),
+				row: row,
+				overrides: overrides
+			})
+			stepRequests.add([c.logKey], request.output("request", cachePeriod))
+		}
 		for name in c.save {
 			written[name] = run.getFile(name)
 		}
@@ -111,7 +116,7 @@ self.body(func(inputs) {
 	return {
 		qc: written[plan.qcJson],
 		log: stepLogs.build(),
-		stepRequest: stepRequests.build(),
+		stepRequest: reportStepRequests ? stepRequests.build() : smart.createNullResource(),
 		reports: reportsMap.build(),
 		clns: written[plan.clns]
 	}

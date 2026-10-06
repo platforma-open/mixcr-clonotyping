@@ -175,7 +175,8 @@ self.body(func(inputs) {
 			readNames: reads.names,
 			readsPattern: reads.pattern,
 			stepClass: stepClass,
-			reports: reports
+			reports: reports,
+			reportStepRequests: inputs.reportStepRequests
 		},
 		{ metaInputs: res }
 	)

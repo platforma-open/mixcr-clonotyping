@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type {
+  ListStepsParams,
   StepResourceOverride,
   StepRule,
 } from "@platforma-open/milaboratories.mixcr-clonotyping-2.model";
@@ -15,8 +16,23 @@ import { KnownSteps } from "./stepResources";
 const app = useApp();
 
 const planned = computed(() => app.model.outputs.stepDefaults);
+// The planning command failed (an unknown species, a preset the dry run rejects): the output
+// carries an error and no value, so the section shows the message instead of waiting.
+const planError = computed(
+  () => planned.value?.error ?? app.model.outputErrors.stepDefaults?.message,
+);
 const steps = computed(() => planned.value?.steps ?? KnownSteps.value);
 const isPresetFile = computed(() => app.model.data.preset?.type === "file");
+
+// Plans once per click: the prerun sees these values, not the live fields.
+function listSteps() {
+  const d = app.model.data;
+  app.model.data.listStepsParams = {
+    tagPattern: d.tagPattern,
+    assembleClonesBy: d.assembleClonesBy,
+    cloneClusteringMode: d.cloneClusteringMode,
+  } satisfies ListStepsParams;
+}
 
 type Field = keyof StepRule;
 // Memory = max(floor, intercept + slope × input GiB), at most cap; CPU = CPU + CPU per input GiB
@@ -120,16 +136,13 @@ function placeholder(rule: StepRule | undefined, key: Field): string {
       </template>
     </PlTooltip>
   </PlCheckbox>
-  <PlBtnSecondary
-    v-if="!app.model.data.listSteps && !isPresetFile"
-    @click="app.model.data.listSteps = true"
-  >
-    List the steps of this preset
+  <PlBtnSecondary v-if="!isPresetFile" @click="listSteps">
+    {{ app.model.data.listStepsParams ? "Refresh the steps" : "List the steps of this preset" }}
   </PlBtnSecondary>
-  <div v-if="planned?.error" class="step-settings__empty">{{ planned.error }}</div>
+  <div v-if="planError" class="step-settings__empty">{{ planError }}</div>
   <div v-else-if="steps.length === 0" class="step-settings__empty">
     {{
-      app.model.data.listSteps
+      app.model.data.listStepsParams
         ? "Planning the steps…"
         : isPresetFile
           ? "Run the block once to list the steps of a preset file."

@@ -25,7 +25,8 @@ export type StepRequest = {
   step: string;
   class: string;
   inputFiles: string[];
-  inputBytes: number;
+  /** Absent on a backend that cannot size files; the request is then the static fallback. */
+  inputBytes?: number;
   ramBytes: number;
   cpu: number;
   rule: StepRule;

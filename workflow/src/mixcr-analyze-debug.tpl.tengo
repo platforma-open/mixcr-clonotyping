@@ -54,7 +54,8 @@ self.body(func(inputs) {
 			library: inputs.library,
 			presetContent: inputs.presetContent,
 
-			readStats: readStats.measure(inputData, params.fileExtension)
+			readStats: readStats.measure(inputData, params.fileExtension),
+			reportStepRequests: true
 		},
 		{
 			// Kept out of the deduplication key, the way process.tpl.tengo passes them to this
