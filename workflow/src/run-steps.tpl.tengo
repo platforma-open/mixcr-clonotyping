@@ -48,7 +48,7 @@ self.body(func(inputs) {
 	// :step-request renders only when the block reports step requests; off, the output is null.
 	reportStepRequests := inputs.reportStepRequests == true
 
-	plan := mixcrSteps.commands(inputs.steps.getDataAsJson().steps, files, inputs.readsPattern)
+	plan := mixcrSteps.commands(mixcrSteps.stepsOf(inputs.steps.getDataAsJson()), files, inputs.readsPattern)
 
 	written := {}
 	// One stream per step, keyed by its run position and name (`007:align`). Carried as the

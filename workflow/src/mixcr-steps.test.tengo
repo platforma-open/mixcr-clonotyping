@@ -99,3 +99,8 @@ TestKeyNamesTheResourcesRow := func() {
 	test.isEqual("mitool-refine-tags", ms.key(["mitool", "refine-tags", "a", "b"]))
 	test.isEqual("assemble", ms.key(["assemble", "a", "b"]))
 }
+
+TestStepsOfChecksTheFormatVersion := func() {
+	test.isEqual(_UMI, ms.stepsOf({ formatVersion: 1, steps: _UMI }))
+	test.isTrue(ms.FORMAT_VERSION == 1)
+}

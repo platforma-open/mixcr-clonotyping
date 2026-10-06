@@ -78,6 +78,17 @@ _command := func(args, written, blockFiles, readsPattern) {
 	return c
 }
 
+// The step-list format this library reads (milaboratory/mixcr#2156).
+FORMAT_VERSION := 1
+
+// stepsOf returns the step list of the file `analyze --dry-run-json` wrote, checking its format
+// version first, so a new format fails here with its version named and not in a step's staging.
+stepsOf := func(stepsFile) {
+	ll.assert(is_map(stepsFile) && stepsFile.formatVersion == FORMAT_VERSION,
+		"the MiXCR step list has format version %v, this block reads %v", is_map(stepsFile) ? stepsFile.formatVersion : undefined, FORMAT_VERSION)
+	return stepsFile.steps
+}
+
 // commands returns { commands, clns, qcJson } for a step list.
 //
 // Each command is { key, logKey, args, stageSteps, stageReads, stageBlock, save,
@@ -128,6 +139,8 @@ export {
 	OUTPUT_PREFIX: OUTPUT_PREFIX,
 	STEPS_FILE: STEPS_FILE,
 	MITOOL_PRESET_FILE: MITOOL_PRESET_FILE,
+	FORMAT_VERSION: FORMAT_VERSION,
 	key: key,
+	stepsOf: stepsOf,
 	commands: commands
 }

@@ -18,7 +18,7 @@ import type { StepLog } from "./results";
 import { MiXCRResultsMap } from "./results";
 
 // Step outputs arrive keyed by (sampleId, logKey); the workflow leads each logKey with the step's
-// zero-padded run position (`05:assemble`), so sorting by it gives the run order.
+// zero-padded run position (`005:assemble`), so sorting by it gives the run order.
 
 export type StepResourcesRow = {
   logKey: string;

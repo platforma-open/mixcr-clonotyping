@@ -27,10 +27,8 @@ _GIB := 1073741824
 self.defineOutputs("request")
 
 self.body(func(inputs) {
+	// name -> file: the template base unmarshals the map input.
 	files := inputs.files
-	if !is_map(files) {
-		files = files.inputs()
-	}
 	names := maps.getKeys(files)
 	tagMap := {}
 	tagMap[resources.INPUT_TAG] = names

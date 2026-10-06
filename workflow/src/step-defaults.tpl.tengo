@@ -38,7 +38,7 @@ self.body(func(inputs) {
 	if presetContent.pipeline[0] == "mitool-parse" {
 		blockFiles[mixcrSteps.MITOOL_PRESET_FILE] = true
 	}
-	plan := mixcrSteps.commands(inputs.steps.getDataAsJson().steps, blockFiles, inputs.readsPattern)
+	plan := mixcrSteps.commands(mixcrSteps.stepsOf(inputs.steps.getDataAsJson()), blockFiles, inputs.readsPattern)
 	stepClass := presetTraits.stepClass(presetContent)
 
 	seen := {}
