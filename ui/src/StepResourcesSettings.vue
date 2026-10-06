@@ -97,7 +97,9 @@ function errorOf(step: string, key: Field): string | undefined {
   return undefined;
 }
 
-function placeholder(rule: StepRule, key: Field): string {
+// "default" when the step's rule is unknown: it came from a run's logs, not a plan or a request.
+function placeholder(rule: StepRule | undefined, key: Field): string {
+  if (rule === undefined) return "default";
   const v = rule[key];
   if (v != null) return String(v);
   return "null";

@@ -1,6 +1,7 @@
 import type {
   StepGrant,
   StepRequest,
+  StepRule,
 } from "@platforma-open/milaboratories.mixcr-clonotyping-2.model";
 import {
   HeapFlag,
@@ -14,6 +15,7 @@ import type { Ref } from "vue";
 import { computed, onScopeDispose, reactive, watch } from "vue";
 import { useApp } from "./app";
 import type { StepLog } from "./results";
+import { MiXCRResultsMap } from "./results";
 
 // Step outputs arrive keyed by (sampleId, logKey); the workflow leads each logKey with the step's
 // zero-padded run position (`05:assemble`), so sorting by it gives the run order.
@@ -53,12 +55,24 @@ export const StepResourcesBySample = computed(() => {
 /** One request per step name, in run order: the steps the settings editor lists. Steps whose
  * row takes no override (`qc`) are left out, as the planned list leaves them out. */
 export const KnownSteps = computed(() => {
-  const seen = new Map<string, StepRequest>();
+  const seen = new Map<string, KnownStep>();
   for (const rows of StepResourcesBySample.value.values())
     for (const r of rows)
-      if (r.request?.overridable && !seen.has(r.step)) seen.set(r.step, r.request);
+      if (r.request?.overridable && !seen.has(r.step))
+        seen.set(r.step, { step: r.step, defaultRule: r.request.defaultRule });
+  // Without step requests, the step logs of a finished run still name the steps; their default
+  // rules are then unknown. `qc` takes no override (its row in resources.lib.tengo).
+  for (const result of MiXCRResultsMap.value?.values() ?? [])
+    for (const log of result.logs) {
+      if (log.label === undefined) continue;
+      const step = stepOf(log.key);
+      if (step !== "qc" && !seen.has(step)) seen.set(step, { step });
+    }
   return [...seen.values()];
 });
+
+/** A step the settings can edit, with its default rule when one is known. */
+export type KnownStep = { step: string; defaultRule?: StepRule };
 
 export type StepGrantInfo = { grant?: StepGrant; heapBytes?: number };
 
