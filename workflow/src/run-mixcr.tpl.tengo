@@ -1,6 +1,6 @@
 // Must stay unique across templates. :mixcr-analyze is the deduplication boundary: when a
 // sample is recovered, this template is never rendered.
-//tengo:hash_override 857A0480-F04D-4BAB-8697-E262BD515AD6
+//tengo:hash_override 9B26DCEF-7F7B-4A39-8DD9-EC302622A2A3
 
 // Runs MiXCR on one measured sample, one exec per step.
 //

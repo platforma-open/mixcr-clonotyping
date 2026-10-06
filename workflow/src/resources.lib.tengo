@@ -44,10 +44,9 @@ _FALLBACK_GIB := 64
 //   scratch       the step gets the scratch request from the reads   	default true
 //   override      the "Advanced Settings" overrides apply          	default true
 //
-// Human Note: Reminder that while backend retries are turned off these are best effort sizing that are
-//	purposely oversize the memory allocation to avoid OOMs, fitted to the largest input shape tested.
-//	If new input shapes arise these will almost certainly need to be updated.
-//	Once backend retries are enabled these values should almost certainly be reduced.
+// While backend OOM retries are off, these rows are best-effort sizing: purposely oversized to
+// avoid OOMs, fitted to the largest input shape tested. A new input shape will need new rows.
+// Once backend retries are on, the values should come down.
 _ROWS := [
 	// `mitool parse` is sized from the FASTQs it stages, the later MiTool steps from the .mic
 	// the step before them wrote.
