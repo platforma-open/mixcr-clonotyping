@@ -1,5 +1,13 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.27.6
+
+### Patch Changes
+
+- 091de08: Add dog, pig and salmon to the species list
+
+  Show every species as its common name with the scientific name in parentheses
+
 ## 1.27.5
 
 ### Patch Changes
