@@ -70,6 +70,9 @@ const BlockArgsValidBase = z.object({
   perProcessMemGB: z.number().int().gte(1, "1GB or more required").optional(),
   perProcessCPUs: z.number().int().gte(1, "1 or more required").optional(),
   stepResources: StepResources.optional(),
+  /** Renders the analysis that also reports what each MiXCR step requested: a separate
+   * analysis identity, so turning it on runs every sample once more. */
+  reportStepRequests: z.boolean().optional(),
   cloneClusteringMode: z.enum(["relaxed", "default", "off"]).optional(),
   title: z.string().optional(),
   presetCommonName: z.string().optional(),

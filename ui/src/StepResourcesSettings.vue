@@ -3,7 +3,7 @@ import type {
   StepResourceOverride,
   StepRule,
 } from "@platforma-open/milaboratories.mixcr-clonotyping-2.model";
-import { PlBtnSecondary, PlNumberField } from "@platforma-sdk/ui-vue";
+import { PlBtnSecondary, PlCheckbox, PlNumberField, PlTooltip } from "@platforma-sdk/ui-vue";
 import { computed } from "vue";
 import { useApp } from "./app";
 import { KnownSteps } from "./stepResources";
@@ -82,12 +82,25 @@ function reset(step: string) {
 
 function placeholder(rule: StepRule, key: Field): string {
   const v = rule[key];
-  if (v !== undefined) return String(v);
+  if (v != null) return String(v);
   return "null";
 }
 </script>
 
 <template>
+  <PlCheckbox
+    :model-value="app.model.data.reportStepRequests === true"
+    @update:model-value="(v: boolean) => (app.model.data.reportStepRequests = v || undefined)"
+  >
+    Report requested resources
+    <PlTooltip class="info" position="top">
+      <template #tooltip>
+        Shows what each step asked for in the Resources tab of a sample. It is a separate analysis,
+        so turning it on runs every sample once more; turning it off again returns to the earlier
+        results.
+      </template>
+    </PlTooltip>
+  </PlCheckbox>
   <PlBtnSecondary
     v-if="!app.model.data.listSteps && !isPresetFile"
     @click="app.model.data.listSteps = true"

@@ -126,6 +126,7 @@ wf.body(func(args) {
 			perProcessMemGB: perProcessMemGB,
 			perProcessCPUs: perProcessCPUs,
 			stepResources: stepResources,
+			reportStepRequests: args.reportStepRequests,
 				cloneClusteringMode: args.cloneClusteringMode,
 			blockId: blockId,
 			libraryId: libraryId,
@@ -184,7 +185,6 @@ wf.body(func(args) {
 		qc: pframes.exportColumnData(runMixcr.output("qc.data")),
 		reports: pframes.exportColumnData(runMixcr.output("reports.data")),
 		logs: runMixcr.output("logs.data"),
-		stepRequests: runMixcr.output("stepRequests.data"),
 		clns: runMixcr.output("clns.data"),
 		clonotypes: pframes.exportFrame(runMixcr.output("clonotypes")),
 		clonotypeTables: pframes.exportFrame(runMixcr.output("clonotypeTables")),
@@ -198,6 +198,11 @@ wf.body(func(args) {
 
 	if !is_undefined(libraryImportHandle) {
 		outputs.libraryImportHandle = libraryImportHandle
+	}
+
+	// :process emits the step requests only when the block reports them.
+	if args.reportStepRequests == true {
+		outputs.stepRequests = runMixcr.output("stepRequests.data")
 	}
 
 	qcReportTable := runMixcr.output("qcReportTable")

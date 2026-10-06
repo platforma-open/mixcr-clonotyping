@@ -19,6 +19,7 @@ text := import("text")
 times := import("times")
 
 mixcrAnalyzeTpl := assets.importTemplate(":mixcr-analyze")
+mixcrAnalyzeDebugTpl := assets.importTemplate(":mixcr-analyze-debug")
 mixcrExportTpl := assets.importTemplate(":mixcr-export")
 aggregateByClonotypeKeyTpl := assets.importTemplate(":aggregate-by-clonotype-key")
 exportReportTpl := assets.importTemplate(":export-report")
@@ -69,6 +70,9 @@ self.body(func(inputs) {
 	perProcessMemGB := params.perProcessMemGB
 	perProcessCPUs := params.perProcessCPUs
 	stepResources := params.stepResources
+	// Reporting what each step requested renders :mixcr-analyze-debug, a separate analysis
+	// identity; off, every sample keeps the identity of the published block.
+	reportStepRequests := params.reportStepRequests == true
 
 	blockId := params.blockId
 	libraryId := params.libraryId
@@ -280,8 +284,8 @@ self.body(func(inputs) {
 
 	mixcrResults := pframes.processColumn(
 		{ spec: inputSpec, data: inputs.inputData },
-		mixcrAnalyzeTpl,
-		targetOutputs,
+		reportStepRequests ? mixcrAnalyzeDebugTpl : mixcrAnalyzeTpl,
+		reportStepRequests ? targetOutputs : slices.filter(targetOutputs, func(o) { return o.name != "stepRequest" }),
 		{
 			aggregate: [{
 				name: "pl7.app/sequencing/lane",
@@ -958,15 +962,20 @@ self.body(func(inputs) {
 		scHeavyOnly: scHeavyOnly
 	})
 
-	return {
+	stepRequestOutputs := {}
+	if reportStepRequests {
+		stepRequestOutputs = {
+			"stepRequests.spec": mixcrResults.outputSpec("stepRequest"),
+			"stepRequests.data": mixcrResults.outputData("stepRequest")
+		}
+	}
+
+	return maps.merge(stepRequestOutputs, {
 		"qc.spec": mixcrResults.outputSpec("qc"),
 		"qc.data": mixcrResults.outputData("qc"),
 
 		"logs.spec": mixcrResults.outputSpec("log"),
 		"logs.data": mixcrResults.outputData("log"),
-
-		"stepRequests.spec": mixcrResults.outputSpec("stepRequest"),
-		"stepRequests.data": mixcrResults.outputData("stepRequest"),
 
 		"reports.spec": mixcrResults.outputSpec("reports"),
 		"reports.data": mixcrResults.outputData("reports"),
@@ -980,5 +989,5 @@ self.body(func(inputs) {
 
 		clonotypes: clonotypes.build(),
 		qcReportTable: qcReportTable.output("qcReportTable")
-	}
+	})
 })

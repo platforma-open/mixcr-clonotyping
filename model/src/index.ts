@@ -182,6 +182,8 @@ export const platforma = BlockModelV3.create({ dataModel, kind })
       perProcessMemGB: data.perProcessMemGB,
       perProcessCPUs: data.perProcessCPUs,
       stepResources: dropEmptyOverrides(data.stepResources),
+      // Only `true` reaches the workflow, so a block that never turns it on keeps its args.
+      reportStepRequests: data.reportStepRequests === true ? true : undefined,
       cloneClusteringMode: data.cloneClusteringMode,
       presetCommonName: data.presetCommonName,
       isGenericPreset: data.isGenericPreset,
@@ -247,14 +249,16 @@ export const platforma = BlockModelV3.create({ dataModel, kind })
   })
 
   // What each MiXCR step requested, keyed by (sampleId, step).
+  // Present only when the block reports step requests (reportStepRequests).
   .output("stepRequests", (ctx) => {
-    return ctx.outputs !== undefined
-      ? parseResourceMap(
-          ctx.outputs?.resolve("stepRequests"),
-          (acc) => acc.getDataAsJson<StepRequest>(),
-          false,
-        )
-      : undefined;
+    const acc = ctx.outputs?.resolve({
+      field: "stepRequests",
+      assertFieldType: "Input",
+      allowPermanentAbsence: true,
+    });
+    return acc === undefined
+      ? undefined
+      : parseResourceMap(acc, (a) => a.getDataAsJson<StepRequest>(), false);
   })
 
   .output("started", (ctx) => ctx.outputs !== undefined)
