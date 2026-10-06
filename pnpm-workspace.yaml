@@ -9,18 +9,18 @@ packages:
 catalog:
   "@milaboratories/ts-builder": 1.7.2
   "@milaboratories/ts-configs": 1.4.0
-  "@platforma-sdk/workflow-tengo": 6.12.1
-  "@platforma-sdk/model": 1.84.1
-  "@platforma-sdk/ui-vue": 1.84.2
-  "@platforma-sdk/tengo-builder": 4.1.4
+  "@platforma-sdk/workflow-tengo": 6.14.0
+  "@platforma-sdk/model": 1.84.10
+  "@platforma-sdk/ui-vue": 1.84.10
+  "@platforma-sdk/tengo-builder": 4.1.9
   "@platforma-sdk/package-builder": 3.16.0
-  "@platforma-sdk/block-tools": 2.16.3
+  "@platforma-sdk/block-tools": 2.16.9
   "@platforma-sdk/block-kind": 1.1.0
 
-  "@platforma-sdk/test": 1.84.1
+  "@platforma-sdk/test": 1.84.11
   "@milaboratories/helpers": 1.14.5
 
-  "@platforma-open/milaboratories.software-mixcr": 4.7.0-403-develop
+  "@platforma-open/milaboratories.software-mixcr": 4.7.0-406-develop
   "@platforma-open/milaboratories.software-binary-collection": 1.0.12
   "vue": 3.5.24
 
