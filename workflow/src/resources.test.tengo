@@ -71,6 +71,14 @@ TestStaticFallbackIsTheFloorOr64 := func() {
 	test.isEqual(_gib(192), f.fallbackOf(rs.ram(rs.lookup("mitool-consensus", "cell"))))
 }
 
+TestStaticFallbackIsCapped := func() {
+	res := { stepResources: { assemble: { cap: 24 } } }
+	test.isEqual(_gib(24), f.fallbackOf(rs.ram(rs.effective(rs.lookup("assemble", "umi"), res).row)))
+	// A cap above the fallback leaves it alone.
+	res = { stepResources: { assemble: { cap: 100 } } }
+	test.isEqual(_gib(64), f.fallbackOf(rs.ram(rs.effective(rs.lookup("assemble", "umi"), res).row)))
+}
+
 TestCapAppliesOnlyWhenARowSetsIt := func() {
 	row := { step: "x", class: "any", memFloor: 8, memIntercept: 0, memSlope: 2, cap: 10 }
 	test.isEqual(_gib(10), _evalSize(rs.ram(row), _gib(100)))

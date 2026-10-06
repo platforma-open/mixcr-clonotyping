@@ -120,6 +120,9 @@ ram := func(row) {
 		formula = formula.atMost(f.gib(row.cap))
 	}
 	fallback := row.memFloor > _FALLBACK_GIB ? row.memFloor : _FALLBACK_GIB
+	if !is_undefined(row.cap) && fallback > row.cap {
+		fallback = row.cap
+	}
 	return formula.staticFallback(f.gib(fallback))
 }
 
