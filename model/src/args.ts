@@ -28,6 +28,25 @@ export const StopCodonReplacements = z
   })
   .optional();
 
+/** Per-step replacement of the workflow's sizing rule; an unset field keeps the rule's value. */
+export const StepResourceOverride = z
+  .object({
+    memFloor: z.number().int().gte(1).optional(),
+    memIntercept: z.number().gte(0).optional(),
+    memSlope: z.number().gte(0).optional(),
+    cap: z.number().int().gte(1).optional(),
+    cpuIntercept: z.number().int().gte(1).optional(),
+    cpuSlope: z.number().gte(0).optional(),
+  })
+  .refine((o) => o.cap === undefined || o.memFloor === undefined || o.cap >= o.memFloor, {
+    message: "Cap must be at least the memory floor",
+  });
+export type StepResourceOverride = z.infer<typeof StepResourceOverride>;
+
+/** Keyed by step: the MiXCR command, or `mitool-<command>`. */
+export const StepResources = z.record(z.string(), StepResourceOverride);
+export type StepResources = z.infer<typeof StepResources>;
+
 const BlockArgsValidBase = z.object({
   defaultBlockLabel: z.string().optional(),
   customBlockLabel: z.string().optional(),
@@ -50,6 +69,10 @@ const BlockArgsValidBase = z.object({
   limitInput: z.number().int().optional(),
   perProcessMemGB: z.number().int().gte(1, "1GB or more required").optional(),
   perProcessCPUs: z.number().int().gte(1, "1 or more required").optional(),
+  stepResources: StepResources.optional(),
+  /** Renders the analysis that also reports what each MiXCR step requested: a separate
+   * analysis identity, so turning it on runs every sample once more. */
+  reportStepRequests: z.boolean().optional(),
   cloneClusteringMode: z.enum(["relaxed", "default", "off"]).optional(),
   title: z.string().optional(),
   presetCommonName: z.string().optional(),

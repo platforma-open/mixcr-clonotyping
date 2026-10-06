@@ -10,8 +10,10 @@
 //
 //     cpu = cpuIntercept + cpuSlope x input GiB, rounded up
 //
-// The "Advanced Settings" memory override replaces the row's memory; the CPU override replaces
-// the row's CPU. A row with `override: false` takes neither.
+// The overrides of a row. Per-step values from "Per-step resources" replace the row's fields.
+// The "Advanced Settings" memory override replaces the row's memory with a flat amount, unless
+// the step sets a memory field of its own; the CPU override replaces the row's CPU, unless the
+// step sets a CPU field of its own. A row with `override: false` takes none.
 //
 // The class comes from :preset-traits: "none", "umi", "cell" or "longRead". A step takes its
 // (step, class) row, then its (step, "any") row, then DEFAULT.
@@ -91,7 +93,9 @@ lookup := func(step, cls) {
 	}
 	if is_undefined(row) {
 		ll.print("step %v used the default grant", step)
-		row = DEFAULT
+		// Named after the step, so a per-step override reaches it.
+		row = copy(DEFAULT)
+		row.step = step
 	}
 	return row
 }
@@ -101,6 +105,9 @@ lookup := func(step, cls) {
 ram := func(row) {
 	if row.memSlope == 0 {
 		gib := row.memIntercept > row.memFloor ? row.memIntercept : row.memFloor
+		if !is_undefined(row.cap) && gib > row.cap {
+			gib = row.cap
+		}
 		return string(gib) + "GiB"
 	}
 	// The formula takes integers only, so the slope goes in as hundredths.
@@ -113,6 +120,9 @@ ram := func(row) {
 		formula = formula.atMost(f.gib(row.cap))
 	}
 	fallback := row.memFloor > _FALLBACK_GIB ? row.memFloor : _FALLBACK_GIB
+	if !is_undefined(row.cap) && fallback > row.cap {
+		fallback = row.cap
+	}
 	return formula.staticFallback(f.gib(fallback))
 }
 
@@ -130,18 +140,67 @@ cpu := func(row) {
 		staticFallback(intercept)
 }
 
+// The fields of a row that a per-step override in res.stepResources may set.
+_OVERRIDE_FIELDS := ["memFloor", "memIntercept", "memSlope", "cap", "cpuIntercept", "cpuSlope"]
+_MEMORY_FIELDS := ["memFloor", "memIntercept", "memSlope", "cap"]
+
+// effective returns { row, source }: the row a step runs with once the overrides in `res` are
+// applied, and for each override field where its value came from: "default", "step" or
+// "global". The global memory override makes the memory flat unless the step sets a memory field;
+// the CPU override replaces the CPU unless the step sets a CPU field. A row with
+// `override: false` takes no override.
+effective := func(row, res) {
+	row = copy(row)
+	source := {}
+	for k in _OVERRIDE_FIELDS {
+		source[k] = "default"
+	}
+	if row.override == false {
+		return { row: row, source: source }
+	}
+
+	stepOverride := is_undefined(res.stepResources) ? undefined : res.stepResources[row.step]
+	if !is_undefined(stepOverride) {
+		for k in _OVERRIDE_FIELDS {
+			v := stepOverride[k]
+			if !is_undefined(v) {
+				// Values arrive from JSON; every field but the slopes must be a whole number.
+				row[k] = (k == "memSlope" || k == "cpuSlope") ? float(v) : int(math.ceil(v))
+				source[k] = "step"
+			}
+		}
+	}
+
+	stepSetsMemory := false
+	for k in _MEMORY_FIELDS {
+		if source[k] == "step" {
+			stepSetsMemory = true
+		}
+	}
+	if !is_undefined(res.perProcessMemGB) && !stepSetsMemory {
+		row.memFloor = int(math.ceil(res.perProcessMemGB))
+		row.memIntercept = 0
+		row.memSlope = 0
+		delete(row, "cap")
+		for k in _MEMORY_FIELDS {
+			source[k] = "global"
+		}
+	}
+	if !is_undefined(res.perProcessCPUs) && source.cpuIntercept != "step" && source.cpuSlope != "step" {
+		row.cpuIntercept = res.perProcessCPUs
+		row.cpuSlope = 0
+		source.cpuIntercept = "global"
+		source.cpuSlope = "global"
+	}
+	return { row: row, source: source }
+}
+
 // apply sets the CPU, memory, scratch and queue of `cmd` from `row`. `res` carries the
-// "Advanced Settings" overrides and the scratch request: { perProcessMemGB, perProcessCPUs,
-// scratchFreeSpace }. A row with `override: false` ignores both overrides.
+// overrides and the scratch request: { perProcessMemGB, perProcessCPUs, stepResources,
+// scratchFreeSpace }; `effective` says how the overrides combine.
 apply := func(cmd, row, res) {
-	useOverrides := row.override != false
+	row = effective(row, res).row
 	onCPU := { cpu: cpu(row), ram: ram(row) }
-	if useOverrides && !is_undefined(res.perProcessMemGB) {
-		onCPU.ram = string(int(math.ceil(res.perProcessMemGB))) + "GiB"
-	}
-	if useOverrides && !is_undefined(res.perProcessCPUs) {
-		onCPU.cpu = res.perProcessCPUs
-	}
 	if row.scratch != false && !is_undefined(res.scratchFreeSpace) {
 		onCPU.scratchFreeSpace = res.scratchFreeSpace
 	}
@@ -156,5 +215,6 @@ export {
 	lookup: lookup,
 	ram: ram,
 	cpu: cpu,
+	effective: effective,
 	apply: apply
 }

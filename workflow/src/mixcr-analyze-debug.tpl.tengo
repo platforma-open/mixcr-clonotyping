@@ -9,8 +9,14 @@
 // renders an overridden template as a `TengoTemplateOverride` resource carrying the UUID
 // alone, with the real template on a Service field. So a rotated UUID in a template this one
 // renders — :run-mixcr, :run-steps — has no effect while this UUID stands.
-//tengo:hash_override D70EDB25-6FF6-4615-966D-B79B04B5751C
+//tengo:hash_override 52A1D1EE-32FE-4D1F-9D1D-C01D425345D6
 
+// :mixcr-analyze with one more output, `stepRequest`: what each MiXCR step requested, as
+// :step-request evaluates it. :process renders this template instead of :mixcr-analyze only
+// when the block reports step requests. It is a separate identity on purpose: a pure template's
+// declared outputs decide whether a sample analysed before is recovered, and :mixcr-analyze
+// must keep exactly the outputs of the published block. Keep the two bodies in step.
+//
 // Measures the reads of one sample, then runs MiXCR on them.
 //
 // MiXCR needs disposable disk space for its temporary files, sized from the sample's read
@@ -29,7 +35,7 @@ pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 
 readStats := import(":read-stats")
 
-self.defineOutputs("qc", "reports", "log", "clns")
+self.defineOutputs("qc", "reports", "log", "stepRequest", "clns")
 
 runMixcrTpl := assets.importTemplate(":run-mixcr")
 
@@ -48,7 +54,8 @@ self.body(func(inputs) {
 			library: inputs.library,
 			presetContent: inputs.presetContent,
 
-			readStats: readStats.measure(inputData, params.fileExtension)
+			readStats: readStats.measure(inputData, params.fileExtension),
+			reportStepRequests: true
 		},
 		{
 			// Kept out of the deduplication key, the way process.tpl.tengo passes them to this
@@ -64,6 +71,7 @@ self.body(func(inputs) {
 	return {
 		qc: runMixcr.output("qc", readStats.CACHE_PERIOD),
 		log: runMixcr.output("log", readStats.CACHE_PERIOD),
+		stepRequest: runMixcr.output("stepRequest", readStats.CACHE_PERIOD),
 		reports: runMixcr.output("reports", readStats.CACHE_PERIOD),
 		clns: runMixcr.output("clns", readStats.CACHE_PERIOD)
 	}

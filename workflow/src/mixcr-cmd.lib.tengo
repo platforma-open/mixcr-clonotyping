@@ -4,6 +4,17 @@ exec := import("@platforma-sdk/workflow-tengo:exec")
 
 PROGRESS_PREFIX := "[==PROGRESS==]"
 
+// Marks the line each step prints with the CPU and memory the backend granted it.
+RESOURCES_PREFIX := "[==RESOURCES==]"
+
+// The JVM echoes JAVA_TOOL_OPTIONS to stderr as it starts ("Picked up JAVA_TOOL_OPTIONS: ..."),
+// and the backend fills {system.*} from the allocation it granted, so the log of every step
+// opens with its grant. -XX:+PrintCommandLineFlags adds the heap the JVM took, MaxHeapSize. On
+// an OOM retry the arguments get the raised limits but the environment does not, so this line
+// then shows the first grant.
+_GRANT_OPTIONS := "-Dplatforma.grant=" + RESOURCES_PREFIX +
+	"cpu={system.cpu};ramMiB={int(system.ram.mib)} -XX:+PrintCommandLineFlags"
+
 // base starts a MiXCR command of any kind: the MI_LICENSE secret, its debug switch and the
 // system CA store go in as environment variables. Every MiXCR exec in the block builds on it.
 base := func(mixcrSw) {
@@ -14,17 +25,21 @@ base := func(mixcrSw) {
 		env("MI_LICENSE_DEBUG", "MI_LICENSE_DEBUG")
 }
 
-// builder starts a step of :run-mixcr: base, plus the progress prefix, and stdout saved with
-// stderr merged in, so the log column carries the command's failure text.
+// builder starts a step of :run-mixcr: base, plus the progress prefix and the grant line, and
+// stdout saved with stderr merged in, so the log column carries the command's failure text.
+// The grant line stays off base: the environment is part of an exec's identity, and the exports
+// built on base must keep theirs.
 builder := func(mixcrSw) {
 	return base(mixcrSw).
 		printErrStreamToStdout().
 		saveStdoutStream().
-		env("MI_PROGRESS_PREFIX", PROGRESS_PREFIX)
+		env("MI_PROGRESS_PREFIX", PROGRESS_PREFIX).
+		envExpr("JAVA_TOOL_OPTIONS", _GRANT_OPTIONS)
 }
 
 export {
 	PROGRESS_PREFIX: PROGRESS_PREFIX,
+	RESOURCES_PREFIX: RESOURCES_PREFIX,
 	base: base,
 	builder: builder
 }

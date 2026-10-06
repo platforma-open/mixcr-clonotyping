@@ -11,14 +11,17 @@ self := import("@platforma-sdk/workflow-tengo:tpl")
 ll := import("@platforma-sdk/workflow-tengo:ll")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 pcolumn := import("@platforma-sdk/workflow-tengo:pframes.pcolumn")
+render := import("@platforma-sdk/workflow-tengo:render")
+smart := import("@platforma-sdk/workflow-tengo:smart")
 times := import("times")
 mixcrCmd := import(":mixcr-cmd")
 mixcrSteps := import(":mixcr-steps")
 resources := import(":resources")
 
-self.defineOutputs("qc", "reports", "log", "clns")
+self.defineOutputs("qc", "reports", "log", "stepRequest", "clns")
 
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
+stepRequestTpl := assets.importTemplate(":step-request")
 
 CACHE_PERIOD := 48 * times.hour
 // For the steps that write no final output (the clones or the qc result).
@@ -31,8 +34,19 @@ self.body(func(inputs) {
 	res := {
 		perProcessMemGB: inputs.perProcessMemGB,
 		perProcessCPUs: inputs.perProcessCPUs,
+		stepResources: inputs.stepResources,
 		scratchFreeSpace: inputs.scratchFreeSpace
 	}
+	// The overrides as :step-request reads them; an unset one is left out.
+	overrides := {}
+	for k in ["perProcessMemGB", "perProcessCPUs", "stepResources"] {
+		if !is_undefined(res[k]) {
+			overrides[k] = res[k]
+		}
+	}
+
+	// :step-request renders only when the block reports step requests; off, the output is null.
+	reportStepRequests := inputs.reportStepRequests == true
 
 	plan := mixcrSteps.commands(inputs.steps.getDataAsJson().steps, files, inputs.readsPattern)
 
@@ -40,6 +54,7 @@ self.body(func(inputs) {
 	// One stream per step, keyed by its run position and name (`007:align`). Carried as the
 	// sample's `log` output: a run from before the split holds a single stream there instead.
 	stepLogs := pcolumn.resourceMapBuilder( /* keyLength */ 1 )
+	stepRequests := pcolumn.resourceMapBuilder( /* keyLength */ 1 )
 	for c in plan.commands {
 		cmd := mixcrCmd.builder(mixcrSw).arg(c.args[0])
 		if c.key == "align" {
@@ -50,12 +65,16 @@ self.body(func(inputs) {
 		for arg in c.args[1:] {
 			cmd.arg(arg)
 		}
+		// The files the step is sized from, which :step-request sizes it from too.
+		sizedFiles := smart.mapBuilder()
 		for name in c.stageSteps {
 			cmd.addFile(name, written[name], { tag: resources.INPUT_TAG })
+			sizedFiles.addRef(name, written[name])
 		}
 		if c.stageReads {
 			for name in readNames {
 				cmd.addFile(name, files[name], { tag: resources.INPUT_TAG })
+				sizedFiles.addRef(name, files[name])
 			}
 		}
 		for name in c.stageBlock {
@@ -64,9 +83,21 @@ self.body(func(inputs) {
 		for name in c.save {
 			cmd.saveFile(name)
 		}
-		resources.apply(cmd, resources.lookup(c.key, inputs.stepClass), res)
-		run := cmd.cache(c.writesFinalOutput ? CACHE_PERIOD : INTERMEDIATE_CACHE_PERIOD).run()
+		row := resources.lookup(c.key, inputs.stepClass)
+		resources.apply(cmd, row, res)
+		cachePeriod := c.writesFinalOutput ? CACHE_PERIOD : INTERMEDIATE_CACHE_PERIOD
+		run := cmd.cache(cachePeriod).run()
 		stepLogs.add([c.logKey], run.getStdoutStream())
+
+		if reportStepRequests {
+			request := render.create(stepRequestTpl, {
+				step: c.key,
+				files: sizedFiles.lockAndBuild(),
+				row: row,
+				overrides: overrides
+			})
+			stepRequests.add([c.logKey], request.output("request", cachePeriod))
+		}
 		for name in c.save {
 			written[name] = run.getFile(name)
 		}
@@ -85,6 +116,7 @@ self.body(func(inputs) {
 	return {
 		qc: written[plan.qcJson],
 		log: stepLogs.build(),
+		stepRequest: reportStepRequests ? stepRequests.build() : smart.createNullResource(),
 		reports: reportsMap.build(),
 		clns: written[plan.clns]
 	}
