@@ -10,8 +10,8 @@
 //
 //     cpu = cpuIntercept + cpuSlope x input GiB, rounded up
 //
-// The memory override raises the floor of a row and does not replace the rule. The CPU override
-// replaces the row's CPU.
+// The "Advanced Settings" memory override replaces the row's memory; the CPU override replaces
+// the row's CPU. A row with `override: false` takes neither.
 //
 // The class comes from :preset-traits: "none", "umi", "cell" or "longRead". A step takes its
 // (step, class) row, then its (step, "any") row, then DEFAULT.
@@ -135,14 +135,10 @@ cpu := func(row) {
 // scratchFreeSpace }. A row with `override: false` ignores both overrides.
 apply := func(cmd, row, res) {
 	useOverrides := row.override != false
-	if useOverrides && !is_undefined(res.perProcessMemGB) {
-		floor := int(math.ceil(res.perProcessMemGB))
-		if floor > row.memFloor {
-			row = copy(row)
-			row.memFloor = floor
-		}
-	}
 	onCPU := { cpu: cpu(row), ram: ram(row) }
+	if useOverrides && !is_undefined(res.perProcessMemGB) {
+		onCPU.ram = string(int(math.ceil(res.perProcessMemGB))) + "GiB"
+	}
 	if useOverrides && !is_undefined(res.perProcessCPUs) {
 		onCPU.cpu = res.perProcessCPUs
 	}

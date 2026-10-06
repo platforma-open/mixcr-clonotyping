@@ -96,13 +96,16 @@ _fakeCmd := func() {
 	return cmd
 }
 
-TestTheMemoryOverrideRaisesTheFloor := func() {
+TestTheMemoryOverrideReplacesTheRow := func() {
 	res := { perProcessMemGB: 100 }
 	test.isEqual("100GiB", rs.apply(_fakeCmd(), rs.lookup("align", "none"), res).onCPU.ram)
-	// Below the row's own floor the override has no effect.
-	test.isEqual("24GiB", rs.apply(_fakeCmd(), rs.lookup("align", "none"), { perProcessMemGB: 8 }).onCPU.ram)
-	// The data term still applies above the override.
-	test.isEqual(_gib(100), f.fallbackOf(rs.apply(_fakeCmd(), rs.lookup("assemble", "none"), res).onCPU.ram))
+	// The override lowers a grant below the row's floor.
+	test.isEqual("8GiB", rs.apply(_fakeCmd(), rs.lookup("align", "none"), { perProcessMemGB: 8 }).onCPU.ram)
+	test.isEqual("100GiB", rs.apply(_fakeCmd(), rs.lookup("mitool-parse", "cell"), res).onCPU.ram)
+	// The override replaces a data-sized row with a fixed request.
+	test.isEqual("100GiB", rs.apply(_fakeCmd(), rs.lookup("assemble", "none"), res).onCPU.ram)
+	// A fractional override rounds up to a whole GiB.
+	test.isEqual("13GiB", rs.apply(_fakeCmd(), rs.lookup("align", "none"), { perProcessMemGB: 12.5 }).onCPU.ram)
 	// A row with override: false keeps its own grant.
 	test.isEqual("4GiB", rs.apply(_fakeCmd(), rs.lookup("qc", "none"), res).onCPU.ram)
 }
