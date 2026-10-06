@@ -1,0 +1,115 @@
+// What the block reads off the resolved preset `mixcr exportPreset` writes, so a preset from a
+// file is read the same way as a built-in one: the class :resources sizes the steps by, and the
+// two properties that make the block reject a preset.
+
+text := import("text")
+slices := import("@platforma-sdk/workflow-tengo:slices")
+
+// _tagSections lists the steps of a resolved preset that tag reads, each as { pattern,
+// splitBySample }: `align`, and `mitool parse` on a MiTool pipeline. `mixcr exportPreset`
+// applies the user's --tag-pattern to both before writing the bundle; a preset file may set
+// either alone.
+_tagSections := func(presetContent) {
+	if !is_map(presetContent) {
+		return []
+	}
+	sections := []
+	align := presetContent.align
+	if is_map(align) && is_string(align.tagPattern) {
+		sections = append(sections, { pattern: align.tagPattern, splitBySample: align.splitBySample })
+	}
+	parse := is_map(presetContent.mitool) ? presetContent.mitool.parse : undefined
+	if is_map(parse) && is_string(parse.pattern) {
+		sections = append(sections, { pattern: parse.pattern, splitBySample: parse.splitBySample })
+	}
+	return sections
+}
+
+// hasCellTag reports whether a tag pattern of the resolved preset captures a cell barcode
+// (CELL, CELL1, CELL2, ...).
+hasCellTag := func(presetContent) {
+	for s in _tagSections(presetContent) {
+		if text.contains(s.pattern, "(CELL") {
+			return true
+		}
+	}
+	return false
+}
+
+// hasLongReadAligner reports whether the resolved preset aligns with the long-read aligner:
+// only presets built on `align-long-read` carry `align.parameters.longReadsParameters`.
+hasLongReadAligner := func(presetContent) {
+	if !is_map(presetContent) || !is_map(presetContent.align) || !is_map(presetContent.align.parameters) {
+		return false
+	}
+	return is_map(presetContent.align.parameters.longReadsParameters)
+}
+
+// _hasSampleTag reports whether a tag pattern names a sample tag: MiTool takes every tag whose
+// name starts with "S" as one (mitool `TagType.inferType`).
+_hasSampleTag := func(pattern) {
+	for match in text.re_find("\\(([A-Za-z][A-Za-z0-9_]*):", pattern, -1) {
+		if text.has_prefix(text.to_upper(match[1].text), "S") {
+			return true
+		}
+	}
+	return false
+}
+
+// splitsBySample reports whether `mitool parse` or `align` writes one file per sample: the step
+// has splitBySample set, MiXCR's default, and its tag pattern names a sample tag. The block
+// rejects these runs.
+splitsBySample := func(presetContent) {
+	for s in _tagSections(presetContent) {
+		if s.splitBySample != false && _hasSampleTag(s.pattern) {
+			return true
+		}
+	}
+	return false
+}
+
+// hasQcChecks reports whether the preset carries qc checks. `analyze` runs `qc` only then, and the block
+// rejects a run without them.
+hasQcChecks := func(presetContent) {
+	return is_map(presetContent) && is_map(presetContent.qc) && is_array(presetContent.qc.checks) &&
+		len(presetContent.qc.checks) > 0
+}
+
+// unsupportedReason returns why the block rejects a resolved preset, or undefined when it runs
+// it: the preset splits the reads by a sample tag, or carries no qc checks. :process rejects with
+// it, and the prerun reports it before any run.
+unsupportedReason := func(presetContent) {
+	if splitsBySample(presetContent) {
+		return "The preset splits the reads by a sample tag, which the block does not support."
+	}
+	if !hasQcChecks(presetContent) {
+		return "The preset carries no qc checks, which the block needs for its QC report."
+	}
+	return undefined
+}
+
+// stepClass names the class :resources sizes a run's steps by, first match winning: "longRead"
+// for the long-read aligner, "cell" when the tag pattern captures a cell barcode or the pipeline
+// assembles cells, "umi" when it refines tags, and "none" otherwise.
+stepClass := func(presetContent) {
+	if hasLongReadAligner(presetContent) {
+		return "longRead"
+	}
+	pipeline := is_map(presetContent) && is_array(presetContent.pipeline) ? presetContent.pipeline : []
+	if hasCellTag(presetContent) || slices.hasElement(pipeline, "assembleCells") {
+		return "cell"
+	}
+	if slices.hasElement(pipeline, "refineTagsAndSort") {
+		return "umi"
+	}
+	return "none"
+}
+
+export {
+	stepClass: stepClass,
+	hasCellTag: hasCellTag,
+	hasLongReadAligner: hasLongReadAligner,
+	splitsBySample: splitsBySample,
+	hasQcChecks: hasQcChecks,
+	unsupportedReason: unsupportedReason
+}

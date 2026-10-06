@@ -1,0 +1,146 @@
+// Turns the step list `mixcr analyze --dry-run-json` writes into the commands the block runs.
+//
+// Each step in the list is the argument list to pass to `mixcr`, with no mark on which argument
+// is a file. This library tells them apart by name:
+//
+//   - an argument that an earlier step wrote is staged from that step;
+//   - the argument that names the reads (the pattern the plan was made with) stages the reads;
+//   - a block file (the library, a preset file) is staged by its name, and a preset argument
+//     `local:NAME` or `local#NAME` stages NAME.yaml;
+//   - a custom library is staged for every MiXCR step, named in its arguments or not;
+//   - any other argument under OUTPUT_PREFIX is a file the step writes, and is saved: every
+//     output, not only the ones a later step or the block reads.
+//
+// Export steps are dropped: the block saves nothing from them and re-exports from the .clns.
+// No step gets `-f`: each runs in an empty work directory.
+
+fmt := import("fmt")
+text := import("text")
+ll := import("@platforma-sdk/workflow-tengo:ll")
+slices := import("@platforma-sdk/workflow-tengo:slices")
+
+// The output prefix the plan is made with; every file a step writes starts with it.
+OUTPUT_PREFIX := "result"
+
+// The file the planning command writes the step list to.
+STEPS_FILE := "steps.json"
+
+// The MiTool preset the planning command writes on a MiTool pipeline, from the same resolved
+// bundle as the steps; the planned `mitool parse` reads it as `local:result.MiTool.preset`.
+MITOOL_PRESET_FILE := OUTPUT_PREFIX + ".MiTool.preset.yaml"
+
+// key names the :resources row of a step: the command, or `mitool-<command>` for MiTool.
+key := func(args) {
+	if args[0] == "mitool" {
+		return "mitool-" + args[1]
+	}
+	return args[0]
+}
+
+// The names the block gives a custom library.
+LIBRARY_FILES := ["library.json", "library.json.gz"]
+
+_presetFile := func(arg) {
+	for scheme in ["local:", "local#"] {
+		if text.has_prefix(arg, scheme) {
+			return text.trim_prefix(arg, scheme) + ".yaml"
+		}
+	}
+	return undefined
+}
+
+// _command sorts the arguments of one step into what to stage and what to save. `written` is
+// the set of files earlier steps wrote; `blockFiles` is keyed by the files the block provides.
+_command := func(args, written, blockFiles, readsPattern) {
+	c := { key: key(args), args: args, stageSteps: [], stageReads: false, stageBlock: [], save: [] }
+	for arg in args {
+		preset := _presetFile(arg)
+		if written[arg] {
+			c.stageSteps = append(c.stageSteps, arg)
+		} else if arg == readsPattern {
+			c.stageReads = true
+		} else if !is_undefined(blockFiles[arg]) {
+			c.stageBlock = append(c.stageBlock, arg)
+		} else if !is_undefined(preset) && !is_undefined(blockFiles[preset]) {
+			c.stageBlock = append(c.stageBlock, preset)
+		} else if text.has_prefix(arg, OUTPUT_PREFIX + ".") {
+			c.save = append(c.save, arg)
+		}
+	}
+	// A MiXCR file names its library but does not carry it, so every MiXCR step reads it again.
+	if args[0] != "mitool" {
+		for name in LIBRARY_FILES {
+			if !is_undefined(blockFiles[name]) && !slices.hasElement(c.stageBlock, name) {
+				c.stageBlock = append(c.stageBlock, name)
+			}
+		}
+	}
+	return c
+}
+
+// The step-list format this library reads (milaboratory/mixcr#2156).
+FORMAT_VERSION := 1
+
+// stepsOf returns the step list of the file `analyze --dry-run-json` wrote, checking its format
+// version first, so a new format fails here with its version named and not in a step's staging.
+stepsOf := func(stepsFile) {
+	ll.assert(is_map(stepsFile) && stepsFile.formatVersion == FORMAT_VERSION,
+		"the MiXCR step list has format version %v, this block reads %v", is_map(stepsFile) ? stepsFile.formatVersion : undefined, FORMAT_VERSION)
+	return stepsFile.steps
+}
+
+// commands returns { commands, clns, qcJson } for a step list.
+//
+// Each command is { key, logKey, args, stageSteps, stageReads, stageBlock, save,
+// writesFinalOutput }: stageSteps and stageBlock list file names, stageReads is true when the
+// step reads the reads, save lists the files the step writes, and writesFinalOutput is true when
+// one of them is the clones or the qc result. logKey leads with the run position, zero-padded,
+// so the step that has got furthest sorts last. clns is the file `qc` reads, qcJson the report
+// `qc` writes.
+//
+// blockFiles is keyed by the file names the block provides; readsPattern is the argument that
+// names the reads.
+commands := func(steps, blockFiles, readsPattern) {
+	ll.assert(is_array(steps) && len(steps) > 0, "the MiXCR step list is empty")
+
+	written := {}
+	result := []
+	clns := undefined
+	qcJson := undefined
+	for args in steps {
+		if text.has_prefix(key(args), "export") {
+			continue
+		}
+		c := _command(args, written, blockFiles, readsPattern)
+		for name in c.save {
+			written[name] = true
+		}
+		if c.key == "qc" {
+			ll.assert(len(c.stageSteps) == 1, "qc reads %v files, expected one .clns", len(c.stageSteps))
+			clns = c.stageSteps[0]
+			for name in c.save {
+				if text.has_suffix(name, ".qc.json") {
+					qcJson = name
+				}
+			}
+		}
+		c.logKey = fmt.sprintf("%03d:%s", len(result) + 1, c.key)
+		result = append(result, c)
+	}
+	ll.assert(!is_undefined(clns) && !is_undefined(qcJson), "the MiXCR step list has no qc step")
+	for c in result {
+		c.writesFinalOutput = slices.hasElement(c.save, clns) || slices.hasElement(c.save, qcJson)
+	}
+
+	return { commands: result, clns: clns, qcJson: qcJson }
+}
+
+export {
+	OUTPUT_PREFIX: OUTPUT_PREFIX,
+	STEPS_FILE: STEPS_FILE,
+	MITOOL_PRESET_FILE: MITOOL_PRESET_FILE,
+	FORMAT_VERSION: FORMAT_VERSION,
+	key: key,
+	stepsOf: stepsOf,
+	commands: commands
+}

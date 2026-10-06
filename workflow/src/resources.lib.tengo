@@ -1,0 +1,214 @@
+// CPU and memory of each step of a split run, as one table keyed by step and class.
+//
+// Every row grants
+//
+//     ram = max(memFloor, memIntercept + memSlope x input GiB), rounded up to a whole GiB
+//     ram = min(ram, cap)   only when the row sets cap
+//
+// where `input GiB` is the stored size of the files the step stages under INPUT_TAG, summed.
+// CPU has the same shape:
+//
+//     cpu = cpuIntercept + cpuSlope x input GiB, rounded up
+//
+// The overrides of a row. Per-step values from "Per-step resources" replace the row's fields.
+// The "Advanced Settings" memory override replaces the row's memory with a flat amount, unless
+// the step sets a memory field of its own; the CPU override replaces the row's CPU, unless the
+// step sets a CPU field of its own. A row with `override: false` takes none.
+//
+// The class comes from :preset-traits: "none", "umi", "cell" or "longRead". A step takes its
+// (step, class) row, then its (step, "any") row, then DEFAULT.
+
+exec := import("@platforma-sdk/workflow-tengo:exec")
+ll := import("@platforma-sdk/workflow-tengo:ll")
+math := import("math")
+
+f := exec.formula
+
+// The tag every split step puts on the file it is sized from.
+INPUT_TAG := "input"
+
+// Backends that cannot evaluate resource formulas get max(floor, this).
+_FALLBACK_GIB := 64
+
+// The fields of a row. The first six are on every row; the rest take their default when absent.
+//
+//   step          the :mixcr-steps key: the MiXCR command, or `mitool-<command>`
+//   class         "none", "umi", "cell", "longRead", or "any" for every class
+//   cpuIntercept  CPUs
+//   memFloor      GiB, the least the step gets
+//   memIntercept  GiB, added to the data term
+//   memSlope      GiB per GiB of input; 0 makes the grant flat at max(memFloor, memIntercept)
+//   cpuSlope      CPUs per GiB of input                            	default 0
+//   cap           GiB, the most the step gets                     		default none
+//   queue         "heavy", "medium" or "light"							default "heavy"
+//   scratch       the step gets the scratch request from the reads   	default true
+//   override      the "Advanced Settings" overrides apply          	default true
+_ROWS := [
+	// `mitool parse` is sized from the FASTQs it stages, the later MiTool steps from the .mic
+	// the step before them wrote.
+	{ step: "mitool-parse", class: "any", cpuIntercept: 16, memFloor: 8, memIntercept: 2, memSlope: 2 },
+	{ step: "mitool-refine-tags", class: "any", cpuIntercept: 16, memFloor: 16, memIntercept: 2, memSlope: 4 },
+	{ step: "mitool-consensus", class: "any", cpuIntercept: 16, memFloor: 16, memIntercept: 2, memSlope: 4 },
+
+	// `align` streams its input, so the grant does not grow with the sample.
+	{ step: "align", class: "any", cpuIntercept: 16, memFloor: 24, memIntercept: 0, memSlope: 0 },
+	{ step: "refineTagsAndSort", class: "any", cpuIntercept: 16, memFloor: 16, memIntercept: 6, memSlope: 2.1 },
+	{ step: "assemblePartial", class: "any", cpuIntercept: 16, memFloor: 8, memIntercept: 0, memSlope: 2 },
+	{ step: "extend", class: "any", cpuIntercept: 16, memFloor: 8, memIntercept: 0, memSlope: 2 },
+	{ step: "assembleContigs", class: "any", cpuIntercept: 16, memFloor: 8, memIntercept: 0, memSlope: 2 },
+	{ step: "assembleCells", class: "any", cpuIntercept: 16, memFloor: 8, memIntercept: 0, memSlope: 2 },
+
+	// Sized from the .vdjca. A clone-count estimate from the align report will replace this row
+	// once one is fitted.
+	{ step: "assemble", class: "none", cpuIntercept: 16, memFloor: 64, memIntercept: 4, memSlope: 21.9 },
+	{ step: "assemble", class: "umi", cpuIntercept: 16, memFloor: 16, memIntercept: 0, memSlope: 1 },
+	{ step: "assemble", class: "cell", cpuIntercept: 16, memFloor: 16, memIntercept: 0, memSlope: 4.1 },
+	{ step: "assemble", class: "longRead", cpuIntercept: 16, memFloor: 6, memIntercept: 6, memSlope: 5.8 },
+
+	// `analyze --dry-run-json` resolves the preset and writes the step list; it reads no data.
+	{ step: "plan", class: "any", cpuIntercept: 1, memFloor: 8, memIntercept: 0, memSlope: 0, queue: "light", scratch: false, override: false },
+
+	// `qc` reads the reports in the .clns footer and holds no clones.
+	{ step: "qc", class: "any", cpuIntercept: 1, memFloor: 4, memIntercept: 0, memSlope: 0, queue: "light", scratch: false, override: false }
+]
+
+DEFAULT := { step: "default", class: "any", cpuIntercept: 16, memFloor: 64, memIntercept: 0, memSlope: 4 }
+
+_byKey := {}
+for row in _ROWS {
+	_byKey[row.step + "/" + row.class] = row
+}
+
+// lookup returns the row a step of the given class takes.
+lookup := func(step, cls) {
+	row := _byKey[step + "/" + cls]
+	if is_undefined(row) {
+		row = _byKey[step + "/any"]
+	}
+	if is_undefined(row) {
+		ll.print("step %v used the default grant", step)
+		// Named after the step, so a per-step override reaches it.
+		row = copy(DEFAULT)
+		row.step = step
+	}
+	return row
+}
+
+// ram returns the memory request of a row: a fixed amount when its slope is 0, an exec.formula
+// over the INPUT_TAG file otherwise.
+ram := func(row) {
+	if row.memSlope == 0 {
+		gib := row.memIntercept > row.memFloor ? row.memIntercept : row.memFloor
+		if !is_undefined(row.cap) && gib > row.cap {
+			gib = row.cap
+		}
+		return string(gib) + "GiB"
+	}
+	// The formula takes integers only, so the slope goes in as hundredths.
+	slopeHundredths := int(row.memSlope * 100 + 0.5)
+	formula := f.gib(row.memIntercept).
+		plus(f.size(INPUT_TAG).times(slopeHundredths).dividedBy(100)).
+		dividedBy(f.gib(1)).times(f.gib(1)). // dividedBy ceils, so this rounds up to a whole GiB
+		atLeast(f.gib(row.memFloor))
+	if !is_undefined(row.cap) {
+		formula = formula.atMost(f.gib(row.cap))
+	}
+	fallback := row.memFloor > _FALLBACK_GIB ? row.memFloor : _FALLBACK_GIB
+	if !is_undefined(row.cap) && fallback > row.cap {
+		fallback = row.cap
+	}
+	return formula.staticFallback(f.gib(fallback))
+}
+
+// cpu returns the CPU request of a row: a fixed count when its cpuSlope is 0, an exec.formula
+// over the INPUT_TAG file otherwise.
+cpu := func(row) {
+	intercept := row.cpuIntercept
+	slope := is_undefined(row.cpuSlope) ? 0 : row.cpuSlope
+	if slope == 0 {
+		return intercept
+	}
+	slopeHundredths := int(slope * 100 + 0.5)
+	return f.size(INPUT_TAG).times(slopeHundredths).dividedBy(f.gib(100)).
+		plus(intercept).
+		staticFallback(intercept)
+}
+
+// The fields of a row that a per-step override in res.stepResources may set.
+_OVERRIDE_FIELDS := ["memFloor", "memIntercept", "memSlope", "cap", "cpuIntercept", "cpuSlope"]
+_MEMORY_FIELDS := ["memFloor", "memIntercept", "memSlope", "cap"]
+
+// effective returns { row, source }: the row a step runs with once the overrides in `res` are
+// applied, and for each override field where its value came from: "default", "step" or
+// "global". The global memory override makes the memory flat unless the step sets a memory field;
+// the CPU override replaces the CPU unless the step sets a CPU field. A row with
+// `override: false` takes no override.
+effective := func(row, res) {
+	row = copy(row)
+	source := {}
+	for k in _OVERRIDE_FIELDS {
+		source[k] = "default"
+	}
+	if row.override == false {
+		return { row: row, source: source }
+	}
+
+	stepOverride := is_undefined(res.stepResources) ? undefined : res.stepResources[row.step]
+	if !is_undefined(stepOverride) {
+		for k in _OVERRIDE_FIELDS {
+			v := stepOverride[k]
+			if !is_undefined(v) {
+				// Values arrive from JSON; every field but the slopes must be a whole number.
+				row[k] = (k == "memSlope" || k == "cpuSlope") ? float(v) : int(math.ceil(v))
+				source[k] = "step"
+			}
+		}
+	}
+
+	stepSetsMemory := false
+	for k in _MEMORY_FIELDS {
+		if source[k] == "step" {
+			stepSetsMemory = true
+		}
+	}
+	if !is_undefined(res.perProcessMemGB) && !stepSetsMemory {
+		row.memFloor = int(math.ceil(res.perProcessMemGB))
+		row.memIntercept = 0
+		row.memSlope = 0
+		delete(row, "cap")
+		for k in _MEMORY_FIELDS {
+			source[k] = "global"
+		}
+	}
+	if !is_undefined(res.perProcessCPUs) && source.cpuIntercept != "step" && source.cpuSlope != "step" {
+		row.cpuIntercept = res.perProcessCPUs
+		row.cpuSlope = 0
+		source.cpuIntercept = "global"
+		source.cpuSlope = "global"
+	}
+	return { row: row, source: source }
+}
+
+// apply sets the CPU, memory, scratch and queue of `cmd` from `row`. `res` carries the
+// overrides and the scratch request: { perProcessMemGB, perProcessCPUs, stepResources,
+// scratchFreeSpace }; `effective` says how the overrides combine.
+apply := func(cmd, row, res) {
+	row = effective(row, res).row
+	onCPU := { cpu: cpu(row), ram: ram(row) }
+	if row.scratch != false && !is_undefined(res.scratchFreeSpace) {
+		onCPU.scratchFreeSpace = res.scratchFreeSpace
+	}
+	queue := is_undefined(row.queue) ? "heavy" : row.queue
+	cmd.resources({ queue: queue, onCPU: onCPU })
+	return cmd
+}
+
+export {
+	INPUT_TAG: INPUT_TAG,
+	DEFAULT: DEFAULT,
+	lookup: lookup,
+	ram: ram,
+	cpu: cpu,
+	effective: effective,
+	apply: apply
+}
