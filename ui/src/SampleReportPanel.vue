@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { PlId } from "@platforma-open/milaboratories.mixcr-clonotyping-2.model";
-import { computed, reactive } from "vue";
+import { computed, reactive, watch } from "vue";
 import { MiXCRResultsMap } from "./results";
 import { debouncedRef } from "@vueuse/core";
 import SampleReportPanelLogs from "./SampleReportPanelLogs.vue";
@@ -10,6 +10,9 @@ import SampleReportPanelReports from "./SampleReportPanelReports.vue";
 import SampleReportPanelQc from "./SampleReportPanelQc.vue";
 import SampleReportPanelVisualReport from "./SampleReportPanelVisualReport.vue";
 import SampleReportPanelResources from "./SampleReportPanelResources.vue";
+import { useApp } from "./app";
+
+const app = useApp();
 
 const sampleId = defineModel<PlId | undefined>();
 
@@ -27,13 +30,21 @@ const data = reactive<{
   currentTab: "visualReport",
 });
 
-const tabOptions: SimpleOption<TabId>[] = [
+// The Resources tab is a debug view: it shows only while the block reports step requests.
+const showResources = computed(() => app.model.data.reportStepRequests === true);
+
+const tabOptions = computed<SimpleOption<TabId>[]>(() => [
   { value: "visualReport", text: "Visual Report" },
   { value: "qc", text: "Quality Checks" },
   { value: "logs", text: "Log" },
   { value: "reports", text: "Reports" },
-  { value: "resources", text: "Resources" },
-];
+  ...(showResources.value ? [{ value: "resources" as const, text: "Resources" }] : []),
+]);
+
+// Turning the report off while the tab is open leaves no tab selected; fall back to the first.
+watch(showResources, (shown) => {
+  if (!shown && data.currentTab === "resources") data.currentTab = "visualReport";
+});
 </script>
 
 <template>
@@ -51,7 +62,7 @@ const tabOptions: SimpleOption<TabId>[] = [
     />
     <SampleReportPanelReports v-else-if="data.currentTab === 'reports'" :sample-id="sampleId" />
     <SampleReportPanelResources
-      v-else-if="data.currentTab === 'resources'"
+      v-else-if="data.currentTab === 'resources' && showResources"
       :key="sampleId"
       :sample-id="sampleId"
       :sample-data="sampleData"
