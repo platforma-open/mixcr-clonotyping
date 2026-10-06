@@ -40,24 +40,19 @@ _FALLBACK_GIB := 64
 //   memSlope      GiB per GiB of input; 0 makes the grant flat at max(memFloor, memIntercept)
 //   cpuSlope      CPUs per GiB of input                            	default 0
 //   cap           GiB, the most the step gets                     		default none
-//   queue         "heavy", "medium" or "light"                              		default "heavy"
+//   queue         "heavy", "medium" or "light"							default "heavy"
 //   scratch       the step gets the scratch request from the reads   	default true
 //   override      the "Advanced Settings" overrides apply          	default true
-//
-// PLACEHOLDER rows are unmeasured and stand until profiling replaces them.
 _ROWS := [
-	// PLACEHOLDER: the grant `analyze` gets on a MiTool pipeline. `mitool parse` is sized from the
-	// FASTQs it stages.
-	{ step: "mitool-parse", class: "any", cpuIntercept: 16, memFloor: 192, memIntercept: 0, memSlope: 4 },
-	{ step: "mitool-refine-tags", class: "any", cpuIntercept: 16, memFloor: 192, memIntercept: 0, memSlope: 4 },
-	{ step: "mitool-consensus", class: "any", cpuIntercept: 16, memFloor: 192, memIntercept: 0, memSlope: 4 },
+	// `mitool parse` is sized from the FASTQs it stages, the later MiTool steps from the .mic
+	// the step before them wrote.
+	{ step: "mitool-parse", class: "any", cpuIntercept: 16, memFloor: 8, memIntercept: 2, memSlope: 2 },
+	{ step: "mitool-refine-tags", class: "any", cpuIntercept: 16, memFloor: 16, memIntercept: 2, memSlope: 4 },
+	{ step: "mitool-consensus", class: "any", cpuIntercept: 16, memFloor: 16, memIntercept: 2, memSlope: 4 },
 
 	// `align` streams its input, so the grant does not grow with the sample.
 	{ step: "align", class: "any", cpuIntercept: 16, memFloor: 24, memIntercept: 0, memSlope: 0 },
-
-	// PLACEHOLDER floor: 2-tag GEM-X needs 12 GiB at 25 % of reads, CELL-only 13.
 	{ step: "refineTagsAndSort", class: "any", cpuIntercept: 16, memFloor: 16, memIntercept: 6, memSlope: 2.1 },
-
 	{ step: "assemblePartial", class: "any", cpuIntercept: 16, memFloor: 8, memIntercept: 0, memSlope: 2 },
 	{ step: "extend", class: "any", cpuIntercept: 16, memFloor: 8, memIntercept: 0, memSlope: 2 },
 	{ step: "assembleContigs", class: "any", cpuIntercept: 16, memFloor: 8, memIntercept: 0, memSlope: 2 },
@@ -66,15 +61,14 @@ _ROWS := [
 	// Sized from the .vdjca. A clone-count estimate from the align report will replace this row
 	// once one is fitted.
 	{ step: "assemble", class: "none", cpuIntercept: 16, memFloor: 64, memIntercept: 4, memSlope: 21.9 },
-	{ step: "assemble", class: "umi", cpuIntercept: 16, memFloor: 16, memIntercept: 0, memSlope: 0.86 },
+	{ step: "assemble", class: "umi", cpuIntercept: 16, memFloor: 16, memIntercept: 0, memSlope: 1 },
 	{ step: "assemble", class: "cell", cpuIntercept: 16, memFloor: 16, memIntercept: 0, memSlope: 4.1 },
 	{ step: "assemble", class: "longRead", cpuIntercept: 16, memFloor: 6, memIntercept: 6, memSlope: 5.8 },
 
-	// PLACEHOLDER: `analyze --dry-run-json` resolves the preset and writes the step list; it
-	// reads no data.
+	// `analyze --dry-run-json` resolves the preset and writes the step list; it reads no data.
 	{ step: "plan", class: "any", cpuIntercept: 1, memFloor: 8, memIntercept: 0, memSlope: 0, queue: "light", scratch: false, override: false },
 
-	// PLACEHOLDER: `qc` reads the reports in the .clns footer and holds no clones.
+	// `qc` reads the reports in the .clns footer and holds no clones.
 	{ step: "qc", class: "any", cpuIntercept: 1, memFloor: 4, memIntercept: 0, memSlope: 0, queue: "light", scratch: false, override: false }
 ]
 

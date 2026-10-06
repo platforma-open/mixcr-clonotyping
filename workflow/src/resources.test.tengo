@@ -42,8 +42,9 @@ TestBulkAssembleIsSizedFromTheVdjcaWithNoCap := func() {
 }
 
 TestTaggedAssembleRows := func() {
-	test.isEqual(_gib(16), _ram("assemble", "umi", _gib(186) / 10))
-	test.isEqual(_gib(26), _ram("assemble", "umi", _gib(30)))
+	test.isEqual(_gib(16), _ram("assemble", "umi", _gib(12)))
+	test.isEqual(_gib(19), _ram("assemble", "umi", _gib(186) / 10))
+	test.isEqual(_gib(30), _ram("assemble", "umi", _gib(30)))
 	test.isEqual(_gib(41), _ram("assemble", "cell", _gib(10)))
 	test.isEqual(_gib(50), _ram("assemble", "longRead", _gib(75) / 10))
 }
@@ -53,10 +54,13 @@ TestRefineHasA16GiBFloor := func() {
 	test.isEqual(_gib(27), _ram("refineTagsAndSort", "umi", _gib(954) / 100))
 }
 
-TestMiToolRowsMatchTheAnalyzeGrant := func() {
-	test.isEqual(_gib(192), _ram("mitool-parse", "cell", _gib(10)))
-	test.isEqual(_gib(200), _ram("mitool-consensus", "cell", _gib(50)))
-	test.isEqual(_gib(400), _ram("mitool-refine-tags", "cell", _gib(100)))
+TestMiToolRowsScaleWithTheirInput := func() {
+	// parse: max(8, 2 + 2 x GiB); refine-tags and consensus: max(16, 2 + 4 x GiB).
+	test.isEqual(_gib(8), _ram("mitool-parse", "cell", _gib(1)))
+	test.isEqual(_gib(22), _ram("mitool-parse", "cell", _gib(10)))
+	test.isEqual(_gib(16), _ram("mitool-consensus", "cell", _gib(1)))
+	test.isEqual(_gib(202), _ram("mitool-consensus", "cell", _gib(50)))
+	test.isEqual(_gib(402), _ram("mitool-refine-tags", "cell", _gib(100)))
 }
 
 TestCellStepsAndTheDefault := func() {
@@ -68,7 +72,10 @@ TestCellStepsAndTheDefault := func() {
 
 TestStaticFallbackIsTheFloorOr64 := func() {
 	test.isEqual(_gib(64),  f.fallbackOf(rs.ram(rs.lookup("refineTagsAndSort", "umi"))))
-	test.isEqual(_gib(192), f.fallbackOf(rs.ram(rs.lookup("mitool-consensus", "cell"))))
+	test.isEqual(_gib(64), f.fallbackOf(rs.ram(rs.lookup("mitool-consensus", "cell"))))
+	// A floor above 64 is the fallback.
+	test.isEqual(_gib(64), f.fallbackOf(rs.ram(rs.lookup("assemble", "none"))))
+	test.isEqual(_gib(100), f.fallbackOf(rs.ram({ step: "x", class: "any", memFloor: 100, memIntercept: 0, memSlope: 1 })))
 }
 
 TestStaticFallbackIsCapped := func() {
