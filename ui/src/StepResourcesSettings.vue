@@ -4,7 +4,7 @@ import type {
   StepResourceOverride,
   StepRule,
 } from "@platforma-open/milaboratories.mixcr-clonotyping-2.model";
-import { PlBtnSecondary, PlNumberField } from "@platforma-sdk/ui-vue";
+import { PlBtnSecondary, PlNumberField, PlTooltip } from "@platforma-sdk/ui-vue";
 import { computed } from "vue";
 import { useApp } from "./app";
 import { KnownSteps } from "./stepResources";
@@ -34,91 +34,24 @@ function listSteps() {
   } satisfies ListStepsParams;
 }
 
-type Field = keyof StepRule;
-// Memory = max(floor, intercept + slope × input GiB), at most cap; CPU = CPU + CPU per input GiB
-// × input GiB. "Input" is the size of the files the step reads.
-const BLANK = "Leave blank (null) to use the default shown in grey.";
-// min matches the model's schema (StepResourceOverride): a value below it would make the block
-// unable to run.
-const fields: { key: Field; label: string; step: number; min: number; tooltip: string }[] = [
-  {
-    key: "memFloor",
-    label: "Memory floor GiB",
-    step: 1,
-    min: 1,
-    tooltip: `The least memory the step gets, whatever its input size. ${BLANK}`,
-  },
-  {
-    key: "memIntercept",
-    label: "Memory intercept GiB",
-    step: 1,
-    min: 0,
-    tooltip: `Memory added to the per-input-GiB term before the floor applies. ${BLANK}`,
-  },
-  {
-    key: "memSlope",
-    label: "Memory GiB per input GiB",
-    step: 0.1,
-    min: 0,
-    tooltip: `Memory per GiB of the files the step reads. 0 makes the request flat at the floor or intercept. ${BLANK}`,
-  },
-  {
-    key: "cap",
-    label: "Cap GiB",
-    step: 1,
-    min: 1,
-    tooltip: `The most memory the step gets. Leave blank (null) for no cap, unless a default is shown in grey.`,
-  },
-  {
-    key: "cpuIntercept",
-    label: "CPU",
-    step: 1,
-    min: 1,
-    tooltip: `The CPUs the step gets before the per-input-GiB term. Beats the CPU setting above for this step. ${BLANK}`,
-  },
-  {
-    key: "cpuSlope",
-    label: "CPU per input GiB",
-    step: 0.1,
-    min: 0,
-    tooltip: `CPUs added per GiB of the files the step reads. Leave blank (null) for none, unless a default is shown in grey.`,
-  },
-];
-
-function value(step: string, key: Field): number | undefined {
-  return app.model.data.stepResources?.[step]?.[key];
+// The memory floor is the one field the editor sets. min matches the model's schema
+// (StepResourceOverride): a value below it would make the block unable to run.
+function memFloor(step: string): number | undefined {
+  return app.model.data.stepResources?.[step]?.memFloor;
 }
 
-function setValue(step: string, key: Field, v: number | undefined) {
+function setMemFloor(step: string, v: number | undefined) {
   const all = { ...app.model.data.stepResources };
-  const one: StepResourceOverride = { ...all[step], [key]: v };
-  if (v === undefined) delete one[key];
+  const one: StepResourceOverride = { ...all[step], memFloor: v };
+  if (v === undefined) delete one.memFloor;
   if (Object.keys(one).length === 0) delete all[step];
   else all[step] = one;
   app.model.data.stepResources = Object.keys(all).length === 0 ? undefined : all;
 }
 
-function reset(step: string) {
-  const all = { ...app.model.data.stepResources };
-  delete all[step];
-  app.model.data.stepResources = Object.keys(all).length === 0 ? undefined : all;
-}
-
-// The one cross-field rule of the schema: a cap below the memory floor.
-function errorOf(step: string, key: Field): string | undefined {
-  if (key !== "cap") return undefined;
-  const o = app.model.data.stepResources?.[step];
-  if (o?.cap !== undefined && o.memFloor !== undefined && o.cap < o.memFloor)
-    return "Cap must be at least the memory floor";
-  return undefined;
-}
-
 // "default" when the step's rule is unknown: it came from a run's logs, not a plan or a request.
-function placeholder(rule: StepRule | undefined, key: Field): string {
-  if (rule === undefined) return "default";
-  const v = rule[key];
-  if (v != null) return String(v);
-  return "null";
+function placeholder(rule: StepRule | undefined): string {
+  return rule === undefined ? "default" : `default (${rule.memFloor})`;
 }
 </script>
 
@@ -138,53 +71,45 @@ function placeholder(rule: StepRule | undefined, key: Field): string {
           : "List the steps, or run the block once."
     }}
   </div>
-  <div v-for="req in steps" v-else :key="req.step" class="step-settings__step">
-    <div class="step-settings__head">
-      <b>{{ req.step }}</b>
-      <PlBtnSecondary
-        v-if="app.model.data.stepResources?.[req.step]"
-        size="small"
-        @click="reset(req.step)"
-      >
-        Reset
-      </PlBtnSecondary>
-    </div>
-    <div class="step-settings__grid">
+  <div v-else class="step-settings__grid">
+    <span class="step-settings__header">Step</span>
+    <span class="step-settings__header">
+      Memory floor GiB
+      <PlTooltip class="info" position="top">
+        <template #tooltip>
+          The least memory the step gets, whatever its input size. Leave blank to use the default
+          shown in grey.
+        </template>
+      </PlTooltip>
+    </span>
+    <template v-for="req in steps" :key="req.step">
+      <span class="step-settings__step">{{ req.step }}</span>
       <PlNumberField
-        v-for="f in fields"
-        :key="f.key"
-        :model-value="value(req.step, f.key)"
-        :label="f.label"
-        :placeholder="placeholder(req.defaultRule, f.key)"
-        :step="f.step"
-        :min-value="f.min"
-        :error-message="errorOf(req.step, f.key)"
+        :model-value="memFloor(req.step)"
+        :placeholder="placeholder(req.defaultRule)"
+        :step="1"
+        :min-value="1"
+        :validate="(v) => (Number.isInteger(v) ? undefined : 'Value must be an integer')"
         clearable
-        @update:model-value="(v: number | undefined) => setValue(req.step, f.key, v)"
-      >
-        <template #tooltip>{{ f.tooltip }}</template>
-      </PlNumberField>
-    </div>
+        @update:model-value="(v: number | undefined) => setMemFloor(req.step, v)"
+      />
+    </template>
   </div>
 </template>
 
 <style scoped>
-.step-settings__step {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-top: 12px;
-}
-.step-settings__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
 .step-settings__grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  /* Each field's label sits on its top border, so rows need room for it. */
-  gap: 24px 12px;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px 16px;
+  margin-top: 12px;
+}
+.step-settings__header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
 }
 .step-settings__empty {
   color: var(--txt-03, #888);
