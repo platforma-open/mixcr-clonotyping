@@ -163,13 +163,13 @@ self.body(func(inputs) {
 
     // Filter exports: one per sample, and in single-cell mode one more per chain per sample.
     // Reads the same .clns as the main clonotype export, so :mem-formula exportRam sizes it
-    // with the same rule and the same coefficient.
+    // with the same rule, at 90 bytes of RAM per .clns byte.
     filterTsvs := {}
     for key in maps.getKeys(clnsFiles) {
         clnsFile := clnsFiles[key]
         exportFiltersCmd := mixcrCmd.base(mixcrSw).
             inMediumQueue().
-            resources({ onCPU: { cpu: 2, ram: memf.exportRam(inputs.perProcessMemGB, 24, 30) } }).
+            resources({ onCPU: { cpu: 2, ram: memf.exportRam(inputs.perProcessMemGB, 24, 90) } }).
             arg("exportClones").
             arg("--dont-split-files").
             arg("--drop-default-fields").
@@ -205,7 +205,7 @@ self.body(func(inputs) {
                 clnsFile := clnsFiles[key]
                 exportChainFiltersCmd := mixcrCmd.base(mixcrSw).
                     inMediumQueue().
-                    resources({ onCPU: { cpu: 2, ram: memf.exportRam(inputs.perProcessMemGB, 24, 30) } }).
+                    resources({ onCPU: { cpu: 2, ram: memf.exportRam(inputs.perProcessMemGB, 24, 90) } }).
                     arg("exportClones").
                     arg("--dont-split-files").
                     arg("--drop-default-fields").
