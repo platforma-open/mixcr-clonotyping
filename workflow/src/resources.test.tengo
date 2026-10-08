@@ -30,8 +30,14 @@ TestLookupPrefersTheClassRowThenTheStepRowThenTheDefault := func() {
 }
 
 TestFlatRowsAreFixedRequests := func() {
-	test.isEqual("24GiB", _ram("align", "none", _gib(100)))
-	test.isEqual("4GiB", _ram("qc", "cell", _gib(100)))
+	test.isEqual("32GiB", _ram("align", "none", _gib(100)))
+	test.isEqual("4GiB", _ram("plan", "cell", _gib(100)))
+}
+
+TestQcIsSizedFromTheClns := func() {
+	// max(32, 8 + 16 x GiB).
+	test.isEqual(_gib(32), _ram("qc", "cell", _gib(1)))
+	test.isEqual(_gib(168), _ram("qc", "cell", _gib(10)))
 }
 
 TestBulkAssembleIsSizedFromTheVdjcaWithNoCap := func() {
@@ -42,30 +48,30 @@ TestBulkAssembleIsSizedFromTheVdjcaWithNoCap := func() {
 }
 
 TestTaggedAssembleRows := func() {
-	test.isEqual(_gib(16), _ram("assemble", "umi", _gib(12)))
-	test.isEqual(_gib(19), _ram("assemble", "umi", _gib(186) / 10))
-	test.isEqual(_gib(30), _ram("assemble", "umi", _gib(30)))
-	test.isEqual(_gib(41), _ram("assemble", "cell", _gib(10)))
-	test.isEqual(_gib(50), _ram("assemble", "longRead", _gib(75) / 10))
+	test.isEqual(_gib(32), _ram("assemble", "umi", _gib(3)))
+	test.isEqual(_gib(75), _ram("assemble", "umi", _gib(186) / 10))
+	test.isEqual(_gib(120), _ram("assemble", "umi", _gib(30)))
+	test.isEqual(_gib(65), _ram("assemble", "cell", _gib(10)))
+	test.isEqual(_gib(66), _ram("assemble", "longRead", _gib(75) / 10))
 }
 
-TestRefineHasA16GiBFloor := func() {
-	test.isEqual(_gib(16), _ram("refineTagsAndSort", "umi", _gib(39) / 100))
-	test.isEqual(_gib(27), _ram("refineTagsAndSort", "umi", _gib(954) / 100))
+TestRefineHasA32GiBFloor := func() {
+	test.isEqual(_gib(32), _ram("refineTagsAndSort", "umi", _gib(39) / 100))
+	test.isEqual(_gib(140), _ram("refineTagsAndSort", "umi", _gib(954) / 100))
 }
 
 TestMiToolRowsScaleWithTheirInput := func() {
-	// parse: max(8, 2 + 2 x GiB); refine-tags and consensus: max(16, 2 + 4 x GiB).
-	test.isEqual(_gib(8), _ram("mitool-parse", "cell", _gib(1)))
-	test.isEqual(_gib(22), _ram("mitool-parse", "cell", _gib(10)))
-	test.isEqual(_gib(16), _ram("mitool-consensus", "cell", _gib(1)))
+	// parse: max(32, 2 + 1 x GiB); refine-tags and consensus: max(32, 2 + 4 x GiB).
+	test.isEqual(_gib(32), _ram("mitool-parse", "cell", _gib(1)))
+	test.isEqual(_gib(42), _ram("mitool-parse", "cell", _gib(40)))
+	test.isEqual(_gib(32), _ram("mitool-consensus", "cell", _gib(1)))
 	test.isEqual(_gib(202), _ram("mitool-consensus", "cell", _gib(50)))
 	test.isEqual(_gib(402), _ram("mitool-refine-tags", "cell", _gib(100)))
 }
 
 TestCellStepsAndTheDefault := func() {
-	test.isEqual(_gib(8),  _ram("extend", "cell", _gib(1)))
-	test.isEqual(_gib(20), _ram("assembleContigs", "cell", _gib(10)))
+	test.isEqual(_gib(32), _ram("extend", "cell", _gib(1)))
+	test.isEqual(_gib(184), _ram("assembleContigs", "cell", _gib(10)))
 	test.isEqual(_gib(64), _ram("findAlleles", "none", _gib(10)))
 	test.isEqual(_gib(80), _ram("findAlleles", "none", _gib(20)))
 }
@@ -96,7 +102,7 @@ TestCpuIsTheInterceptWhileTheSlopeIs0 := func() {
 	test.isEqual(16, rs.cpu(rs.lookup("assemble", "umi")))
 	test.isEqual(16, rs.cpu(rs.lookup("refineTagsAndSort", "umi")))
 	test.isEqual(16, rs.cpu(rs.DEFAULT))
-	test.isEqual(1, rs.cpu(rs.lookup("qc", "none")))
+	test.isEqual(4, rs.cpu(rs.lookup("qc", "none")))
 }
 
 TestCpuSlopeScalesWithTheInput := func() {
@@ -123,7 +129,7 @@ TestTheMemoryOverrideReplacesTheRow := func() {
 	// A fractional override rounds up to a whole GiB.
 	test.isEqual("13GiB", rs.apply(_fakeCmd(), rs.lookup("align", "none"), { perProcessMemGB: 12.5 }).onCPU.ram)
 	// A row with override: false keeps its own grant.
-	test.isEqual("4GiB", rs.apply(_fakeCmd(), rs.lookup("qc", "none"), res).onCPU.ram)
+	test.isEqual("4GiB", rs.apply(_fakeCmd(), rs.lookup("plan", "none"), res).onCPU.ram)
 }
 
 TestTheCpuOverrideReplacesTheRow := func() {
@@ -134,9 +140,12 @@ TestScratchIsOffOnlyWhereARowOptsOut := func() {
 	res := { scratchFreeSpace: "44GiB" }
 	test.isEqual("44GiB", rs.apply(_fakeCmd(), rs.lookup("assemble", "umi"), res).onCPU.scratchFreeSpace)
 	test.isEqual("44GiB", rs.apply(_fakeCmd(), rs.DEFAULT, res).onCPU.scratchFreeSpace)
-	cmd := rs.apply(_fakeCmd(), rs.lookup("qc", "none"), res)
+	cmd := rs.apply(_fakeCmd(), rs.lookup("plan", "none"), res)
 	test.isTrue(is_undefined(cmd.onCPU.scratchFreeSpace))
 	test.isEqual("light", cmd.queue)
+	cmd = rs.apply(_fakeCmd(), rs.lookup("qc", "none"), res)
+	test.isTrue(is_undefined(cmd.onCPU.scratchFreeSpace))
+	test.isEqual("medium", cmd.queue)
 	test.isEqual("heavy", rs.apply(_fakeCmd(), rs.DEFAULT, res).queue)
 }
 
@@ -149,7 +158,7 @@ TestAStepOverrideReplacesOnlyTheFieldsItSets := func() {
 	test.isEqual("step", e.source.memFloor)
 	test.isEqual("default", e.source.memIntercept)
 	// Another step is untouched.
-	test.isEqual(24, rs.effective(rs.lookup("align", "none"), res).row.memFloor)
+	test.isEqual(32, rs.effective(rs.lookup("align", "none"), res).row.memFloor)
 }
 
 TestAStepOverrideBeatsTheGlobalOverrides := func() {
@@ -177,15 +186,15 @@ TestStepOverrideValuesBecomeWholeGiB := func() {
 }
 
 TestRowsWithoutOverridesIgnoreStepOverrides := func() {
-	res := { stepResources: { qc: { memFloor: 64 } } }
-	test.isEqual(4, rs.effective(rs.lookup("qc", "none"), res).row.memFloor)
+	res := { stepResources: { plan: { memFloor: 64 } } }
+	test.isEqual(4, rs.effective(rs.lookup("plan", "none"), res).row.memFloor)
 }
 
 TestCapAppliesToFlatRequestsToo := func() {
 	res := { stepResources: { align: { memIntercept: 32, cap: 24 } } }
 	test.isEqual("24GiB", rs.ram(rs.effective(rs.lookup("align", "none"), res).row))
 	// Below the cap a flat request is unchanged.
-	test.isEqual("24GiB", rs.ram(rs.effective(rs.lookup("align", "none"), { stepResources: { align: { cap: 100 } } }).row))
+	test.isEqual("32GiB", rs.ram(rs.effective(rs.lookup("align", "none"), { stepResources: { align: { cap: 100 } } }).row))
 }
 
 TestTheGlobalMemoryOverrideMakesMemoryFlatUnlessTheStepSetsMemory := func() {
@@ -195,7 +204,7 @@ TestTheGlobalMemoryOverrideMakesMemoryFlatUnlessTheStepSetsMemory := func() {
 	test.isEqual("global", e.source.memSlope)
 	// A step memory field wins over the global override, which then leaves memory alone.
 	e = rs.effective(rs.lookup("assemble", "umi"), { perProcessMemGB: 40, stepResources: { assemble: { memSlope: 2 } } })
-	test.isEqual(16, e.row.memFloor)
+	test.isEqual(32, e.row.memFloor)
 	test.isEqual(2.0, e.row.memSlope)
 	test.isEqual("default", e.source.memFloor)
 }

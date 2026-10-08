@@ -48,32 +48,32 @@ _FALLBACK_GIB := 64
 // avoid OOMs, fitted to the largest input shape tested. A new input shape will need new rows.
 // Once backend retries are on, the values should come down.
 _ROWS := [
+	// `analyze --dry-run-json` resolves the preset and writes the step list; it reads no data.
+	{ step: "plan", class: "any", cpuIntercept: 1, memFloor: 4, memIntercept: 0, memSlope: 0, queue: "light", scratch: false, override: false },
+
 	// `mitool parse` is sized from the FASTQs it stages, the later MiTool steps from the .mic
 	// the step before them wrote.
-	{ step: "mitool-parse", class: "any", cpuIntercept: 16, memFloor: 8, memIntercept: 2, memSlope: 2 },
-	{ step: "mitool-refine-tags", class: "any", cpuIntercept: 16, memFloor: 16, memIntercept: 2, memSlope: 4 },
-	{ step: "mitool-consensus", class: "any", cpuIntercept: 16, memFloor: 16, memIntercept: 2, memSlope: 4 },
+	{ step: "mitool-parse", class: "any", cpuIntercept: 16, memFloor: 32, memIntercept: 2, memSlope: 1 },
+	{ step: "mitool-refine-tags", class: "any", cpuIntercept: 16, memFloor: 32, memIntercept: 2, memSlope: 4 },
+	{ step: "mitool-consensus", class: "any", cpuIntercept: 16, memFloor: 32, memIntercept: 2, memSlope: 4 },
 
 	// `align` streams its input, so the grant does not grow with the sample.
-	{ step: "align", class: "any", cpuIntercept: 16, memFloor: 24, memIntercept: 0, memSlope: 0 },
-	{ step: "refineTagsAndSort", class: "any", cpuIntercept: 16, memFloor: 16, memIntercept: 6, memSlope: 2.1 },
-	{ step: "assemblePartial", class: "any", cpuIntercept: 16, memFloor: 8, memIntercept: 0, memSlope: 2 },
-	{ step: "extend", class: "any", cpuIntercept: 16, memFloor: 8, memIntercept: 0, memSlope: 2 },
-	{ step: "assembleContigs", class: "any", cpuIntercept: 16, memFloor: 8, memIntercept: 0, memSlope: 2 },
-	{ step: "assembleCells", class: "any", cpuIntercept: 16, memFloor: 8, memIntercept: 0, memSlope: 2 },
+	{ step: "align", class: "any", cpuIntercept: 16, memFloor: 32, memIntercept: 0, memSlope: 0 },
+	{ step: "refineTagsAndSort", class: "any", cpuIntercept: 16, memFloor: 32, memIntercept: 6, memSlope: 14 },
+	{ step: "assemblePartial", class: "any", cpuIntercept: 16, memFloor: 32, memIntercept: 4, memSlope: 15 },
+	{ step: "extend", class: "any", cpuIntercept: 16, memFloor: 32, memIntercept: 4, memSlope: 10 },
+	{ step: "assembleContigs", class: "any", cpuIntercept: 24, memFloor: 32, memIntercept: 4, memSlope: 18 },
+	{ step: "assembleCells", class: "any", cpuIntercept: 16, memFloor: 32, memIntercept: 4, memSlope: 15 },
 
 	// Sized from the .vdjca. A clone-count estimate from the align report will replace this row
 	// once one is fitted.
 	{ step: "assemble", class: "none", cpuIntercept: 16, memFloor: 64, memIntercept: 4, memSlope: 21.9 },
-	{ step: "assemble", class: "umi", cpuIntercept: 16, memFloor: 16, memIntercept: 0, memSlope: 1 },
-	{ step: "assemble", class: "cell", cpuIntercept: 16, memFloor: 16, memIntercept: 0, memSlope: 4.1 },
-	{ step: "assemble", class: "longRead", cpuIntercept: 16, memFloor: 6, memIntercept: 6, memSlope: 5.8 },
+	{ step: "assemble", class: "umi", cpuIntercept: 16, memFloor: 32, memIntercept: 0, memSlope: 4 },
+	{ step: "assemble", class: "cell", cpuIntercept: 16, memFloor: 32, memIntercept: 0, memSlope: 6.5 },
+	{ step: "assemble", class: "longRead", cpuIntercept: 16, memFloor: 32, memIntercept: 6, memSlope: 8},
 
-	// `analyze --dry-run-json` resolves the preset and writes the step list; it reads no data.
-	{ step: "plan", class: "any", cpuIntercept: 1, memFloor: 8, memIntercept: 0, memSlope: 0, queue: "light", scratch: false, override: false },
-
-	// `qc` reads the reports in the .clns footer and holds no clones.
-	{ step: "qc", class: "any", cpuIntercept: 1, memFloor: 4, memIntercept: 0, memSlope: 0, queue: "light", scratch: false, override: false }
+	// `qc` is sized from the .clns it reads.
+	{ step: "qc", class: "any", cpuIntercept: 4, memFloor: 32, memIntercept: 8, memSlope: 16, queue: "medium", scratch: false }
 ]
 
 DEFAULT := { step: "default", class: "any", cpuIntercept: 16, memFloor: 64, memIntercept: 0, memSlope: 4 }
