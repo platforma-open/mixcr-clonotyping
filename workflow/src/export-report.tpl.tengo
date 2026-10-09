@@ -1,6 +1,6 @@
 self := import("@platforma-sdk/workflow-tengo:tpl")
 ll := import("@platforma-sdk/workflow-tengo:ll")
-exec := import("@platforma-sdk/workflow-tengo:exec")
+mixcrCmd := import(":mixcr-cmd")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 text := import("text")
 maps := import("@platforma-sdk/workflow-tengo:maps")
@@ -132,11 +132,7 @@ self.body(func(inputs) {
     clnsFiles := clnsData.inputs()
     
     // Build the exportReportsTable command
-    exportReportCmd := exec.builder().
-        software(mixcrSw).
-        env("MI_USE_SYSTEM_CA", "true").
-        secret("MI_LICENSE", "MI_LICENSE").
-        env("MI_LICENSE_DEBUG", "MI_LICENSE_DEBUG").
+    exportReportCmd := mixcrCmd.base(mixcrSw).
         arg("exportReportsTable")
     
     // Add all clns files as input
@@ -167,17 +163,13 @@ self.body(func(inputs) {
 
     // Filter exports: one per sample, and in single-cell mode one more per chain per sample.
     // Reads the same .clns as the main clonotype export, so :mem-formula exportRam sizes it
-    // with the same rule and the same coefficient.
+    // with the same rule, at 90 bytes of RAM per .clns byte.
     filterTsvs := {}
     for key in maps.getKeys(clnsFiles) {
         clnsFile := clnsFiles[key]
-        exportFiltersCmd := exec.builder().
+        exportFiltersCmd := mixcrCmd.base(mixcrSw).
             inMediumQueue().
-            resources({ onCPU: { cpu: 2, ram: memf.exportRam(inputs.perProcessMemGB, 24, 30) } }).
-            software(mixcrSw).
-            env("MI_USE_SYSTEM_CA", "true").
-            secret("MI_LICENSE", "MI_LICENSE").
-            env("MI_LICENSE_DEBUG", "MI_LICENSE_DEBUG").
+            resources({ onCPU: { cpu: 2, ram: memf.exportRam(inputs.perProcessMemGB, 24, 90) } }).
             arg("exportClones").
             arg("--dont-split-files").
             arg("--drop-default-fields").
@@ -211,13 +203,9 @@ self.body(func(inputs) {
             chainFilterTsvs[chain] = {}
             for key in maps.getKeys(clnsFiles) {
                 clnsFile := clnsFiles[key]
-                exportChainFiltersCmd := exec.builder().
+                exportChainFiltersCmd := mixcrCmd.base(mixcrSw).
                     inMediumQueue().
-                    resources({ onCPU: { cpu: 2, ram: memf.exportRam(inputs.perProcessMemGB, 24, 30) } }).
-                    software(mixcrSw).
-                    env("MI_USE_SYSTEM_CA", "true").
-                    secret("MI_LICENSE", "MI_LICENSE").
-                    env("MI_LICENSE_DEBUG", "MI_LICENSE_DEBUG").
+                    resources({ onCPU: { cpu: 2, ram: memf.exportRam(inputs.perProcessMemGB, 24, 90) } }).
                     arg("exportClones").
                     arg("--dont-split-files").
                     arg("--drop-default-fields").

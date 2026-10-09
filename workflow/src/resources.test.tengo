@@ -1,0 +1,210 @@
+test := import("@platforma-sdk/workflow-tengo:test")
+exec := import("@platforma-sdk/workflow-tengo:exec")
+rs := import(":resources")
+
+f := exec.formula
+
+_gib := func(n) { return n * 1073741824 }
+
+// Evaluates a formula node against a fake staged input of sizeBytes.
+_evalSize := func(node, sizeBytes) {
+	fileName := "input.bin"
+	inputs := {}
+	inputs[rs.INPUT_TAG] = [fileName]
+	resolved := f.resolveAst(node, inputs, [fileName])
+	resolver := { size: func(files) { return sizeBytes }, lineCount: func(files) { return 0 } }
+	return f.evaluateResource(resolved, resolver, "test")
+}
+
+// A row's memory for a fake staged input of sizeBytes: a string for a flat row, bytes otherwise.
+_ram := func(step, cls, sizeBytes) {
+	node := rs.ram(rs.lookup(step, cls))
+	return is_string(node) ? node : _evalSize(node, sizeBytes)
+}
+
+TestLookupPrefersTheClassRowThenTheStepRowThenTheDefault := func() {
+	test.isEqual("umi", rs.lookup("assemble", "umi").class)
+	test.isEqual("any", rs.lookup("refineTagsAndSort", "cell").class)
+	test.isEqual(rs.DEFAULT.memFloor, rs.lookup("findAlleles", "none").memFloor)
+	test.isEqual("findAlleles", rs.lookup("findAlleles", "none").step)
+}
+
+TestFlatRowsAreFixedRequests := func() {
+	test.isEqual("32GiB", _ram("align", "none", _gib(100)))
+	test.isEqual("4GiB", _ram("plan", "cell", _gib(100)))
+}
+
+TestQcIsSizedFromTheClns := func() {
+	// max(32, 8 + 16 x GiB).
+	test.isEqual(_gib(32), _ram("qc", "cell", _gib(1)))
+	test.isEqual(_gib(168), _ram("qc", "cell", _gib(10)))
+}
+
+TestBulkAssembleIsSizedFromTheVdjcaWithNoCap := func() {
+	// max(64, 4 + 21.9 x GiB), rounded up.
+	test.isEqual(_gib(64),  _ram("assemble", "none", _gib(2)))
+	test.isEqual(_gib(115), _ram("assemble", "none", _gib(505) / 100))
+	test.isEqual(_gib(267), _ram("assemble", "none", _gib(12)))
+}
+
+TestTaggedAssembleRows := func() {
+	test.isEqual(_gib(32), _ram("assemble", "umi", _gib(3)))
+	test.isEqual(_gib(75), _ram("assemble", "umi", _gib(186) / 10))
+	test.isEqual(_gib(120), _ram("assemble", "umi", _gib(30)))
+	test.isEqual(_gib(65), _ram("assemble", "cell", _gib(10)))
+	test.isEqual(_gib(66), _ram("assemble", "longRead", _gib(75) / 10))
+}
+
+TestRefineHasA32GiBFloor := func() {
+	test.isEqual(_gib(32), _ram("refineTagsAndSort", "umi", _gib(39) / 100))
+	test.isEqual(_gib(140), _ram("refineTagsAndSort", "umi", _gib(954) / 100))
+}
+
+TestMiToolRowsScaleWithTheirInput := func() {
+	// parse: max(32, 2 + 1 x GiB); refine-tags and consensus: max(32, 2 + 4 x GiB).
+	test.isEqual(_gib(32), _ram("mitool-parse", "cell", _gib(1)))
+	test.isEqual(_gib(42), _ram("mitool-parse", "cell", _gib(40)))
+	test.isEqual(_gib(32), _ram("mitool-consensus", "cell", _gib(1)))
+	test.isEqual(_gib(202), _ram("mitool-consensus", "cell", _gib(50)))
+	test.isEqual(_gib(402), _ram("mitool-refine-tags", "cell", _gib(100)))
+}
+
+TestCellStepsAndTheDefault := func() {
+	test.isEqual(_gib(32), _ram("extend", "cell", _gib(1)))
+	test.isEqual(_gib(184), _ram("assembleContigs", "cell", _gib(10)))
+	test.isEqual(_gib(64), _ram("findAlleles", "none", _gib(10)))
+	test.isEqual(_gib(80), _ram("findAlleles", "none", _gib(20)))
+}
+
+TestStaticFallbackIsTheFloorOr64 := func() {
+	test.isEqual(_gib(64),  f.fallbackOf(rs.ram(rs.lookup("refineTagsAndSort", "umi"))))
+	test.isEqual(_gib(64), f.fallbackOf(rs.ram(rs.lookup("mitool-consensus", "cell"))))
+	// A floor above 64 is the fallback.
+	test.isEqual(_gib(64), f.fallbackOf(rs.ram(rs.lookup("assemble", "none"))))
+	test.isEqual(_gib(100), f.fallbackOf(rs.ram({ step: "x", class: "any", memFloor: 100, memIntercept: 0, memSlope: 1 })))
+}
+
+TestStaticFallbackIsCapped := func() {
+	res := { stepResources: { assemble: { cap: 24 } } }
+	test.isEqual(_gib(24), f.fallbackOf(rs.ram(rs.effective(rs.lookup("assemble", "umi"), res).row)))
+	// A cap above the fallback leaves it alone.
+	res = { stepResources: { assemble: { cap: 100 } } }
+	test.isEqual(_gib(64), f.fallbackOf(rs.ram(rs.effective(rs.lookup("assemble", "umi"), res).row)))
+}
+
+TestCapAppliesOnlyWhenARowSetsIt := func() {
+	row := { step: "x", class: "any", memFloor: 8, memIntercept: 0, memSlope: 2, cap: 10 }
+	test.isEqual(_gib(10), _evalSize(rs.ram(row), _gib(100)))
+}
+
+TestCpuIsTheInterceptWhileTheSlopeIs0 := func() {
+	test.isEqual(16, rs.cpu(rs.lookup("align", "none")))
+	test.isEqual(16, rs.cpu(rs.lookup("assemble", "umi")))
+	test.isEqual(16, rs.cpu(rs.lookup("refineTagsAndSort", "umi")))
+	test.isEqual(16, rs.cpu(rs.DEFAULT))
+	test.isEqual(4, rs.cpu(rs.lookup("qc", "none")))
+}
+
+TestCpuSlopeScalesWithTheInput := func() {
+	node := rs.cpu({ step: "x", class: "any", memFloor: 8, memIntercept: 0, memSlope: 0, cpuIntercept: 4, cpuSlope: 0.5 })
+	test.isEqual(9, _evalSize(node, _gib(10)))
+	test.isEqual(4, f.fallbackOf(node))
+}
+
+// A command stand-in that records what apply sets on it.
+_fakeCmd := func() {
+	cmd := {}
+	cmd.resources = func(r) { cmd.queue = r.queue; cmd.onCPU = r.onCPU; return cmd }
+	return cmd
+}
+
+TestTheMemoryOverrideReplacesTheRow := func() {
+	res := { perProcessMemGB: 100 }
+	test.isEqual("100GiB", rs.apply(_fakeCmd(), rs.lookup("align", "none"), res).onCPU.ram)
+	// The override lowers a grant below the row's floor.
+	test.isEqual("8GiB", rs.apply(_fakeCmd(), rs.lookup("align", "none"), { perProcessMemGB: 8 }).onCPU.ram)
+	test.isEqual("100GiB", rs.apply(_fakeCmd(), rs.lookup("mitool-parse", "cell"), res).onCPU.ram)
+	// The override replaces a data-sized row with a fixed request.
+	test.isEqual("100GiB", rs.apply(_fakeCmd(), rs.lookup("assemble", "none"), res).onCPU.ram)
+	// A fractional override rounds up to a whole GiB.
+	test.isEqual("13GiB", rs.apply(_fakeCmd(), rs.lookup("align", "none"), { perProcessMemGB: 12.5 }).onCPU.ram)
+	// A row with override: false keeps its own grant.
+	test.isEqual("4GiB", rs.apply(_fakeCmd(), rs.lookup("plan", "none"), res).onCPU.ram)
+}
+
+TestTheCpuOverrideReplacesTheRow := func() {
+	test.isEqual(8, rs.apply(_fakeCmd(), rs.lookup("align", "none"), { perProcessCPUs: 8 }).onCPU.cpu)
+}
+
+TestScratchIsOffOnlyWhereARowOptsOut := func() {
+	res := { scratchFreeSpace: "44GiB" }
+	test.isEqual("44GiB", rs.apply(_fakeCmd(), rs.lookup("assemble", "umi"), res).onCPU.scratchFreeSpace)
+	test.isEqual("44GiB", rs.apply(_fakeCmd(), rs.DEFAULT, res).onCPU.scratchFreeSpace)
+	cmd := rs.apply(_fakeCmd(), rs.lookup("plan", "none"), res)
+	test.isTrue(is_undefined(cmd.onCPU.scratchFreeSpace))
+	test.isEqual("light", cmd.queue)
+	cmd = rs.apply(_fakeCmd(), rs.lookup("qc", "none"), res)
+	test.isTrue(is_undefined(cmd.onCPU.scratchFreeSpace))
+	test.isEqual("medium", cmd.queue)
+	test.isEqual("heavy", rs.apply(_fakeCmd(), rs.DEFAULT, res).queue)
+}
+
+TestAStepOverrideReplacesOnlyTheFieldsItSets := func() {
+	res := { stepResources: { assemble: { memFloor: 100, memSlope: 1.5 } } }
+	e := rs.effective(rs.lookup("assemble", "umi"), res)
+	test.isEqual(100, e.row.memFloor)
+	test.isEqual(1.5, e.row.memSlope)
+	test.isEqual(0, e.row.memIntercept)
+	test.isEqual("step", e.source.memFloor)
+	test.isEqual("default", e.source.memIntercept)
+	// Another step is untouched.
+	test.isEqual(32, rs.effective(rs.lookup("align", "none"), res).row.memFloor)
+}
+
+TestAStepOverrideBeatsTheGlobalOverrides := func() {
+	res := { perProcessMemGB: 200, perProcessCPUs: 8, stepResources: { assemble: { memFloor: 50, cpuIntercept: 32 } } }
+	e := rs.effective(rs.lookup("assemble", "umi"), res)
+	test.isEqual(50, e.row.memFloor)
+	test.isEqual(32, e.row.cpuIntercept)
+	// Steps without their own value still take the global overrides.
+	a := rs.effective(rs.lookup("align", "none"), res)
+	test.isEqual(200, a.row.memFloor)
+	test.isEqual("global", a.source.memFloor)
+	test.isEqual(8, a.row.cpuIntercept)
+}
+
+TestAStepOverrideReachesAStepOnTheDefaultRow := func() {
+	res := { stepResources: { findAlleles: { memFloor: 99 } } }
+	test.isEqual(99, rs.effective(rs.lookup("findAlleles", "none"), res).row.memFloor)
+}
+
+TestStepOverrideValuesBecomeWholeGiB := func() {
+	res := { stepResources: { assemble: { memFloor: 16.2, cap: 40.0 } } }
+	e := rs.effective(rs.lookup("assemble", "umi"), res)
+	test.isEqual(17, e.row.memFloor)
+	test.isEqual(40, e.row.cap)
+}
+
+TestRowsWithoutOverridesIgnoreStepOverrides := func() {
+	res := { stepResources: { plan: { memFloor: 64 } } }
+	test.isEqual(4, rs.effective(rs.lookup("plan", "none"), res).row.memFloor)
+}
+
+TestCapAppliesToFlatRequestsToo := func() {
+	res := { stepResources: { align: { memIntercept: 32, cap: 24 } } }
+	test.isEqual("24GiB", rs.ram(rs.effective(rs.lookup("align", "none"), res).row))
+	// Below the cap a flat request is unchanged.
+	test.isEqual("32GiB", rs.ram(rs.effective(rs.lookup("align", "none"), { stepResources: { align: { cap: 100 } } }).row))
+}
+
+TestTheGlobalMemoryOverrideMakesMemoryFlatUnlessTheStepSetsMemory := func() {
+	// No step memory field: the global override replaces the rule with a flat amount.
+	e := rs.effective(rs.lookup("assemble", "umi"), { perProcessMemGB: 40 })
+	test.isEqual("40GiB", rs.ram(e.row))
+	test.isEqual("global", e.source.memSlope)
+	// A step memory field wins over the global override, which then leaves memory alone.
+	e = rs.effective(rs.lookup("assemble", "umi"), { perProcessMemGB: 40, stepResources: { assemble: { memSlope: 2 } } })
+	test.isEqual(32, e.row.memFloor)
+	test.isEqual(2.0, e.row.memSlope)
+	test.isEqual("default", e.source.memFloor)
+}

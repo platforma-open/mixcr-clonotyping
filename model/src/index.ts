@@ -11,20 +11,34 @@ import {
   isImportFileHandleIndex,
   isPColumnSpec,
   parseResourceMap,
+  RT_RESOURCE_MAP,
   type ColumnData,
   type ImportFileHandle,
   type ImportFileHandleIndex,
   type InferOutputsType,
+  type PColumnKey,
+  type PColumnResourceMapData,
 } from "@platforma-sdk/model";
 import type { BlockParams as KindBlockParams } from "@platforma-open/milaboratories.mixcr-clonotyping-2.kind";
 import { kind } from "@platforma-open/milaboratories.mixcr-clonotyping-2.kind";
 import type { BlockArgs } from "./args";
 import { BlockArgsValid } from "./args";
 import { ProgressPrefix } from "./progress";
+import type { PresetSupport, StepDefaults } from "./step-resources";
+import { dropEmptyOverrides } from "./step-resources";
+
+export type ListStepsParams = Pick<
+  BlockArgs,
+  "tagPattern" | "assembleClonesBy" | "cloneClusteringMode"
+>;
 
 export type BlockData = BlockArgs & {
   tableState: PlDataTableStateV2;
   runMode: "dry" | "full";
+  /** The fields the step list depends on, as they stood when the operator last asked the
+   * "Per-step resources" settings to list the steps. Absent until then. A snapshot, not the
+   * live fields: the plan runs once per click, not once per edit of the tag pattern. */
+  listStepsParams?: ListStepsParams;
 };
 
 type LegacyUiState = {
@@ -49,6 +63,38 @@ const dataModel = new DataModelBuilder({ kind })
     tableState: createPlDataTableStateV2(),
     runMode: params?.runMode ?? "full",
   }));
+
+/**
+ * Reads the per-sample `logs` column. A sample's value is one log stream, or a map of streams
+ * keyed by MiXCR step for a run split into one command per step. Entries are keyed [sampleId]
+ * or [sampleId, step].
+ */
+function parseSampleLogs<T>(
+  acc: TreeNodeAccessor | undefined,
+  parse: (acc: TreeNodeAccessor) => T | undefined,
+): PColumnResourceMapData<NonNullable<T>> | undefined {
+  if (acc === undefined) return undefined;
+  const data: { key: PColumnKey; value: NonNullable<T> }[] = [];
+  let isComplete = acc.getInputsLocked();
+  for (const sampleKey of acc.listInputFields()) {
+    const sample = acc.resolve({ field: sampleKey, assertFieldType: "Input" });
+    if (sample === undefined) {
+      isComplete = false;
+      continue;
+    }
+    const key = JSON.parse(sampleKey) as PColumnKey;
+    if (sample.resourceType.name === RT_RESOURCE_MAP) {
+      const steps = parseResourceMap(sample, parse, false);
+      isComplete &&= steps.isComplete;
+      for (const step of steps.data) data.push({ key: [...key, ...step.key], value: step.value });
+    } else {
+      const value = parse(sample);
+      if (value === undefined || value === null) isComplete = false;
+      else data.push({ key, value });
+    }
+  }
+  return { isComplete, data };
+}
 
 export const platforma = BlockModelV3.create({ dataModel, kind })
 
@@ -84,6 +130,8 @@ export const platforma = BlockModelV3.create({ dataModel, kind })
     limitInput: data.limitInput,
     perProcessMemGB: data.perProcessMemGB,
     perProcessCPUs: data.perProcessCPUs,
+    // `stepResources` stays out: a per-step override is tuned to one cluster, and a template may
+    // open on another.
 
     defaultBlockLabel: data.defaultBlockLabel,
     customBlockLabel: data.customBlockLabel,
@@ -97,6 +145,9 @@ export const platforma = BlockModelV3.create({ dataModel, kind })
     rightAlignmentMode: data.rightAlignmentMode,
     materialType: data.materialType,
     isGenericPreset: data.isGenericPreset,
+    // The fields that shape the step list reach the prerun as the snapshot taken when the list
+    // was asked for, so the plan runs once per click and never for an operator who did not ask.
+    ...(data.listStepsParams ? { listSteps: true, ...data.listStepsParams } : {}),
   }))
 
   .args((data) => {
@@ -132,6 +183,7 @@ export const platforma = BlockModelV3.create({ dataModel, kind })
       limitInput: data.runMode === "dry" ? data.limitInput : undefined,
       perProcessMemGB: data.perProcessMemGB,
       perProcessCPUs: data.perProcessCPUs,
+      stepResources: dropEmptyOverrides(data.stepResources),
       cloneClusteringMode: data.cloneClusteringMode,
       presetCommonName: data.presetCommonName,
       isGenericPreset: data.isGenericPreset,
@@ -151,6 +203,21 @@ export const platforma = BlockModelV3.create({ dataModel, kind })
     ctx.prerun
       ?.resolve({ field: "preset", assertFieldType: "Input", allowPermanentAbsence: true })
       ?.getDataAsJson<string>(),
+  )
+
+  // Whether the block runs the selected built-in preset, known before any run. Absent for a
+  // preset file: the prerun does not resolve those.
+  .retentiveOutput("presetSupport", (ctx) =>
+    ctx.prerun
+      ?.resolve({ field: "presetSupport", assertFieldType: "Input", allowPermanentAbsence: true })
+      ?.getDataAsJson<PresetSupport>(),
+  )
+
+  // The steps of the selected preset with their default rules, planned before any run.
+  .output("stepDefaults", (ctx) =>
+    ctx.prerun
+      ?.resolve({ field: "stepDefaults", assertFieldType: "Input", allowPermanentAbsence: true })
+      ?.getDataAsJson<StepDefaults>(),
   )
 
   .retentiveOutput("libraryOptions", (ctx) =>
@@ -175,19 +242,17 @@ export const platforma = BlockModelV3.create({ dataModel, kind })
     parseResourceMap(ctx.outputs?.resolve("reports"), (acc) => acc.getFileHandle(), false),
   )
 
+  // Keys are [sampleId] for the single log of a result from before the split, and
+  // [sampleId, step] for a split run.
   .output("logs", (ctx) => {
     return ctx.outputs !== undefined
-      ? parseResourceMap(ctx.outputs?.resolve("logs"), (acc) => acc.getLogHandle(), false)
+      ? parseSampleLogs(ctx.outputs?.resolve("logs"), (acc) => acc.getLogHandle())
       : undefined;
   })
 
   .output("progress", (ctx) => {
     return ctx.outputs !== undefined
-      ? parseResourceMap(
-          ctx.outputs?.resolve("logs"),
-          (acc) => acc.getProgressLog(ProgressPrefix),
-          false,
-        )
+      ? parseSampleLogs(ctx.outputs?.resolve("logs"), (acc) => acc.getProgressLog(ProgressPrefix))
       : undefined;
   })
 
@@ -366,6 +431,7 @@ export * from "./preset";
 export * from "./progress";
 export * from "./qc";
 export * from "./reports";
+export * from "./step-resources";
 export { BlockArgs };
 
 // ---------------------------------------------------------------------------
