@@ -84,6 +84,7 @@ self.body(func(inputs) {
 	}
 
 	mixcrCmdBuilder := exec.builder().
+		name("mixcr analyze").
 		printErrStreamToStdout().
 		saveStdoutStream().
 		env("MI_USE_SYSTEM_CA", "true").

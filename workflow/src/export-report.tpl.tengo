@@ -133,6 +133,7 @@ self.body(func(inputs) {
     
     // Build the exportReportsTable command
     exportReportCmd := exec.builder().
+        name("mixcr exportReportsTable").
         software(mixcrSw).
         env("MI_USE_SYSTEM_CA", "true").
         secret("MI_LICENSE", "MI_LICENSE").
@@ -172,6 +173,7 @@ self.body(func(inputs) {
     for key in maps.getKeys(clnsFiles) {
         clnsFile := clnsFiles[key]
         exportFiltersCmd := exec.builder().
+            name("mixcr exportClones filters").
             inMediumQueue().
             resources({ onCPU: { cpu: 2, ram: memf.exportRam(inputs.perProcessMemGB, 24, 30) } }).
             software(mixcrSw).
@@ -212,6 +214,7 @@ self.body(func(inputs) {
             for key in maps.getKeys(clnsFiles) {
                 clnsFile := clnsFiles[key]
                 exportChainFiltersCmd := exec.builder().
+                    name("mixcr exportClones chain filters").
                     inMediumQueue().
                     resources({ onCPU: { cpu: 2, ram: memf.exportRam(inputs.perProcessMemGB, 24, 30) } }).
                     software(mixcrSw).
