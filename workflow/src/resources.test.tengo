@@ -190,6 +190,11 @@ TestRowsWithoutOverridesIgnoreStepOverrides := func() {
 	test.isEqual(4, rs.effective(rs.lookup("plan", "none"), res).row.memFloor)
 }
 
+TestQcTakesStepAndGlobalOverrides := func() {
+	test.isEqual(64, rs.effective(rs.lookup("qc", "none"), { stepResources: { qc: { memFloor: 64 } } }).row.memFloor)
+	test.isEqual("40GiB", rs.ram(rs.effective(rs.lookup("qc", "none"), { perProcessMemGB: 40 }).row))
+}
+
 TestCapAppliesToFlatRequestsToo := func() {
 	res := { stepResources: { align: { memIntercept: 32, cap: 24 } } }
 	test.isEqual("24GiB", rs.ram(rs.effective(rs.lookup("align", "none"), res).row))
