@@ -136,8 +136,9 @@ self.body(func(inputs) {
         arg("exportReportsTable")
     
     // Add all clns files as input
-    for i, clnsFile in clnsFiles {
-        fileName := json.decode(i)[0] + ".clns"
+    for key in maps.getKeys(clnsFiles) {
+        clnsFile := clnsFiles[key]
+        fileName := json.decode(key)[0] + ".clns"
         exportReportCmd.addFile(fileName, clnsFile)
         exportReportCmd.arg(fileName)
     }
