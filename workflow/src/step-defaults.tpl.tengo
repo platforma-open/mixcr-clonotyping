@@ -1,0 +1,58 @@
+// The steps a run of the preset takes, each once, in run order, with the :resources row it is
+// sized by. :plan-steps renders this over the step list `analyze --dry-run-json` wrote.
+
+self := import("@platforma-sdk/workflow-tengo:tpl")
+smart := import("@platforma-sdk/workflow-tengo:smart")
+mixcrSteps := import(":mixcr-steps")
+presetTraits := import(":preset-traits")
+resources := import(":resources")
+
+self.defineOutputs("stepDefaults")
+
+// The settings take a rule's fields, and never its scratch, queue or class.
+_ruleOf := func(row) {
+	return {
+		memFloor: row.memFloor,
+		memIntercept: row.memIntercept,
+		memSlope: row.memSlope,
+		cap: row.cap,
+		cpuIntercept: row.cpuIntercept,
+		cpuSlope: row.cpuSlope
+	}
+}
+
+self.body(func(inputs) {
+	// With the tag pattern the plan ran with, so the class and the rejections match the run's.
+	presetContent := presetTraits.withTagPattern(inputs.presetContent.getDataAsJson(), inputs.tagPattern)
+
+	// The run rejects these presets, so there is no step list to show.
+	unsupported := presetTraits.unsupportedReason(presetContent)
+	if !is_undefined(unsupported) {
+		return { stepDefaults: smart.createJsonResource({ "error": unsupported }) }
+	}
+
+	blockFiles := {}
+	for name in inputs.readNames {
+		blockFiles[name] = true
+	}
+	// As in :run-mixcr: the plan writes the MiTool preset when the pipeline opens with `mitool parse`.
+	if presetContent.pipeline[0] == "mitool-parse" {
+		blockFiles[mixcrSteps.MITOOL_PRESET_FILE] = true
+	}
+	plan := mixcrSteps.commands(mixcrSteps.stepsOf(inputs.steps.getDataAsJson()), blockFiles, inputs.readsPattern)
+	stepClass := presetTraits.stepClass(presetContent)
+
+	seen := {}
+	steps := []
+	for c in plan.commands {
+		row := resources.lookup(c.key, stepClass)
+		// Rows that take no override are not listed: the settings could not change them.
+		if seen[c.key] || row.override == false {
+			continue
+		}
+		seen[c.key] = true
+		steps = append(steps, { step: c.key, class: stepClass, defaultRule: _ruleOf(row) })
+	}
+
+	return { stepDefaults: smart.createJsonResource({ steps: steps }) }
+})

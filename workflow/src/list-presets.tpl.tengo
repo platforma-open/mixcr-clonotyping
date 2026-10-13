@@ -2,7 +2,7 @@
 
 self := import("@platforma-sdk/workflow-tengo:tpl")
 ll := import("@platforma-sdk/workflow-tengo:ll")
-exec := import("@platforma-sdk/workflow-tengo:exec")
+mixcrCmd := import(":mixcr-cmd")
 file := import("@platforma-sdk/workflow-tengo:file")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 feats := import("@platforma-sdk/workflow-tengo:feats")
@@ -12,14 +12,10 @@ self.defineOutputs("presets")
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
 
 self.body(func(inputs) {
-	listPresets := exec.builder().
+	listPresets := mixcrCmd.base(mixcrSw).
 		inLightQueue().
 		cpu(1).
 		mem("512MiB").
-		software(mixcrSw).
-		env("MI_USE_SYSTEM_CA", "true").
-		secret("MI_LICENSE", "MI_LICENSE").
-		env("MI_LICENSE_DEBUG", "MI_LICENSE_DEBUG").
 		arg("listPresetSpecificationsForUI").
 		arg("presets.json").
 		saveFile("presets.json").

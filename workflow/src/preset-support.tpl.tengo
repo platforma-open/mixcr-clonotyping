@@ -1,0 +1,15 @@
+// Whether the block can run the selected preset, read off the resolved preset before any run,
+// so the settings can say so where the preset is picked instead of the run failing on it.
+// :process rejects the same presets, with the same reason.
+
+self := import("@platforma-sdk/workflow-tengo:tpl")
+smart := import("@platforma-sdk/workflow-tengo:smart")
+presetTraits := import(":preset-traits")
+
+self.defineOutputs("presetSupport")
+
+self.body(func(inputs) {
+	reason := presetTraits.unsupportedReason(inputs.presetContent.getDataAsJson())
+	support := is_undefined(reason) ? { supported: true } : { supported: false, reason: reason }
+	return { presetSupport: smart.createJsonResource(support) }
+})

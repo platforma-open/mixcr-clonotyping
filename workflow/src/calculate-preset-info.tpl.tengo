@@ -3,7 +3,7 @@
 self := import("@platforma-sdk/workflow-tengo:tpl")
 smart := import("@platforma-sdk/workflow-tengo:smart")
 ll := import("@platforma-sdk/workflow-tengo:ll")
-exec := import("@platforma-sdk/workflow-tengo:exec")
+mixcrCmd := import(":mixcr-cmd")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 
 self.validateInputs({
@@ -33,13 +33,9 @@ self.body(func(inputs) {
 	tagPattern := inputs.params.tagPattern
 	assembleClonesBy := inputs.params.assembleClonesBy
 
-	mixcrExportPresetCmdBuilder := exec.builder().
+	mixcrExportPresetCmdBuilder := mixcrCmd.base(mixcrSw).
 		inLightQueue().
 		mem("512MiB").
-		software(mixcrSw).
-		env("MI_USE_SYSTEM_CA", "true").
-		secret("MI_LICENSE", "MI_LICENSE").
-		env("MI_LICENSE_DEBUG", "MI_LICENSE_DEBUG").
 		arg("exportPreset")
 
 	if smart.isResource(preset) /* file */ {
@@ -81,13 +77,9 @@ self.body(func(inputs) {
 
 	presetContent := mixcrExportPresetCmd.getFileContent("preset.json")
 
-	mixcrForBackCmd := exec.builder().
+	mixcrForBackCmd := mixcrCmd.base(mixcrSw).
 		inLightQueue().
 		mem("512MiB").
-		software(mixcrSw).
-		env("MI_USE_SYSTEM_CA", "true").
-		secret("MI_LICENSE", "MI_LICENSE").
-		env("MI_LICENSE_DEBUG", "MI_LICENSE_DEBUG").
 		arg("presetSpecificationsForBack").
 		addFile("preset.yaml", mixcrExportPresetCmd.getFile("preset.json")).
 		arg("preset.yaml").

@@ -1,0 +1,30 @@
+// The exec shape every MiXCR command of the block shares.
+
+exec := import("@platforma-sdk/workflow-tengo:exec")
+
+PROGRESS_PREFIX := "[==PROGRESS==]"
+
+// base starts a MiXCR command of any kind: the MI_LICENSE secret, its debug switch and the
+// system CA store go in as environment variables. Every MiXCR exec in the block builds on it.
+base := func(mixcrSw) {
+	return exec.builder().
+		software(mixcrSw).
+		env("MI_USE_SYSTEM_CA", "true").
+		secret("MI_LICENSE", "MI_LICENSE").
+		env("MI_LICENSE_DEBUG", "MI_LICENSE_DEBUG")
+}
+
+// builder starts a step of :run-mixcr: base, plus the progress prefix, and stdout saved with
+// stderr merged in, so the log column carries the command's failure text.
+builder := func(mixcrSw) {
+	return base(mixcrSw).
+		printErrStreamToStdout().
+		saveStdoutStream().
+		env("MI_PROGRESS_PREFIX", PROGRESS_PREFIX)
+}
+
+export {
+	PROGRESS_PREFIX: PROGRESS_PREFIX,
+	base: base,
+	builder: builder
+}

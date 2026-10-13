@@ -1,0 +1,73 @@
+// The arguments that select the preset and every mixin that shapes the resolved parameter
+// bundle. `analyze` hands them to the first step of its plan, which packs the bundle into its
+// output's header; every later step reads it from there. :run-mixcr plans a run with them, and
+// :plan-steps plans the steps the settings list before any run.
+
+smart := import("@platforma-sdk/workflow-tengo:smart")
+ll := import("@platforma-sdk/workflow-tengo:ll")
+
+// apply adds the preset arguments to `builder`. `preset` is a preset file resource or
+// { name }; `params` carries species, isLibraryFileGzipped, leftAlignmentMode,
+// rightAlignmentMode, materialType, tagPattern, assembleClonesBy and cloneClusteringMode;
+// `library` is the library file, or false.
+apply := func(builder, preset, params, library) {
+	species := params.species
+	if library {
+		builder.arg("--species").arg(species)
+		if params.isLibraryFileGzipped {
+			builder.arg("--library").arg("library.json.gz").
+			addFile("library.json.gz", library)
+		} else {
+			builder.arg("--library").arg("library.json").
+			addFile("library.json", library)
+		}
+	} else if !is_undefined(species) {
+		builder.arg("--species").arg(species)
+	}
+
+	if smart.isResource(preset) /* file */ {
+		builder.
+			arg("local#input_preset").
+			addFile("input_preset.yaml", preset)
+	} else {
+		ll.assert(!is_undefined(preset.name), "undefined preset name")
+		builder.
+			arg(preset.name)
+	}
+
+	// Optional preset-specific parameters (order matters if preset requires positional values)
+	if !is_undefined(params.leftAlignmentMode) {
+		builder.arg(params.leftAlignmentMode)
+	}
+	if !is_undefined(params.rightAlignmentMode) {
+		builder.arg(params.rightAlignmentMode)
+	}
+	if !is_undefined(params.materialType) {
+		builder.arg(params.materialType)
+	}
+	if !is_undefined(params.tagPattern) {
+		builder.arg("--tag-pattern").arg(params.tagPattern)
+	}
+	if !is_undefined(params.assembleClonesBy) {
+		builder.arg("--assemble-clonotypes-by").arg(params.assembleClonesBy)
+	}
+	// Clone clustering tuning
+	cloneClusteringMode := params.cloneClusteringMode
+	if is_undefined(cloneClusteringMode) {
+		cloneClusteringMode = "default"
+	}
+	if cloneClusteringMode == "relaxed" {
+		builder.
+			arg("-Massemble.cloneAssemblerParameters.minimalQuality=20").
+			arg("-Massemble.cloneAssemblerParameters.badQualityThreshold=10").
+			arg("-Massemble.cloneAssemblerParameters.cloneClusteringParameters.searchParameters=oneMismatchOrIndel").
+			arg("-Massemble.cloneAssemblerParameters.cloneClusteringParameters.searchDepth=1")
+	} else if cloneClusteringMode == "off" {
+		builder.arg("-Massemble.cloneAssemblerParameters.cloneClusteringParameters=null")
+	}
+	return builder
+}
+
+export {
+	apply: apply
+}

@@ -12,6 +12,7 @@ import {
   SupportedPresetList,
   uniquePlId,
 } from "@platforma-open/milaboratories.mixcr-clonotyping-2.model";
+import type { ML, RawHelpers } from "@platforma-sdk/test";
 import { awaitStableState, blockTest } from "@platforma-sdk/test";
 import { SamplesAndDataBlockPointer } from "@platforma-open/milaboratories.samples-and-data";
 import { MixcrClonotyping2BlockPointer as myBlockSpec } from "this-block";
@@ -77,64 +78,80 @@ blockTest("empty inputs", { timeout: 20000 }, async ({ rawPrj: project, ml: _ml,
 //   },
 // );
 
-blockTest(
-  "simple project",
-  { timeout: 150000 },
-  async ({ rawPrj: project, ml, helpers, expect }) => {
-    const sndBlockId = await project.addBlock("Samples & Data", SamplesAndDataBlockPointer);
-    const clonotypingBlockId = await project.addBlock("MiXCR Clonotyping", myBlockSpec);
+// A one-sample bulk run of `preset` on ./assets/<assetPrefix>_R1/_R2.fastq.gz.
+/** Adds a Samples & Data block holding one paired-end bulk sample from `test/assets`, runs it,
+ * and returns the ids the clonotyping block needs. */
+async function addBulkSample(project: ML.Project, helpers: RawHelpers, assetPrefix: string) {
+  const sndBlockId = await project.addBlock("Samples & Data", SamplesAndDataBlockPointer);
 
-    const sample1Id = uniquePlId();
-    const metaColumn1Id = uniquePlId();
-    const dataset1Id = uniquePlId();
+  const sample1Id = uniquePlId();
+  const metaColumn1Id = uniquePlId();
+  const dataset1Id = uniquePlId();
 
-    const r1Handle = await helpers.getLocalFileHandle("./assets/small_data_R1.fastq.gz");
-    const r2Handle = await helpers.getLocalFileHandle("./assets/small_data_R2.fastq.gz");
+  const r1Handle = await helpers.getLocalFileHandle(`./assets/${assetPrefix}_R1.fastq.gz`);
+  const r2Handle = await helpers.getLocalFileHandle(`./assets/${assetPrefix}_R2.fastq.gz`);
 
-    await project.mutateBlockStorage(sndBlockId, {
-      operation: "update-block-data",
-      value: {
-        metadata: [
-          {
-            id: metaColumn1Id,
-            label: "MetaColumn1",
-            global: false,
-            valueType: "Long",
-            data: {
-              [sample1Id]: 2345,
-            },
+  await project.mutateBlockStorage(sndBlockId, {
+    operation: "update-block-data",
+    value: {
+      metadata: [
+        {
+          id: metaColumn1Id,
+          label: "MetaColumn1",
+          global: false,
+          valueType: "Long",
+          data: {
+            [sample1Id]: 2345,
           },
-        ],
-        sampleIds: [sample1Id],
-        sampleLabelColumnLabel: "Sample Name",
-        sampleLabels: { [sample1Id]: "Sample 1" },
-        datasets: [
-          {
-            id: dataset1Id,
-            label: "Dataset 1",
-            content: {
-              type: "Fastq",
-              readIndices: ["R1", "R2"],
-              gzipped: true,
-              data: {
-                [sample1Id]: {
-                  R1: r1Handle,
-                  R2: r2Handle,
-                },
+        },
+      ],
+      sampleIds: [sample1Id],
+      sampleLabelColumnLabel: "Sample Name",
+      sampleLabels: { [sample1Id]: "Sample 1" },
+      datasets: [
+        {
+          id: dataset1Id,
+          label: "Dataset 1",
+          content: {
+            type: "Fastq",
+            readIndices: ["R1", "R2"],
+            gzipped: true,
+            data: {
+              [sample1Id]: {
+                R1: r1Handle,
+                R2: r2Handle,
               },
             },
           },
-        ],
-        h5adFilesToPreprocess: [],
-        seuratFilesToPreprocess: [],
-        suggestedImport: false,
-        // The facade bundles PlId's brand under its own zod symbol, so it can't
-        // unify with this block's PlId; mutateBlockStorage value is `unknown` and
-        // the brand is runtime-erased, so no satisfies assertion is possible here.
-      },
-    });
-    await project.runBlock(sndBlockId);
-    await helpers.awaitBlockDone(sndBlockId, 8000);
+        },
+      ],
+      h5adFilesToPreprocess: [],
+      seuratFilesToPreprocess: [],
+      suggestedImport: false,
+      // The facade bundles PlId's brand under its own zod symbol, so it can't
+      // unify with this block's PlId; mutateBlockStorage value is `unknown` and
+      // the brand is runtime-erased, so no satisfies assertion is possible here.
+    },
+  });
+  await project.runBlock(sndBlockId);
+  await helpers.awaitBlockDone(sndBlockId, 8000);
+  return { sndBlockId, sample1Id, r1Handle, r2Handle };
+}
+
+const bulkProjectTest = (
+  name: string,
+  assetPrefix: string,
+  preset: string,
+  chains: BlockData["chains"],
+  stepResources?: BlockData["stepResources"],
+) =>
+  blockTest(name, { timeout: 150000 }, async ({ rawPrj: project, ml, helpers, expect }) => {
+    const { sndBlockId, sample1Id, r1Handle, r2Handle } = await addBulkSample(
+      project,
+      helpers,
+      assetPrefix,
+    );
+    const clonotypingBlockId = await project.addBlock("MiXCR Clonotyping", myBlockSpec);
     const clonotypingBlockState = project.getBlockState(clonotypingBlockId);
 
     const sdnStableState1 = await helpers.awaitBlockDoneAndGetStableBlockState(sndBlockId, 8000);
@@ -176,11 +193,12 @@ blockTest(
         defaultBlockLabel: "",
         customBlockLabel: "",
         input: clonotypingStableState1Outputs.inputOptions[0].ref,
-        preset: { type: "name", name: "milab-human-dna-xcr-7genes-multiplex" },
-        chains: ["IGHeavy", "IGLight"],
+        preset: { type: "name", name: preset },
+        chains,
         cloneClusteringMode: "default",
         runMode: "full",
         tableState: createPlDataTableStateV2(),
+        stepResources,
       } satisfies BlockData,
     });
 
@@ -269,6 +287,89 @@ blockTest(
     ).toHaveProperty("pl7.app/vdj/clonotypeKey/structure");
 
     expect(clonesPfColumnList).length.to.greaterThanOrEqual(7);
+
+    // A split run has one log per step, keyed [sampleId, step], in run order.
+    const logs = outputs3.logs!.data.filter((e) => e.key[0] === sample1Id && e.key.length === 2);
+    expect(logs.length).toBeGreaterThanOrEqual(3);
+  });
+
+bulkProjectTest("simple project", "small_data", "milab-human-dna-xcr-7genes-multiplex", [
+  "IGHeavy",
+  "IGLight",
+]);
+
+// Pipeline `align, refineTagsAndSort, assemble, exportClones`. The reads are MiXCR's own UMI
+// fixture (tools/mixcr src/test/resources/sequences/umi_ig_data_2_subset_*).
+// A lowered assemble floor shows a per-step override reaching the step.
+bulkProjectTest("umi project", "umi_ig_data_2_subset", "mikelov-et-al-2021", ["IGHeavy"], {
+  assemble: { memFloor: 4 },
+});
+
+// The published block ran one `mixcr analyze` per sample; this build runs one exec per step.
+// A sample analysed by the published block must be recovered on update, not run again:
+// :mixcr-analyze keeps the published identity and output names. A recovered sample keeps its
+// single log, keyed [sampleId]; a sample run on this build gets one log per step, keyed
+// [sampleId, step]. The log keys therefore tell the two apart without reading the backend.
+blockTest(
+  "update from the published block keeps old results",
+  { timeout: 300000 },
+  async ({ rawPrj: project, helpers, expect }) => {
+    const { sample1Id } = await addBulkSample(project, helpers, "small_data");
+    const clonotypingBlockId = await project.addBlock("MiXCR Clonotyping", {
+      type: "from-registry-v2",
+      registryUrl: "https://blocks.pl-open.science/",
+      id: { organization: "milaboratories", name: "mixcr-clonotyping-2", version: "2.23.13" },
+    });
+
+    const publishedState1 = (await awaitStableState(
+      project.getBlockState(clonotypingBlockId),
+      25000,
+    )) as InferBlockState<typeof platforma>;
+    const publishedOutputs1 = wrapOutputs(publishedState1.outputs);
+    expect(publishedOutputs1.inputOptions).toHaveLength(1);
+
+    await project.mutateBlockStorage(clonotypingBlockId, {
+      operation: "update-block-data",
+      value: {
+        defaultBlockLabel: "",
+        customBlockLabel: "",
+        input: publishedOutputs1.inputOptions[0].ref,
+        preset: { type: "name", name: "milab-human-dna-xcr-7genes-multiplex" },
+        chains: ["IGHeavy", "IGLight"],
+        cloneClusteringMode: "default",
+        // The read limit is part of the analysis identity, and the model passes it only in dry
+        // mode. No other test uses this value, so the published run cannot be recovered from a
+        // run of this build on the same reads.
+        runMode: "dry",
+        limitInput: 999999999999900,
+        tableState: createPlDataTableStateV2(),
+      } satisfies BlockData,
+    });
+    await project.runBlock(clonotypingBlockId);
+    const publishedState2 = await helpers.awaitBlockDoneAndGetStableBlockState(
+      clonotypingBlockId,
+      100000,
+    );
+    const publishedOutputs2 = wrapOutputs<BlockOutputs>(
+      publishedState2.outputs as unknown as BlockOutputs,
+    );
+    expect(publishedOutputs2.done).toEqual([sample1Id]);
+    expect(publishedOutputs2.logs!.data.map((e) => e.key)).toEqual([[sample1Id]]);
+
+    await project.updateBlockPack(clonotypingBlockId, myBlockSpec);
+    await project.runBlock(clonotypingBlockId);
+    const updatedState = await helpers.awaitBlockDoneAndGetStableBlockState(
+      clonotypingBlockId,
+      100000,
+    );
+    const updatedOutputs = wrapOutputs<BlockOutputs>(
+      updatedState.outputs as unknown as BlockOutputs,
+    );
+    expect(updatedOutputs.done).toEqual([sample1Id]);
+    expect(updatedOutputs.qc!.data[0]).toBeDefined();
+    expect(updatedOutputs.reports.isComplete).toEqual(true);
+    // The single log of the published run, not one log per step.
+    expect(updatedOutputs.logs!.data.map((e) => e.key)).toEqual([[sample1Id]]);
   },
 );
 

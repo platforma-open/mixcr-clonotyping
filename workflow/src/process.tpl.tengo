@@ -12,6 +12,7 @@ sets := import("@platforma-sdk/workflow-tengo:sets")
 anonymize := import("@platforma-sdk/workflow-tengo:anonymize")
 
 calculateExportSpecs := import(":calculate-export-specs")
+presetTraits := import(":preset-traits")
 
 json := import("json")
 text := import("text")
@@ -67,6 +68,7 @@ self.body(func(inputs) {
 	limitInput := params.limitInput
 	perProcessMemGB := params.perProcessMemGB
 	perProcessCPUs := params.perProcessCPUs
+	stepResources := params.stepResources
 
 	blockId := params.blockId
 	libraryId := params.libraryId
@@ -78,6 +80,13 @@ self.body(func(inputs) {
 
 	if is_undefined(presetSpecForBack) {
 		ll.panic("no presetSpecForBack")
+	}
+
+	// The resolved preset is the same for every sample, so a preset the block cannot run is
+	// rejected once here, before any sample template renders.
+	unsupported := presetTraits.unsupportedReason(presetContent.getDataAsJson())
+	if !is_undefined(unsupported) {
+		ll.panic(unsupported)
 	}
 
 	reports := []
@@ -155,6 +164,8 @@ self.body(func(inputs) {
 		},
 		name: "qc"
 	}, {
+		// Per sample: one stream for a run from before the split, or a map of streams keyed by
+		// step (`007:align`) for a split run. Never exported.
 		type: "Resource",
 		spec: {
 			kind: "PColumn",
@@ -292,7 +303,8 @@ self.body(func(inputs) {
 			// to pick up the results from executions with different values for CPU and Memory overrides
             metaExtra: {
                 perProcessMemGB: perProcessMemGB,
-                perProcessCPUs: perProcessCPUs
+                perProcessCPUs: perProcessCPUs,
+                stepResources: stepResources
             }
 		}
 	)

@@ -25,6 +25,7 @@ import {
 import { computed, reactive, watch } from "vue";
 import { useApp } from "./app";
 import { retentive } from "./retentive";
+import StepResourcesSettings from "./StepResourcesSettings.vue";
 
 const app = useApp();
 
@@ -75,6 +76,13 @@ const presetOptions = computed(() => {
         value: preset.presetName,
       }) satisfies ListOption,
   );
+});
+
+// Why the block cannot run the selected built-in preset; undefined while it can, or is unknown.
+const unsupportedPresetReason = computed(() => {
+  if (app.model.data.preset?.type !== "name") return undefined;
+  const support = app.model.outputs.presetSupport;
+  return support?.supported === false ? support.reason : undefined;
 });
 
 const preset = computed(() => {
@@ -562,6 +570,10 @@ watch(stopCodonSelection, (selected) => {
     @update:model-value="setPresetFile"
   />
 
+  <PlAlert v-if="unsupportedPresetReason" type="error" icon>
+    {{ unsupportedPresetReason }} Pick another preset.
+  </PlAlert>
+
   <PlDropdown
     v-if="needSpecies"
     v-model="app.model.data.species"
@@ -831,6 +843,10 @@ watch(stopCodonSelection, (selected) => {
       :minValue="1"
       :maxValue="999999"
     />
+
+    <PlAccordionSection label="Per-step resources">
+      <StepResourcesSettings />
+    </PlAccordionSection>
   </PlAccordionSection>
 </template>
 

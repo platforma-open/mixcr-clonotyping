@@ -6,7 +6,7 @@ pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 smart := import("@platforma-sdk/workflow-tengo:smart")
 slices := import("@platforma-sdk/workflow-tengo:slices")
 assets := import("@platforma-sdk/workflow-tengo:assets")
-exec := import("@platforma-sdk/workflow-tengo:exec")
+mixcrCmd := import(":mixcr-cmd")
 pt := import("@platforma-sdk/workflow-tengo:pt")
 clonotypeLabel := import(":clonotype-label")
 stopCodonReplacement := import(":stop-codon-replacement")
@@ -75,13 +75,9 @@ self.body(func(inputs) {
 	// Exporting clones from clns file
 
 	createExport := func(additionalAction, ramRequest) {
-		mixcrCmdBuilder := exec.builder().
+		mixcrCmdBuilder := mixcrCmd.base(mixcrSw).
 			inMediumQueue().
 			resources({ onCPU: { cpu: 2, ram: ramRequest } }).
-			env("MI_USE_SYSTEM_CA", "true").
-			software(mixcrSw).
-			secret("MI_LICENSE", "MI_LICENSE").
-			env("MI_LICENSE_DEBUG", "MI_LICENSE_DEBUG").
 			arg("exportClones").
 			arg("--dont-split-files").
 			arg("--drop-default-fields").
@@ -113,7 +109,7 @@ self.body(func(inputs) {
 	}
 
 	// Bulk export: loads the CloneSet and writes it straight out.
-	mixcrCmd := createExport(func(mixcrCmdBuilder) {
+	exportClonesCmd := createExport(func(mixcrCmdBuilder) {
 		for argGrp in exportArgs {
 			for arg in argGrp {
 				mixcrCmdBuilder.arg(arg)
@@ -121,7 +117,7 @@ self.body(func(inputs) {
 		}
 	}, exportRam(16, 30))
 
-	unprocessedTsv := mixcrCmd.getFile("clones.tsv")
+	unprocessedTsv := exportClonesCmd.getFile("clones.tsv")
 
 	result := {
 		tsvForSingleCell: smart.createNullResource()
