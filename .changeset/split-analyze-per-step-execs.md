@@ -1,8 +1,0 @@
----
-'@platforma-open/milaboratories.mixcr-clonotyping-2.workflow': minor
-'@platforma-open/milaboratories.mixcr-clonotyping-2.ui': minor
-'@platforma-open/milaboratories.mixcr-clonotyping-2.model': minor
-'@platforma-open/milaboratories.mixcr-clonotyping-2': minor
----
-
-Run MiXCR as one exec per step, the steps `mixcr analyze --dry-run-json` plans for the preset, each with CPU and memory from one per-step table. Each step has its own log, carried in the log column in place of the single log; samples analysed before the update do not run again and keep their single log. The "Advanced Settings" memory and CPU overrides replace each step's grant, as before; the planning step takes neither. Presets that split the reads by a sample tag, and presets without qc checks, are rejected, and the settings say so under the preset picker before any run. Needs a MiXCR build with `--dry-run-json` (milaboratory/mixcr#2156). The MiTool steps are sized from the file each stages (parse from the reads, refine-tags and consensus from the `.mic`) in place of the flat 192 GiB `analyze` had; the refine, qc and planning grants are placeholders until profiled. Most steps now start at 32 GiB, below the 64 GiB floor every `analyze` had: align is a flat 32 GiB, and the MiTool, refine, assemble (UMI, cell and long-read), contig, cell and qc steps grow with their input from 32 GiB. Planning gets 4 GiB; bulk assemble, and any step without its own row, start at 64 GiB. A step that runs out of memory fails the sample with no retry: the "Advanced Settings" memory override, global or per step, is the way to raise it.

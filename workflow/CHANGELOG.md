@@ -1,5 +1,16 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.30.0
+
+### Minor Changes
+
+- df9ac7f: Per-step resources. "Advanced Settings" gains a Per-step resources section: a memory floor per step, which beats the global memory override for that step and does not re-run finished samples, and a "List the steps of this preset" button that plans the steps before any run.
+- df9ac7f: Run MiXCR as one exec per step, the steps `mixcr analyze --dry-run-json` plans for the preset, each with CPU and memory from one per-step table. Each step has its own log, carried in the log column in place of the single log; samples analysed before the update do not run again and keep their single log. The "Advanced Settings" memory and CPU overrides replace each step's grant, as before; the planning step takes neither. Presets that split the reads by a sample tag, and presets without qc checks, are rejected, and the settings say so under the preset picker before any run. Needs a MiXCR build with `--dry-run-json` (milaboratory/mixcr#2156). The MiTool steps are sized from the file each stages (parse from the reads, refine-tags and consensus from the `.mic`) in place of the flat 192 GiB `analyze` had; the refine, qc and planning grants are placeholders until profiled. Most steps now start at 32 GiB, below the 64 GiB floor every `analyze` had: align is a flat 32 GiB, and the MiTool, refine, assemble (UMI, cell and long-read), contig, cell and qc steps grow with their input from 32 GiB. Planning gets 4 GiB; bulk assemble, and any step without its own row, start at 64 GiB. A step that runs out of memory fails the sample with no retry: the "Advanced Settings" memory override, global or per step, is the way to raise it.
+
+### Patch Changes
+
+- ce0bc99: The QC report passes the `.clns` files to `exportReportsTable` in sorted sample order, so an unchanged run renders the same command and reuses its earlier result.
+
 ## 3.29.9
 
 ### Patch Changes
