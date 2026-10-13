@@ -41,18 +41,18 @@ TestQcIsSizedFromTheClns := func() {
 }
 
 TestBulkAssembleIsSizedFromTheVdjcaWithNoCap := func() {
-	// max(64, 4 + 21.9 x GiB), rounded up.
+	// max(64, 4 + 25 x GiB), rounded up.
 	test.isEqual(_gib(64),  _ram("assemble", "none", _gib(2)))
-	test.isEqual(_gib(115), _ram("assemble", "none", _gib(505) / 100))
-	test.isEqual(_gib(267), _ram("assemble", "none", _gib(12)))
+	test.isEqual(_gib(131), _ram("assemble", "none", _gib(505) / 100))
+	test.isEqual(_gib(304), _ram("assemble", "none", _gib(12)))
 }
 
 TestTaggedAssembleRows := func() {
 	test.isEqual(_gib(32), _ram("assemble", "umi", _gib(3)))
-	test.isEqual(_gib(75), _ram("assemble", "umi", _gib(186) / 10))
-	test.isEqual(_gib(120), _ram("assemble", "umi", _gib(30)))
-	test.isEqual(_gib(65), _ram("assemble", "cell", _gib(10)))
-	test.isEqual(_gib(66), _ram("assemble", "longRead", _gib(75) / 10))
+	test.isEqual(_gib(186), _ram("assemble", "umi", _gib(186) / 10))
+	test.isEqual(_gib(300), _ram("assemble", "umi", _gib(30)))
+	test.isEqual(_gib(100), _ram("assemble", "cell", _gib(10)))
+	test.isEqual(_gib(119), _ram("assemble", "longRead", _gib(75) / 10))
 }
 
 TestRefineHasA32GiBFloor := func() {
@@ -61,12 +61,12 @@ TestRefineHasA32GiBFloor := func() {
 }
 
 TestMiToolRowsScaleWithTheirInput := func() {
-	// parse: max(32, 2 + 1 x GiB); refine-tags and consensus: max(32, 2 + 4 x GiB).
+	// parse: max(32, 2 + 2 x GiB); refine-tags and consensus: max(32, 2 + 8 x GiB).
 	test.isEqual(_gib(32), _ram("mitool-parse", "cell", _gib(1)))
-	test.isEqual(_gib(42), _ram("mitool-parse", "cell", _gib(40)))
+	test.isEqual(_gib(82), _ram("mitool-parse", "cell", _gib(40)))
 	test.isEqual(_gib(32), _ram("mitool-consensus", "cell", _gib(1)))
-	test.isEqual(_gib(202), _ram("mitool-consensus", "cell", _gib(50)))
-	test.isEqual(_gib(402), _ram("mitool-refine-tags", "cell", _gib(100)))
+	test.isEqual(_gib(402), _ram("mitool-consensus", "cell", _gib(50)))
+	test.isEqual(_gib(802), _ram("mitool-refine-tags", "cell", _gib(100)))
 }
 
 TestCellStepsAndTheDefault := func() {
