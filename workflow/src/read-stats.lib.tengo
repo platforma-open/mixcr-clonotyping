@@ -3,11 +3,11 @@
 // Two shapes of temporary data compete for the space, and the run needs whichever is
 // larger:
 //
-//     S   = 2.0 x millionsOfReads x (lengthOfR1 + lengthOfR2) / 1000
+//     S   = 4.0 x millionsOfReads x (lengthOfR1 + lengthOfR2) / 1000
 //     C   = 11  x millionsOfReads x (lengthOfTheLongestRead / 1000) ^ 2
 //     GiB = max(S, C)
 //
-// S scales with the volume of the input — two bytes per base of the pair. C is quadratic in
+// S scales with the volume of the input — four bytes per base of the pair. C is quadratic in
 // read length, so it overtakes S only on long reads.
 //
 // None of those numbers is in the p-column metadata, so the reads are measured with
@@ -209,7 +209,7 @@ scratchFreeSpaceFor := func(readStats) {
 
 	// 'reads x (lengthOfR1 + lengthOfR2)' is the summed bases of the pair, so the sums stand
 	// in for the two average lengths with no rounding of their own.
-	volumeGiB := 2.0 * float(totals.basesR1 + totals.basesR2) / 1000000000.0
+	volumeGiB := 4.0 * float(totals.basesR1 + totals.basesR2) / 1000000000.0
 
 	kilobases := float(totals.longestRead) / 1000.0
 	lengthGiB := 11.0 * millionsOfReads * kilobases * kilobases
