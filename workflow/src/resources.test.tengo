@@ -16,6 +16,20 @@ _evalSize := func(node, sizeBytes) {
 	return f.evaluateResource(resolved, resolver, "test")
 }
 
+// A row's scratch for a fake staged input of sizeBytes: the reads request when the row sets no
+// scratchSlope, bytes otherwise.
+_scratch := func(step, cls, readsSize, sizeBytes) {
+	node := rs.scratch(rs.lookup(step, cls), readsSize)
+	if is_undefined(node) || is_string(node) {
+		return node
+	}
+	fileName := "input.bin"
+	inputs := {}
+	inputs[rs.INPUT_TAG] = [fileName]
+	resolved := f.resolveAst(node, inputs, [fileName])
+	return f.evaluateScratch(resolved, { size: func(files) { return sizeBytes }, lineCount: func(files) { return 0 } })
+}
+
 // A row's memory for a fake staged input of sizeBytes: a string for a flat row, bytes otherwise.
 _ram := func(step, cls, sizeBytes) {
 	node := rs.ram(rs.lookup(step, cls))
@@ -212,4 +226,29 @@ TestTheGlobalMemoryOverrideMakesMemoryFlatUnlessTheStepSetsMemory := func() {
 	test.isEqual(32, e.row.memFloor)
 	test.isEqual(2.0, e.row.memSlope)
 	test.isEqual("default", e.source.memFloor)
+}
+
+TestRefineScratchIsSizedFromTheVdjca := func() {
+	// max(reads request, 4 + 12 x GiB), rounded up.
+	test.isEqual(_gib(76), _scratch("refineTagsAndSort", "umi", "32GiB", _gib(6)))
+	test.isEqual(_gib(40), _scratch("refineTagsAndSort", "cell", "32GiB", _gib(3)))
+	// The reads request is the floor.
+	test.isEqual(_gib(100), _scratch("refineTagsAndSort", "umi", "100GiB", _gib(6)))
+	// No reads request: the data term alone.
+	test.isEqual(_gib(16), _scratch("refineTagsAndSort", "umi", undefined, _gib(1)))
+	// A part GiB rounds up.
+	test.isEqual(_gib(17), _scratch("refineTagsAndSort", "umi", undefined, _gib(1) + 1))
+}
+
+TestStepsWithoutAScratchSlopeKeepTheReadsRequest := func() {
+	test.isEqual("44GiB", _scratch("assemble", "umi", "44GiB", _gib(6)))
+	test.isEqual("44GiB", _scratch("mitool-parse", "cell", "44GiB", _gib(6)))
+	test.isTrue(is_undefined(_scratch("assemble", "umi", undefined, _gib(6))))
+	test.isTrue(is_undefined(_scratch("qc", "cell", "44GiB", _gib(6))))
+}
+
+TestApplyPassesTheRefineScratchFormula := func() {
+	cmd := rs.apply(_fakeCmd(), rs.lookup("refineTagsAndSort", "umi"), { scratchFreeSpace: "32GiB" })
+	test.isTrue(!is_string(cmd.onCPU.scratchFreeSpace))
+	test.isTrue(!is_undefined(cmd.onCPU.scratchFreeSpace))
 }
