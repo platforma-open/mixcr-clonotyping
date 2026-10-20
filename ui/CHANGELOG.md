@@ -1,5 +1,13 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.ui
 
+## 1.28.1
+
+### Patch Changes
+
+- 35522d7: Release every package through npm trusted publishing (OIDC) so each package's trusted publisher is used before it expires.
+- Updated dependencies [35522d7]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.model@1.29.1
+
 ## 1.28.0
 
 ### Minor Changes

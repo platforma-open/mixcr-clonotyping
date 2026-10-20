@@ -1,6 +1,6 @@
 {
   "name": "@platforma-open/milaboratories.mixcr-clonotyping-2",
-  "version": "2.24.0",
+  "version": "2.24.1",
   "files": [
     "dist",
     "block-pack"

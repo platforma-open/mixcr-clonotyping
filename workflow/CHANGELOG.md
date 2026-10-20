@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.30.1
+
+### Patch Changes
+
+- 35522d7: Release every package through npm trusted publishing (OIDC) so each package's trusted publisher is used before it expires.
+
 ## 3.30.0
 
 ### Minor Changes
