@@ -10,6 +10,10 @@
 //
 //     cpu = cpuIntercept + cpuSlope x input GiB, rounded up
 //
+// Scratch is the request :read-stats sizes from the reads, unless the row sets scratchSlope:
+//
+//     scratch = max(reads request, scratchIntercept + scratchSlope x input GiB), rounded up
+//
 // The overrides of a row. Per-step values from "Per-step resources" replace the row's fields.
 // The "Advanced Settings" memory override replaces the row's memory with a flat amount, unless
 // the step sets a memory field of its own; the CPU override replaces the row's CPU, unless the
@@ -21,6 +25,7 @@
 exec := import("@platforma-sdk/workflow-tengo:exec")
 ll := import("@platforma-sdk/workflow-tengo:ll")
 math := import("math")
+text := import("text")
 
 f := exec.formula
 
@@ -41,7 +46,9 @@ _FALLBACK_GIB := 64
 //   cpuSlope      CPUs per GiB of input                            	default 0
 //   cap           GiB, the most the step gets                     		default none
 //   queue         "heavy", "medium" or "light"							default "heavy"
-//   scratch       the step gets the scratch request from the reads   	default true
+//   scratch       the step gets a scratch request                     	default true
+//   scratchSlope  whole GiB of scratch per GiB of input            	default none
+//   scratchIntercept  GiB, added to the scratch data term          	default 0
 //   override      the "Advanced Settings" overrides apply          	default true
 //
 // While backend OOM retries are off, these rows are best-effort sizing: purposely oversized to
@@ -59,7 +66,8 @@ _ROWS := [
 
 	// `align` streams its input, so the grant does not grow with the sample.
 	{ step: "align", class: "any", cpuIntercept: 16, memFloor: 32, memIntercept: 0, memSlope: 0 },
-	{ step: "refineTagsAndSort", class: "any", cpuIntercept: 16, memFloor: 32, memIntercept: 6, memSlope: 14 },
+	// Its scratch is sized from the .vdjca it sorts.
+	{ step: "refineTagsAndSort", class: "any", cpuIntercept: 16, memFloor: 32, memIntercept: 6, memSlope: 14, scratchIntercept: 4, scratchSlope: 12 },
 	{ step: "assemblePartial", class: "any", cpuIntercept: 16, memFloor: 32, memIntercept: 4, memSlope: 15 },
 	{ step: "extend", class: "any", cpuIntercept: 16, memFloor: 32, memIntercept: 4, memSlope: 10 },
 	{ step: "assembleContigs", class: "any", cpuIntercept: 24, memFloor: 32, memIntercept: 4, memSlope: 18 },
@@ -193,14 +201,37 @@ effective := func(row, res) {
 	return { row: row, source: source }
 }
 
+// scratch returns the scratch request of a row: 'undefined' when the row opts out, the reads
+// request `readsSize` ("<n>GiB" or 'undefined') when it sets no scratchSlope, an exec.formula
+// over the INPUT_TAG file otherwise.
+scratch := func(row, readsSize) {
+	if row.scratch == false {
+		return undefined
+	}
+	if is_undefined(row.scratchSlope) {
+		return readsSize
+	}
+	ll.assert(is_int(row.scratchSlope), "scratchSlope of %v must be a whole number", row.step)
+	intercept := is_undefined(row.scratchIntercept) ? 0 : row.scratchIntercept
+	formula := f.gib(intercept).
+		plus(f.size(INPUT_TAG).times(row.scratchSlope)).
+		dividedBy(f.gib(1)).times(f.gib(1)) // dividedBy ceils, so this rounds up to a whole GiB
+	if !is_undefined(readsSize) {
+		ll.assert(text.has_suffix(readsSize, "GiB"), "scratch request %v is not in GiB", readsSize)
+		formula = formula.atLeast(f.gib(int(readsSize[:len(readsSize) - 3])))
+	}
+	return formula
+}
+
 // apply sets the CPU, memory, scratch and queue of `cmd` from `row`. `res` carries the
 // overrides and the scratch request: { perProcessMemGB, perProcessCPUs, stepResources,
 // scratchFreeSpace }; `effective` says how the overrides combine.
 apply := func(cmd, row, res) {
 	row = effective(row, res).row
 	onCPU := { cpu: cpu(row), ram: ram(row) }
-	if row.scratch != false && !is_undefined(res.scratchFreeSpace) {
-		onCPU.scratchFreeSpace = res.scratchFreeSpace
+	scratchSize := scratch(row, res.scratchFreeSpace)
+	if !is_undefined(scratchSize) {
+		onCPU.scratchFreeSpace = scratchSize
 	}
 	queue := is_undefined(row.queue) ? "heavy" : row.queue
 	cmd.resources({ queue: queue, onCPU: onCPU })
@@ -213,6 +244,7 @@ export {
 	lookup: lookup,
 	ram: ram,
 	cpu: cpu,
+	scratch: scratch,
 	effective: effective,
 	apply: apply
 }
