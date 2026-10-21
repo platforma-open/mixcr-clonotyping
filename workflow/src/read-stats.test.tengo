@@ -38,24 +38,24 @@ _paired := func(numberOfReads, readLength) {
 
 TestVolumeTermWins := func() {
 	// The reference sample: 72,604,410 pairs of 151 bp.
-	//   S = 2.0 x 72.60441 x 302/1000     = 43.85 GiB
+	//   S = 4.0 x 72.60441 x 302/1000     = 87.71 GiB
 	//   C = 11  x 72.60441 x (0.151)^2    = 18.21 GiB
-	test.isEqual("44GiB", rs.scratchFreeSpaceFor(_paired(72604410, 151)))
+	test.isEqual("88GiB", rs.scratchFreeSpaceFor(_paired(72604410, 151)))
 }
 
 TestLengthTermWins := func() {
 	// Long reads make the quadratic term overtake the volume term.
-	//   S = 2.0 x 1.0 x 4000/1000         =  8.00 GiB
+	//   S = 4.0 x 1.0 x 4000/1000         = 16.00 GiB
 	//   C = 11  x 1.0 x (2.0)^2           = 44.00 GiB
 	test.isEqual("44GiB", rs.scratchFreeSpaceFor(_paired(1000000, 2000)))
 }
 
 TestSingleEndUsesOneLength := func() {
 	// Only R1 present, so 'lengthOfR2' contributes nothing.
-	//   S = 2.0 x 72.60441 x 151/1000     = 21.93 GiB
+	//   S = 4.0 x 72.60441 x 151/1000     = 43.85 GiB
 	//   C = 18.21 GiB
 	single := [_row("reads_R1_0.fastq.gz", 72604410, 72604410 * 151, 151)]
-	test.isEqual("22GiB", rs.scratchFreeSpaceFor(single))
+	test.isEqual("44GiB", rs.scratchFreeSpaceFor(single))
 }
 
 TestReadCountCountsPairsOnce := func() {
@@ -72,7 +72,7 @@ TestLanesAreSummed := func() {
 		_row("reads_R1_2.fastq.gz", 36302205, 36302205 * 151, 151),
 		_row("reads_R2_3.fastq.gz", 36302205, 36302205 * 151, 151)
 	]
-	test.isEqual("44GiB", rs.scratchFreeSpaceFor(lanes))
+	test.isEqual("88GiB", rs.scratchFreeSpaceFor(lanes))
 }
 
 TestLongestReadIsTakenAcrossEnds := func() {
@@ -102,7 +102,7 @@ TestUnusableInputAsksForNothing := func() {
 TestLargeSingleEndSampleStaysUnderTheCeiling := func() {
 	// The largest shape we expect: 600M single-end reads of 1000 bp. The quadratic term
 	// decides, and this is where it would run away if it were going to.
-	//   S = 2.0 x 600 x 1000/1000  = 1200 GiB
+	//   S = 4.0 x 600 x 1000/1000  = 2400 GiB
 	//   C = 11  x 600 x (1.0)^2    = 6600 GiB
 	single := [_row("reads_R1_0.fastq.gz", 600000000, 600000000 * 1000, 1000)]
 	size := rs.scratchFreeSpaceFor(single)
