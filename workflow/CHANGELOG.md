@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.30.2
+
+### Patch Changes
+
+- 81a7d7d: Size MiXCR scratch space at four bytes per base of the read pair instead of two. `refineTagsAndSort` ran out of temporary disk during its final sort on 10x 5' BCR samples granted 32 GiB.
+
 ## 3.30.1
 
 ### Patch Changes
