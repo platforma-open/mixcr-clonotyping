@@ -8,6 +8,7 @@ assets := import("@platforma-sdk/workflow-tengo:assets")
 smart := import("@platforma-sdk/workflow-tengo:smart")
 file := import("@platforma-sdk/workflow-tengo:file")
 pframes := import("@platforma-sdk/workflow-tengo:pframes")
+presetArgs := import(":preset-args")
 
 calculatePresetInfoTpl := assets.importTemplate(":calculate-preset-info")
 processTpl := assets.importTemplate(":process")
@@ -88,14 +89,14 @@ wf.body(func(args) {
 
 	presetInfoResult := render.create(calculatePresetInfoTpl, {
 		preset: presetResource,
-		params: {
+		params: presetArgs.withContigs({
 			species: species,
 			leftAlignmentMode: args.leftAlignmentMode,
 			rightAlignmentMode: args.rightAlignmentMode,
 			materialType: args.materialType,
 			tagPattern: args.tagPattern,
 			assembleClonesBy: args.assembleClonesBy
-		}
+		}, args.assembleContigsBy)
 	})
 
 	presetContent := presetInfoResult.output("preset", 24 * 60 * 60 * 1000)
@@ -119,7 +120,7 @@ wf.body(func(args) {
 
 		library: library,
 
-			params: smart.createJsonResource({
+			params: smart.createJsonResource(presetArgs.withContigs({
 			species: species,
 			receptorsOrChains: receptorsOrChains,
 			limitInput: limitInput,
@@ -141,7 +142,7 @@ wf.body(func(args) {
 				stopCodonTypes: args.stopCodonTypes,
 				stopCodonReplacements: args.stopCodonReplacements,
 				scHeavyOnly: args.scHeavyOnly
-		})
+		}, args.assembleContigsBy))
 	})
 
 	exports := {

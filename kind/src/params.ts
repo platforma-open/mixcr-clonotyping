@@ -108,6 +108,7 @@ const CONTRACT = {
   rightAlignmentMode: check(isString, "a string"),
   tagPattern: check(isString, "a string"),
   assembleClonesBy: check(isString, "a string"),
+  assembleContigsBy: check(isString, "a string"),
   imputeGermline: check(isBoolean, "a boolean"),
   chains: check(arrayOf(isString), "an array of strings"),
   scHeavyOnly: check(isBoolean, "a boolean"),

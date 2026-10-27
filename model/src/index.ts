@@ -29,7 +29,7 @@ import { dropEmptyOverrides } from "./step-resources";
 
 export type ListStepsParams = Pick<
   BlockArgs,
-  "tagPattern" | "assembleClonesBy" | "cloneClusteringMode"
+  "tagPattern" | "assembleClonesBy" | "assembleContigsBy" | "cloneClusteringMode"
 >;
 
 export type BlockData = BlockArgs & {
@@ -118,6 +118,7 @@ export const platforma = BlockModelV3.create({ dataModel, kind })
     rightAlignmentMode: data.rightAlignmentMode,
     tagPattern: data.tagPattern,
     assembleClonesBy: data.assembleClonesBy,
+    assembleContigsBy: data.assembleContigsBy,
     imputeGermline: data.imputeGermline,
     chains: data.chains,
     scHeavyOnly: data.scHeavyOnly,
@@ -178,6 +179,7 @@ export const platforma = BlockModelV3.create({ dataModel, kind })
       rightAlignmentMode: builtIn ? data.rightAlignmentMode : undefined,
       tagPattern: builtIn ? data.tagPattern : undefined,
       assembleClonesBy: builtIn ? data.assembleClonesBy : undefined,
+      assembleContigsBy: builtIn ? data.assembleContigsBy : undefined,
       imputeGermline:
         builtIn && data.assembleClonesBy !== undefined ? data.imputeGermline : undefined,
       limitInput: data.runMode === "dry" ? data.limitInput : undefined,
