@@ -29,6 +29,17 @@ _TENX := [
 	["exportCloneGroups", "result.assembledCells.clns", "result.clone.groups.tsv"]
 ]
 
+// The shotgun presets (rna-seq, exome-seq) run assemblePartial twice; both rounds name the same
+// reports, and MiXCR appends the second round's report to the first's.
+_SHOTGUN := [
+	["align", "--report", "result.align.report.txt", "--json-report", "result.align.report.json", "--preset", "rna-seq", "--species", "hs", "input_{{R}}.fastq.gz", "result.alignments.vdjca"],
+	["assemblePartial", "--report", "result.assemblePartial.report.txt", "--json-report", "result.assemblePartial.report.json", "result.alignments.vdjca", "result.passembled.1.vdjca"],
+	["assemblePartial", "--report", "result.assemblePartial.report.txt", "--json-report", "result.assemblePartial.report.json", "result.passembled.1.vdjca", "result.passembled.2.vdjca"],
+	["extend", "--report", "result.extend.report.txt", "--json-report", "result.extend.report.json", "result.passembled.2.vdjca", "result.extended.vdjca"],
+	["assemble", "--report", "result.assemble.report.txt", "--json-report", "result.assemble.report.json", "result.extended.vdjca", "result.clns"],
+	["qc", "--print-to-stdout", "result.clns", "result.qc.txt", "result.qc.json"]
+]
+
 _READS := { "input_R1.fastq.gz": true, "input_R2.fastq.gz": true }
 
 _keys := func(plan) {
@@ -65,6 +76,17 @@ TestTenXRunsEveryMiToolRound := func() {
 	test.isEqual("007:align", plan.commands[6].logKey)
 	test.isEqual("013:qc", plan.commands[12].logKey)
 	test.isEqual("result.assembledCells.clns", plan.clns)
+}
+
+// A staged file is read-only, so a repeated step that got the earlier round's report could not
+// append to it.
+TestRepeatedStepWritesItsOwnReports := func() {
+	plan := ms.commands(_SHOTGUN, _READS, "input_{{R}}.fastq.gz")
+	second := plan.commands[2]
+	test.isEqual("003:assemblePartial", second.logKey)
+	test.isEqual(["result.passembled.1.vdjca"], second.stageSteps)
+	test.isEqual(["result.assemblePartial.report.txt", "result.assemblePartial.report.json", "result.passembled.2.vdjca"], second.save)
+	test.isEqual(["result.passembled.2.vdjca"], plan.commands[3].stageSteps)
 }
 
 TestExportStepsAreDropped := func() {
