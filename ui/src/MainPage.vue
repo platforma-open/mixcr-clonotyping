@@ -2,7 +2,7 @@
 import { AgGridVue } from "ag-grid-vue3";
 
 import type { PlId, Qc } from "@platforma-open/milaboratories.mixcr-clonotyping-2.model";
-import { plRefsEqual, type ImportFileHandle } from "@platforma-sdk/model";
+import type { ImportFileHandle } from "@platforma-sdk/model";
 import type { PlAgHeaderComponentParams } from "@platforma-sdk/ui-vue";
 import {
   AgGridTheme,
@@ -24,7 +24,7 @@ import {
 import { refDebounced, whenever } from "@vueuse/core";
 import type { ColDef, GridApi, GridOptions, GridReadyEvent } from "ag-grid-enterprise";
 import { ClientSideRowModelModule, ModuleRegistry } from "ag-grid-enterprise";
-import { computed, reactive, shallowRef, watch, watchEffect } from "vue";
+import { computed, reactive, shallowRef, watch } from "vue";
 import { useApp } from "./app";
 import { getAlignmentChartSettings } from "./charts/alignmentChartSettings";
 import { getChainsChartSettings } from "./charts/chainsChartSettings";
@@ -35,25 +35,6 @@ import SampleReportPanel from "./SampleReportPanel.vue";
 import SettingsPanel from "./SettingsPanel.vue";
 
 const app = useApp();
-
-// updating defaultBlockLabel
-watchEffect(() => {
-  const parts: string[] = [];
-  // Add dataset name if available
-  if (app.model.data.input) {
-    const inputOption = app.model.outputs.inputOptions?.find(
-      (p) => app.model.data.input && plRefsEqual(p.ref, app.model.data.input),
-    );
-    if (inputOption?.label) {
-      parts.push(inputOption.label);
-    }
-  }
-  // Add chains if available
-  if (app.model.data.chains && app.model.data.chains.length > 0) {
-    parts.push(app.model.data.chains.join(", "));
-  }
-  app.model.data.defaultBlockLabel = parts.filter(Boolean).join(" - ");
-});
 
 // @TODO
 const result = refDebounced(MiXCRResultsFull, 100, {
