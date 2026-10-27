@@ -86,11 +86,12 @@ DEFAULT := { step: "default", class: "any", cpuIntercept: 16, memFloor: 64, memI
 // `M aligned reads` its `aligned`, in millions. `feature` is "CDR3" for a run that assembles
 // clones by CDR3 alone, "any" otherwise.
 //
-// Each row is 1.35 x the least memory that ran without OOM at no more than 1.5 x the uncapped
-// wall time, fitted over the profiled samples of its class and feature.
+// The floor of a sample is the least memory that ran without OOM at no more than 1.5 x the
+// uncapped wall time. Each row is at least 1.6 x the floor of every profiled sample of its
+// class and feature. The jobs have no retry, so the margin covers the scatter of the floors.
 _CLONE_ROWS := [
-	{ class: "none", feature: "CDR3", memFloor: 32, memIntercept: 4, memPerMClones: 9, memPerMReads: 0 },
-	{ class: "none", feature: "any", memFloor: 32, memIntercept: 0, memPerMClones: 13.8, memPerMReads: 0.45 },
+	{ class: "none", feature: "CDR3", memFloor: 32, memIntercept: 4.3, memPerMClones: 9.8, memPerMReads: 0 },
+	{ class: "none", feature: "any", memFloor: 32, memIntercept: 10, memPerMClones: 16, memPerMReads: 0.32 },
 	{ class: "longRead", feature: "any", memFloor: 32, memIntercept: 6, memPerMClones: 5.4, memPerMReads: 0 }
 ]
 
