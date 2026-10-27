@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.30.4
+
+### Patch Changes
+
+- 9da47cb: Update MiXCR to the versions with the rebuilt Docker images. The old images trust the compromised eMudhra intermediate CAs.
+
 ## 3.30.3
 
 ### Patch Changes
