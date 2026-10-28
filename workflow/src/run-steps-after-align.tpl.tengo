@@ -29,23 +29,15 @@ self.body(func(inputs) {
 	files := inputs.files
 	plan := mixcrSteps.commands(mixcrSteps.stepsOf(inputs.steps.getDataAsJson()), files, args.readsPattern)
 
-	written := {}
-	for name, file in inputs.written {
-		written[name] = file
-	}
-	logs := {}
-	for logKey, stream in inputs.logs {
-		logs[logKey] = stream
-	}
 	ctx := {
 		sw: mixcrSw,
 		files: files,
 		readNames: args.readNames,
 		stepClass: args.stepClass,
 		features: args.assemblingFeatures,
-		res: is_undefined(args.res) ? {} : args.res,
-		written: written,
-		logs: logs,
+		res: args.res,
+		written: copy(inputs.written),
+		logs: copy(inputs.logs),
 		alignReport: inputs.alignReport.getDataAsJson()
 	}
 	stepRunner.run(plan, int(args.from), ctx)

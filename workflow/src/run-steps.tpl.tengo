@@ -45,13 +45,6 @@ self.body(func(inputs) {
 		return stepRunner.outputs(plan, ctx.written, ctx.logs, inputs.reports)
 	}
 
-	// The undefined overrides are left out: a JSON input cannot carry them.
-	given := {}
-	for k, v in res {
-		if !is_undefined(v) {
-			given[k] = v
-		}
-	}
 	rest := render.createEphemeral(afterAlignTpl, {
 		steps: inputs.steps,
 		alignReport: stop.alignReport,
@@ -65,7 +58,7 @@ self.body(func(inputs) {
 			stepClass: inputs.stepClass,
 			assemblingFeatures: inputs.assemblingFeatures,
 			reports: inputs.reports,
-			res: given
+			res: res
 		}
 	})
 	return {

@@ -12,17 +12,6 @@ CACHE_PERIOD := 48 * times.hour
 // For the steps that write no final output (the clones or the qc result).
 INTERMEDIATE_CACHE_PERIOD := 36 * times.hour
 
-// _jsonReport returns the JSON report a step writes, read off its `--json-report` argument, or
-// undefined.
-_jsonReport := func(c) {
-	for i, arg in c.args {
-		if arg == "--json-report" && i + 1 < len(c.args) {
-			return c.args[i + 1]
-		}
-	}
-	return undefined
-}
-
 // run runs plan.commands from index `from`. ctx is { sw, files, readNames, stepClass, features,
 // res, written, logs, alignReport }: `files` holds the block files by name, `written` and `logs`
 // gain the files each step writes (by name) and its stdout stream (by logKey), and `alignReport`
@@ -75,12 +64,9 @@ run := func(plan, from, ctx) {
 		for name in c.save {
 			cmd.saveFile(name)
 		}
-		reportName := undefined
-		if needsReport && c.key == "align" {
-			reportName = _jsonReport(c)
-			if !is_undefined(reportName) {
-				cmd.saveFileContent(reportName)
-			}
+		reportName := needsReport && c.key == "align" ? c.jsonReport : undefined
+		if !is_undefined(reportName) {
+			cmd.saveFileContent(reportName)
 		}
 
 		fixedRam := undefined
