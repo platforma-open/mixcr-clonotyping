@@ -3,6 +3,8 @@
 // Each step in the list is the argument list to pass to `mixcr`, with no mark on which argument
 // is a file. This library tells them apart by name:
 //
+//   - the value of `--report` or `--json-report` is a file the step writes, even when an
+//     earlier round of the step wrote the same name;
 //   - an argument that an earlier step wrote is staged from that step;
 //   - the argument that names the reads (the pattern the plan was made with) stages the reads;
 //   - a block file (the library, a preset file) is staged by its name, and a preset argument
@@ -37,6 +39,11 @@ key := func(args) {
 	return args[0]
 }
 
+// The options whose value is a report the step writes. A repeated step (assemblePartial in the
+// shotgun presets) names the same reports as the round before it and appends to them; staged,
+// they are read-only, so each round writes its own.
+REPORT_OPTIONS := { "--report": true, "--json-report": true }
+
 // The names the block gives a custom library.
 LIBRARY_FILES := ["library.json", "library.json.gz"]
 
@@ -53,9 +60,11 @@ _presetFile := func(arg) {
 // the set of files earlier steps wrote; `blockFiles` is keyed by the files the block provides.
 _command := func(args, written, blockFiles, readsPattern) {
 	c := { key: key(args), args: args, stageSteps: [], stageReads: false, stageBlock: [], save: [] }
-	for arg in args {
+	for i, arg in args {
 		preset := _presetFile(arg)
-		if written[arg] {
+		if i > 0 && REPORT_OPTIONS[args[i - 1]] {
+			c.save = append(c.save, arg)
+		} else if written[arg] {
 			c.stageSteps = append(c.stageSteps, arg)
 		} else if arg == readsPattern {
 			c.stageReads = true

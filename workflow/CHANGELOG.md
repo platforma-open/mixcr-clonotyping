@@ -1,5 +1,17 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.workflow
 
+## 3.30.4
+
+### Patch Changes
+
+- 9da47cb: Update MiXCR to the versions with the rebuilt Docker images. The old images trust the compromised eMudhra intermediate CAs.
+
+## 3.30.3
+
+### Patch Changes
+
+- c0d095c: Fix the RNA-Seq and Exome-Seq presets, which failed at the second assemblePartial step: each round of a repeated step now writes its own reports.
+
 ## 3.30.2
 
 ### Patch Changes
