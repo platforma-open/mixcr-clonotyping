@@ -198,7 +198,9 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId, expor
 	ops := exportSpecOpsFromPreset(presetSpecForBack)
 
 	assemblingFeature := ops.assemblingFeature
-	isRnaSeqPreset := is_undefined(assemblingFeature)
+	// Undefined when clones are extended into the longest contigs (rna-seq and exome-seq without an
+	// "Assemble clones by" override, and some single-cell and UMI presets).
+	isLongestContigAssembly := is_undefined(assemblingFeature)
 	cellTags := ops.cellTags
 	hasUmi := ops.hasUmi
 	splitByC := ops.splitByC
@@ -244,7 +246,7 @@ calculateExportSpecs := func(presetSpecForBack, sampleIdAxisSpec, blockId, expor
 	clonotypeKeyArgs := undefined
 
 	if !is_undefined(assemblingFeature) {
-		if isRnaSeqPreset {
+		if isLongestContigAssembly {
 			clonotypeKeyColumns = [
 				"nSeqFR1",
 				"nSeqCDR1",

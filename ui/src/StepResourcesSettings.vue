@@ -30,6 +30,7 @@ function listSteps() {
   app.model.data.listStepsParams = {
     tagPattern: d.tagPattern,
     assembleClonesBy: d.assembleClonesBy,
+    assembleContigsBy: d.assembleContigsBy,
     cloneClusteringMode: d.cloneClusteringMode,
   } satisfies ListStepsParams;
 }

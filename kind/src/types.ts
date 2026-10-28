@@ -49,6 +49,7 @@ export type BlockParams = {
   rightAlignmentMode?: string;
   tagPattern?: string;
   assembleClonesBy?: string;
+  assembleContigsBy?: string;
   imputeGermline?: boolean;
   chains?: string[];
   scHeavyOnly?: boolean;

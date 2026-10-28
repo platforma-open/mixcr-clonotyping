@@ -5,6 +5,7 @@ smart := import("@platforma-sdk/workflow-tengo:smart")
 ll := import("@platforma-sdk/workflow-tengo:ll")
 mixcrCmd := import(":mixcr-cmd")
 assets := import("@platforma-sdk/workflow-tengo:assets")
+presetArgs := import(":preset-args")
 
 self.validateInputs({
 	"__options__,closed": "",
@@ -16,7 +17,8 @@ self.validateInputs({
 		"rightAlignmentMode,omitempty": "string",
 		"materialType,omitempty": "string",
 		"tagPattern,omitempty": "string",
-		"assembleClonesBy,omitempty": "string"
+		"assembleClonesBy,omitempty": "string",
+		"assembleContigsBy,omitempty": "string"
 	}
 })
 
@@ -32,6 +34,7 @@ self.body(func(inputs) {
 	materialType := inputs.params.materialType
 	tagPattern := inputs.params.tagPattern
 	assembleClonesBy := inputs.params.assembleClonesBy
+	assembleContigsBy := inputs.params.assembleContigsBy
 
 	mixcrExportPresetCmdBuilder := mixcrCmd.base(mixcrSw).
 		inLightQueue().
@@ -69,6 +72,7 @@ self.body(func(inputs) {
 	if !is_undefined(assembleClonesBy) {
 		mixcrExportPresetCmdBuilder.arg("--assemble-clonotypes-by").arg(assembleClonesBy)
 	}
+	presetArgs.contigArgs(mixcrExportPresetCmdBuilder, assembleContigsBy)
 
 	mixcrExportPresetCmd := mixcrExportPresetCmdBuilder.arg("preset.json").
 		saveFileContent("preset.json").

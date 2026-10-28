@@ -6,9 +6,31 @@
 smart := import("@platforma-sdk/workflow-tengo:smart")
 ll := import("@platforma-sdk/workflow-tengo:ll")
 
+// contigArgs replaces the preset's contig assembly. MiXCR rejects contigs by CDR3, since clones
+// are already assembled by CDR3, so that choice drops the step instead. :calculate-preset-info
+// calls it too, so the resolved pipeline matches the run.
+contigArgs := func(builder, assembleContigsBy) {
+	if assembleContigsBy == "CDR3" {
+		builder.arg("--remove-step").arg("assembleContigs")
+	} else if !is_undefined(assembleContigsBy) {
+		builder.arg("--assemble-contigs-by").arg(assembleContigsBy)
+	}
+	return builder
+}
+
+// withContigs sets params.assembleContigsBy only when given: an undefined key would still change
+// the params, and with them the cache and deduplication keys of runs without the override.
+withContigs := func(params, assembleContigsBy) {
+	if !is_undefined(assembleContigsBy) {
+		params.assembleContigsBy = assembleContigsBy
+	}
+	return params
+}
+
 // apply adds the preset arguments to `builder`. `preset` is a preset file resource or
 // { name }; `params` carries species, isLibraryFileGzipped, leftAlignmentMode,
-// rightAlignmentMode, materialType, tagPattern, assembleClonesBy and cloneClusteringMode;
+// rightAlignmentMode, materialType, tagPattern, assembleClonesBy, assembleContigsBy and
+// cloneClusteringMode;
 // `library` is the library file, or false.
 apply := func(builder, preset, params, library) {
 	species := params.species
@@ -51,6 +73,7 @@ apply := func(builder, preset, params, library) {
 	if !is_undefined(params.assembleClonesBy) {
 		builder.arg("--assemble-clonotypes-by").arg(params.assembleClonesBy)
 	}
+	contigArgs(builder, params.assembleContigsBy)
 	// Clone clustering tuning
 	cloneClusteringMode := params.cloneClusteringMode
 	if is_undefined(cloneClusteringMode) {
@@ -69,5 +92,7 @@ apply := func(builder, preset, params, library) {
 }
 
 export {
-	apply: apply
+	apply: apply,
+	contigArgs: contigArgs,
+	withContigs: withContigs
 }

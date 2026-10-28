@@ -65,6 +65,8 @@ const BlockArgsValidBase = z.object({
   rightAlignmentMode: z.string().optional(),
   tagPattern: z.string().optional(),
   assembleClonesBy: z.string().optional(),
+  // Overrides a shotgun preset's longest-contig assembly; "CDR3" drops contig assembly.
+  assembleContigsBy: z.string().optional(),
   imputeGermline: z.boolean().optional(),
   limitInput: z.number().int().optional(),
   perProcessMemGB: z.number().int().gte(1, "1GB or more required").optional(),

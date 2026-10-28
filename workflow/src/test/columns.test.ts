@@ -14,11 +14,13 @@ type Preset =
 
 type Params = {
   species?: string;
+  assembleContigsBy?: string;
 };
 
 type TestCase = {
   preset: string;
   species?: string;
+  assembleContigsBy?: string;
   check: (expect: ExpectStatic, config: any) => void;
 };
 
@@ -125,6 +127,33 @@ const testCases: TestCase[] = [
     }
   },
   {
+    preset: 'rna-seq',
+    species: 'human',
+    assembleContigsBy: 'VDJRegion',
+    check: (expect, config) => {
+      expect(config.columnsSpec.find((c: any) => c.column === 'nSeqVDJRegion')).toBeDefined();
+      expect(config.clonotypeKeyColumns).toEqual(['nSeqVDJRegion', 'bestVGene', 'bestJGene']);
+    }
+  },
+  {
+    preset: 'rna-seq',
+    species: 'human',
+    assembleContigsBy: 'CDR3',
+    check: (expect, config) => {
+      expect(config.columnsSpec.find((c: any) => c.column === 'nSeqCDR3')).toBeDefined();
+      expect(config.columnsSpec.find((c: any) => c.column === 'nSeqFR1')).toBeUndefined();
+      expect(config.clonotypeKeyColumns).toEqual(['nSeqCDR3', 'bestVGene', 'bestJGene']);
+    }
+  },
+  {
+    preset: 'exome-seq',
+    species: 'human',
+    assembleContigsBy: 'VDJRegion',
+    check: (expect, config) => {
+      expect(config.clonotypeKeyColumns).toEqual(['nSeqVDJRegion', 'bestVGene', 'bestJGene']);
+    }
+  },
+  {
     preset: 'generic-single-cell-gex',
     species: 'human',
     check: (expect, config) => {
@@ -138,7 +167,7 @@ const testCases: TestCase[] = [
 tplTest.for(testCases)(
   'checking preset for $preset',
   { timeout: 30000 },
-  async ({ preset, species, check }, { helper, expect }) => {
+  async ({ preset, species, assembleContigsBy, check }, { helper, expect }) => {
     const resultC = (
       await helper.renderTemplate(true, 'test.columns.test', ['exportSpecs'], (tx) => {
         return {
@@ -146,7 +175,7 @@ tplTest.for(testCases)(
             ML.Pl.JsonObject,
             JSON.stringify({ type: 'name', name: preset } satisfies Preset)
           ),
-          params: tx.createValue(ML.Pl.JsonObject, JSON.stringify({ species } satisfies Params))
+          params: tx.createValue(ML.Pl.JsonObject, JSON.stringify({ species, assembleContigsBy } satisfies Params))
         };
       })
     ).computeOutput('exportSpecs', (c) => c?.getDataAsJson());

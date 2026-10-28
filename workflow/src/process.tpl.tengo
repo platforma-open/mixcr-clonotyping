@@ -13,6 +13,7 @@ anonymize := import("@platforma-sdk/workflow-tengo:anonymize")
 
 calculateExportSpecs := import(":calculate-export-specs")
 presetTraits := import(":preset-traits")
+presetArgs := import(":preset-args")
 
 json := import("json")
 text := import("text")
@@ -282,7 +283,7 @@ self.body(func(inputs) {
 
 			extra: {
 				preset: preset,
-				params: {
+				params: presetArgs.withContigs({
 					species: species,
 					limitInput: limitInput,
 					fileExtension: fileExtension,
@@ -294,7 +295,7 @@ self.body(func(inputs) {
 					tagPattern: params.tagPattern,
 					assembleClonesBy: params.assembleClonesBy,
 					cloneClusteringMode: params.cloneClusteringMode
-				},
+				}, params.assembleContigsBy),
 				library: library,
 				presetContent: presetContent
 			},

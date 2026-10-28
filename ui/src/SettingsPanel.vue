@@ -137,6 +137,21 @@ const needAssembleClonesBy = computed(() =>
 const presetScKind = computed(() => preset.value?.analysisStages.includes("assembleCells"));
 const isSingleCell = computed(() => presetScKind.value === true);
 
+// Shotgun presets (rna-seq, exome-seq): partial assembly and contigs, with no cells or tags. They
+// extend clones into the longest contigs. Undefined until the preset list is loaded.
+const isLongestContigPreset = computed(() => {
+  if (app.model.data.preset?.type !== "name") return false;
+  if (presets.value === undefined) return undefined;
+  // A preset the block does not list has no override to offer.
+  const stages = preset.value?.analysisStages ?? [];
+  return (
+    stages.includes("assemblePartial") &&
+    stages.includes("assembleContigs") &&
+    !stages.includes("assembleCells") &&
+    !stages.includes("refineTagsAndSort")
+  );
+});
+
 // Heavy-chain-only (VHH) applies to single-cell IG data, so the option is offered only
 // when the preset is single-cell and IG is among the selected receptors.
 const showHeavyOnly = computed(
@@ -233,6 +248,22 @@ watch(needAssembleClonesBy, (v) => {
   if (v === true && app.model.data.assembleClonesBy === undefined)
     app.model.data.assembleClonesBy = "CDR3";
 });
+
+// Clears the override on a switch to a preset that has no contig step to override. The step
+// list snapshot loses it too, so it cannot replan with it after switching back. Immediate, so a
+// value that arrived some other way (template, undo) is cleared when the panel opens.
+watch(
+  isLongestContigPreset,
+  (v) => {
+    if (v !== false) return;
+    if (app.model.data.assembleContigsBy !== undefined)
+      app.model.data.assembleContigsBy = undefined;
+    const snapshot = app.model.data.listStepsParams;
+    if (snapshot?.assembleContigsBy !== undefined)
+      app.model.data.listStepsParams = { ...snapshot, assembleContigsBy: undefined };
+  },
+  { immediate: true },
+);
 
 function setPresetName(name?: string) {
   if (name === undefined) {
@@ -695,6 +726,21 @@ watch(stopCodonSelection, (selected) => {
     :required="true"
   >
     <template #tooltip> Feature span used to group reads into clonotypes </template>
+  </PlDropdown>
+
+  <PlDropdown
+    v-if="isLongestContigPreset"
+    v-model="app.model.data.assembleContigsBy"
+    :options="assembleClonesByOptions"
+    label="Assemble clones by"
+    placeholder="Longest contigs (preset default)"
+    clearable
+  >
+    <template #tooltip>
+      By default, clones are assembled by CDR3 and extended into the longest contigs the reads
+      support. Selecting a feature span replaces that: clones are defined by the selected span, and
+      clones that do not fully cover it are dropped.
+    </template>
   </PlDropdown>
 
   <PlCheckbox v-if="needAssembleClonesBy" v-model="imputeGermline">
