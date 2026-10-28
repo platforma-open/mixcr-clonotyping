@@ -113,6 +113,7 @@ measure := func(inputData, fileExtension) {
 	// their number would idle. The command reads the granted count back from '{system.cpu}'
 	// instead of repeating the number, so the request and the flag can never diverge.
 	statsBuilder := exec.builder().
+		name("seqkit stats").
 		inMediumQueue().
 		cpu(len(reads)).
 		mem("1GiB").
@@ -137,6 +138,7 @@ measure := func(inputData, fileExtension) {
 	// two-character string and rejects it.
 	statsFileName := "stats.tsv"
 	statsJsonCmd := exec.builder().
+		name("csvtk csv2json").
 		inLightQueue().
 		cpu(1).
 		mem("256MiB").
