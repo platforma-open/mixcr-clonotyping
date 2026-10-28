@@ -58,7 +58,7 @@ _ROWS := [
 	{ step: "mitool-consensus", class: "any", cpuIntercept: 16, memFloor: 32, memIntercept: 2, memSlope: 8 },
 
 	// `align` streams its input, so the grant does not grow with the sample.
-	{ step: "align", class: "any", cpuIntercept: 16, memFloor: 32, memIntercept: 0, memSlope: 0 },
+	{ step: "align", class: "any", cpuIntercept: 16, memFloor: 16, memIntercept: 0, memSlope: 0 },
 	{ step: "refineTagsAndSort", class: "any", cpuIntercept: 16, memFloor: 32, memIntercept: 6, memSlope: 14 },
 	{ step: "assemblePartial", class: "any", cpuIntercept: 16, memFloor: 32, memIntercept: 4, memSlope: 15 },
 	{ step: "extend", class: "any", cpuIntercept: 16, memFloor: 32, memIntercept: 4, memSlope: 10 },

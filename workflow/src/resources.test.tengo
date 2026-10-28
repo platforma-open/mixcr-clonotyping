@@ -30,7 +30,7 @@ TestLookupPrefersTheClassRowThenTheStepRowThenTheDefault := func() {
 }
 
 TestFlatRowsAreFixedRequests := func() {
-	test.isEqual("32GiB", _ram("align", "none", _gib(100)))
+	test.isEqual("16GiB", _ram("align", "none", _gib(100)))
 	test.isEqual("4GiB", _ram("plan", "cell", _gib(100)))
 }
 
@@ -158,7 +158,7 @@ TestAStepOverrideReplacesOnlyTheFieldsItSets := func() {
 	test.isEqual("step", e.source.memFloor)
 	test.isEqual("default", e.source.memIntercept)
 	// Another step is untouched.
-	test.isEqual(32, rs.effective(rs.lookup("align", "none"), res).row.memFloor)
+	test.isEqual(16, rs.effective(rs.lookup("align", "none"), res).row.memFloor)
 }
 
 TestAStepOverrideBeatsTheGlobalOverrides := func() {
@@ -199,7 +199,7 @@ TestCapAppliesToFlatRequestsToo := func() {
 	res := { stepResources: { align: { memIntercept: 32, cap: 24 } } }
 	test.isEqual("24GiB", rs.ram(rs.effective(rs.lookup("align", "none"), res).row))
 	// Below the cap a flat request is unchanged.
-	test.isEqual("32GiB", rs.ram(rs.effective(rs.lookup("align", "none"), { stepResources: { align: { cap: 100 } } }).row))
+	test.isEqual("16GiB", rs.ram(rs.effective(rs.lookup("align", "none"), { stepResources: { align: { cap: 100 } } }).row))
 }
 
 TestTheGlobalMemoryOverrideMakesMemoryFlatUnlessTheStepSetsMemory := func() {
