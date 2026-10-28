@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping
 
+## 2.25.0
+
+### Minor Changes
+
+- 358d9ee: Add an optional "Assemble clones by" setting for the RNA-Seq and Exome-Seq presets. Left empty, clones are assembled into the longest contigs as before. A selected feature span replaces that assembly; CDR3 skips contig assembly.
+
 ## 2.24.4
 
 ### Patch Changes
