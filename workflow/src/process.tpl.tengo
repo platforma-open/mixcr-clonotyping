@@ -5,6 +5,7 @@ render := import("@platforma-sdk/workflow-tengo:render")
 ll := import("@platforma-sdk/workflow-tengo:ll")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 pframes := import("@platforma-sdk/workflow-tengo:pframes")
+pcolumn := import("@platforma-sdk/workflow-tengo:pframes.pcolumn")
 execConstants := import("@platforma-sdk/workflow-tengo:exec.constants")
 slices := import("@platforma-sdk/workflow-tengo:slices")
 maps := import("@platforma-sdk/workflow-tengo:maps")
@@ -24,12 +25,14 @@ mixcrExportTpl := assets.importTemplate(":mixcr-export")
 aggregateByClonotypeKeyTpl := assets.importTemplate(":aggregate-by-clonotype-key")
 exportReportTpl := assets.importTemplate(":export-report")
 processSingleCellTpl := assets.importTemplate(":process-single-cell")
+mergeResourceMapsTpl := assets.importTemplate("@platforma-sdk/workflow-tengo:pframes.merge-resource-maps")
 
 self.awaitState("InputsLocked")
 self.awaitState("params", "ResourceReady")
 self.awaitState("inputSpec", "ResourceReady")
 self.awaitState("presetSpecForBack", "ResourceReady")
 self.awaitState("presetContent", "ResourceReady")
+self.awaitState("inputData", "InputsLocked")
 
 chainInfos := {
 	"IGHeavy": { mixcrFilter: "IGH", name: "IG Heavy", shortName: "Heavy" },
@@ -257,58 +260,153 @@ self.body(func(inputs) {
 	// function with receptor argument
 	cellLinkerColumnSettingsGen := exportSpecs.cellLinkerColumnSettingsGen
 
-	mixcrResults := pframes.processColumn(
-		{ spec: inputSpec, data: inputs.inputData },
-		mixcrAnalyzeTpl,
-		targetOutputs,
-		{
-			aggregate: [{
-				name: "pl7.app/sequencing/lane",
-				optional: true
-			}, {
-				name: "pl7.app/sequencing/readIndex",
-				optional: true
-			}],
+	// The MiXCR step jobs of a sample must not be submitted while the backend is still submitting
+	// a burst: the backend fails a k8s job it has not seen within 300 s, and at its submit rate of
+	// about 150 jobs a minute a burst past ~700 submissions makes that happen to jobs that already
+	// finished. A dataset with more than WAVE_SIZE samples therefore runs in waves: the bodies of
+	// wave k get wave k-1's clones as an input and start only when that wave is complete. The gate
+	// is a regular input of the body, so wave membership is part of a sample's identity; the MiXCR
+	// commands inside dedup on their own inputs regardless, and a re-render costs no MiXCR run.
+	WAVE_SIZE := 256
 
-			// resulting aggregation axes names will be checked against supported combinations
-			// in the body template
-			passAggregationAxesNames: true,
-
-			// this will cache each individual step result for 30 minutes, even if execution of some of the steps
-			// failed or whole execution was interrupted
-			stepCache: 30 * times.minute,
-
-			// will be automatically propagated to all output specs
-			traceSteps: [{type: "milaboratories.mixcr-clonotyping", id: blockId, importance: 20, label: "MiXCR " + presetCommonName}],
-
-			extra: {
-				preset: preset,
-				params: presetArgs.withContigs({
-					species: species,
-					limitInput: limitInput,
-					fileExtension: fileExtension,
-					reports: reports,
-					isLibraryFileGzipped: isLibraryFileGzipped,
-					leftAlignmentMode: params.leftAlignmentMode,
-					rightAlignmentMode: params.rightAlignmentMode,
-					materialType: params.materialType,
-					tagPattern: params.tagPattern,
-					assembleClonesBy: params.assembleClonesBy,
-					cloneClusteringMode: params.cloneClusteringMode
-				}, params.assembleContigsBy),
-				library: library,
-				presetContent: presetContent
-			},
-
-			// by passing those parameters as meta fields we allow for recovery and deduplication mechanisms
-			// to pick up the results from executions with different values for CPU and Memory overrides
-            metaExtra: {
-                perProcessMemGB: perProcessMemGB,
-                perProcessCPUs: perProcessCPUs,
-                stepResources: stepResources
-            }
+	mixcrExtra := func(gate) {
+		extra := {
+			preset: preset,
+			params: presetArgs.withContigs({
+				species: species,
+				limitInput: limitInput,
+				fileExtension: fileExtension,
+				reports: reports,
+				isLibraryFileGzipped: isLibraryFileGzipped,
+				leftAlignmentMode: params.leftAlignmentMode,
+				rightAlignmentMode: params.rightAlignmentMode,
+				materialType: params.materialType,
+				tagPattern: params.tagPattern,
+				assembleClonesBy: params.assembleClonesBy,
+				cloneClusteringMode: params.cloneClusteringMode
+			}, params.assembleContigsBy),
+			library: library,
+			presetContent: presetContent
 		}
-	)
+		if !is_undefined(gate) {
+			extra.waveGate = gate
+		}
+		return extra
+	}
+
+	runMixcrOn := func(data, gate) {
+		return pframes.processColumn(
+			{ spec: inputSpec, data: data },
+			mixcrAnalyzeTpl,
+			targetOutputs,
+			{
+				aggregate: [{
+					name: "pl7.app/sequencing/lane",
+					optional: true
+				}, {
+					name: "pl7.app/sequencing/readIndex",
+					optional: true
+				}],
+
+				// resulting aggregation axes names will be checked against supported combinations
+				// in the body template
+				passAggregationAxesNames: true,
+
+				// this will cache each individual step result for 30 minutes, even if execution of some of the steps
+				// failed or whole execution was interrupted
+				stepCache: 30 * times.minute,
+
+				// will be automatically propagated to all output specs
+				traceSteps: [{type: "milaboratories.mixcr-clonotyping", id: blockId, importance: 20, label: "MiXCR " + presetCommonName}],
+
+				extra: mixcrExtra(gate),
+
+				// by passing those parameters as meta fields we allow for recovery and deduplication mechanisms
+				// to pick up the results from executions with different values for CPU and Memory overrides
+	            metaExtra: {
+	                perProcessMemGB: perProcessMemGB,
+	                perProcessCPUs: perProcessCPUs,
+	                stepResources: stepResources
+	            }
+			}
+		)
+	}
+
+	// The waves of a dataset too large for one burst, as resource maps with the data's key
+	// length, every file of a sample in the same wave; undefined when the data is not a resource
+	// map or the dataset fits in one wave.
+	waveData := func() {
+		data := inputs.inputData
+		if !pcolumn.isResourceMap(data) {
+			return undefined
+		}
+		meta := data.getDataAsJson()
+		if !is_int(meta.keyLength) || meta.keyLength < 1 {
+			return undefined
+		}
+		entries := data.inputs()
+		bySample := {}
+		for sKey in maps.getKeys(entries) {
+			sample := string(json.decode(sKey)[0])
+			if is_undefined(bySample[sample]) {
+				bySample[sample] = []
+			}
+			bySample[sample] = append(bySample[sample], sKey)
+		}
+		samples := maps.getKeys(bySample)
+		if len(samples) <= WAVE_SIZE {
+			return undefined
+		}
+		waves := []
+		for start := 0; start < len(samples); start += WAVE_SIZE {
+			end := start + WAVE_SIZE
+			if end > len(samples) {
+				end = len(samples)
+			}
+			wave := pcolumn.resourceMapBuilder(meta.keyLength)
+			for sample in samples[start:end] {
+				for sKey in bySample[sample] {
+					wave.add(json.decode(sKey), entries[sKey])
+				}
+			}
+			waves = append(waves, wave.build())
+		}
+		return waves
+	}
+
+	waves := waveData()
+	mixcrResults := undefined
+	if is_undefined(waves) {
+		mixcrResults = runMixcrOn(inputs.inputData, undefined)
+	} else {
+		waveResults := []
+		gate := undefined
+		for data in waves {
+			result := runMixcrOn(data, gate)
+			waveResults = append(waveResults, result)
+			gate = result.outputData("clns")
+		}
+		merged := {}
+		for name in ["qc", "log", "reports", "clns"] {
+			sources := {}
+			for i, result in waveResults {
+				sources["src_" + string(i)] = result.outputData(name)
+			}
+			merged[name] = render.createEphemeral(mergeResourceMapsTpl, sources).output("result")
+		}
+		first := waveResults[0]
+		mixcrResults = {
+			outputSpec: func(name) {
+				return first.outputSpec(name)
+			},
+			outputData: func(name) {
+				return merged[name]
+			},
+			output: func(name) {
+				return { data: merged[name], spec: first.outputSpec(name) }
+			}
+		}
+	}
 
 	clnsFiles := mixcrResults.output("clns")
 
