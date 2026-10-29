@@ -46,8 +46,8 @@ catalogs:
       specifier: 1.84.14
       version: 1.84.14
     '@platforma-sdk/workflow-tengo':
-      specifier: 6.15.0
-      version: 6.15.0
+      specifier: 6.17.3
+      version: 6.17.3
     '@types/wicg-file-system-access':
       specifier: ^2023.10.7
       version: 2023.10.7
@@ -324,7 +324,7 @@ importers:
         version: 4.7.0-415-develop
       '@platforma-sdk/workflow-tengo':
         specifier: 'catalog:'
-        version: 6.15.0
+        version: 6.17.3
     devDependencies:
       '@platforma-sdk/tengo-builder':
         specifier: 'catalog:'
@@ -1188,6 +1188,9 @@ packages:
   '@milaboratories/pframes-rs-wasip2@1.1.61':
     resolution: {integrity: sha512-0/LwALWJxsWjRf7AyhznRCzOOR4MyzAq4OJ+FvaRuNUztSBJZeXWRBzatmDN9JjCoonap1F05cy33NXKX+hUyQ==}
 
+  '@milaboratories/pframes-rs-wasip2@1.2.0':
+    resolution: {integrity: sha512-veQz38MXRMqbN3So8vwiyg9Cpeua/svPnM3kyLa6oocQVmBcRjXgg6X81YEFczQh1FMsSHSWyY3wFGD4Ho2xLQ==}
+
   '@milaboratories/pl-client@3.18.1':
     resolution: {integrity: sha512-LimmQ9gO6N/4MoyS912V5Q6IrLChGD8hSrjZpFKwHHKdRbnx4mGpA3laDntBD7B7/jYP8XpsqSgoISi8/wnNpw==}
     engines: {node: '>=22.19.0'}
@@ -1651,6 +1654,9 @@ packages:
   '@platforma-open/milaboratories.software-ptabler@2.1.14':
     resolution: {integrity: sha512-gUh8h12v7FG5hj5+dPHETAk69hu4kqUPKumYKUbcAcMoEi0mhh/MEm/epHPxnCVNBNJEwwbscJ5HsrJQUTr1HQ==}
 
+  '@platforma-open/milaboratories.software-ptabler@2.3.0':
+    resolution: {integrity: sha512-zJ5DfRD0k+KH3tnme6dkY5iQJ0h7Vx6Knkla1JL7ImN+V7ovUGotVxXPjMfuMsKIT4O9ZorFeGlo0khya3pP7A==}
+
   '@platforma-open/milaboratories.software-ptexter@1.2.6':
     resolution: {integrity: sha512-UNGsCwUpgnPSFFmv1YegCrzbZRlY72/XTRGTubX9PmMYqR6TYPT07hBIpHQj7Ax74+k1puH07g1QP6gIaj/6Ow==}
 
@@ -1709,6 +1715,9 @@ packages:
 
   '@platforma-sdk/workflow-tengo@6.15.0':
     resolution: {integrity: sha512-51ZPqifX14ZremW8y6Q1kBkaysTR2Zu+7AoGxi3Ad9uJC/baa+ceigteKz9fMQIlXgdqH5tGYNbpHwtdKMc9qw==}
+
+  '@platforma-sdk/workflow-tengo@6.17.3':
+    resolution: {integrity: sha512-gmMqGwNUNglyNaf52Nj1PXguQx9I0qnGL8VAwRbOZ/jMmpt8afVzQwqHFFcuVCWgyprrpaPx7LeHrQxLA6yjLA==}
 
   '@protobuf-ts/grpc-transport@2.11.1':
     resolution: {integrity: sha512-l6wrcFffY+tuNnuyrNCkRM8hDIsAZVLA8Mn7PKdVyYxITosYh60qW663p9kL6TWXYuDCL3oxH8ih3vLKTDyhtg==}
@@ -3433,6 +3442,7 @@ packages:
   eslint@9.39.1:
     resolution: {integrity: sha512-BhHmn2yNOFA9H9JmmIVKJmd288g9hrVRDkdoIgRCRuSySRUHH7r/DI6aAXW9T1WwUuY3DFgrcaqB+deURBLR5g==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
     peerDependencies:
       jiti: '*'
@@ -6575,6 +6585,8 @@ snapshots:
 
   '@milaboratories/pframes-rs-wasip2@1.1.61': {}
 
+  '@milaboratories/pframes-rs-wasip2@1.2.0': {}
+
   '@milaboratories/pl-client@3.18.1':
     dependencies:
       '@grpc/grpc-js': 1.14.4
@@ -7279,6 +7291,8 @@ snapshots:
 
   '@platforma-open/milaboratories.software-ptabler@2.1.14': {}
 
+  '@platforma-open/milaboratories.software-ptabler@2.3.0': {}
+
   '@platforma-open/milaboratories.software-ptexter@1.2.6': {}
 
   '@platforma-open/milaboratories.software-small-binaries.hello-world-py@1.0.10': {}
@@ -7484,6 +7498,14 @@ snapshots:
       '@milaboratories/pframes-rs-wasip2': 1.1.61
       '@milaboratories/software-pframes-conv': 2.2.9
       '@platforma-open/milaboratories.software-ptabler': 2.1.14
+      '@platforma-open/milaboratories.software-ptexter': 1.2.6
+      '@platforma-open/milaboratories.software-small-binaries': 2.1.1
+
+  '@platforma-sdk/workflow-tengo@6.17.3':
+    dependencies:
+      '@milaboratories/pframes-rs-wasip2': 1.2.0
+      '@milaboratories/software-pframes-conv': 2.2.9
+      '@platforma-open/milaboratories.software-ptabler': 2.3.0
       '@platforma-open/milaboratories.software-ptexter': 1.2.6
       '@platforma-open/milaboratories.software-small-binaries': 2.1.1
 
