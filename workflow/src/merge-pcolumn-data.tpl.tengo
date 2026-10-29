@@ -1,0 +1,54 @@
+// Merges p-column data resources of one type and metadata, `PColumnData/ResourceMap` or
+// `PColumnData/Partitioned/ResourceMap`, into one resource holding the union of their fields.
+// The sources are the inputs named `src_<i>`; their field names must not overlap. The merged
+// resource points at the same underlying resources as the sources, nothing is copied.
+//
+// :process merges the per-wave outputs of :mixcr-analyze with it. The SDK's
+// pframes.merge-resource-maps takes a plain ResourceMap only.
+
+self := import("@platforma-sdk/workflow-tengo:tpl.light")
+ll := import("@platforma-sdk/workflow-tengo:ll")
+smart := import("@platforma-sdk/workflow-tengo:smart")
+maps := import("@platforma-sdk/workflow-tengo:maps")
+text := import("text")
+json := import("json")
+
+self.awaitState("InputsLocked")
+self.awaitState({ wildcard: "*" }, "InputsLocked")
+
+self.body(func(inputs) {
+	rawInputs := self.rawInputs()
+	sources := []
+	for name in maps.getKeys(rawInputs) {
+		if text.has_prefix(name, "src_") {
+			sources = append(sources, rawInputs[name].getValue())
+		}
+	}
+	ll.assert(len(sources) > 0, "merge-pcolumn-data: no sources")
+
+	first := sources[0]
+	resourceType := first.info().Type
+	ll.assert(text.has_prefix(resourceType.Name, "PColumnData/"),
+		"merge-pcolumn-data: expected a PColumnData resource, got %v", resourceType.Name)
+	meta := json.encode(first.getDataAsJson())
+
+	merged := smart.structBuilder(resourceType, meta)
+	seen := {}
+	for src in sources {
+		srcType := src.info().Type
+		ll.assert(srcType.Name == resourceType.Name && srcType.Version == resourceType.Version,
+			"merge-pcolumn-data: type mismatch across sources, %v vs %v", srcType, resourceType)
+		srcMeta := json.encode(src.getDataAsJson())
+		ll.assert(srcMeta == meta, "merge-pcolumn-data: metadata mismatch across sources, %v vs %v", srcMeta, meta)
+		srcInputs := src.inputs()
+		for key in maps.getKeys(srcInputs) {
+			ll.assert(is_undefined(seen[key]), "merge-pcolumn-data: key %v in more than one source", key)
+			seen[key] = true
+			merged.createInputField(key).set(srcInputs[key])
+		}
+	}
+
+	return {
+		result: merged.lockAndBuild()
+	}
+})

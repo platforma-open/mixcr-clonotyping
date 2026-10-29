@@ -25,7 +25,7 @@ mixcrExportTpl := assets.importTemplate(":mixcr-export")
 aggregateByClonotypeKeyTpl := assets.importTemplate(":aggregate-by-clonotype-key")
 exportReportTpl := assets.importTemplate(":export-report")
 processSingleCellTpl := assets.importTemplate(":process-single-cell")
-mergeResourceMapsTpl := assets.importTemplate("@platforma-sdk/workflow-tengo:pframes.merge-resource-maps")
+mergePColumnDataTpl := assets.importTemplate(":merge-pcolumn-data")
 
 self.awaitState("InputsLocked")
 self.awaitState("params", "ResourceReady")
@@ -266,7 +266,8 @@ self.body(func(inputs) {
 	// finished. A dataset with more than WAVE_SIZE samples therefore runs in waves: the bodies of
 	// wave k get wave k-1's clones as an input and start only when that wave is complete. The gate
 	// is a regular input of the body, so wave membership is part of a sample's identity; the MiXCR
-	// commands inside dedup on their own inputs regardless, and a re-render costs no MiXCR run.
+	// commands inside dedup on their own inputs regardless, and a re-render costs no MiXCR run. The
+	// per-wave outputs are merged by :merge-pcolumn-data; `reports` is a partitioned map.
 	WAVE_SIZE := 256
 
 	mixcrExtra := func(gate) {
@@ -392,7 +393,7 @@ self.body(func(inputs) {
 			for i, result in waveResults {
 				sources["src_" + string(i)] = result.outputData(name)
 			}
-			merged[name] = render.createEphemeral(mergeResourceMapsTpl, sources).output("result")
+			merged[name] = render.createEphemeral(mergePColumnDataTpl, sources).output("result")
 		}
 		first := waveResults[0]
 		mixcrResults = {
