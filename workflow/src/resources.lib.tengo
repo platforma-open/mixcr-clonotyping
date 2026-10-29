@@ -90,7 +90,7 @@ DEFAULT := { step: "default", class: "any", cpuIntercept: 16, memFloor: 64, memI
 // uncapped wall time. Each row is at least 1.6 x the floor of every profiled sample of its
 // class and feature. The jobs have no retry, so the margin covers the scatter of the floors.
 _CLONE_ROWS := [
-	{ class: "none", feature: "CDR3", memFloor: 32, memIntercept: 4.3, memPerMClones: 9.8, memPerMReads: 0 },
+	{ class: "none", feature: "CDR3", memFloor: 32, memIntercept: 26, memPerMClones: 8.3, memPerMReads: 0 },
 	{ class: "none", feature: "any", memFloor: 32, memIntercept: 10, memPerMClones: 16, memPerMReads: 0.32 },
 	{ class: "longRead", feature: "any", memFloor: 32, memIntercept: 6, memPerMClones: 5.4, memPerMReads: 0 }
 ]

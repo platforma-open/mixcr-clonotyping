@@ -217,7 +217,7 @@ TestTheGlobalMemoryOverrideMakesMemoryFlatUnlessTheStepSetsMemory := func() {
 TestCloneRowsByClassAndFeature := func() {
 	test.isEqual(16, rs.cloneRow("assemble", "none", ["VDJRegion"]).memPerMClones)
 	test.isEqual(16, rs.cloneRow("assemble", "none", undefined).memPerMClones)
-	test.isEqual(9.8, rs.cloneRow("assemble", "none", ["CDR3"]).memPerMClones)
+	test.isEqual(8.3, rs.cloneRow("assemble", "none", ["CDR3"]).memPerMClones)
 	test.isEqual(5.4, rs.cloneRow("assemble", "longRead", ["CDR3"]).memPerMClones)
 	test.isTrue(is_undefined(rs.cloneRow("assemble", "umi", ["CDR3"])))
 	test.isTrue(is_undefined(rs.cloneRow("assemble", "cell", ["VDJRegion"])))
@@ -230,8 +230,8 @@ TestRamFromReport := func() {
 	test.isEqual("59GiB", rs.ramFromReport(vdj, { estimatedInitialClones: 2227494, aligned: 39375951 }))
 	// Below the floor.
 	test.isEqual("32GiB", rs.ramFromReport(vdj, { estimatedInitialClones: 633078, aligned: 10803859 }))
-	// 4.3 + 9.8 x 17.269869 = 173.5, rounded up.
-	test.isEqual("174GiB", rs.ramFromReport(rs.cloneRow("assemble", "none", ["CDR3"]), { estimatedInitialClones: 17269869, aligned: 203593616 }))
+	// 26 + 8.3 x 17.269869 = 169.34, rounded up.
+	test.isEqual("170GiB", rs.ramFromReport(rs.cloneRow("assemble", "none", ["CDR3"]), { estimatedInitialClones: 17269869, aligned: 203593616 }))
 	test.isTrue(is_undefined(rs.ramFromReport(vdj, { aligned: 100 })))
 	test.isTrue(is_undefined(rs.ramFromReport(vdj, undefined)))
 }
