@@ -176,6 +176,7 @@ self.body(func(inputs) {
 			readNames: reads.names,
 			readsPattern: reads.pattern,
 			stepClass: stepClass,
+			assemblingFeatures: presetTraits.assemblingFeatures(presetContent),
 			reports: reports
 		},
 		{ metaInputs: res }

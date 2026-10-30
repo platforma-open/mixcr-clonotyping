@@ -76,6 +76,7 @@ self.body(func(inputs) {
 
 	createExport := func(additionalAction, ramRequest) {
 		mixcrCmdBuilder := mixcrCmd.base(mixcrSw).
+			name("mixcr exportClones").
 			inMediumQueue().
 			resources({ onCPU: { cpu: 2, ram: ramRequest } }).
 			arg("exportClones").

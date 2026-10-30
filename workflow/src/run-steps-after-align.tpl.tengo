@@ -1,0 +1,47 @@
+// Runs the steps of a plan from the first one that has a clone row, once :run-steps has started
+// the steps before it and the align report is ready. Its outputs are the outputs of :run-steps.
+//
+// Ephemeral: :run-steps, pure and pinned, is the unit the sample is recovered by; a pure render
+// here would key the same inputs a second time and recover nothing by it.
+//
+// Inputs: `steps` and `alignReport`, the content of the step list and of the align report;
+// `files`, `written` and `logs`, the block files, the files the earlier steps wrote and their
+// stdout streams; `args`, { from, readNames, readsPattern, stepClass, assemblingFeatures,
+// reports, res }.
+
+self := import("@platforma-sdk/workflow-tengo:tpl")
+assets := import("@platforma-sdk/workflow-tengo:assets")
+mixcrSteps := import(":mixcr-steps")
+stepRunner := import(":step-runner")
+
+self.defineOutputs("qc", "reports", "log", "clns")
+
+self.awaitState("InputsLocked")
+self.awaitState("args", "ResourceReady")
+self.awaitState("steps", "ResourceReady")
+self.awaitState("alignReport", "ResourceReady")
+self.awaitState("files", "InputsLocked")
+self.awaitState("written", "InputsLocked")
+self.awaitState("logs", "InputsLocked")
+
+mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
+
+self.body(func(inputs) {
+	args := inputs.args
+	files := inputs.files
+	plan := mixcrSteps.commands(mixcrSteps.stepsOf(inputs.steps.getDataAsJson()), files, args.readsPattern)
+
+	ctx := {
+		sw: mixcrSw,
+		files: files,
+		readNames: args.readNames,
+		stepClass: args.stepClass,
+		features: args.assemblingFeatures,
+		res: args.res,
+		written: copy(inputs.written),
+		logs: copy(inputs.logs),
+		alignReport: inputs.alignReport.getDataAsJson()
+	}
+	stepRunner.run(plan, int(args.from), ctx)
+	return stepRunner.outputs(plan, ctx.written, ctx.logs, args.reports)
+})

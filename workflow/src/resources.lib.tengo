@@ -58,15 +58,15 @@ _ROWS := [
 	{ step: "mitool-consensus", class: "any", cpuIntercept: 16, memFloor: 32, memIntercept: 2, memSlope: 8 },
 
 	// `align` streams its input, so the grant does not grow with the sample.
-	{ step: "align", class: "any", cpuIntercept: 16, memFloor: 32, memIntercept: 0, memSlope: 0 },
+	{ step: "align", class: "any", cpuIntercept: 16, memFloor: 16, memIntercept: 0, memSlope: 0 },
 	{ step: "refineTagsAndSort", class: "any", cpuIntercept: 16, memFloor: 32, memIntercept: 6, memSlope: 14 },
 	{ step: "assemblePartial", class: "any", cpuIntercept: 16, memFloor: 32, memIntercept: 4, memSlope: 15 },
 	{ step: "extend", class: "any", cpuIntercept: 16, memFloor: 32, memIntercept: 4, memSlope: 10 },
 	{ step: "assembleContigs", class: "any", cpuIntercept: 24, memFloor: 32, memIntercept: 4, memSlope: 18 },
 	{ step: "assembleCells", class: "any", cpuIntercept: 16, memFloor: 32, memIntercept: 4, memSlope: 15 },
 
-	// Sized from the .vdjca. A clone-count estimate from the align report will replace this row
-	// once one is fitted.
+	// Sized from the .vdjca. On "none" and "longRead", a row of _CLONE_ROWS replaces the memory
+	// when the align report carries a clone estimate and no override sets the memory.
 	{ step: "assemble", class: "none", cpuIntercept: 16, memFloor: 64, memIntercept: 4, memSlope: 25 },
 	{ step: "assemble", class: "umi", cpuIntercept: 16, memFloor: 32, memIntercept: 0, memSlope: 10 },
 	{ step: "assemble", class: "cell", cpuIntercept: 16, memFloor: 32, memIntercept: 0, memSlope: 10 },
@@ -77,6 +77,23 @@ _ROWS := [
 ]
 
 DEFAULT := { step: "default", class: "any", cpuIntercept: 16, memFloor: 64, memIntercept: 0, memSlope: 4 }
+
+// The memory of `assemble` from the align report, by class and assembling feature:
+//
+//     ram = max(memFloor, memIntercept + memPerMClones x M clones + memPerMReads x M aligned reads)
+//
+// rounded up to a whole GiB, where `M clones` is the report's estimatedInitialClones and
+// `M aligned reads` its `aligned`, in millions. `feature` is "CDR3" for a run that assembles
+// clones by CDR3 alone, "any" otherwise.
+//
+// The floor of a sample is the least memory that ran without OOM at no more than 1.5 x the
+// uncapped wall time. Each row is at least 1.6 x the floor of every profiled sample of its
+// class and feature. The jobs have no retry, so the margin covers the scatter of the floors.
+_CLONE_ROWS := [
+	{ class: "none", feature: "CDR3", memFloor: 32, memIntercept: 26, memPerMClones: 8.3, memPerMReads: 0 },
+	{ class: "none", feature: "any", memFloor: 32, memIntercept: 10, memPerMClones: 16, memPerMReads: 0.32 },
+	{ class: "longRead", feature: "any", memFloor: 32, memIntercept: 6, memPerMClones: 5.4, memPerMReads: 0 }
+]
 
 _byKey := {}
 for row in _ROWS {
@@ -193,12 +210,60 @@ effective := func(row, res) {
 	return { row: row, source: source }
 }
 
+// cloneRow returns the _CLONE_ROWS row `step` of the given class takes under the assembling
+// features `features` (the preset's assemblingFeatures): the row of its feature, then the row
+// of "any". Undefined when the step is sized from its input alone.
+cloneRow := func(step, cls, features) {
+	if step != "assemble" {
+		return undefined
+	}
+	feature := is_array(features) && len(features) == 1 && features[0] == "CDR3" ? "CDR3" : "any"
+	fallback := undefined
+	for row in _CLONE_ROWS {
+		if row.class == cls && row.feature == feature {
+			return row
+		}
+		if row.class == cls && row.feature == "any" {
+			fallback = row
+		}
+	}
+	return fallback
+}
+
+// sizedByReport returns true when `step` takes its memory from the align report: it has a
+// cloneRow and no override sets its memory.
+sizedByReport := func(step, cls, features, res) {
+	if is_undefined(cloneRow(step, cls, features)) {
+		return false
+	}
+	source := effective(lookup(step, cls), res).source
+	for k in _MEMORY_FIELDS {
+		if source[k] != "default" {
+			return false
+		}
+	}
+	return true
+}
+
+// ramFromReport returns the memory request of a cloneRow for the parsed align report, or
+// undefined when the report carries no clone estimate.
+ramFromReport := func(row, report) {
+	if !is_map(report) || is_undefined(report.estimatedInitialClones) {
+		return undefined
+	}
+	clones := float(report.estimatedInitialClones) / 1000000.0
+	aligned := is_undefined(report.aligned) ? 0.0 : float(report.aligned) / 1000000.0
+	gib := int(math.ceil(row.memIntercept + row.memPerMClones * clones + row.memPerMReads * aligned))
+	return string(gib > row.memFloor ? gib : row.memFloor) + "GiB"
+}
+
 // apply sets the CPU, memory, scratch and queue of `cmd` from `row`. `res` carries the
 // overrides and the scratch request: { perProcessMemGB, perProcessCPUs, stepResources,
-// scratchFreeSpace }; `effective` says how the overrides combine.
-apply := func(cmd, row, res) {
+// scratchFreeSpace }; `effective` says how the overrides combine. A `fixedRam` given and not
+// undefined replaces the row's memory.
+apply := func(cmd, row, res, ...fixedRam) {
 	row = effective(row, res).row
-	onCPU := { cpu: cpu(row), ram: ram(row) }
+	onCPU := { cpu: cpu(row), ram: len(fixedRam) > 0 && !is_undefined(fixedRam[0]) ? fixedRam[0] : ram(row) }
 	if row.scratch != false && !is_undefined(res.scratchFreeSpace) {
 		onCPU.scratchFreeSpace = res.scratchFreeSpace
 	}
@@ -214,5 +279,8 @@ export {
 	ram: ram,
 	cpu: cpu,
 	effective: effective,
+	cloneRow: cloneRow,
+	sizedByReport: sizedByReport,
+	ramFromReport: ramFromReport,
 	apply: apply
 }
