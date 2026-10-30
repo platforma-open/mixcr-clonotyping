@@ -2,8 +2,8 @@
 //tengo:hash_override 0E53B0CD-37CB-4740-BE98-3195AE3C96F8
 
 // Runs the steps `mixcr analyze --dry-run-json` planned for one sample, one exec per step, each
-// with its CPU and memory from :resources. A step sized from the align report runs, with every
-// step after it, in :run-steps-after-align, which waits for that report.
+// with its CPU and memory from :resources. A step that has a clone row runs, with every step
+// after it, in :run-steps-after-align, which waits for the align report.
 //
 // A template cannot read the result of a command it started, so the planning command runs in
 // :run-mixcr and this template reads back the step list it wrote.

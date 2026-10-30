@@ -245,4 +245,7 @@ TestAnyMemoryOverrideKeepsTheInputSizing := func() {
 	// A CPU override leaves the memory to the report.
 	test.isTrue(rs.sizedByReport("assemble", "none", ["VDJRegion"], { perProcessCPUs: 8 }))
 	test.isTrue(rs.sizedByReport("assemble", "none", ["VDJRegion"], { stepResources: { align: { memFloor: 80 } } }))
+	// The clone row, which sets where :run-steps hands off and whether align saves its report,
+	// does not read the overrides: an override keeps the row and only disables its use.
+	test.isFalse(is_undefined(rs.cloneRow("assemble", "none", ["VDJRegion"])))
 }

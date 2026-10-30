@@ -1,9 +1,10 @@
 // Runs the commands of a step plan, one exec per step, each with its CPU and memory from
-// :resources. :run-steps runs a plan up to the first step sized from the align report;
-// :run-steps-after-align runs the rest once that report is ready.
+// :resources. :run-steps runs a plan up to the first step that has a clone row;
+// :run-steps-after-align runs the rest once the align report is ready.
 
 times := import("times")
 ll := import("@platforma-sdk/workflow-tengo:ll")
+maps := import("@platforma-sdk/workflow-tengo:maps")
 pcolumn := import("@platforma-sdk/workflow-tengo:pframes.pcolumn")
 mixcrCmd := import(":mixcr-cmd")
 resources := import(":resources")
@@ -17,13 +18,20 @@ INTERMEDIATE_CACHE_PERIOD := 36 * times.hour
 // gain the files each step writes (by name) and its stdout stream (by logKey), and `alignReport`
 // is the parsed align report, undefined until it is ready.
 //
-// Without ctx.alignReport, run stops before the first step sized from the align report and
-// returns { stopAt, alignReport }: that step's index and the report's content resource. It
-// returns {} when it ran every step.
+// Without ctx.alignReport, run stops before the first step that has a clone row and returns
+// { stopAt, alignReport }: that step's index and the report's content resource. It returns {}
+// when it ran every step.
+//
+// Whether the report is saved and where the run stops follow the clone row alone, never the
+// overrides in ctx.res: the overrides are meta inputs, and the align exec must not change with
+// them. An override only keeps the step on its input sizing once the report is in hand.
 run := func(plan, from, ctx) {
+	hasCloneRow := func(c) {
+		return !is_undefined(resources.cloneRow(c.key, ctx.stepClass, ctx.features))
+	}
 	needsReport := false
 	for i, c in plan.commands {
-		if i >= from && resources.sizedByReport(c.key, ctx.stepClass, ctx.features, ctx.res) {
+		if i >= from && hasCloneRow(c) {
 			needsReport = true
 		}
 	}
@@ -34,8 +42,7 @@ run := func(plan, from, ctx) {
 		if i < from {
 			continue
 		}
-		sized := resources.sizedByReport(c.key, ctx.stepClass, ctx.features, ctx.res)
-		if sized && !is_undefined(reportContent) {
+		if hasCloneRow(c) && !is_undefined(reportContent) {
 			return { stopAt: i, alignReport: reportContent }
 		}
 
@@ -70,7 +77,7 @@ run := func(plan, from, ctx) {
 		}
 
 		fixedRam := undefined
-		if sized && !is_undefined(ctx.alignReport) {
+		if !is_undefined(ctx.alignReport) && resources.sizedByReport(c.key, ctx.stepClass, ctx.features, ctx.res) {
 			fixedRam = resources.ramFromReport(resources.cloneRow(c.key, ctx.stepClass, ctx.features), ctx.alignReport)
 			if is_undefined(fixedRam) {
 				ll.print("the align report has no clone estimate; %v is sized from its input", c.key)
@@ -104,9 +111,9 @@ outputs := func(plan, written, logs, reports) {
 	// One stream per step, keyed by its run position and name (`007:align`). Carried as the
 	// sample's `log` output: a run from before the split holds a single stream there instead.
 	stepLogs := pcolumn.resourceMapBuilder( /* keyLength */ 1 )
-	for logKey, stream in logs {
+	maps.forEach(logs, func(logKey, stream) {
 		stepLogs.add([logKey], stream)
-	}
+	})
 	return {
 		qc: written[plan.qcJson],
 		log: stepLogs.build(),

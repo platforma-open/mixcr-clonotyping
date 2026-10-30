@@ -1,6 +1,8 @@
-// Runs the steps of a plan from the first one sized from the align report, once :run-steps has
-// started the steps before it and the report is ready. Its outputs are the outputs of
-// :run-steps.
+// Runs the steps of a plan from the first one that has a clone row, once :run-steps has started
+// the steps before it and the align report is ready. Its outputs are the outputs of :run-steps.
+//
+// Ephemeral: :run-steps, pure and pinned, is the unit the sample is recovered by; a pure render
+// here would key the same inputs a second time and recover nothing by it.
 //
 // Inputs: `steps` and `alignReport`, the content of the step list and of the align report;
 // `files`, `written` and `logs`, the block files, the files the earlier steps wrote and their
