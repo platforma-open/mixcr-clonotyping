@@ -1,11 +1,9 @@
 // list presets
 
 self := import("@platforma-sdk/workflow-tengo:tpl")
-ll := import("@platforma-sdk/workflow-tengo:ll")
 mixcrCmd := import(":mixcr-cmd")
 file := import("@platforma-sdk/workflow-tengo:file")
 assets := import("@platforma-sdk/workflow-tengo:assets")
-feats := import("@platforma-sdk/workflow-tengo:feats")
 
 self.defineOutputs("presets")
 

@@ -8,7 +8,7 @@
     "build": "shx rm -rf dist && pl-tengo build",
     "format": "/usr/bin/env emacs --script ./format.el || echo 'No emacs.'",
     "do-pack": "shx rm -f *.tgz && pnpm pack && shx mv *.tgz package.tgz",
-    "check": "pl-tengo check",
+    "check": "pl-tengo imports && pl-tengo check",
     "test": "pl-tengo test && vitest run --passWithNoTests"
   },
   "dependencies": {
