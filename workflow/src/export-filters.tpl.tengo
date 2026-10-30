@@ -1,0 +1,71 @@
+// One sample's filter exports: the clonotype flags :export-report counts per sample, out of
+// frame, stop codons and the productive feature's nucleotide sequence, exported from the
+// sample's .clns. `filters` covers every chain of the run; `chainFilters` holds one export per
+// chain and is empty for bulk presets.
+//
+// :process runs this through processColumn over the CLNS column, one body per sample, so a
+// sample's export starts when its own .clns exists.
+
+self := import("@platforma-sdk/workflow-tengo:tpl.light")
+pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
+smart := import("@platforma-sdk/workflow-tengo:smart")
+assets := import("@platforma-sdk/workflow-tengo:assets")
+maps := import("@platforma-sdk/workflow-tengo:maps")
+mixcrCmd := import(":mixcr-cmd")
+memf := import(":mem-formula")
+
+self.defineOutputs("filters", "chainFilters")
+
+mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
+
+self.body(func(inputs) {
+	clnsFile := inputs[pConstants.VALUE_FIELD_NAME]
+	params := inputs.params
+	library := inputs.library
+
+	featureForFlags := params.productiveFeature
+	if is_undefined(featureForFlags) || featureForFlags == "" {
+		featureForFlags = "CDR3"
+	}
+
+	// Reads the same .clns as :mixcr-export, so :mem-formula exportRam sizes it with the same
+	// rule, at 90 bytes of RAM per .clns byte.
+	exportFilters := func(chainsArg) {
+		cmd := mixcrCmd.base(mixcrSw).
+			inMediumQueue().
+			resources({ onCPU: { cpu: 2, ram: memf.exportRam(inputs.perProcessMemGB, 24, 90) } }).
+			arg("exportClones").
+			arg("--dont-split-files").
+			arg("--drop-default-fields").
+			arg("--reset-export-clone-table-splitting")
+		if chainsArg != "" {
+			cmd.arg("--chains").arg(chainsArg)
+		}
+		cmd = cmd.
+			arg("-isOOF").arg(featureForFlags).
+			arg("-hasStops").arg(featureForFlags).
+			arg("-nFeature").arg(featureForFlags).
+			arg("clones.clns").
+			addFile("clones.clns", clnsFile, { tag: "clns" }).
+			arg("clones.tsv").
+			saveFile("clones.tsv")
+		if library {
+			if params.isLibraryFileGzipped {
+				cmd.addFile("library.json.gz", library)
+			} else {
+				cmd.addFile("library.json", library)
+			}
+		}
+		return cmd.cacheHours(3).run().getFile("clones.tsv")
+	}
+
+	chainFilters := {}
+	for chain in maps.getKeys(params.chainFilters) {
+		chainFilters[chain] = exportFilters(params.chainFilters[chain])
+	}
+
+	return {
+		filters: exportFilters(params.chains),
+		chainFilters: smart.createMapResource(chainFilters)
+	}
+})
