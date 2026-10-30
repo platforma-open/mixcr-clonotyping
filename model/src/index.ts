@@ -229,11 +229,6 @@ export const platforma = BlockModelV3.create({ dataModel, kind })
     }),
   )
 
-  .output("datasetSpec", (ctx) => {
-    if (ctx.data.inputLibrary) return Column(ctx.data.inputLibrary)?.getSpec();
-    else return undefined;
-  })
-
   .output("qc", (ctx) => {
     const acc = ctx.outputs?.resolve("qc");
     if (!acc || !acc.getInputsLocked()) return undefined;

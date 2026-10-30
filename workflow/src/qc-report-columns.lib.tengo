@@ -1,8 +1,6 @@
 // QC Report Columns Library
 // Defines column specifications for the mixcr exportReportsTable command output
 
-ll := import("@platforma-sdk/workflow-tengo:ll")
-pConstants := import("@platforma-sdk/workflow-tengo:pframes.constants")
 text := import("text")
 
 // QC Report column specifications function

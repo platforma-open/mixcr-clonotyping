@@ -8,7 +8,6 @@ pframes := import("@platforma-sdk/workflow-tengo:pframes")
 execConstants := import("@platforma-sdk/workflow-tengo:exec.constants")
 slices := import("@platforma-sdk/workflow-tengo:slices")
 maps := import("@platforma-sdk/workflow-tengo:maps")
-sets := import("@platforma-sdk/workflow-tengo:sets")
 anonymize := import("@platforma-sdk/workflow-tengo:anonymize")
 
 calculateExportSpecs := import(":calculate-export-specs")

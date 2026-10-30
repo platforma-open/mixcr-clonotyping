@@ -7,22 +7,22 @@ packages:
   - workflow
 
 catalog:
-  "@milaboratories/ts-builder": 1.7.2
+  "@milaboratories/ts-builder": 1.7.3
   "@milaboratories/ts-configs": 1.4.0
   "@platforma-sdk/workflow-tengo": 6.17.3
-  "@platforma-sdk/model": 1.84.10
-  "@platforma-sdk/ui-vue": 1.84.14
-  "@platforma-sdk/tengo-builder": 4.1.10
-  "@platforma-sdk/package-builder": 3.16.0
+  "@platforma-sdk/model": 1.86.3
+  "@platforma-sdk/ui-vue": 1.86.3
+  "@platforma-sdk/tengo-builder": 4.1.14
+  "@platforma-sdk/package-builder": 3.16.2
   "@platforma-sdk/block-tools": 2.17.0
   "@platforma-sdk/block-kind": 1.1.0
 
-  "@platforma-sdk/test": 1.84.15
-  "@milaboratories/helpers": 1.14.5
+  "@platforma-sdk/test": 1.86.4
+  "@milaboratories/helpers": 1.14.6
 
   "@platforma-open/milaboratories.software-mixcr": 4.7.0-415-develop
   "@platforma-open/milaboratories.software-binary-collection": 1.0.12
-  "vue": 3.5.24
+  "vue": 3.5.44
 
   "zod": ~3.25.76
   "utility-types": ^3.11.0
@@ -30,9 +30,9 @@ catalog:
   "es-toolkit": 1.42.0
 
   "typescript": ~5.6.3
-  "turbo": ^2.5.8
+  "turbo": ~2.11.10
 
-  "vitest": ^4.0.18
+  "vitest": ^4.1.12
   "eslint": ^9.38.0
 
   "@vueuse/core": ^13.6.0
@@ -49,3 +49,15 @@ catalog:
   # other blocks used in tests
 
   "@platforma-open/milaboratories.samples-and-data": ^1.18.0
+minimumReleaseAgeExclude:
+  - "@milaboratories/*"
+  - "@platforma-sdk/*"
+  - "@platforma-open/*"
+allowBuilds:
+  "@milaboratories/tengo-tester": false
+  cpu-features: false
+  esbuild: false
+  protobufjs: false
+  ssh2: false
+  "@milaboratories/pframes-rs-node": true
+  "@platforma-open/milaboratories.software-mixcr": false
