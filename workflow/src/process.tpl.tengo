@@ -11,6 +11,7 @@ slices := import("@platforma-sdk/workflow-tengo:slices")
 maps := import("@platforma-sdk/workflow-tengo:maps")
 sets := import("@platforma-sdk/workflow-tengo:sets")
 anonymize := import("@platforma-sdk/workflow-tengo:anonymize")
+smart := import("@platforma-sdk/workflow-tengo:smart")
 
 calculateExportSpecs := import(":calculate-export-specs")
 presetTraits := import(":preset-traits")
@@ -27,6 +28,7 @@ exportReportTpl := assets.importTemplate(":export-report")
 processSingleCellTpl := assets.importTemplate(":process-single-cell")
 mergePColumnDataTpl := assets.importTemplate(":merge-pcolumn-data")
 exportFiltersTpl := assets.importTemplate(":export-filters")
+perSampleCountsTpl := assets.importTemplate(":per-sample-counts")
 
 self.awaitState("InputsLocked")
 self.awaitState("params", "ResourceReady")
@@ -1077,20 +1079,54 @@ self.body(func(inputs) {
 		}
 	}
 
+	// The per-sample QC count rows: one :per-sample-counts render per sample over that sample's
+	// filter and clonotype TSVs, so each runs when its own inputs exist. :export-report joins
+	// the rows; launched from its body they all went out at once (see WAVE_SIZE).
+	ll.assert(pcolumn.isResourceMap(inputs.inputData), "per-sample counts need a PColumnData/ResourceMap input, got %v", inputs.inputData.info().Type)
+	sampleIds := {}
+	for sKey in maps.getKeys(inputs.inputData.inputs()) {
+		sampleIds[string(json.decode(sKey)[0])] = true
+	}
+	filtersData := filtersResults.outputData("filters")
+	countsBuilder := pcolumn.resourceMapBuilder(1)
+	for sampleId in maps.getKeys(sampleIds) {
+		sKey := json.encode([sampleId])
+		clonotypeTables := {}
+		chainFilterTsvs := {}
+		scChainTsvs := {}
+		for chain in chains {
+			clonotypeTables[chain] = clonotypeTablesData[chain].buildFutureField(sKey)
+			if isSingleCell {
+				chainFilterTsvs[chain] = chainFilterTsvsData[chain].buildFutureField(sKey)
+				scChainTsvs[chain] = singleCellChainTsvs[chain].buildFutureField(sKey)
+			}
+		}
+		counts := render.create(perSampleCountsTpl, {
+			params: {
+				sampleId: sampleId,
+				chains: chains,
+				isSingleCell: isSingleCell,
+				scHeavyOnly: scHeavyOnly,
+				productiveFeature: productiveFeature,
+				stopCodonTypes: params.stopCodonTypes,
+				stopCodonReplacements: params.stopCodonReplacements
+			},
+			filterTsv: filtersData.buildFutureField(sKey),
+			clonotypeTables: smart.createMapResource(clonotypeTables),
+			chainFilterTsvs: smart.createMapResource(chainFilterTsvs),
+			scChainTsvs: smart.createMapResource(scChainTsvs)
+		})
+		countsBuilder.add([sampleId], counts.output("counts"))
+	}
+
     qcReportTable := render.create(exportReportTpl, {
 		clnsData: mixcrResults.outputData("clns"),
-		filterTsvsData: filtersResults.outputData("filters"),
-		chainFilterTsvsData: chainFilterTsvsData,
+		countsData: countsBuilder.build(),
 		presetSpecForBack: presetSpecForBack,
 		sampleIdAxisSpec: sampleIdAxisSpec,
         chains: chains,
 		library: library,
 		isLibraryFileGzipped: isLibraryFileGzipped,
-        clonotypeTablesData: clonotypeTablesData,
-		productiveFeature: productiveFeature,
-		stopCodonTypes: params.stopCodonTypes,
-		stopCodonReplacements: params.stopCodonReplacements,
-		singleCellChainTsvsData: singleCellChainTsvs,
 		scHeavyOnly: scHeavyOnly
 	})
 
