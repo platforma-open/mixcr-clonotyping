@@ -1,4 +1,4 @@
-// The memory grant of the `exportClones` steps of :mixcr-export. The MiXCR steps of a run take
+// The memory grant of the `exportClones` steps of :mixcr-export and :export-filters. The MiXCR steps of a run take
 // theirs from :resources.
 
 exec := import("@platforma-sdk/workflow-tengo:exec")

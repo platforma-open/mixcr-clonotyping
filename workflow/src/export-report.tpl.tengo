@@ -9,7 +9,6 @@ xsv := import("@platforma-sdk/workflow-tengo:pframes.xsv")
 pt := import("@platforma-sdk/workflow-tengo:pt")
 units := import("@platforma-sdk/workflow-tengo:units")
 qcReportColumns := import(":qc-report-columns")
-memf := import(":mem-formula")
 
 json := import("json")
 
@@ -122,12 +121,6 @@ self.body(func(inputs) {
 	"TCRDelta": { mixcrFilter: "TRD", name: "TCR Delta", shortName: "Delta" }
     }
 
-    chainsForMixcr := []
-
-    for chain in chains {
-        chainsForMixcr += text.split(chainInfos[chain].mixcrFilter, ",")
-    }
-    
     // Get all clns files from the input data
     clnsFiles := clnsData.inputs()
     
@@ -160,77 +153,13 @@ self.body(func(inputs) {
     // Per-sample counts. One small ptabler run per sample reads that sample's clonotype TSVs
     // (one per chain) and its filter TSVs and writes a one-row table. The cohort run below
     // frames only those rows, so its input does not grow with the clonotype count.
-    mixcrChainsArg := text.join(chainsForMixcr, ",")
-
-    // Filter exports: one per sample, and in single-cell mode one more per chain per sample.
-    // Reads the same .clns as the main clonotype export, so :mem-formula exportRam sizes it
-    // with the same rule, at 90 bytes of RAM per .clns byte.
-    filterTsvs := {}
-    for key in maps.getKeys(clnsFiles) {
-        clnsFile := clnsFiles[key]
-        exportFiltersCmd := mixcrCmd.base(mixcrSw).
-            inMediumQueue().
-            resources({ onCPU: { cpu: 2, ram: memf.exportRam(inputs.perProcessMemGB, 24, 90) } }).
-            arg("exportClones").
-            arg("--dont-split-files").
-            arg("--drop-default-fields").
-            arg("--reset-export-clone-table-splitting")
-        if mixcrChainsArg != "" {
-            exportFiltersCmd.arg("--chains").arg(mixcrChainsArg)
-        }
-        exportFiltersCmd = exportFiltersCmd.
-            arg("-isOOF").arg(featureForFlags).
-            arg("-hasStops").arg(featureForFlags).
-            arg("-nFeature").arg(featureForFlags).
-            arg("clones.clns").
-            addFile("clones.clns", clnsFile, { tag: "clns" }).
-            arg("clones.tsv").
-            saveFile("clones.tsv")
-        if library {
-            if isLibraryFileGzipped {
-			    exportFiltersCmd.addFile("library.json.gz", library)
-		    } else {
-			    exportFiltersCmd.addFile("library.json", library)
-		    }
-		}
-        exportFiltersResult := exportFiltersCmd.cacheHours(3).run()
-        filterTsvs[key] = exportFiltersResult.getFile("clones.tsv")
-    }
-
+    // Filter exports, one per sample and in single-cell mode one more per chain per sample,
+    // run by :export-filters through :process as each sample's .clns becomes available.
+    filterTsvs := inputs.filterTsvsData.inputs()
     chainFilterTsvs := {}
     if isSingleCell {
         for chain in chains {
-            chainMixcr := chainInfos[chain].mixcrFilter
-            chainFilterTsvs[chain] = {}
-            for key in maps.getKeys(clnsFiles) {
-                clnsFile := clnsFiles[key]
-                exportChainFiltersCmd := mixcrCmd.base(mixcrSw).
-                    inMediumQueue().
-                    resources({ onCPU: { cpu: 2, ram: memf.exportRam(inputs.perProcessMemGB, 24, 90) } }).
-                    arg("exportClones").
-                    arg("--dont-split-files").
-                    arg("--drop-default-fields").
-                    arg("--reset-export-clone-table-splitting").
-                    arg("--chains").arg(chainMixcr)
-                if library {
-                    if isLibraryFileGzipped {
-                        exportChainFiltersCmd.addFile("library.json.gz", library)
-                    } else {
-                        exportChainFiltersCmd.addFile("library.json", library)
-                    }
-                }
-                exportChainFiltersResult := exportChainFiltersCmd.
-                    arg("-isOOF").arg(featureForFlags).
-                    arg("-hasStops").arg(featureForFlags).
-                    arg("-nFeature").arg(featureForFlags).
-                    arg("clones.clns").
-                    addFile("clones.clns", clnsFile, { tag: "clns" }).
-                    arg("clones.tsv").
-                    saveFile("clones.tsv").
-                    cacheHours(3).
-                    run()
-                chainFilterTsvs[chain][key] = exportChainFiltersResult.getFile("clones.tsv")
-            }
+            chainFilterTsvs[chain] = inputs.chainFilterTsvsData[chain].inputs()
         }
     }
 

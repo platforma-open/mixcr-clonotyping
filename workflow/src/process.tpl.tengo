@@ -26,6 +26,7 @@ aggregateByClonotypeKeyTpl := assets.importTemplate(":aggregate-by-clonotype-key
 exportReportTpl := assets.importTemplate(":export-report")
 processSingleCellTpl := assets.importTemplate(":process-single-cell")
 mergePColumnDataTpl := assets.importTemplate(":merge-pcolumn-data")
+exportFiltersTpl := assets.importTemplate(":export-filters")
 
 self.awaitState("InputsLocked")
 self.awaitState("params", "ResourceReady")
@@ -1021,8 +1022,65 @@ self.body(func(inputs) {
 		}
 	}
 
+	// The per-sample filter exports :export-report counts: one :export-filters body per
+	// sample, started when that sample's .clns exists. :export-report itself runs only once
+	// every .clns is final, so launching these from its body put every sample's export in one
+	// burst, past the backend's submit rate (see WAVE_SIZE).
+	filtersSpec := func(chain) {
+		domain := { "pl7.app/vdj/clonotypingRunId": blockId }
+		if !is_undefined(chain) {
+			domain["pl7.app/vdj/chain"] = chain
+		}
+		return { kind: "PColumn", name: "mixcr.com/clonotypeFilters", domain: domain, valueType: "File" }
+	}
+	filtersOutputs := [ { type: "Resource", spec: filtersSpec(undefined), name: "filters", path: ["filters"] } ]
+	chainFilters := {}
+	if isSingleCell {
+		for chain in chains {
+			chainFilters[chain] = chainInfos[chain].mixcrFilter
+			filtersOutputs = append(filtersOutputs, {
+				type: "Resource",
+				spec: filtersSpec(chain),
+				name: "chainFilters/" + chain,
+				path: ["chainFilters", chain]
+			})
+		}
+	}
+	chainsForMixcr := []
+	for chain in chains {
+		chainsForMixcr += text.split(chainInfos[chain].mixcrFilter, ",")
+	}
+	filtersResults := pframes.processColumn(
+		clnsFiles,
+		exportFiltersTpl,
+		filtersOutputs,
+		{
+			stepCache: 30 * times.minute,
+			extra: {
+				params: {
+					chains: text.join(chainsForMixcr, ","),
+					chainFilters: chainFilters,
+					productiveFeature: productiveFeature,
+					isLibraryFileGzipped: isLibraryFileGzipped
+				},
+				library: library
+			},
+			metaExtra: {
+				perProcessMemGB: perProcessMemGB
+			}
+		}
+	)
+	chainFilterTsvsData := {}
+	for chain in chains {
+		if isSingleCell {
+			chainFilterTsvsData[chain] = filtersResults.outputData("chainFilters/" + chain)
+		}
+	}
+
     qcReportTable := render.create(exportReportTpl, {
 		clnsData: mixcrResults.outputData("clns"),
+		filterTsvsData: filtersResults.outputData("filters"),
+		chainFilterTsvsData: chainFilterTsvsData,
 		presetSpecForBack: presetSpecForBack,
 		sampleIdAxisSpec: sampleIdAxisSpec,
         chains: chains,
