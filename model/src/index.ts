@@ -96,6 +96,17 @@ function parseSampleLogs<T>(
   return { isComplete, data };
 }
 
+/**
+ * The label shown when the user set none: the dataset name (`title`, written when the input is
+ * chosen) and the chains. A template may carry its own `defaultBlockLabel`; it applies when the
+ * block has no input yet.
+ */
+export function defaultBlockLabelFor(data: Partial<BlockData>): string {
+  const parts = [data.title, data.chains?.length ? data.chains.join(", ") : undefined];
+  const derived = parts.filter(Boolean).join(" - ");
+  return derived || data.defaultBlockLabel || "";
+}
+
 export const platforma = BlockModelV3.create({ dataModel, kind })
 
   // Inverse of `init` — the same fields, projected back out for template export.
@@ -162,9 +173,9 @@ export const platforma = BlockModelV3.create({ dataModel, kind })
     if (!BlockArgsValid.safeParse(data).success) return undefined;
     // A preset file carries its own settings; built-in preset flags must not override it.
     const builtIn = data.preset.type === "name";
+    // The labels stay out: no template reads them, and a label change must not make the block
+    // stale.
     return {
-      defaultBlockLabel: data.defaultBlockLabel ?? "",
-      customBlockLabel: data.customBlockLabel ?? "",
       input: data.input,
       preset: data.preset,
       chains: data.chains,
@@ -421,7 +432,7 @@ export const platforma = BlockModelV3.create({ dataModel, kind })
 
   .title(() => "MiXCR Clonotyping")
 
-  .subtitle((ctx) => ctx.data.customBlockLabel || ctx.data.defaultBlockLabel || "")
+  .subtitle((ctx) => ctx.data.customBlockLabel || defaultBlockLabelFor(ctx.data) || "")
 
   .done();
 
