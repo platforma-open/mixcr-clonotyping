@@ -50,8 +50,10 @@ function setMemFloor(step: string, v: number | undefined) {
 }
 
 // "default" when the step's rule is unknown: it came from a run's logs, not a plan or a request.
-function placeholder(rule: StepRule | undefined): string {
-  return rule === undefined ? "default" : `default (${rule.memFloor})`;
+// A step sized from the clone estimate shows that sizing's floor.
+function placeholder(req: { defaultRule?: StepRule; cloneFloor?: number }): string {
+  if (req.cloneFloor !== undefined) return `by clone count (≥ ${req.cloneFloor})`;
+  return req.defaultRule === undefined ? "default" : `default (${req.defaultRule.memFloor})`;
 }
 </script>
 
@@ -78,7 +80,7 @@ function placeholder(rule: StepRule | undefined): string {
       <PlTooltip class="info" position="top">
         <template #tooltip>
           The least memory the step gets, whatever its input size. Leave blank to use the default
-          shown in grey.
+          shown in grey. A step sized by clone count gets more when align estimates more clones.
         </template>
       </PlTooltip>
     </span>
@@ -86,7 +88,7 @@ function placeholder(rule: StepRule | undefined): string {
       <span class="step-settings__step">{{ req.step }}</span>
       <PlNumberField
         :model-value="memFloor(req.step)"
-        :placeholder="placeholder(req.defaultRule)"
+        :placeholder="placeholder(req)"
         :step="1"
         :min-value="1"
         :validate="(v) => (Number.isInteger(v) ? undefined : 'Value must be an integer')"

@@ -26,6 +26,22 @@ _stepLogs := func(logs) {
 	return stepLogs
 }
 
+// checkReports fails unless a step of `plan` writes both files of every report :process lists.
+// :run-steps calls it before the first step starts.
+checkReports := func(plan, reports) {
+	saved := {}
+	for c in plan.commands {
+		for name in c.save {
+			saved[name] = true
+		}
+	}
+	for report in reports {
+		for name in [report.fileJson, report.fileTxt] {
+			ll.assert(saved[name], "no MiXCR step writes the %v report %v", report.id, name)
+		}
+	}
+}
+
 // splitLog returns the `log` output of a run handed off to :run-steps-after-align: the streams of
 // the steps run before the hand-off, and `afterAlignLog`, the log of the rest, nested under
 // AFTER_ALIGN_LOG_KEY. The earlier streams show while align runs and when the rest fails.
@@ -44,7 +60,8 @@ splitLog := func(logs, afterAlignLog) {
 //
 // Whether the report is saved and where the run stops follow the clone row alone, never the
 // overrides in ctx.res: the overrides are meta inputs, and the align exec must not change with
-// them. An override only keeps the step on its input sizing once the report is in hand.
+// them. Once the report is in hand, an override either keeps the step on its input sizing or,
+// a step memFloor alone, replaces the floor of its clone row (resources.sizedByReport).
 run := func(plan, from, ctx) {
 	hasCloneRow := func(c) {
 		return !is_undefined(resources.cloneRow(c.key, ctx.stepClass, ctx.features))
@@ -98,7 +115,7 @@ run := func(plan, from, ctx) {
 
 		fixedRam := undefined
 		if !is_undefined(ctx.alignReport) && resources.sizedByReport(c.key, ctx.stepClass, ctx.features, ctx.res) {
-			fixedRam = resources.ramFromReport(resources.cloneRow(c.key, ctx.stepClass, ctx.features), ctx.alignReport)
+			fixedRam = resources.ramFromReport(resources.reportRow(c.key, ctx.stepClass, ctx.features, ctx.res), ctx.alignReport)
 			if is_undefined(fixedRam) {
 				ll.print("the align report has no clone estimate; %v is sized from its input", c.key)
 			}
@@ -122,9 +139,6 @@ run := func(plan, from, ctx) {
 outputs := func(plan, written, logs, reports) {
 	reportsMap := pcolumn.resourceMapBuilder( /* keyLength */ 2 )
 	for report in reports {
-		for name in [report.fileJson, report.fileTxt] {
-			ll.assert(!is_undefined(written[name]), "no MiXCR step writes the %v report %v", report.id, name)
-		}
 		reportsMap.add([report.id, "json"], written[report.fileJson])
 		reportsMap.add([report.id, "txt"], written[report.fileTxt])
 	}
@@ -139,5 +153,6 @@ outputs := func(plan, written, logs, reports) {
 export {
 	run: run,
 	outputs: outputs,
+	checkReports: checkReports,
 	splitLog: splitLog
 }

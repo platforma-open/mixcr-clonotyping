@@ -231,18 +231,33 @@ cloneRow := func(step, cls, features) {
 }
 
 // sizedByReport returns true when `step` takes its memory from the align report: it has a
-// cloneRow and no override sets its memory.
+// cloneRow and no override sets its memory, except a step override of memFloor alone.
 sizedByReport := func(step, cls, features, res) {
 	if is_undefined(cloneRow(step, cls, features)) {
 		return false
 	}
 	source := effective(lookup(step, cls), res).source
 	for k in _MEMORY_FIELDS {
-		if source[k] != "default" {
+		if source[k] != "default" && !(k == "memFloor" && source[k] == "step") {
 			return false
 		}
 	}
 	return true
+}
+
+// reportRow returns the cloneRow of `step` with the memFloor of its step override, if one is set.
+// Undefined when the step has no cloneRow.
+reportRow := func(step, cls, features, res) {
+	row := cloneRow(step, cls, features)
+	if is_undefined(row) {
+		return undefined
+	}
+	eff := effective(lookup(step, cls), res)
+	if eff.source.memFloor == "step" {
+		row = copy(row)
+		row.memFloor = eff.row.memFloor
+	}
+	return row
 }
 
 // ramFromReport returns the memory request of a cloneRow for the parsed align report, or
@@ -281,6 +296,7 @@ export {
 	effective: effective,
 	cloneRow: cloneRow,
 	sizedByReport: sizedByReport,
+	reportRow: reportRow,
 	ramFromReport: ramFromReport,
 	apply: apply
 }

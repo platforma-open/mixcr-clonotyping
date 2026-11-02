@@ -236,16 +236,32 @@ TestRamFromReport := func() {
 	test.isTrue(is_undefined(rs.ramFromReport(vdj, undefined)))
 }
 
-TestAnyMemoryOverrideKeepsTheInputSizing := func() {
+TestMemoryOverridesBeyondTheStepFloorKeepTheInputSizing := func() {
 	test.isTrue(rs.sizedByReport("assemble", "none", ["VDJRegion"], {}))
 	test.isFalse(rs.sizedByReport("assemble", "umi", ["VDJRegion"], {}))
 	test.isFalse(rs.sizedByReport("align", "none", ["VDJRegion"], {}))
 	test.isFalse(rs.sizedByReport("assemble", "none", ["VDJRegion"], { perProcessMemGB: 100 }))
-	test.isFalse(rs.sizedByReport("assemble", "none", ["VDJRegion"], { stepResources: { assemble: { memFloor: 80 } } }))
+	test.isFalse(rs.sizedByReport("assemble", "none", ["VDJRegion"], { stepResources: { assemble: { memSlope: 10 } } }))
+	test.isFalse(rs.sizedByReport("assemble", "none", ["VDJRegion"], { stepResources: { assemble: { memFloor: 80, cap: 100 } } }))
+	// A step floor alone keeps the report sizing.
+	test.isTrue(rs.sizedByReport("assemble", "none", ["VDJRegion"], { stepResources: { assemble: { memFloor: 80 } } }))
 	// A CPU override leaves the memory to the report.
 	test.isTrue(rs.sizedByReport("assemble", "none", ["VDJRegion"], { perProcessCPUs: 8 }))
 	test.isTrue(rs.sizedByReport("assemble", "none", ["VDJRegion"], { stepResources: { align: { memFloor: 80 } } }))
 	// The clone row, which sets where :run-steps hands off and whether align saves its report,
 	// does not read the overrides: an override keeps the row and only disables its use.
 	test.isFalse(is_undefined(rs.cloneRow("assemble", "none", ["VDJRegion"])))
+}
+
+TestAStepFloorReplacesTheCloneRowFloor := func() {
+	floor80 := { stepResources: { assemble: { memFloor: 80 } } }
+	small := { estimatedInitialClones: 633078, aligned: 10803859 }
+	large := { estimatedInitialClones: 2227494, aligned: 39375951 }
+	test.isEqual("80GiB", rs.ramFromReport(rs.reportRow("assemble", "none", ["VDJRegion"], floor80), small))
+	// Above the floor, the clone formula: 10 + 16 x 2.227494 + 0.32 x 39.375951 = 58.24.
+	test.isEqual("59GiB", rs.ramFromReport(rs.reportRow("assemble", "none", ["VDJRegion"], { stepResources: { assemble: { memFloor: 40 } } }), large))
+	// A floor below the row's own replaces it too: 10 + 16 x 0.633078 + 0.32 x 10.803859 = 23.59.
+	test.isEqual("24GiB", rs.ramFromReport(rs.reportRow("assemble", "none", ["VDJRegion"], { stepResources: { assemble: { memFloor: 16 } } }), small))
+	test.isEqual("32GiB", rs.ramFromReport(rs.reportRow("assemble", "none", ["VDJRegion"], {}), small))
+	test.isTrue(is_undefined(rs.reportRow("assemble", "umi", ["VDJRegion"], floor80)))
 }

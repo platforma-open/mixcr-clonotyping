@@ -29,6 +29,7 @@ self.body(func(inputs) {
 		scratchFreeSpace: inputs.scratchFreeSpace
 	}
 	plan := mixcrSteps.commands(mixcrSteps.stepsOf(inputs.steps.getDataAsJson()), files, inputs.readsPattern)
+	stepRunner.checkReports(plan, inputs.reports)
 
 	ctx := {
 		sw: mixcrSw,
