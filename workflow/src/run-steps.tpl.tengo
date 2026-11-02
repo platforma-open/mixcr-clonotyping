@@ -50,7 +50,6 @@ self.body(func(inputs) {
 		alignReport: stop.alignReport,
 		files: files,
 		written: ctx.written,
-		logs: ctx.logs,
 		args: {
 			from: stop.stopAt,
 			readNames: inputs.readNames,
@@ -63,7 +62,7 @@ self.body(func(inputs) {
 	})
 	return {
 		qc: rest.output("qc"),
-		log: rest.output("log"),
+		log: stepRunner.splitLog(ctx.logs, rest.output("log")),
 		reports: rest.output("reports"),
 		clns: rest.output("clns")
 	}

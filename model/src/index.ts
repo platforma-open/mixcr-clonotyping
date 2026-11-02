@@ -65,9 +65,22 @@ const dataModel = new DataModelBuilder({ kind })
   }));
 
 /**
+ * The input field `field` of `map`, or undefined while it is unset or when it carries an error.
+ * A step that failed, or the steps that never ran after it, must not hide the logs of the others.
+ */
+function resolveUnlessErrored(map: TreeNodeAccessor, field: string): TreeNodeAccessor | undefined {
+  try {
+    return map.resolve({ field, assertFieldType: "Input" });
+  } catch {
+    return undefined;
+  }
+}
+
+/**
  * Reads the per-sample `logs` column. A sample's value is one log stream, or a map of streams
- * keyed by MiXCR step for a run split into one command per step. Entries are keyed [sampleId]
- * or [sampleId, step].
+ * keyed by MiXCR step for a run split into one command per step. A run that waits for the align
+ * report nests the map of the later steps as one entry of that map; it is flattened here.
+ * Entries are keyed [sampleId] or [sampleId, step].
  */
 function parseSampleLogs<T>(
   acc: TreeNodeAccessor | undefined,
@@ -75,18 +88,33 @@ function parseSampleLogs<T>(
 ): PColumnResourceMapData<NonNullable<T>> | undefined {
   if (acc === undefined) return undefined;
   const data: { key: PColumnKey; value: NonNullable<T> }[] = [];
+  // Adds the streams of a step map under `prefix`; returns whether every step is in.
+  const addSteps = (steps: TreeNodeAccessor, prefix: PColumnKey): boolean => {
+    let complete = steps.getInputsLocked();
+    for (const stepKey of steps.listInputFields()) {
+      const step = resolveUnlessErrored(steps, stepKey);
+      if (step === undefined) {
+        complete = false;
+      } else if (step.resourceType.name === RT_RESOURCE_MAP) {
+        complete = addSteps(step, prefix) && complete;
+      } else {
+        const value = parse(step);
+        if (value === undefined || value === null) complete = false;
+        else data.push({ key: [...prefix, ...(JSON.parse(stepKey) as PColumnKey)], value });
+      }
+    }
+    return complete;
+  };
   let isComplete = acc.getInputsLocked();
   for (const sampleKey of acc.listInputFields()) {
-    const sample = acc.resolve({ field: sampleKey, assertFieldType: "Input" });
+    const sample = resolveUnlessErrored(acc, sampleKey);
     if (sample === undefined) {
       isComplete = false;
       continue;
     }
     const key = JSON.parse(sampleKey) as PColumnKey;
     if (sample.resourceType.name === RT_RESOURCE_MAP) {
-      const steps = parseResourceMap(sample, parse, false);
-      isComplete &&= steps.isComplete;
-      for (const step of steps.data) data.push({ key: [...key, ...step.key], value: step.value });
+      isComplete = addSteps(sample, key) && isComplete;
     } else {
       const value = parse(sample);
       if (value === undefined || value === null) isComplete = false;

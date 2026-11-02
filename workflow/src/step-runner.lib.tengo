@@ -13,6 +13,26 @@ CACHE_PERIOD := 48 * times.hour
 // For the steps that write no final output (the clones or the qc result).
 INTERMEDIATE_CACHE_PERIOD := 36 * times.hour
 
+// The entry of a split run's log that holds the log of :run-steps-after-align.
+AFTER_ALIGN_LOG_KEY := "after-align"
+
+// One stream per step, keyed by its run position and name (`007:align`). Carried as the
+// sample's `log` output: a run from before the split holds a single stream there instead.
+_stepLogs := func(logs) {
+	stepLogs := pcolumn.resourceMapBuilder( /* keyLength */ 1 )
+	maps.forEach(logs, func(logKey, stream) {
+		stepLogs.add([logKey], stream)
+	})
+	return stepLogs
+}
+
+// splitLog returns the `log` output of a run handed off to :run-steps-after-align: the streams of
+// the steps run before the hand-off, and `afterAlignLog`, the log of the rest, nested under
+// AFTER_ALIGN_LOG_KEY. The earlier streams show while align runs and when the rest fails.
+splitLog := func(logs, afterAlignLog) {
+	return _stepLogs(logs).add([AFTER_ALIGN_LOG_KEY], afterAlignLog).build()
+}
+
 // run runs plan.commands from index `from`. ctx is { sw, files, readNames, stepClass, features,
 // res, written, logs, alignReport }: `files` holds the block files by name, `written` and `logs`
 // gain the files each step writes (by name) and its stdout stream (by logKey), and `alignReport`
@@ -108,15 +128,9 @@ outputs := func(plan, written, logs, reports) {
 		reportsMap.add([report.id, "json"], written[report.fileJson])
 		reportsMap.add([report.id, "txt"], written[report.fileTxt])
 	}
-	// One stream per step, keyed by its run position and name (`007:align`). Carried as the
-	// sample's `log` output: a run from before the split holds a single stream there instead.
-	stepLogs := pcolumn.resourceMapBuilder( /* keyLength */ 1 )
-	maps.forEach(logs, func(logKey, stream) {
-		stepLogs.add([logKey], stream)
-	})
 	return {
 		qc: written[plan.qcJson],
-		log: stepLogs.build(),
+		log: _stepLogs(logs).build(),
 		reports: reportsMap.build(),
 		clns: written[plan.clns]
 	}
@@ -124,5 +138,6 @@ outputs := func(plan, written, logs, reports) {
 
 export {
 	run: run,
-	outputs: outputs
+	outputs: outputs,
+	splitLog: splitLog
 }
