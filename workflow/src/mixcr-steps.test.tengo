@@ -56,6 +56,7 @@ TestUmiStepsChainTheirFiles := func() {
 	align := plan.commands[0]
 	test.isTrue(align.stageReads)
 	test.isEqual(["result.align.report.txt", "result.align.report.json", "result.alignments.vdjca"], align.save)
+	test.isEqual("result.align.report.json", align.jsonReport)
 	test.isEqual(["result.alignments.vdjca"], plan.commands[1].stageSteps)
 	test.isEqual("result.clns", plan.clns)
 	test.isEqual("result.qc.json", plan.qcJson)

@@ -64,6 +64,9 @@ _command := func(args, written, blockFiles, readsPattern) {
 		preset := _presetFile(arg)
 		if i > 0 && REPORT_OPTIONS[args[i - 1]] {
 			c.save = append(c.save, arg)
+			if args[i - 1] == "--json-report" {
+				c.jsonReport = arg
+			}
 		} else if written[arg] {
 			c.stageSteps = append(c.stageSteps, arg)
 		} else if arg == readsPattern {
@@ -100,10 +103,11 @@ stepsOf := func(stepsFile) {
 
 // commands returns { commands, clns, qcJson } for a step list.
 //
-// Each command is { key, logKey, args, stageSteps, stageReads, stageBlock, save,
+// Each command is { key, logKey, args, stageSteps, stageReads, stageBlock, save, jsonReport,
 // writesFinalOutput }: stageSteps and stageBlock list file names, stageReads is true when the
-// step reads the reads, save lists the files the step writes, and writesFinalOutput is true when
-// one of them is the clones or the qc result. logKey leads with the run position, zero-padded,
+// step reads the reads, save lists the files the step writes, jsonReport is the one of them the
+// step's `--json-report` names (undefined without that option), and writesFinalOutput is true
+// when one of them is the clones or the qc result. logKey leads with the run position, zero-padded,
 // so the step that has got furthest sorts last. clns is the file `qc` reads, qcJson the report
 // `qc` writes.
 //

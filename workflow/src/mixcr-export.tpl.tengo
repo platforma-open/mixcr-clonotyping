@@ -74,8 +74,9 @@ self.body(func(inputs) {
 
 	// Exporting clones from clns file
 
-	createExport := func(additionalAction, ramRequest) {
+	createExport := func(name, additionalAction, ramRequest) {
 		mixcrCmdBuilder := mixcrCmd.base(mixcrSw).
+			name(name).
 			inMediumQueue().
 			resources({ onCPU: { cpu: 2, ram: ramRequest } }).
 			arg("exportClones").
@@ -109,7 +110,7 @@ self.body(func(inputs) {
 	}
 
 	// Bulk export: loads the CloneSet and writes it straight out.
-	exportClonesCmd := createExport(func(mixcrCmdBuilder) {
+	exportClonesCmd := createExport("mixcr exportClones", func(mixcrCmdBuilder) {
 		for argGrp in exportArgs {
 			for arg in argGrp {
 				mixcrCmdBuilder.arg(arg)
@@ -184,7 +185,7 @@ self.body(func(inputs) {
 	if !is_undefined(cellTagColumns) {
 		// Single-cell export: pays the divideClonesByTags expansion on top of the
 		// resident CloneSet -- hence the higher floor and steeper slope.
-		mixcrForSingleCell := createExport(func(mixcrCmdBuilder) {
+		mixcrForSingleCell := createExport("mixcr exportClones cells", func(mixcrCmdBuilder) {
 			mixcrCmdBuilder.
 				arg("--split-by-tags").arg("Cell").
 				arg("-tags").arg("Cell")
