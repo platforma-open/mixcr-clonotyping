@@ -1,5 +1,21 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.31.1
+
+### Patch Changes
+
+- 7f4cfec: Compute the block subtitle without opening the block
+
+  Opening the block no longer rewrites its arguments, so a block run with Run All is not marked
+  stale (with everything downstream) the first time someone opens it. The subtitle is computed
+  from the block's settings: the input dataset label stored when the user picked the input,
+  followed by the chosen chains. A block that was never opened, including one created from a
+  template, now shows it too. Existing blocks show stale once after the update. The init-params
+  contract no longer carries `defaultBlockLabel`; templates that still contain it keep loading.
+
+- Updated dependencies [7f4cfec]
+  - @platforma-open/milaboratories.mixcr-clonotyping-2.kind@1.3.0
+
 ## 1.31.0
 
 ### Minor Changes
