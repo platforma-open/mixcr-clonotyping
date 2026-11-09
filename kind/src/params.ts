@@ -131,7 +131,6 @@ const CONTRACT = {
   perProcessMemGB: check(isInteger, "an integer"),
   perProcessCPUs: check(isInteger, "an integer"),
 
-  defaultBlockLabel: check(isString, "a string"),
   customBlockLabel: check(isString, "a string"),
   title: check(isString, "a string"),
 } satisfies { [K in keyof BlockParams]-?: Check<NonNullable<BlockParams[K]>> };

@@ -65,7 +65,6 @@ export type BlockParams = {
   perProcessCPUs?: number;
 
   // Display naming.
-  defaultBlockLabel?: string;
   customBlockLabel?: string;
   title?: string;
 };

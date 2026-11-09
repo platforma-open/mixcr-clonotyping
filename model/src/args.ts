@@ -48,7 +48,6 @@ export const StepResources = z.record(z.string(), StepResourceOverride);
 export type StepResources = z.infer<typeof StepResources>;
 
 const BlockArgsValidBase = z.object({
-  defaultBlockLabel: z.string().optional(),
   customBlockLabel: z.string().optional(),
   input: PlRef,
   inputLibrary: PlRef.optional(),
@@ -91,7 +90,6 @@ export type BlockArgsValid = z.infer<typeof BlockArgsValid>;
 export const BlockArgs = BlockArgsValidBase.partial({
   input: true,
   preset: true,
-  defaultBlockLabel: true,
   customBlockLabel: true,
 });
 export type BlockArgs = z.infer<typeof BlockArgs>;

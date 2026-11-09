@@ -187,6 +187,9 @@ importers:
       '@platforma-sdk/block-tools':
         specifier: 'catalog:'
         version: 2.17.0(@types/node@24.10.2)
+      vitest:
+        specifier: 'catalog:'
+        version: 4.0.18(@types/node@24.10.2)(lightningcss@1.32.0)(yaml@2.9.1)
 
   model:
     dependencies:
