@@ -41,22 +41,28 @@ export type BlockData = BlockArgs & {
   listStepsParams?: ListStepsParams;
 };
 
+type BlockDataV1 = BlockData & { defaultBlockLabel?: string };
+
+type LegacyArgs = BlockArgs & { defaultBlockLabel?: string };
+
 type LegacyUiState = {
   tableState: PlDataTableStateV2;
 };
 
 const dataModel = new DataModelBuilder({ kind })
-  .from<BlockData>("v1")
-  .upgradeLegacy<BlockArgs, LegacyUiState>(({ args, uiState }) => ({
+  .from<BlockDataV1>("v1")
+  .upgradeLegacy<LegacyArgs, LegacyUiState>(({ args, uiState }) => ({
     ...args,
     tableState: uiState.tableState,
     runMode: (args.limitInput ?? 0) > 0 ? "dry" : "full",
   }))
+  // The old label joined the input dataset label with the chains; both are already in data
+  // (`title` holds the input label), so the subtitle is recomputed and the copy is dropped.
+  .migrate<BlockData>("v2", ({ defaultBlockLabel: _, ...rest }) => rest)
   // `params` is absent when a block is created by hand rather than from a
   // template, so every field the contract carries keeps its own default.
   .init(({ params }) => ({
     ...params,
-    defaultBlockLabel: params?.defaultBlockLabel ?? "",
     customBlockLabel: params?.customBlockLabel ?? "",
     chains: params?.chains ?? ["IG", "TCRAB", "TCRGD"],
     cloneClusteringMode: params?.cloneClusteringMode ?? "default",
@@ -162,7 +168,6 @@ export const platforma = BlockModelV3.create({ dataModel, kind })
     // `stepResources` stays out: a per-step override is tuned to one cluster, and a template may
     // open on another.
 
-    defaultBlockLabel: data.defaultBlockLabel,
     customBlockLabel: data.customBlockLabel,
     title: data.title,
   }))
@@ -191,7 +196,6 @@ export const platforma = BlockModelV3.create({ dataModel, kind })
     // A preset file carries its own settings; built-in preset flags must not override it.
     const builtIn = data.preset.type === "name";
     return {
-      defaultBlockLabel: data.defaultBlockLabel ?? "",
       customBlockLabel: data.customBlockLabel ?? "",
       input: data.input,
       preset: data.preset,
@@ -449,7 +453,11 @@ export const platforma = BlockModelV3.create({ dataModel, kind })
 
   .title(() => "MiXCR Clonotyping")
 
-  .subtitle((ctx) => ctx.data.customBlockLabel || ctx.data.defaultBlockLabel || "")
+  .subtitle(
+    (ctx) =>
+      ctx.data.customBlockLabel ||
+      [ctx.data.title, labelFromParams(ctx.data)].filter(Boolean).join(" - "),
+  )
 
   .done();
 
@@ -483,4 +491,9 @@ function portablePreset(preset: BlockData["preset"]): KindBlockParams["preset"] 
   if (preset.type === "name") return preset;
   const file = portableHandle(preset.file);
   return file === undefined ? undefined : { type: "file", file };
+}
+
+/** Settings part of the subtitle: the chosen receptors and chains. */
+function labelFromParams(data: BlockData): string {
+  return (data.chains ?? []).join(", ");
 }

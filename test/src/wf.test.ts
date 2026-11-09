@@ -190,7 +190,6 @@ const bulkProjectTest = (
     await project.mutateBlockStorage(clonotypingBlockId, {
       operation: "update-block-data",
       value: {
-        defaultBlockLabel: "",
         customBlockLabel: "",
         input: clonotypingStableState1Outputs.inputOptions[0].ref,
         preset: { type: "name", name: preset },
@@ -331,7 +330,6 @@ blockTest(
     await project.mutateBlockStorage(clonotypingBlockId, {
       operation: "update-block-data",
       value: {
-        defaultBlockLabel: "",
         customBlockLabel: "",
         input: publishedOutputs1.inputOptions[0].ref,
         preset: { type: "name", name: "milab-human-dna-xcr-7genes-multiplex" },
@@ -485,7 +483,6 @@ blockTest(
     await project.mutateBlockStorage(clonotypingBlockId, {
       operation: "update-block-data",
       value: {
-        defaultBlockLabel: "",
         customBlockLabel: "",
         input: clonotypingStableState1Outputs.inputOptions[0].ref,
         preset: { type: "name", name: "10x-sc-xcr-vdj" },
