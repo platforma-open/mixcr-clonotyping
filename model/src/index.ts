@@ -41,22 +41,28 @@ export type BlockData = BlockArgs & {
   listStepsParams?: ListStepsParams;
 };
 
+type BlockDataV1 = BlockData & { defaultBlockLabel?: string };
+
+type LegacyArgs = BlockArgs & { defaultBlockLabel?: string };
+
 type LegacyUiState = {
   tableState: PlDataTableStateV2;
 };
 
 const dataModel = new DataModelBuilder({ kind })
-  .from<BlockData>("v1")
-  .upgradeLegacy<BlockArgs, LegacyUiState>(({ args, uiState }) => ({
+  .from<BlockDataV1>("v1")
+  .upgradeLegacy<LegacyArgs, LegacyUiState>(({ args, uiState }) => ({
     ...args,
     tableState: uiState.tableState,
     runMode: (args.limitInput ?? 0) > 0 ? "dry" : "full",
   }))
+  // The old label joined the input dataset label with the chains; both are already in data
+  // (`title` holds the input label), so the subtitle is recomputed and the copy is dropped.
+  .migrate<BlockData>("v2", ({ defaultBlockLabel: _, ...rest }) => rest)
   // `params` is absent when a block is created by hand rather than from a
   // template, so every field the contract carries keeps its own default.
   .init(({ params }) => ({
     ...params,
-    defaultBlockLabel: params?.defaultBlockLabel ?? "",
     customBlockLabel: params?.customBlockLabel ?? "",
     chains: params?.chains ?? ["IG", "TCRAB", "TCRGD"],
     cloneClusteringMode: params?.cloneClusteringMode ?? "default",
@@ -65,9 +71,22 @@ const dataModel = new DataModelBuilder({ kind })
   }));
 
 /**
+ * The input field `field` of `map`, or undefined while it is unset or when it carries an error.
+ * A step that failed, or the steps that never ran after it, must not hide the logs of the others.
+ */
+function resolveUnlessErrored(map: TreeNodeAccessor, field: string): TreeNodeAccessor | undefined {
+  try {
+    return map.resolve({ field, assertFieldType: "Input" });
+  } catch {
+    return undefined;
+  }
+}
+
+/**
  * Reads the per-sample `logs` column. A sample's value is one log stream, or a map of streams
- * keyed by MiXCR step for a run split into one command per step. Entries are keyed [sampleId]
- * or [sampleId, step].
+ * keyed by MiXCR step for a run split into one command per step. A run that waits for the align
+ * report nests the map of the later steps as one entry of that map; it is flattened here.
+ * Entries are keyed [sampleId] or [sampleId, step].
  */
 function parseSampleLogs<T>(
   acc: TreeNodeAccessor | undefined,
@@ -75,18 +94,33 @@ function parseSampleLogs<T>(
 ): PColumnResourceMapData<NonNullable<T>> | undefined {
   if (acc === undefined) return undefined;
   const data: { key: PColumnKey; value: NonNullable<T> }[] = [];
+  // Adds the streams of a step map under `prefix`; returns whether every step is in.
+  const addSteps = (steps: TreeNodeAccessor, prefix: PColumnKey): boolean => {
+    let complete = steps.getInputsLocked();
+    for (const stepKey of steps.listInputFields()) {
+      const step = resolveUnlessErrored(steps, stepKey);
+      if (step === undefined) {
+        complete = false;
+      } else if (step.resourceType.name === RT_RESOURCE_MAP) {
+        complete = addSteps(step, prefix) && complete;
+      } else {
+        const value = parse(step);
+        if (value === undefined || value === null) complete = false;
+        else data.push({ key: [...prefix, ...(JSON.parse(stepKey) as PColumnKey)], value });
+      }
+    }
+    return complete;
+  };
   let isComplete = acc.getInputsLocked();
   for (const sampleKey of acc.listInputFields()) {
-    const sample = acc.resolve({ field: sampleKey, assertFieldType: "Input" });
+    const sample = resolveUnlessErrored(acc, sampleKey);
     if (sample === undefined) {
       isComplete = false;
       continue;
     }
     const key = JSON.parse(sampleKey) as PColumnKey;
     if (sample.resourceType.name === RT_RESOURCE_MAP) {
-      const steps = parseResourceMap(sample, parse, false);
-      isComplete &&= steps.isComplete;
-      for (const step of steps.data) data.push({ key: [...key, ...step.key], value: step.value });
+      isComplete = addSteps(sample, key) && isComplete;
     } else {
       const value = parse(sample);
       if (value === undefined || value === null) isComplete = false;
@@ -134,7 +168,6 @@ export const platforma = BlockModelV3.create({ dataModel, kind })
     // `stepResources` stays out: a per-step override is tuned to one cluster, and a template may
     // open on another.
 
-    defaultBlockLabel: data.defaultBlockLabel,
     customBlockLabel: data.customBlockLabel,
     title: data.title,
   }))
@@ -163,7 +196,6 @@ export const platforma = BlockModelV3.create({ dataModel, kind })
     // A preset file carries its own settings; built-in preset flags must not override it.
     const builtIn = data.preset.type === "name";
     return {
-      defaultBlockLabel: data.defaultBlockLabel ?? "",
       customBlockLabel: data.customBlockLabel ?? "",
       input: data.input,
       preset: data.preset,
@@ -416,7 +448,11 @@ export const platforma = BlockModelV3.create({ dataModel, kind })
 
   .title(() => "MiXCR Clonotyping")
 
-  .subtitle((ctx) => ctx.data.customBlockLabel || ctx.data.defaultBlockLabel || "")
+  .subtitle(
+    (ctx) =>
+      ctx.data.customBlockLabel ||
+      [ctx.data.title, labelFromParams(ctx.data)].filter(Boolean).join(" - "),
+  )
 
   .done();
 
@@ -450,4 +486,9 @@ function portablePreset(preset: BlockData["preset"]): KindBlockParams["preset"] 
   if (preset.type === "name") return preset;
   const file = portableHandle(preset.file);
   return file === undefined ? undefined : { type: "file", file };
+}
+
+/** Settings part of the subtitle: the chosen receptors and chains. */
+function labelFromParams(data: BlockData): string {
+  return (data.chains ?? []).join(", ");
 }

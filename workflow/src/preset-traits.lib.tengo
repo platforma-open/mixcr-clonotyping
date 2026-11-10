@@ -127,8 +127,17 @@ stepClass := func(presetContent) {
 	return "none"
 }
 
+// assemblingFeatures returns the features `assemble` builds clones on in the resolved preset, as
+// `mixcr exportPreset` writes them (["CDR3"], ["VDJRegion"], ...), or undefined when it sets none.
+assemblingFeatures := func(presetContent) {
+	assemble := is_map(presetContent) ? presetContent.assemble : undefined
+	params := is_map(assemble) ? assemble.cloneAssemblerParameters : undefined
+	return is_map(params) && is_array(params.assemblingFeatures) ? params.assemblingFeatures : undefined
+}
+
 export {
 	stepClass: stepClass,
+	assemblingFeatures: assemblingFeatures,
 	hasCellTag: hasCellTag,
 	hasLongReadAligner: hasLongReadAligner,
 	splitsBySample: splitsBySample,

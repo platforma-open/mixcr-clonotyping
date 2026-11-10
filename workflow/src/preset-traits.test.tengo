@@ -71,3 +71,9 @@ TestWithTagPatternAppliesTheUserPattern := func() {
 	test.isEqual("^(CELL:N{16})", pt.withTagPattern(tenx, "^(CELL:N{16})").mitool.parse.pattern)
 	test.isEqual(generic, pt.withTagPattern(generic, undefined))
 }
+
+TestAssemblingFeatures := func() {
+	test.isEqual(["CDR3"], pt.assemblingFeatures({ assemble: { cloneAssemblerParameters: { assemblingFeatures: ["CDR3"] } } }))
+	test.isTrue(is_undefined(pt.assemblingFeatures({ assemble: {} })))
+	test.isTrue(is_undefined(pt.assemblingFeatures(undefined)))
+}

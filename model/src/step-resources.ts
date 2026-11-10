@@ -10,9 +10,15 @@ export type StepRule = {
   cpuSlope?: number;
 };
 
-/** What `step-defaults.tpl.tengo` reports: the planned steps, or why there are none. */
+/**
+ * What `step-defaults.tpl.tengo` reports: the planned steps, or why there are none. `cloneFloor`
+ * is set on a step sized from align's clone estimate: the least memory that sizing grants.
+ */
 export type StepDefaults =
-  | { steps: { step: string; class: string; defaultRule: StepRule }[]; error?: undefined }
+  | {
+      steps: { step: string; class: string; defaultRule: StepRule; cloneFloor?: number }[];
+      error?: undefined;
+    }
   | { error: string; steps?: undefined };
 
 /** What `preset-support.tpl.tengo` reports: whether the block runs the selected preset. */

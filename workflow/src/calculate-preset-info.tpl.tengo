@@ -37,6 +37,7 @@ self.body(func(inputs) {
 	assembleContigsBy := inputs.params.assembleContigsBy
 
 	mixcrExportPresetCmdBuilder := mixcrCmd.base(mixcrSw).
+		name("mixcr exportPreset").
 		inLightQueue().
 		mem("512MiB").
 		arg("exportPreset")
@@ -82,6 +83,7 @@ self.body(func(inputs) {
 	presetContent := mixcrExportPresetCmd.getFileContent("preset.json")
 
 	mixcrForBackCmd := mixcrCmd.base(mixcrSw).
+		name("mixcr presetSpecificationsForBack").
 		inLightQueue().
 		mem("512MiB").
 		arg("presetSpecificationsForBack").
