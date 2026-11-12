@@ -30,9 +30,9 @@ catalog:
   "es-toolkit": 1.42.0
 
   "typescript": ~5.6.3
-  "turbo": ^2.5.8
+  "turbo": ~2.11.10
 
-  "vitest": ^4.0.18
+  "vitest": ^4.1.12
   "eslint": ^9.38.0
 
   "@vueuse/core": ^13.6.0
@@ -49,3 +49,16 @@ catalog:
   # other blocks used in tests
 
   "@platforma-open/milaboratories.samples-and-data": ^1.18.0
+  cross-env: ~10.1.0
+minimumReleaseAgeExclude:
+  - "@milaboratories/*"
+  - "@platforma-sdk/*"
+  - "@platforma-open/*"
+allowBuilds:
+  "@milaboratories/tengo-tester": false
+  cpu-features: false
+  esbuild: false
+  protobufjs: false
+  ssh2: false
+  "@milaboratories/pframes-rs-node": true
+  "@platforma-open/milaboratories.software-mixcr": false

@@ -2,8 +2,8 @@
   "scripts": {
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
-    "test": "env PL_BUILD_CHANNEL=dev PL_BUILD_VARIANT=binary PL_BUILD_LOCATION=local turbo run test --concurrency 1",
-    "test:dry-run": "env PL_BUILD_CHANNEL=dev PL_BUILD_VARIANT=binary PL_BUILD_LOCATION=local turbo run test --dry-run=json",
+    "test": "cross-env PL_BUILD_CHANNEL=dev PL_BUILD_VARIANT=binary PL_BUILD_LOCATION=local turbo run test --concurrency 1",
+    "test:dry-run": "cross-env PL_BUILD_CHANNEL=dev PL_BUILD_VARIANT=binary PL_BUILD_LOCATION=local turbo run test --dry-run=json",
     "mark-stable": "turbo run mark-stable",
     "do-pack": "turbo run do-pack",
     "watch": "turbo watch build",
@@ -13,16 +13,17 @@
     "fmt": "turbo run fmt",
     "check": "turbo run check",
     "upgrade-sdk": "block-tools structure refresh --update-deps-only && pnpm i && block-tools structure refresh && pnpm i && pnpm fmt",
-    "build:dev-local": "env PL_BUILD_CHANNEL=dev PL_BUILD_VARIANT=all PL_BUILD_LOCATION=local turbo run build",
-    "build:dev-remote": "env PL_BUILD_CHANNEL=dev PL_BUILD_VARIANT=all PL_BUILD_LOCATION=remote turbo run build",
-    "build:dev-no-software": "env PL_BUILD_CHANNEL=dev PL_BUILD_VARIANT=none turbo run build",
-    "build:dev-binary-existing": "env PL_BUILD_CHANNEL=dev PL_BUILD_USE_PUBLISHED=true turbo run build",
-    "build:release": "env PL_BUILD_CHANNEL=release PL_BUILD_VARIANT=all PL_BUILD_LOCATION=remote turbo run build"
+    "build:dev-local": "cross-env PL_BUILD_CHANNEL=dev PL_BUILD_VARIANT=all PL_BUILD_LOCATION=local turbo run build",
+    "build:dev-remote": "cross-env PL_BUILD_CHANNEL=dev PL_BUILD_VARIANT=all PL_BUILD_LOCATION=remote turbo run build",
+    "build:dev-no-software": "cross-env PL_BUILD_CHANNEL=dev PL_BUILD_VARIANT=none turbo run build",
+    "build:dev-binary-existing": "cross-env PL_BUILD_CHANNEL=dev PL_BUILD_USE_PUBLISHED=true turbo run build",
+    "build:release": "cross-env PL_BUILD_CHANNEL=release PL_BUILD_VARIANT=all PL_BUILD_LOCATION=remote turbo run build"
   },
   "devDependencies": {
     "@changesets/cli": "catalog:",
     "@milaboratories/ts-builder": "catalog:",
     "@platforma-sdk/block-tools": "catalog:",
+    "cross-env": "catalog:",
     "js-yaml": "catalog:",
     "shx": "catalog:",
     "turbo": "catalog:",
@@ -32,5 +33,12 @@
     "oxfmt": "*",
     "oxlint": "*"
   },
-  "packageManager": "pnpm@9.12.0"
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "24.22.1",
+      "onFail": "download"
+    }
+  },
+  "packageManager": "pnpm@12.16.1+sha512.091d1dee7927575661b25dab3c2ae31cafc1c54d6b71ed6a6600cf0c1cb10434a447eae14015f1b23e2e6bedeed79df94a932e2164d2832280dce3fb32f656d1"
 }
