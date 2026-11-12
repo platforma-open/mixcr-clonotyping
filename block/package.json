@@ -45,7 +45,7 @@
     "meta": {
       "title": "MiXCR Clonotyping",
       "logo": "file:../logos/block-logo.png",
-      "url": "https://github.com/platforma-open/mixcr-clonotyping-2",
+      "url": "https://github.com/platforma-open/mixcr-clonotyping",
       "support": "mailto:support@milaboratories.com",
       "description": "Extract TCR / BCR clonotypes from next-generation sequencing data",
       "longDescription": "file:../docs/description.md",
