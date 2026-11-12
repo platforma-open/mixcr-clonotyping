@@ -1,5 +1,11 @@
 # @platforma-open/milaboratories.mixcr-clonotyping.model
 
+## 1.31.2
+
+### Patch Changes
+
+- b929477: Update the SDK (workflow-tengo 6.22.1): the block's renders and commands report into their action contexts, so the Desktop App shows what a running block is doing.
+
 ## 1.31.1
 
 ### Patch Changes
