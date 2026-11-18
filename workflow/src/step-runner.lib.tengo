@@ -8,6 +8,7 @@ maps := import("@platforma-sdk/workflow-tengo:maps")
 pcolumn := import("@platforma-sdk/workflow-tengo:pframes.pcolumn")
 mixcrCmd := import(":mixcr-cmd")
 resources := import(":resources")
+readStats := import(":read-stats")
 
 CACHE_PERIOD := 48 * times.hour
 // For the steps that write no final output (the clones or the qc result).
@@ -74,6 +75,17 @@ run := func(plan, from, ctx) {
 	}
 	needsReport = needsReport && is_undefined(ctx.alignReport)
 
+	// The scratch request of every step: a formula over the sample's read statistics, measured
+	// by a collector the platform runs once per sample (:read-stats). Built here, in the
+	// template that runs the steps, because a formula cannot travel as a template input; kept
+	// out of ctx.res, which :run-steps-after-align gets as one.
+	res := copy(ctx.res)
+	reads := {}
+	for name in ctx.readNames {
+		reads[name] = ctx.files[name]
+	}
+	res.scratchFreeSpace = readStats.scratchFreeSpace(reads)
+
 	reportContent := undefined
 	for i, c in plan.commands {
 		if i < from {
@@ -120,7 +132,7 @@ run := func(plan, from, ctx) {
 				ll.print("the align report has no clone estimate; %v is sized from its input", c.key)
 			}
 		}
-		resources.apply(cmd, resources.lookup(c.key, ctx.stepClass), ctx.res, fixedRam)
+		resources.apply(cmd, resources.lookup(c.key, ctx.stepClass), res, fixedRam)
 		cachePeriod := c.writesFinalOutput ? CACHE_PERIOD : INTERMEDIATE_CACHE_PERIOD
 		r := cmd.cache(cachePeriod).run()
 		ctx.logs[c.logKey] = r.getStdoutStream()
