@@ -10,12 +10,12 @@
 // S scales with the volume of the input — four bytes per base of the pair. C is quadratic in
 // read length, so it overtakes S only on long reads.
 //
-// None of those numbers is in the p-column metadata, so the reads are measured: a custom
-// metric collector (exec.formula.collector) runs 'seqkit stats' over the read files and 'jq'
-// folds its table into the four metrics the formula reads. The platform runs the collector
-// before the step it sizes and evaluates the formula there, so the template that builds the
-// step needs no measurement of its own. Every step of a sample reads the same files, so the
-// collector runs once per sample however many steps it sizes.
+// None of those numbers is in the p-column metadata, so the reads are measured: four custom
+// metrics (exec.formula.customMetric) computed by :read-stats-metric, which runs 'seqkit stats'
+// over the read files and folds its table with 'jq'. The four share one run of the template,
+// which the platform starts before the step it sizes and evaluates the formula there, so the
+// template that builds the step needs no measurement of its own. Every step of a sample reads
+// the same files, so the template runs once per sample however many steps it sizes.
 //
 // The request is an optimisation and never a precondition. A deployment with no scratch
 // storage, or a sample with no read end to measure, gets 'undefined' and the field is left
@@ -27,82 +27,16 @@
 exec := import("@platforma-sdk/workflow-tengo:exec")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 feats := import("@platforma-sdk/workflow-tengo:feats")
-maps := import("@platforma-sdk/workflow-tengo:maps")
-slices := import("@platforma-sdk/workflow-tengo:slices")
 
-times := import("times")
 text := import("text")
+times := import("times")
 
 f := exec.formula
 
-seqkitSw := assets.importSoftware("@platforma-open/milaboratories.software-binary-collection:seqkit")
-jqSw := assets.importSoftware("@platforma-open/milaboratories.software-binary-collection:jq")
-
-// How long a measurement may be reused. Matches the MiXCR run cache, so a repeated analysis
-// of the same sample reads the files no more often than it runs MiXCR.
+// How long a measurement may be reused, and the run cache of :mixcr-analyze. Matches the MiXCR
+// run cache, so a repeated analysis of the same sample reads the files no more often than it
+// runs MiXCR. :read-stats-metric keeps the same period.
 CACHE_PERIOD := 48 * times.hour
-
-// The metrics the collector writes.
-//   reads       - reads of the sample, counted on R1 alone: it counts pairs, so adding R2
-//                 would double it
-//   basesR1     - bases of every R1 file, summed; summing rather than averaging is exact and
-//                 needs no weighting when a sample spans lanes
-//   basesR2     - the same for R2
-//   longestRead - the longest read of either end
-METRICS := ["reads", "basesR1", "basesR2", "longestRead"]
-
-// Folds the table of 'seqkit stats --tabular' (a header line plus one line per file) into a
-// JSON object of the metrics. Fields are read by header name, not by column position. A file
-// is R2 when its name says so ("input_R2.fastq.gz", "input_L1_R2.fastq.gz"); every other file
-// given is R1, which also covers the single "input.fastq.gz" of a sample with no read index.
-// An empty table gives zeros.
-_FOLD_PROGRAM := `split("\n") | map(select(length > 0) | split("\t")) | .[0] as $h | .[1:]
-| map(. as $r | reduce range(0; $h | length) as $i ({}; .[$h[$i]] = $r[$i]))
-| map(.r2 = (.file | test("_R2[._]")))
-| {
-    reads: (map(select(.r2 | not) | .num_seqs | tonumber) | add // 0),
-    basesR1: (map(select(.r2 | not) | .sum_len | tonumber) | add // 0),
-    basesR2: (map(select(.r2) | .sum_len | tonumber) | add // 0),
-    longestRead: (map(.max_len | tonumber) | max // 0)
-  }`
-
-// _measure is the collector's builder: 'seqkit stats' over the files, then 'jq' over its table.
-//
-// seqkit reads every file whole, so it gets the same queue as other data passes. One core per
-// file: seqkit parallelises across files, not within one, so a core beyond their number would
-// idle. The command reads the granted count back from '{system.cpu}' instead of repeating the
-// number, so the request and the flag can never diverge.
-_measure := func(files) {
-	names := slices.quickSort(maps.getKeys(files))
-	stats := exec.builder().
-		name("seqkit stats").
-		inMediumQueue().
-		cpu(len(names)).
-		mem("1GiB").
-		software(seqkitSw).
-		arg("stats").
-		arg("--threads").
-		argExpr("{system.cpu}").
-		arg("--tabular")
-	for name in names {
-		stats.addFile(name, files[name]).arg(name)
-	}
-	statsFile := stats.saveStdoutFile().cache(CACHE_PERIOD).run().getStdoutFile()
-
-	return exec.builder().
-		name("read stats").
-		inLightQueue().
-		cpu(1).
-		mem("256MiB").
-		software(jqSw).
-		addFile("stats.tsv", statsFile).
-		arg("--raw-input").
-		arg("--slurp").
-		arg("--compact-output").
-		arg(_FOLD_PROGRAM).
-		arg("stats.tsv").
-		cache(CACHE_PERIOD)
-}
 
 // readsToMeasure picks the read ends to measure from the files a step stages, by the names
 // :run-mixcr gives them: "input.<ext>", "input_R1.<ext>", "input_L1_R2.<ext>". Index reads
@@ -119,7 +53,7 @@ readsToMeasure := func(files) {
 }
 
 // scratchFormula is the scratch space of the steps of one sample, a formula over the metrics
-// `stats` (a collector over the sample's reads) writes:
+// of its reads (see :read-stats-metric for what each one is):
 //
 //     S = ceil(4 x (basesR1 + basesR2) / 10^9)
 //     C = ceil(11 x ceil(reads / 1000) x longestRead^2 / 10^9)
@@ -129,10 +63,14 @@ readsToMeasure := func(files) {
 // read count goes in as thousands so C cannot overflow: 10^10 reads of 10^5 bases stay under
 // 2^63. A request below one GiB is raised to one, as a sample small enough to need less still
 // needs scratch space.
-scratchFormula := func(stats) {
-	volume := stats.metric("basesR1").plus(stats.metric("basesR2")).times(4).dividedBy(1000000000)
-	length := stats.metric("reads").dividedBy(1000).times(11).
-		times(stats.metric("longestRead")).times(stats.metric("longestRead")).dividedBy(1000000000)
+scratchFormula := func(reads, tpl) {
+	readCount   := f.customMetric("reads", reads, tpl)
+	basesR1     := f.customMetric("basesR1", reads, tpl)
+	basesR2     := f.customMetric("basesR2", reads, tpl)
+	longestRead := f.customMetric("longestRead", reads, tpl)
+
+	volume := basesR1.plus(basesR2).times(4).dividedBy(1000000000)
+	length := readCount.dividedBy(1000).times(11).times(longestRead).times(longestRead).dividedBy(1000000000)
 	return volume.atLeast(length).atLeast(1).times(f.gib(1))
 }
 
@@ -149,13 +87,11 @@ scratchFreeSpace := func(files) {
 	if len(reads) == 0 {
 		return undefined
 	}
-	stats := f.collector("readStats", { metrics: METRICS, files: reads, builder: _measure, output: "stdout" })
-	return scratchFormula(stats)
+	return scratchFormula(reads, assets.importTemplate(":read-stats-metric"))
 }
 
 export {
 	CACHE_PERIOD: CACHE_PERIOD,
-	METRICS: METRICS,
 	readsToMeasure: readsToMeasure,
 	scratchFormula: scratchFormula,
 	scratchFreeSpace: scratchFreeSpace

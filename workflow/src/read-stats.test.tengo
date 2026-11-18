@@ -11,16 +11,14 @@ _CEILING_GIB := 16 * 1024
 
 _GIB := 1024 * 1024 * 1024
 
-// The scratch request, in whole GiB, for the metrics the collector would write. The formula
-// is evaluated as the platform evaluates it, against a resolver that answers the collector's
-// metrics from `metrics` instead of running it.
+// The scratch request, in whole GiB, for the metrics :read-stats-metric would write. The
+// formula is evaluated as the platform evaluates it, against a resolver that answers the custom
+// metrics from `metrics` instead of running the template.
 _scratchGiB := func(metrics) {
-	stats := f.collector("readStats", {
-		metrics: rs.METRICS,
-		files: { "input_R1.fastq.gz": "r1" },
-		builder: func(files) { return undefined }
-	})
-	resolved := f.resolveAst(rs.scratchFormula(stats), {}, [])
+	formula := rs.scratchFormula({ "input_R1.fastq.gz": "r1" }, { id: 1 })
+	// all four metrics come from one run of the template
+	test.isEqual(1, len(f.sourcesOf(formula)))
+	resolved := f.resolveAst(formula, {}, [])
 	resolver := {
 		size: func(files) { return 0 },
 		lineCount: func(files) { return 0 },
