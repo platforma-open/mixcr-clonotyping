@@ -25,8 +25,7 @@ self.body(func(inputs) {
 	res := {
 		perProcessMemGB: inputs.perProcessMemGB,
 		perProcessCPUs: inputs.perProcessCPUs,
-		stepResources: inputs.stepResources,
-		scratchFreeSpace: inputs.scratchFreeSpace
+		stepResources: inputs.stepResources
 	}
 	plan := mixcrSteps.commands(mixcrSteps.stepsOf(inputs.steps.getDataAsJson()), files, inputs.readsPattern)
 	stepRunner.checkReports(plan, inputs.reports)

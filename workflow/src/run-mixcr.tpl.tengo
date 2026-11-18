@@ -19,7 +19,6 @@ render := import("@platforma-sdk/workflow-tengo:render")
 maps := import("@platforma-sdk/workflow-tengo:maps")
 mixcrCmd := import(":mixcr-cmd")
 resources := import(":resources")
-readStats := import(":read-stats")
 presetTraits := import(":preset-traits")
 mixcrSteps := import(":mixcr-steps")
 presetArgs := import(":preset-args")
@@ -55,17 +54,12 @@ self.body(func(inputs) {
 
 	inputDataMeta := inputData.getDataAsJson()
 
-	// The "Advanced Settings" overrides, and the disposable disk space for MiXCR's temporary
-	// files. TMPDIR points at a volume of that size, so MiXCR no longer writes temporary files
-	// to the shared workspace storage. 'undefined' when :mixcr-analyze found no read end to
-	// measure. One number covers every step of a split run: :read-stats folds the
-	// sequence-volume and read-length terms into a single max, so the step that needs the
-	// smaller of the two over-requests disk.
+	// The "Advanced Settings" overrides. The scratch request is a formula over the reads,
+	// which :step-runner builds for each step: a formula cannot travel as a template input.
 	res := {
 		perProcessMemGB: inputs.perProcessMemGB,
 		perProcessCPUs: inputs.perProcessCPUs,
-		stepResources: inputs.stepResources,
-		scratchFreeSpace: readStats.scratchFreeSpaceFor(inputs.readStats)
+		stepResources: inputs.stepResources
 	}
 
 
@@ -166,8 +160,8 @@ self.body(func(inputs) {
 		files.addRef(mixcrSteps.MITOOL_PRESET_FILE, planRun.getFile(mixcrSteps.MITOOL_PRESET_FILE))
 	}
 
-	// The overrides and the scratch request go in as metaInputs, out of the deduplication key:
-	// a change to them must not re-run the sample.
+	// The overrides go in as metaInputs, out of the deduplication key: a change to them must not
+	// re-run the sample.
 	stepsRun := render.create(
 		runStepsTpl,
 		{
