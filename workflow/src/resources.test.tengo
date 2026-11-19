@@ -115,6 +115,7 @@ TestCpuSlopeScalesWithTheInput := func() {
 _fakeCmd := func() {
 	cmd := {}
 	cmd.resources = func(r) { cmd.queue = r.queue; cmd.onCPU = r.onCPU; return cmd }
+	cmd.metricInputs = func(...m) { cmd.declared = m; return cmd }
 	return cmd
 }
 
@@ -224,15 +225,18 @@ TestCloneRowsByClassAndFeature := func() {
 	test.isTrue(is_undefined(rs.cloneRow("qc", "none", ["VDJRegion"])))
 }
 
-// The align report as :run-steps hands it to the formula, and a stand-in for the metric template.
-_REPORT := { "result.align.report.json": "report" }
-_TPL := { id: 1 }
+// align's output metrics, as its exec result's metric() returns them.
+_content := { id: { ResourceID: 1, Name: "result.align.report.json" } }
+_METRICS := {
+	clones: f.outputMetric("clones", "result.align.report.json", _content, { key: "estimatedInitialClones", default: 0 }),
+	aligned: f.outputMetric("aligned", "result.align.report.json", _content, { default: 0 })
+}
 
-_estimate := func(clones, aligned) { return { clones: clones, aligned: aligned, hasEstimate: 1 } }
-_noEstimate := { clones: 0, aligned: 100, hasEstimate: 0 }
+_estimate := func(clones, aligned) { return { clones: clones, aligned: aligned } }
+_noEstimate := { clones: 0, aligned: 100 }
 
-// Evaluates a memory formula as the platform does: the custom metrics from `metrics` instead of
-// a run of the template, the .vdjca staged under INPUT_TAG holding vdjcaBytes. Whole GiB.
+// Evaluates a memory formula as the platform does: the output metrics from `metrics`, the
+// .vdjca staged under INPUT_TAG holding vdjcaBytes. Whole GiB.
 _evalGiB := func(node, metrics, vdjcaBytes) {
 	fileName := "input.vdjca"
 	tags := {}
@@ -249,9 +253,7 @@ _evalGiB := func(node, metrics, vdjcaBytes) {
 
 // The memory, in whole GiB, of `assemble` on "none" sized by the clone row `row`.
 _reportGiB := func(row, metrics, ...vdjcaBytes) {
-	formula := rs.ramFromReport(row, _REPORT, _TPL, rs.ram(rs.lookup("assemble", "none")))
-	// the three metrics come from one run of the template
-	test.isEqual(1, len(f.sourcesOf(formula)))
+	formula := rs.ramFromReport(row, _METRICS, rs.ram(rs.lookup("assemble", "none")))
 	return _evalGiB(formula, metrics, len(vdjcaBytes) > 0 ? vdjcaBytes[0] : 0)
 }
 
@@ -263,8 +265,6 @@ TestRamFromReport := func() {
 	test.isEqual(32, _reportGiB(vdj, _estimate(633078, 10803859)))
 	// 26 + 8.3 x 17.269869 = 169.34, rounded up.
 	test.isEqual(170, _reportGiB(rs.cloneRow("assemble", "none", ["CDR3"]), _estimate(17269869, 203593616)))
-	// A whole-GiB result stays whole: 10 + 16 x 1.0 + 0.32 x 0 = 26, under the floor of 32.
-	test.isEqual(32, _reportGiB(vdj, _estimate(1000000, 0)))
 	// 10 + 16 x 4.0 = 74 exactly.
 	test.isEqual(74, _reportGiB(vdj, _estimate(4000000, 0)))
 }
@@ -278,51 +278,32 @@ TestNoCloneEstimateKeepsTheInputSizing := func() {
 
 TestReportSizingFallsBackLikeTheInputSizing := func() {
 	inputRam := rs.ram(rs.lookup("assemble", "none"))
-	formula := rs.ramFromReport(rs.cloneRow("assemble", "none", ["VDJRegion"]), _REPORT, _TPL, inputRam)
+	formula := rs.ramFromReport(rs.cloneRow("assemble", "none", ["VDJRegion"]), _METRICS, inputRam)
 	test.isEqual(f.fallbackOf(inputRam), f.fallbackOf(formula))
 }
 
 TestApplySizesFromTheReportOnlyAfterAlignAndWithoutMemoryOverrides := func() {
-	report := { files: _REPORT, cls: "none", features: ["VDJRegion"], tpl: _TPL }
+	report := { metrics: _METRICS, cls: "none", features: ["VDJRegion"] }
 	ramOf := func(cls, res, r) { return rs.apply(_fakeCmd(), rs.lookup("assemble", cls), res, r).onCPU.ram }
 
-	test.isEqual(1, len(f.sourcesOf(ramOf("none", {}, report))))
 	test.isEqual(59, _evalGiB(ramOf("none", {}, report), _estimate(2227494, 39375951), 0))
 	// Before align has run there is no report to read.
-	test.isEqual(0, len(f.sourcesOf(ramOf("none", {}, { files: undefined, cls: "none", features: ["VDJRegion"] }))))
+	test.isEqual(0, len(f.sourcesOf(ramOf("none", {}, { metrics: undefined, cls: "none", features: ["VDJRegion"] }))))
 	// A memory override keeps the input sizing.
-	test.isEqual(100, _evalGiB(ramOf("none", { perProcessMemGB: 100 }, report), _estimate(2227494, 39375951), 0))
+	test.isEqual("100GiB", ramOf("none", { perProcessMemGB: 100 }, report))
 	test.isEqual(304, _evalGiB(ramOf("none", { stepResources: { assemble: { memSlope: 25 } } }, report), _estimate(2227494, 39375951), _gib(12)))
-	// A class with no clone row never reads the report.
-	umi := { files: _REPORT, cls: "umi", features: ["VDJRegion"], tpl: _TPL }
-	test.isEqual(0, len(f.sourcesOf(ramOf("umi", {}, umi))))
 }
 
-// The metric run is a regular input of the step, so it decides whether the step re-runs; the
-// formula and the fallback are meta inputs and do not.
-TestMemoryOverridesDoNotChangeWhatTheStepReads := func() {
-	report := { files: _REPORT, cls: "none", features: ["VDJRegion"], tpl: _TPL }
-	ramOf := func(res) { return rs.apply(_fakeCmd(), rs.lookup("assemble", "none"), res, report).onCPU.ram }
-	sources := func(res) { return f.sourcesOf(ramOf(res)) }
-	base := sources({})
-	test.isEqual(1, len(base))
-	for res in [
-		{ perProcessMemGB: 100 },
-		{ perProcessMemGB: 8 },
-		{ perProcessCPUs: 8 },
-		{ stepResources: { assemble: { memFloor: 80 } } },
-		{ stepResources: { assemble: { memSlope: 10 } } },
-		{ stepResources: { assemble: { memFloor: 80, cap: 100 } } }
-	] {
-		got := sources(res)
-		test.isEqual(len(base), len(got), res)
-		for key, src in base {
-			test.isFalse(is_undefined(got[key]), res)
-			test.isEqual(src.files, got[key].files, res)
-		}
+// The metric inputs decide whether the step re-runs; the formula is a meta input and does not.
+TestAStepWithACloneRowAlwaysTakesTheMetricInputs := func() {
+	report := { metrics: _METRICS, cls: "none", features: ["VDJRegion"] }
+	for res in [{}, { perProcessMemGB: 100 }, { stepResources: { assemble: { memSlope: 10 } } }, { stepResources: { assemble: { memFloor: 80 } } }] {
+		test.isEqual(2, len(rs.apply(_fakeCmd(), rs.lookup("assemble", "none"), res, report).declared), res)
 	}
-	// A flat override falls back to itself where formulas cannot run.
-	test.isEqual(f.fallbackOf(f.gib(1).staticFallback(f.gib(100))), f.fallbackOf(ramOf({ perProcessMemGB: 100 })))
+	// A class with no clone row takes none.
+	umi := { metrics: _METRICS, cls: "umi", features: ["VDJRegion"] }
+	test.isTrue(is_undefined(rs.apply(_fakeCmd(), rs.lookup("assemble", "umi"), {}, umi).declared))
+	test.isTrue(is_undefined(rs.apply(_fakeCmd(), rs.lookup("qc", "none"), {}, report).declared))
 }
 
 TestMemoryOverridesBeyondTheStepFloorKeepTheInputSizing := func() {

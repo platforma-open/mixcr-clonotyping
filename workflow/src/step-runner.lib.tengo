@@ -43,8 +43,8 @@ checkReports := func(plan, reports) {
 // logs }: `files` holds the block files by name, `written` and `logs` gain the files each step
 // writes (by name) and its stdout stream (by logKey).
 //
-// The steps after align that have a clone row take their memory from the align report
-// (resources.ramFromReport), read by a custom metric before the step starts, unless an override
+// The steps after align that have a clone row take their memory from align's report
+// (resources.ramFromReport), read as output metrics when the step starts, unless an override
 // sets their memory (resources.sizedByReport).
 run := func(plan, ctx) {
 	// The scratch request of every step: a formula over the sample's read statistics, measured
@@ -57,8 +57,17 @@ run := func(plan, ctx) {
 	}
 	res.scratchFreeSpace = readStats.scratchFreeSpace(reads)
 
-	// { <file name>: <file> } of the align JSON report, once align has run.
-	alignReport := undefined
+	// Whether a step sizes from align's report follows the clone rows alone, never the overrides
+	// in ctx.res: the overrides are meta inputs, and align must not change with them.
+	needsReport := false
+	for c in plan.commands {
+		if !is_undefined(resources.cloneRow(c.key, ctx.stepClass, ctx.features)) {
+			needsReport = true
+		}
+	}
+
+	// align's { clones, aligned } output metrics, once align has run.
+	alignMetrics := undefined
 	for c in plan.commands {
 		// The name is the job's label on the backend (the k8s job name, the failure message).
 		cmd := mixcrCmd.builder(ctx.sw).name("mixcr " + c.key).arg(c.args[0])
@@ -85,17 +94,23 @@ run := func(plan, ctx) {
 		for name in c.save {
 			cmd.saveFile(name)
 		}
+		readsReport := needsReport && c.key == "align" && !is_undefined(c.jsonReport)
+		if readsReport {
+			cmd.saveFileContent(c.jsonReport)
+		}
 		resources.apply(cmd, resources.lookup(c.key, ctx.stepClass), res,
-			{ files: alignReport, cls: ctx.stepClass, features: ctx.features })
+			{ metrics: alignMetrics, cls: ctx.stepClass, features: ctx.features })
 		cachePeriod := c.writesFinalOutput ? CACHE_PERIOD : INTERMEDIATE_CACHE_PERIOD
 		r := cmd.cache(cachePeriod).run()
 		ctx.logs[c.logKey] = r.getStdoutStream()
 		for name in c.save {
 			ctx.written[name] = r.getFile(name)
 		}
-		if c.key == "align" && !is_undefined(c.jsonReport) {
-			alignReport = {}
-			alignReport[c.jsonReport] = ctx.written[c.jsonReport]
+		if readsReport {
+			alignMetrics = {
+				clones: r.metric("clones", c.jsonReport, { key: "estimatedInitialClones", default: 0 }),
+				aligned: r.metric("aligned", c.jsonReport, { default: 0 })
+			}
 		}
 	}
 }

@@ -19,7 +19,6 @@
 // (step, class) row, then its (step, "any") row, then DEFAULT.
 
 exec := import("@platforma-sdk/workflow-tengo:exec")
-assets := import("@platforma-sdk/workflow-tengo:assets")
 ll := import("@platforma-sdk/workflow-tengo:ll")
 math := import("math")
 
@@ -85,9 +84,9 @@ DEFAULT := { step: "default", class: "any", cpuIntercept: 16, memFloor: 64, memI
 //
 // rounded up to a whole GiB, where `M clones` is the report's estimatedInitialClones and
 // `M aligned reads` its `aligned`, in millions. `feature` is "CDR3" for a run that assembles
-// clones by CDR3 alone, "any" otherwise. :align-report-metric reads both numbers before the step
-// starts (exec.formula.customMetric); a report with no clone estimate leaves the step on its
-// input sizing.
+// clones by CDR3 alone, "any" otherwise. Both numbers are output metrics of align (its exec
+// result's metric()), read when the step starts; a report with no clone estimate leaves the
+// step on its input sizing.
 //
 // The floor of a sample is the least memory that ran without OOM at no more than 1.5 x the
 // uncapped wall time. Each row is at least 1.6 x the floor of every profiled sample of its
@@ -118,29 +117,15 @@ lookup := func(step, cls) {
 	return row
 }
 
-// _fallbackGiB is the memory a backend that cannot evaluate formulas grants a sized row.
-_fallbackGiB := func(row) {
-	fallback := row.memFloor > _FALLBACK_GIB ? row.memFloor : _FALLBACK_GIB
-	if !is_undefined(row.cap) && fallback > row.cap {
-		fallback = row.cap
-	}
-	return fallback
-}
-
-// _flatGiB is the memory of a row whose slope is 0.
-_flatGiB := func(row) {
-	gib := row.memIntercept > row.memFloor ? row.memIntercept : row.memFloor
-	if !is_undefined(row.cap) && gib > row.cap {
-		gib = row.cap
-	}
-	return gib
-}
-
 // ram returns the memory request of a row: a fixed amount when its slope is 0, an exec.formula
 // over the INPUT_TAG file otherwise.
 ram := func(row) {
 	if row.memSlope == 0 {
-		return string(_flatGiB(row)) + "GiB"
+		gib := row.memIntercept > row.memFloor ? row.memIntercept : row.memFloor
+		if !is_undefined(row.cap) && gib > row.cap {
+			gib = row.cap
+		}
+		return string(gib) + "GiB"
 	}
 	// The formula takes integers only, so the slope goes in as hundredths.
 	slopeHundredths := int(row.memSlope * 100 + 0.5)
@@ -151,7 +136,11 @@ ram := func(row) {
 	if !is_undefined(row.cap) {
 		formula = formula.atMost(f.gib(row.cap))
 	}
-	return formula.staticFallback(f.gib(_fallbackGiB(row)))
+	fallback := row.memFloor > _FALLBACK_GIB ? row.memFloor : _FALLBACK_GIB
+	if !is_undefined(row.cap) && fallback > row.cap {
+		fallback = row.cap
+	}
+	return formula.staticFallback(f.gib(fallback))
 }
 
 // cpu returns the CPU request of a row: a fixed count when its cpuSlope is 0, an exec.formula
@@ -273,57 +262,39 @@ reportRow := func(step, cls, features, res) {
 	return row
 }
 
-// ramFromReport returns the memory request of a cloneRow `row`: an exec.formula over the metrics
-// `tpl` (:align-report-metric) reads from `report`, { <file name>: <align JSON report> }. When
-// the report carries no clone estimate the request is `inputRam`, the step's input sizing.
+// ramFromReport returns the memory request of a cloneRow `row` as an exec.formula over
+// `metrics`, { clones, aligned }: align's output metrics, 0 when the report lacks them. With no
+// clone estimate the request is `inputRam`, the step's input sizing.
 //
 // The formula takes integers only, so the per-million terms go in as hundredths of a GiB. Each
 // division rounds up, so the request is at most 1 GiB above the float formula, never below it.
-ramFromReport := func(row, report, tpl, inputRam) {
-	ll.assert(!is_string(inputRam), "a report-sized step must have an input-sized fallback, got %v", inputRam)
-	clones := f.customMetric("clones", report, tpl)
-	aligned := f.customMetric("aligned", report, tpl)
-	hasEstimate := f.customMetric("hasEstimate", report, tpl)
-
+ramFromReport := func(row, metrics, inputRam) {
 	perMClones := int(row.memPerMClones * 100 + 0.5)
 	perMReads := int(row.memPerMReads * 100 + 0.5)
-	cloneRam := clones.times(perMClones).plus(aligned.times(perMReads)).dividedBy(1000000).
+	cloneRam := metrics.clones.times(perMClones).plus(metrics.aligned.times(perMReads)).dividedBy(1000000).
 		plus(row.memIntercept * 100).dividedBy(100).
 		atLeast(row.memFloor).
 		times(f.gib(1))
-	return f.when(hasEstimate.gt(0), cloneRam).otherwise(inputRam).
+	return f.when(metrics.clones.gt(0), cloneRam).otherwise(inputRam).
 		staticFallback(f.fallbackOf(inputRam))
-}
-
-// readingReport returns `memory`, the memory request of a step whose overrides set its memory,
-// as a formula that reads the report's metrics and ignores them. The metrics' run is a regular
-// input of the step, so a step with a clone row keeps one whatever the overrides say: switching
-// an override must not re-run the step.
-readingReport := func(memory, row, report, tpl) {
-	value := is_string(memory) ? f.gib(_flatGiB(row)) : memory
-	fallback := is_string(memory) ? f.gib(_flatGiB(row)) : f.fallbackOf(memory)
-	hasEstimate := f.customMetric("hasEstimate", report, tpl)
-	return f.when(hasEstimate.gte(0), value).otherwise(value).staticFallback(fallback)
 }
 
 // apply sets the CPU, memory, scratch and queue of `cmd` from `row`. `res` carries the
 // overrides and the scratch request: { perProcessMemGB, perProcessCPUs, stepResources,
 // scratchFreeSpace }; `effective` says how the overrides combine. `report`, optional, is
-// { files, cls, features }: `files` the align JSON report as { <file name>: <file> }, undefined
-// before align has run; `cls` and `features` the step class and assembling features. A step
-// with a clone row then takes its memory from the report when it is sizedByReport, and reads
-// the report without using it otherwise. `tpl` replaces the metric template in tests.
+// { metrics, cls, features }: `metrics` align's { clones, aligned }, undefined before align has
+// run; `cls` and `features` the step class and assembling features. A step with a clone row
+// always takes the metrics as inputs (metricInputs), so an override never changes what it
+// reads; it sizes from them unless an override sets its memory (sizedByReport).
 apply := func(cmd, row, res, ...report) {
 	step := row.step
 	row = effective(row, res).row
 	memory := ram(row)
 	r := len(report) > 0 ? report[0] : undefined
-	if !is_undefined(r) && !is_undefined(r.files) && !is_undefined(cloneRow(step, r.cls, r.features)) {
-		tpl := is_undefined(r.tpl) ? assets.importTemplate(":align-report-metric") : r.tpl
+	if !is_undefined(r) && !is_undefined(r.metrics) && !is_undefined(cloneRow(step, r.cls, r.features)) {
+		cmd.metricInputs(r.metrics.clones, r.metrics.aligned)
 		if sizedByReport(step, r.cls, r.features, res) {
-			memory = ramFromReport(reportRow(step, r.cls, r.features, res), r.files, tpl, memory)
-		} else {
-			memory = readingReport(memory, row, r.files, tpl)
+			memory = ramFromReport(reportRow(step, r.cls, r.features, res), r.metrics, memory)
 		}
 	}
 	onCPU := { cpu: cpu(row), ram: memory }

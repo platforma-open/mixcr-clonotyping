@@ -3,7 +3,8 @@
 "@platforma-open/milaboratories.mixcr-clonotyping-2": minor
 ---
 
-Size `assemble` from the align report with custom metrics (exec.formula.customMetric): :align-report-metric
-reads the clone estimate and aligned reads with jq before the step starts, and the memory is a formula over
-them, falling back to the input sizing when the report has no estimate. The steps of a sample run in one
-template; :run-steps-after-align and its split log are gone (MILAB-6912).
+Size `assemble` from align's report with output metrics: align saves its report content, and
+`assemble`'s memory is a formula over `run.metric()` reads of the clone estimate and aligned reads, falling
+back to the input sizing when the report has no estimate. The steps of a sample run in one template;
+:run-steps-after-align and its split log are gone. Needs a workflow-tengo with `exec.formula.outputMetric`
+and `exec.builder().metricInputs()` (MILAB-6912).
