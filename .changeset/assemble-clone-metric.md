@@ -8,3 +8,5 @@ Size `assemble` from align's report with output metrics: align saves its report 
 back to the input sizing when the report has no estimate. The steps of a sample run in one template;
 :run-steps-after-align and its split log are gone. Needs a workflow-tengo with `exec.formula.outputMetric`
 and `exec.builder().metricInputs()` (MILAB-6912).
+Read stats run as two plain jobs (seqkit, jq) read through `run.stdoutMetric()`, replacing
+:read-stats-metric; resource coefficients use decimal `.times()`.

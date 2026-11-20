@@ -11,12 +11,15 @@ _CEILING_GIB := 16 * 1024
 
 _GIB := 1024 * 1024 * 1024
 
-// The scratch request, in whole GiB, for the metrics :read-stats-metric would write. The
-// formula is evaluated as the platform evaluates it, against a resolver that answers the custom
-// metrics from `metrics` instead of running the template.
+// The jq run's stdout, as its exec result returns it.
+_stdout := { id: { ResourceID: 1, Name: "stdout" } }
+
+// The scratch request, in whole GiB, for the metrics the jq fold would print. The formula is
+// evaluated as the platform evaluates it, against a resolver that answers the output metrics
+// from `metrics` instead of reading the jq output.
 _scratchGiB := func(metrics) {
-	formula := rs.scratchFormula({ "input_R1.fastq.gz": "r1" }, { id: 1 })
-	// all four metrics come from one run of the template
+	formula := rs.scratchFormula(func(name) { return f.outputMetric(name, "stdout", _stdout) })
+	// all four metrics come from one output
 	test.isEqual(1, len(f.sourcesOf(formula)))
 	resolved := f.resolveAst(formula, {}, [])
 	resolver := {

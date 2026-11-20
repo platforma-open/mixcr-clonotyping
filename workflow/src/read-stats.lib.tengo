@@ -10,13 +10,11 @@
 // S scales with the volume of the input — four bytes per base of the pair. C is quadratic in
 // read length, so it overtakes S only on long reads.
 //
-// None of those numbers is in the p-column metadata, so the reads are measured: four custom
-// metrics (exec.formula.customMetric) computed by :read-stats-metric, which runs 'seqkit stats'
-// over the read files and folds its table with 'jq'. The four share one run of the template,
-// which the platform starts before the step it sizes and evaluates the formula there, so the
-// template that builds the step needs no measurement of its own. Every step of a sample reads
-// the same files, so the template runs once per sample however many steps it sizes.
-//
+// None of those numbers is in the p-column metadata, so the reads are measured: 'seqkit stats'
+// over the read files, its table folded by 'jq' into one JSON object on stdout, which the steps
+// read as output metrics (run.stdoutMetric). Every step of a sample reads the same files, so the
+// two jobs run once per sample however many steps they size.
+
 // The request is an optimisation and never a precondition. A deployment with no scratch
 // storage, or a sample with no read end to measure, gets 'undefined' and the field is left
 // out; a backend that cannot evaluate formulas leaves a formula with no fallback out the same
@@ -27,6 +25,8 @@
 exec := import("@platforma-sdk/workflow-tengo:exec")
 assets := import("@platforma-sdk/workflow-tengo:assets")
 feats := import("@platforma-sdk/workflow-tengo:feats")
+maps := import("@platforma-sdk/workflow-tengo:maps")
+slices := import("@platforma-sdk/workflow-tengo:slices")
 
 text := import("text")
 times := import("times")
@@ -35,7 +35,7 @@ f := exec.formula
 
 // How long a measurement may be reused, and the run cache of :mixcr-analyze. Matches the MiXCR
 // run cache, so a repeated analysis of the same sample reads the files no more often than it
-// runs MiXCR. :read-stats-metric keeps the same period.
+// runs MiXCR.
 CACHE_PERIOD := 48 * times.hour
 
 // readsToMeasure picks the read ends to measure from the files a step stages, by the names
@@ -52,8 +52,75 @@ readsToMeasure := func(files) {
 	return reads
 }
 
+// Folds the table of 'seqkit stats --tabular' (a header line plus one line per file) into the
+// JSON object of the metrics:
+//
+//   reads       - reads of the sample, counted on R1 alone: it counts pairs
+//   basesR1     - bases of every R1 file, summed, which is exact across lanes
+//   basesR2     - the same for R2
+//   longestRead - the longest read of either end
+//
+// Fields are read by header name, not by column position. A file is R2 when its
+// name says so ("input_R2.fastq.gz", "input_L1_R2.fastq.gz"); every other file given is R1,
+// which also covers the single "input.fastq.gz" of a sample with no read index. An empty table
+// gives zeros.
+FOLD_PROGRAM := `split("\n") | map(select(length > 0) | split("\t")) | .[0] as $h | .[1:]
+| map(. as $r | reduce range(0; $h | length) as $i ({}; .[$h[$i]] = $r[$i]))
+| map(.r2 = (.file | test("_R2[._]")))
+| {
+    reads: (map(select(.r2 | not) | .num_seqs | tonumber) | add // 0),
+    basesR1: (map(select(.r2 | not) | .sum_len | tonumber) | add // 0),
+    basesR2: (map(select(.r2) | .sum_len | tonumber) | add // 0),
+    longestRead: (map(.max_len | tonumber) | max // 0)
+  }`
+
+// _measure runs 'seqkit stats' and 'jq' over the read files and returns the jq run, whose stdout
+// is the JSON object of the four metrics.
+_measure := func(files) {
+	seqkitSw := assets.importSoftware("@platforma-open/milaboratories.software-binary-collection:seqkit")
+	jqSw := assets.importSoftware("@platforma-open/milaboratories.software-binary-collection:jq")
+	names := slices.quickSort(maps.getKeys(files))
+
+	// seqkit reads every file whole, so it gets the same queue as other data passes. One core
+	// per file: seqkit parallelises across files, not within one, so a core beyond their number
+	// would idle. The command reads the granted count back from '{system.cpu}' instead of
+	// repeating the number, so the request and the flag can never diverge.
+	stats := exec.builder().
+		name("seqkit stats").
+		inMediumQueue().
+		cpu(len(names)).
+		mem("1GiB").
+		software(seqkitSw).
+		arg("stats").
+		arg("--threads").
+		argExpr("{system.cpu}").
+		arg("--tabular")
+	for name in names {
+		stats.addFile(name, files[name]).arg(name)
+	}
+	table := stats.saveStdoutFile().cache(CACHE_PERIOD).run().getStdoutFile()
+
+	fold := exec.builder().
+		name("read stats").
+		inLightQueue().
+		cpu(1).
+		mem("256MiB").
+		software(jqSw).
+		addFile("stats.tsv", table).
+		arg("--raw-input").
+		arg("--slurp").
+		arg("--compact-output").
+		arg(FOLD_PROGRAM).
+		arg("stats.tsv").
+		saveStdoutContent().
+		cache(CACHE_PERIOD).
+		run()
+
+	return fold
+}
+
 // scratchFormula is the scratch space of the steps of one sample, a formula over the metrics
-// of its reads (see :read-stats-metric for what each one is):
+// of its reads, `metric(name)` giving each (FOLD_PROGRAM says what each one is):
 //
 //     S = ceil(4 x (basesR1 + basesR2) / 10^9)
 //     C = ceil(11 x ceil(reads / 1000) x longestRead^2 / 10^9)
@@ -63,11 +130,11 @@ readsToMeasure := func(files) {
 // read count goes in as thousands so C cannot overflow: 10^10 reads of 10^5 bases stay under
 // 2^63. A request below one GiB is raised to one, as a sample small enough to need less still
 // needs scratch space.
-scratchFormula := func(reads, tpl) {
-	readCount   := f.customMetric("reads", reads, tpl)
-	basesR1     := f.customMetric("basesR1", reads, tpl)
-	basesR2     := f.customMetric("basesR2", reads, tpl)
-	longestRead := f.customMetric("longestRead", reads, tpl)
+scratchFormula := func(metric) {
+	readCount   := metric("reads")
+	basesR1     := metric("basesR1")
+	basesR2     := metric("basesR2")
+	longestRead := metric("longestRead")
 
 	volume := basesR1.plus(basesR2).times(4).dividedBy(1000000000)
 	length := readCount.dividedBy(1000).times(11).times(longestRead).times(longestRead).dividedBy(1000000000)
@@ -87,7 +154,7 @@ scratchFreeSpace := func(files) {
 	if len(reads) == 0 {
 		return undefined
 	}
-	return scratchFormula(reads, assets.importTemplate(":read-stats-metric"))
+	return scratchFormula(_measure(reads).stdoutMetric)
 }
 
 export {

@@ -127,10 +127,8 @@ ram := func(row) {
 		}
 		return string(gib) + "GiB"
 	}
-	// The formula takes integers only, so the slope goes in as hundredths.
-	slopeHundredths := int(row.memSlope * 100 + 0.5)
 	formula := f.gib(row.memIntercept).
-		plus(f.size(INPUT_TAG).times(slopeHundredths).dividedBy(100)).
+		plus(f.size(INPUT_TAG).times(row.memSlope)).
 		dividedBy(f.gib(1)).times(f.gib(1)). // dividedBy ceils, so this rounds up to a whole GiB
 		atLeast(f.gib(row.memFloor))
 	if !is_undefined(row.cap) {
@@ -151,8 +149,7 @@ cpu := func(row) {
 	if slope == 0 {
 		return intercept
 	}
-	slopeHundredths := int(slope * 100 + 0.5)
-	return f.size(INPUT_TAG).times(slopeHundredths).dividedBy(f.gib(100)).
+	return f.size(INPUT_TAG).times(slope).dividedBy(f.gib(1)).
 		plus(intercept).
 		staticFallback(intercept)
 }
@@ -266,15 +263,11 @@ reportRow := func(step, cls, features, res) {
 // `metrics`, { clones, aligned }: align's output metrics, 0 when the report lacks them. With no
 // clone estimate the request is `inputRam`, the step's input sizing.
 //
-// The formula takes integers only, so the per-million terms go in as hundredths of a GiB. Each
-// division rounds up, so the request is at most 1 GiB above the float formula, never below it.
+// Each decimal product and division rounds up, so the request is at most 1 GiB above the float
+// formula, never below it.
 ramFromReport := func(row, metrics, inputRam) {
-	perMClones := int(row.memPerMClones * 100 + 0.5)
-	perMReads := int(row.memPerMReads * 100 + 0.5)
-	cloneRam := metrics.clones.times(perMClones).plus(metrics.aligned.times(perMReads)).dividedBy(1000000).
-		plus(row.memIntercept * 100).dividedBy(100).
-		atLeast(row.memFloor).
-		times(f.gib(1))
+	cloneRam := metrics.clones.times(row.memPerMClones).plus(metrics.aligned.times(row.memPerMReads)).
+		dividedBy(1000000).plus(row.memIntercept).atLeast(row.memFloor).times(f.gib(1))
 	return f.when(metrics.clones.gt(0), cloneRam).otherwise(inputRam).
 		staticFallback(f.fallbackOf(inputRam))
 }
