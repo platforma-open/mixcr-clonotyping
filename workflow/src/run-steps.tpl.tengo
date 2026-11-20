@@ -2,22 +2,19 @@
 //tengo:hash_override 0E53B0CD-37CB-4740-BE98-3195AE3C96F8
 
 // Runs the steps `mixcr analyze --dry-run-json` planned for one sample, one exec per step, each
-// with its CPU and memory from :resources. A step that has a clone row runs, with every step
-// after it, in :run-steps-after-align, which waits for the align report.
+// with its CPU and memory from :resources.
 //
 // A template cannot read the result of a command it started, so the planning command runs in
 // :run-mixcr and this template reads back the step list it wrote.
 
 self := import("@platforma-sdk/workflow-tengo:tpl")
 assets := import("@platforma-sdk/workflow-tengo:assets")
-render := import("@platforma-sdk/workflow-tengo:render")
 mixcrSteps := import(":mixcr-steps")
 stepRunner := import(":step-runner")
 
 self.defineOutputs("qc", "reports", "log", "clns")
 
 mixcrSw := assets.importSoftware("@platforma-open/milaboratories.software-mixcr:memory-from-limits")
-afterAlignTpl := assets.importTemplate(":run-steps-after-align")
 
 self.body(func(inputs) {
 	// name -> file: the template base unmarshals the map input, set fields and pending alike.
@@ -25,8 +22,7 @@ self.body(func(inputs) {
 	res := {
 		perProcessMemGB: inputs.perProcessMemGB,
 		perProcessCPUs: inputs.perProcessCPUs,
-		stepResources: inputs.stepResources,
-		scratchFreeSpace: inputs.scratchFreeSpace
+		stepResources: inputs.stepResources
 	}
 	plan := mixcrSteps.commands(mixcrSteps.stepsOf(inputs.steps.getDataAsJson()), files, inputs.readsPattern)
 	stepRunner.checkReports(plan, inputs.reports)
@@ -41,30 +37,6 @@ self.body(func(inputs) {
 		written: {},
 		logs: {}
 	}
-	stop := stepRunner.run(plan, 0, ctx)
-	if is_undefined(stop.stopAt) {
-		return stepRunner.outputs(plan, ctx.written, ctx.logs, inputs.reports)
-	}
-
-	rest := render.createEphemeral(afterAlignTpl, {
-		steps: inputs.steps,
-		alignReport: stop.alignReport,
-		files: files,
-		written: ctx.written,
-		args: {
-			from: stop.stopAt,
-			readNames: inputs.readNames,
-			readsPattern: inputs.readsPattern,
-			stepClass: inputs.stepClass,
-			assemblingFeatures: inputs.assemblingFeatures,
-			reports: inputs.reports,
-			res: res
-		}
-	})
-	return {
-		qc: rest.output("qc"),
-		log: stepRunner.splitLog(ctx.logs, rest.output("log")),
-		reports: rest.output("reports"),
-		clns: rest.output("clns")
-	}
+	stepRunner.run(plan, ctx)
+	return stepRunner.outputs(plan, ctx.written, ctx.logs, inputs.reports)
 })

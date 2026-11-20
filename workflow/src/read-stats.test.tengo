@@ -1,102 +1,75 @@
 test := import("@platforma-sdk/workflow-tengo:test")
+exec := import("@platforma-sdk/workflow-tengo:exec")
 rs := import(":read-stats")
 
-text := import("text")
+f := exec.formula
 
 // The largest volume EBS gp3 can create, and what AWS deployments configure as
 // --k8s-max-scratch-request. A request above it is clamped, so the run would get less space
 // than it was sized for without anything saying so.
 _CEILING_GIB := 16 * 1024
 
-// One row of 'seqkit stats --tabular' as csvtk renders it: every field is a string.
-_row := func(name, numberOfReads, bases, longestRead) {
-	return {
-		file: name,
-		format: "FASTQ",
-		type: "DNA",
-		num_seqs: string(numberOfReads),
-		sum_len: string(bases),
-		min_len: string(longestRead),
-		avg_len: string(bases / numberOfReads) + ".0",
-		max_len: string(longestRead)
+_GIB := 1024 * 1024 * 1024
+
+// The jq run's stdout, as its exec result returns it.
+_stdout := { id: { ResourceID: 1, Name: "stdout" } }
+
+// The scratch request, in whole GiB, for the metrics the jq fold would print. The formula is
+// evaluated as the platform evaluates it, against a resolver that answers the output metrics
+// from `metrics` instead of reading the jq output.
+_scratchGiB := func(metrics) {
+	formula := rs.scratchFormula(func(name) { return f.outputMetric(name, "stdout", _stdout) })
+	// all four metrics come from one output
+	test.isEqual(1, len(f.sourcesOf(formula)))
+	resolved := f.resolveAst(formula, {}, [])
+	resolver := {
+		size: func(files) { return 0 },
+		lineCount: func(files) { return 0 },
+		custom: func(node) { return metrics[node.name] }
 	}
+	bytes := f.evaluateScratch(resolved, resolver)
+	test.isEqual(0, bytes % _GIB, "the request is a whole number of GiB")
+	return bytes / _GIB
 }
 
-// The whole number of GiB behind a scratchFreeSpaceFor() result.
-_gibOf := func(size) {
-	test.isTrue(text.has_suffix(size, "GiB"), "expected a GiB size string, got %v", size)
-	return int(size[:len(size) - 3])
-}
-
-// A paired sample of uniform read length, as one file per end.
+// A paired sample of uniform read length: the metrics jq folds one file per end into.
 _paired := func(numberOfReads, readLength) {
-	return [
-		_row("reads_R1_0.fastq.gz", numberOfReads, numberOfReads * readLength, readLength),
-		_row("reads_R2_1.fastq.gz", numberOfReads, numberOfReads * readLength, readLength)
-	]
+	return { reads: numberOfReads, basesR1: numberOfReads * readLength, basesR2: numberOfReads * readLength, longestRead: readLength }
 }
 
 TestVolumeTermWins := func() {
 	// The reference sample: 72,604,410 pairs of 151 bp.
 	//   S = 4.0 x 72.60441 x 302/1000     = 87.71 GiB
 	//   C = 11  x 72.60441 x (0.151)^2    = 18.21 GiB
-	test.isEqual("88GiB", rs.scratchFreeSpaceFor(_paired(72604410, 151)))
+	test.isEqual(88, _scratchGiB(_paired(72604410, 151)))
 }
 
 TestLengthTermWins := func() {
 	// Long reads make the quadratic term overtake the volume term.
 	//   S = 4.0 x 1.0 x 4000/1000         = 16.00 GiB
 	//   C = 11  x 1.0 x (2.0)^2           = 44.00 GiB
-	test.isEqual("44GiB", rs.scratchFreeSpaceFor(_paired(1000000, 2000)))
+	test.isEqual(44, _scratchGiB(_paired(1000000, 2000)))
 }
 
 TestSingleEndUsesOneLength := func() {
 	// Only R1 present, so 'lengthOfR2' contributes nothing.
 	//   S = 4.0 x 72.60441 x 151/1000     = 43.85 GiB
 	//   C = 18.21 GiB
-	single := [_row("reads_R1_0.fastq.gz", 72604410, 72604410 * 151, 151)]
-	test.isEqual("44GiB", rs.scratchFreeSpaceFor(single))
+	test.isEqual(44, _scratchGiB({ reads: 72604410, basesR1: 72604410 * 151, basesR2: 0, longestRead: 151 }))
 }
 
-TestReadCountCountsPairsOnce := func() {
-	// R2 must not add to the read count, or the quadratic term doubles. Long reads make
-	// that term decide, so a doubled count would show up as 88GiB instead of 44GiB.
-	test.isEqual("44GiB", rs.scratchFreeSpaceFor(_paired(1000000, 2000)))
-}
-
-TestLanesAreSummed := func() {
-	// The same sample split across two lanes must size the same as one file per end.
-	lanes := [
-		_row("reads_R1_0.fastq.gz", 36302205, 36302205 * 151, 151),
-		_row("reads_R2_1.fastq.gz", 36302205, 36302205 * 151, 151),
-		_row("reads_R1_2.fastq.gz", 36302205, 36302205 * 151, 151),
-		_row("reads_R2_3.fastq.gz", 36302205, 36302205 * 151, 151)
-	]
-	test.isEqual("88GiB", rs.scratchFreeSpaceFor(lanes))
-}
-
-TestLongestReadIsTakenAcrossEnds := func() {
-	// R2 holds the longest read, and it is the term that decides.
+TestLongestReadDecides := func() {
+	// R2 holds the longest read, and it is the term that decides; jq takes the longest read
+	// across both ends.
 	//   C = 11 x 1.0 x (2.0)^2 = 44.00 GiB
-	mixed := [
-		_row("reads_R1_0.fastq.gz", 1000000, 1000000 * 100, 100),
-		_row("reads_R2_1.fastq.gz", 1000000, 1000000 * 100, 2000)
-	]
-	test.isEqual("44GiB", rs.scratchFreeSpaceFor(mixed))
+	test.isEqual(44, _scratchGiB({ reads: 1000000, basesR1: 100000000, basesR2: 100000000, longestRead: 2000 }))
 }
 
 TestSmallSampleRoundsUpToOneGiB := func() {
-	// Below a whole GiB, but a request of zero would read as no request at all.
-	test.isEqual("1GiB", rs.scratchFreeSpaceFor(_paired(10000, 151)))
-}
-
-TestUnusableInputAsksForNothing := func() {
-	test.isTrue(is_undefined(rs.scratchFreeSpaceFor(undefined)))
-	test.isTrue(is_undefined(rs.scratchFreeSpaceFor([])))
-	// A row with no counts cannot size anything.
-	test.isTrue(is_undefined(rs.scratchFreeSpaceFor([_row("reads_R1_0.fastq.gz", 1, 0, 0)])))
-	// Only an index read: nothing named R1, so no read count.
-	test.isTrue(is_undefined(rs.scratchFreeSpaceFor([_row("reads_R2_0.fastq.gz", 100, 15100, 151)])))
+	// Below a whole GiB, but a sample that small still needs scratch space.
+	test.isEqual(1, _scratchGiB(_paired(10000, 151)))
+	// Nothing measured at all still asks for the floor, not for zero.
+	test.isEqual(1, _scratchGiB({ reads: 0, basesR1: 0, basesR2: 0, longestRead: 0 }))
 }
 
 TestLargeSingleEndSampleStaysUnderTheCeiling := func() {
@@ -104,9 +77,26 @@ TestLargeSingleEndSampleStaysUnderTheCeiling := func() {
 	// decides, and this is where it would run away if it were going to.
 	//   S = 4.0 x 600 x 1000/1000  = 2400 GiB
 	//   C = 11  x 600 x (1.0)^2    = 6600 GiB
-	single := [_row("reads_R1_0.fastq.gz", 600000000, 600000000 * 1000, 1000)]
-	size := rs.scratchFreeSpaceFor(single)
+	gib := _scratchGiB({ reads: 600000000, basesR1: 600000000 * 1000, basesR2: 0, longestRead: 1000 })
+	test.isEqual(6600, gib)
+	test.isTrue(gib < _CEILING_GIB, "%v GiB is at or above the %v GiB ceiling", gib, _CEILING_GIB)
+}
 
-	test.isEqual("6600GiB", size)
-	test.isTrue(_gibOf(size) < _CEILING_GIB, "%v is at or above the %vGiB ceiling", size, _CEILING_GIB)
+TestHugeSampleDoesNotOverflow := func() {
+	// 10^10 reads of 10^5 bases, far past any real sample: the read count enters the length
+	// term in thousands, so the product (1.1 x 10^18) stays inside int64 and the result is the
+	// float formula's.
+	//   C = 11 x 10^4 x (100)^2 = 1.1 x 10^9 GiB
+	test.isEqual(1100000000, _scratchGiB({ reads: 10000000000, basesR1: 0, basesR2: 0, longestRead: 100000 }))
+}
+
+TestIndexReadsAreNotMeasured := func() {
+	reads := rs.readsToMeasure({
+		"input_R1.fastq.gz": "r1",
+		"input_R2.fastq.gz": "r2",
+		"input_I1.fastq.gz": "i1",
+		"input_L1_I2.fastq.gz": "i2"
+	})
+	test.isEqual({ "input_R1.fastq.gz": "r1", "input_R2.fastq.gz": "r2" }, reads)
+	test.isEqual({ "input.fastq.gz": "r" }, rs.readsToMeasure({ "input.fastq.gz": "r" }))
 }

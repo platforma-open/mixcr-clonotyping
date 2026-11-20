@@ -11,12 +11,11 @@
 // renders — :run-mixcr, :run-steps — has no effect while this UUID stands.
 //tengo:hash_override D70EDB25-6FF6-4615-966D-B79B04B5751C
 
-// Measures the reads of one sample, then runs MiXCR on them.
+// Runs MiXCR on the reads of one sample, through :run-mixcr.
 //
 // MiXCR needs disposable disk space for its temporary files, sized from the sample's read
-// count and read length. Measuring those is a command, and a template cannot read the result
-// of a command it started itself, so the run lives in :run-mixcr and this template only
-// feeds it. See :read-stats for what is measured and how the size follows from it.
+// count and read length. :run-mixcr requests it as a formula over a custom metric collector
+// (see :read-stats), so the measurement no longer has to start here.
 //
 // The override, the inputs pframes.processColumn passes, and the output names must stay the
 // ones of the single `analyze` build, or every finished analysis runs again on update. A new
@@ -46,9 +45,7 @@ self.body(func(inputs) {
 			preset: inputs.preset,
 			params: params,
 			library: inputs.library,
-			presetContent: inputs.presetContent,
-
-			readStats: readStats.measure(inputData, params.fileExtension)
+			presetContent: inputs.presetContent
 		},
 		{
 			// Kept out of the deduplication key, the way process.tpl.tengo passes them to this

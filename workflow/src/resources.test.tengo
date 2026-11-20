@@ -115,6 +115,7 @@ TestCpuSlopeScalesWithTheInput := func() {
 _fakeCmd := func() {
 	cmd := {}
 	cmd.resources = func(r) { cmd.queue = r.queue; cmd.onCPU = r.onCPU; return cmd }
+	cmd.metricInputs = func(...m) { cmd.declared = m; return cmd }
 	return cmd
 }
 
@@ -224,16 +225,57 @@ TestCloneRowsByClassAndFeature := func() {
 	test.isTrue(is_undefined(rs.cloneRow("qc", "none", ["VDJRegion"])))
 }
 
+// align's output metrics, as its exec result's metric() returns them.
+_content := { id: { ResourceID: 1, Name: "align.json" } }
+_METRICS := {
+	clones: f.outputMetric("clones", "align.json", _content, { key: "estimatedInitialClones", default: 0 }),
+	aligned: f.outputMetric("aligned", "align.json", _content, { default: 0 })
+}
+
+_estimate := func(clones, aligned) { return { clones: clones, aligned: aligned } }
+
+// The memory, in whole GiB, of `assemble` on "none" sized by the clone row `row`, evaluated as
+// the platform does: the metrics from `metrics`, the staged .vdjca holding vdjcaBytes.
+_reportGiB := func(row, metrics, ...vdjcaBytes) {
+	formula := rs.ramFromReport(row, _METRICS, rs.ram(rs.lookup("assemble", "none")))
+	tags := {}
+	tags[rs.INPUT_TAG] = ["input.vdjca"]
+	resolver := {
+		size: func(files) { return len(vdjcaBytes) > 0 ? vdjcaBytes[0] : 0 },
+		lineCount: func(files) { return 0 },
+		custom: func(n) { return metrics[n.name] }
+	}
+	return f.evaluateResource(f.resolveAst(formula, tags, ["input.vdjca"]), resolver, "test") / _gib(1)
+}
+
 TestRamFromReport := func() {
 	vdj := rs.cloneRow("assemble", "none", ["VDJRegion"])
 	// 10 + 16 x 2.227494 + 0.32 x 39.375951 = 58.24, rounded up.
-	test.isEqual("59GiB", rs.ramFromReport(vdj, { estimatedInitialClones: 2227494, aligned: 39375951 }))
+	test.isEqual(59, _reportGiB(vdj, _estimate(2227494, 39375951)))
 	// Below the floor.
-	test.isEqual("32GiB", rs.ramFromReport(vdj, { estimatedInitialClones: 633078, aligned: 10803859 }))
+	test.isEqual(32, _reportGiB(vdj, _estimate(633078, 10803859)))
 	// 26 + 8.3 x 17.269869 = 169.34, rounded up.
-	test.isEqual("170GiB", rs.ramFromReport(rs.cloneRow("assemble", "none", ["CDR3"]), { estimatedInitialClones: 17269869, aligned: 203593616 }))
-	test.isTrue(is_undefined(rs.ramFromReport(vdj, { aligned: 100 })))
-	test.isTrue(is_undefined(rs.ramFromReport(vdj, undefined)))
+	test.isEqual(170, _reportGiB(rs.cloneRow("assemble", "none", ["CDR3"]), _estimate(17269869, 203593616)))
+	// No clone estimate: the step's own row, max(64, 4 + 25 x GiB); the same static fallback.
+	test.isEqual(304, _reportGiB(vdj, _estimate(0, 100), _gib(12)))
+	inputRam := rs.ram(rs.lookup("assemble", "none"))
+	test.isEqual(f.fallbackOf(inputRam), f.fallbackOf(rs.ramFromReport(vdj, _METRICS, inputRam)))
+}
+
+// A step with a clone row always takes the metric inputs, which decide whether it re-runs; an
+// override changes only the formula, a meta input.
+TestApplyDeclaresTheReportMetricsWhateverTheOverrides := func() {
+	report := { metrics: _METRICS, cls: "none", features: ["VDJRegion"] }
+	applied := func(step, res, r) { return rs.apply(_fakeCmd(), rs.lookup(step, r.cls), res, r) }
+	for res in [{}, { perProcessMemGB: 100 }, { stepResources: { assemble: { memSlope: 10 } } }, { stepResources: { assemble: { memFloor: 80 } } }] {
+		test.isEqual(2, len(applied("assemble", res, report).declared), res)
+	}
+	test.isEqual(1, len(f.sourcesOf(applied("assemble", {}, report).onCPU.ram)))
+	test.isEqual("100GiB", applied("assemble", { perProcessMemGB: 100 }, report).onCPU.ram)
+	// None before align has run, on a class with no clone row, or on another step.
+	test.isTrue(is_undefined(applied("assemble", {}, { metrics: undefined, cls: "none", features: ["VDJRegion"] }).declared))
+	test.isTrue(is_undefined(applied("assemble", {}, { metrics: _METRICS, cls: "umi", features: ["VDJRegion"] }).declared))
+	test.isTrue(is_undefined(applied("qc", {}, report).declared))
 }
 
 TestMemoryOverridesBeyondTheStepFloorKeepTheInputSizing := func() {
@@ -248,20 +290,20 @@ TestMemoryOverridesBeyondTheStepFloorKeepTheInputSizing := func() {
 	// A CPU override leaves the memory to the report.
 	test.isTrue(rs.sizedByReport("assemble", "none", ["VDJRegion"], { perProcessCPUs: 8 }))
 	test.isTrue(rs.sizedByReport("assemble", "none", ["VDJRegion"], { stepResources: { align: { memFloor: 80 } } }))
-	// The clone row, which sets where :run-steps hands off and whether align saves its report,
-	// does not read the overrides: an override keeps the row and only disables its use.
+	// The clone row does not read the overrides: an override keeps the row and only disables its use.
 	test.isFalse(is_undefined(rs.cloneRow("assemble", "none", ["VDJRegion"])))
 }
 
 TestAStepFloorReplacesTheCloneRowFloor := func() {
-	floor80 := { stepResources: { assemble: { memFloor: 80 } } }
-	small := { estimatedInitialClones: 633078, aligned: 10803859 }
-	large := { estimatedInitialClones: 2227494, aligned: 39375951 }
-	test.isEqual("80GiB", rs.ramFromReport(rs.reportRow("assemble", "none", ["VDJRegion"], floor80), small))
+	floor := func(gib) { return { stepResources: { assemble: { memFloor: gib } } } }
+	row := func(res) { return rs.reportRow("assemble", "none", ["VDJRegion"], res) }
+	small := _estimate(633078, 10803859)
+	large := _estimate(2227494, 39375951)
+	test.isEqual(80, _reportGiB(row(floor(80)), small))
 	// Above the floor, the clone formula: 10 + 16 x 2.227494 + 0.32 x 39.375951 = 58.24.
-	test.isEqual("59GiB", rs.ramFromReport(rs.reportRow("assemble", "none", ["VDJRegion"], { stepResources: { assemble: { memFloor: 40 } } }), large))
+	test.isEqual(59, _reportGiB(row(floor(40)), large))
 	// A floor below the row's own replaces it too: 10 + 16 x 0.633078 + 0.32 x 10.803859 = 23.59.
-	test.isEqual("24GiB", rs.ramFromReport(rs.reportRow("assemble", "none", ["VDJRegion"], { stepResources: { assemble: { memFloor: 16 } } }), small))
-	test.isEqual("32GiB", rs.ramFromReport(rs.reportRow("assemble", "none", ["VDJRegion"], {}), small))
-	test.isTrue(is_undefined(rs.reportRow("assemble", "umi", ["VDJRegion"], floor80)))
+	test.isEqual(24, _reportGiB(row(floor(16)), small))
+	test.isEqual(32, _reportGiB(row({}), small))
+	test.isTrue(is_undefined(rs.reportRow("assemble", "umi", ["VDJRegion"], floor(80))))
 }
