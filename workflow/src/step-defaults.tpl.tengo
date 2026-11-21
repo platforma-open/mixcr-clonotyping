@@ -54,8 +54,8 @@ self.body(func(inputs) {
 		}
 		seen[c.key] = true
 		step := { step: c.key, class: stepClass, defaultRule: _ruleOf(row) }
-		// The floor of the clone-estimate sizing, which the step takes once the align report
-		// carries an estimate. A memFloor override replaces it.
+		// The floor of the align-report sizing, which the step takes once the align report
+		// carries an estimate (on "cell", only for a plasma sample). A memFloor override replaces it.
 		clone := resources.cloneRow(c.key, stepClass, features)
 		if !is_undefined(clone) {
 			step.cloneFloor = clone.memFloor

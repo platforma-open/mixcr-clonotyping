@@ -115,9 +115,13 @@ run := func(plan, from, ctx) {
 
 		fixedRam := undefined
 		if !is_undefined(ctx.alignReport) && resources.sizedByReport(c.key, ctx.stepClass, ctx.features, ctx.res) {
-			fixedRam = resources.ramFromReport(resources.reportRow(c.key, ctx.stepClass, ctx.features, ctx.res), ctx.alignReport)
+			fixedRam = resources.reportRam(c.key, ctx.stepClass, ctx.features, ctx.res, ctx.alignReport)
 			if is_undefined(fixedRam) {
 				ll.print("the align report has no clone estimate; %v is sized from its input", c.key)
+			}
+			plasmaBelow := resources.cloneRow(c.key, ctx.stepClass, ctx.features).plasmaBelow
+			if !is_undefined(plasmaBelow) {
+				ll.print("%v: aligned / estimated clones = %v, plasma below %v", c.key, resources.plasmaRatio(ctx.alignReport), plasmaBelow)
 			}
 		}
 		resources.apply(cmd, resources.lookup(c.key, ctx.stepClass), ctx.res, fixedRam)
