@@ -13,10 +13,18 @@ export type StepRule = {
 /**
  * What `step-defaults.tpl.tengo` reports: the planned steps, or why there are none. `cloneFloor`
  * is set on a step sized from align's clone estimate: the least memory that sizing grants.
+ * `plasmaBelow` is set when that sizing applies only to plasma samples (aligned / estimated clones
+ * below it); other samples keep `defaultRule`.
  */
 export type StepDefaults =
   | {
-      steps: { step: string; class: string; defaultRule: StepRule; cloneFloor?: number }[];
+      steps: {
+        step: string;
+        class: string;
+        defaultRule: StepRule;
+        cloneFloor?: number;
+        plasmaBelow?: number;
+      }[];
       error?: undefined;
     }
   | { error: string; steps?: undefined };

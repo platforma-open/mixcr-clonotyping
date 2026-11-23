@@ -59,6 +59,10 @@ self.body(func(inputs) {
 		clone := resources.cloneRow(c.key, stepClass, features)
 		if !is_undefined(clone) {
 			step.cloneFloor = clone.memFloor
+			// On "cell" the floor holds only for a plasma sample: one whose ratio is below this.
+			if !is_undefined(clone.plasmaBelow) {
+				step.plasmaBelow = clone.plasmaBelow
+			}
 		}
 		steps = append(steps, step)
 	}
