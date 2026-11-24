@@ -66,7 +66,8 @@ _ROWS := [
 	{ step: "assembleCells", class: "any", cpuIntercept: 16, memFloor: 32, memIntercept: 4, memSlope: 15 },
 
 	// Sized from the .vdjca. On "none" and "longRead", a row of _CLONE_ROWS replaces the memory
-	// when the align report carries a clone estimate and no override sets the memory.
+	// when the align report carries a clone estimate and no override sets the memory; on "cell",
+	// a row of _CLONE_ROWS raises it when the align report marks the sample as plasma cells.
 	{ step: "assemble", class: "none", cpuIntercept: 16, memFloor: 64, memIntercept: 4, memSlope: 25 },
 	{ step: "assemble", class: "umi", cpuIntercept: 16, memFloor: 32, memIntercept: 0, memSlope: 10 },
 	{ step: "assemble", class: "cell", cpuIntercept: 16, memFloor: 32, memIntercept: 0, memSlope: 10 },
@@ -78,7 +79,8 @@ _ROWS := [
 
 DEFAULT := { step: "default", class: "any", cpuIntercept: 16, memFloor: 64, memIntercept: 0, memSlope: 4 }
 
-// The memory of `assemble` from the align report, by class and assembling feature:
+// The memory of a step from the align report, by step, class and assembling feature. The clone
+// rows:
 //
 //     ram = max(memFloor, memIntercept + memPerMClones x M clones + memPerMReads x M aligned reads)
 //
@@ -90,9 +92,20 @@ DEFAULT := { step: "default", class: "any", cpuIntercept: 16, memFloor: 64, memI
 // uncapped wall time. Each row is at least 1.6 x the floor of every profiled sample of its
 // class and feature. The jobs have no retry, so the margin covers the scatter of the floors.
 _CLONE_ROWS := [
-	{ class: "none", feature: "CDR3", memFloor: 32, memIntercept: 26, memPerMClones: 8.3, memPerMReads: 0 },
-	{ class: "none", feature: "any", memFloor: 32, memIntercept: 10, memPerMClones: 16, memPerMReads: 0.32 },
-	{ class: "longRead", feature: "any", memFloor: 32, memIntercept: 6, memPerMClones: 5.4, memPerMReads: 0 }
+	{ step: "assemble", class: "none", feature: "CDR3", memFloor: 32, memIntercept: 26, memPerMClones: 8.3, memPerMReads: 0 },
+	{ step: "assemble", class: "none", feature: "any", memFloor: 32, memIntercept: 10, memPerMClones: 16, memPerMReads: 0.32 },
+	{ step: "assemble", class: "longRead", feature: "any", memFloor: 32, memIntercept: 6, memPerMClones: 5.4, memPerMReads: 0 },
+
+	// "cell", plasma rows: a sample is plasma cells when aligned / estimatedInitialClones in the
+	// align report is below plasmaBelow. Plasma cells carry 10-100x the Ig mRNA of other B cells,
+	// so they have many UMIs per cell, and refineTagsAndSort and `assemble` need several times the
+	// memory their input predicts. A plasma sample takes the step's input row with its memSlope
+	// times slopeScale and its memFloor raised to the row's memFloor; any other sample takes the
+	// input row unchanged.
+	// UNFITTED: set from one 10x 5' BCR dataset, where plasma-rich samples scored about 200 and
+	// the others above 600, and the input rows left the plasma samples short of memory.
+	{ step: "refineTagsAndSort", class: "cell", feature: "any", plasmaBelow: 400, memFloor: 64, slopeScale: 3 },
+	{ step: "assemble", class: "cell", feature: "any", plasmaBelow: 400, memFloor: 128, slopeScale: 3 }
 ]
 
 _byKey := {}
@@ -214,16 +227,16 @@ effective := func(row, res) {
 // features `features` (the preset's assemblingFeatures): the row of its feature, then the row
 // of "any". Undefined when the step is sized from its input alone.
 cloneRow := func(step, cls, features) {
-	if step != "assemble" {
-		return undefined
-	}
 	feature := is_array(features) && len(features) == 1 && features[0] == "CDR3" ? "CDR3" : "any"
 	fallback := undefined
 	for row in _CLONE_ROWS {
-		if row.class == cls && row.feature == feature {
+		if row.step != step || row.class != cls {
+			continue
+		}
+		if row.feature == feature {
 			return row
 		}
-		if row.class == cls && row.feature == "any" {
+		if row.feature == "any" {
 			fallback = row
 		}
 	}
@@ -260,8 +273,21 @@ reportRow := func(step, cls, features, res) {
 	return row
 }
 
-// ramFromReport returns the memory request of a cloneRow for the parsed align report, or
-// undefined when the report carries no clone estimate.
+// plasmaRatio returns aligned / estimatedInitialClones from a parsed align report, or undefined
+// when the report lacks either.
+plasmaRatio := func(report) {
+	if !is_map(report) || is_undefined(report.estimatedInitialClones) || is_undefined(report.aligned) {
+		return undefined
+	}
+	clones := float(report.estimatedInitialClones)
+	if clones <= 0 {
+		return undefined
+	}
+	return float(report.aligned) / clones
+}
+
+// ramFromReport returns the memory of a clone row for a parsed align report, rounded up to a whole
+// GiB and at least the row's memFloor, or undefined when the report lacks the clone estimate.
 ramFromReport := func(row, report) {
 	if !is_map(report) || is_undefined(report.estimatedInitialClones) {
 		return undefined
@@ -270,6 +296,32 @@ ramFromReport := func(row, report) {
 	aligned := is_undefined(report.aligned) ? 0.0 : float(report.aligned) / 1000000.0
 	gib := int(math.ceil(row.memIntercept + row.memPerMClones * clones + row.memPerMReads * aligned))
 	return string(gib > row.memFloor ? gib : row.memFloor) + "GiB"
+}
+
+// reportRam returns the memory `step` runs with once the align report is in hand: the report
+// request of a clone row; for a plasma row, the input request, raised as the row says when the
+// sample is plasma cells. Undefined when the step is sized from its input alone or the report
+// lacks what its row reads.
+reportRam := func(step, cls, features, res, report) {
+	if !sizedByReport(step, cls, features, res) {
+		return undefined
+	}
+	row := reportRow(step, cls, features, res)
+	if is_undefined(row.plasmaBelow) {
+		return ramFromReport(row, report)
+	}
+	ratio := plasmaRatio(report)
+	if is_undefined(ratio) {
+		return undefined
+	}
+	eff := effective(lookup(step, cls), res).row
+	if ratio < row.plasmaBelow {
+		if row.memFloor > eff.memFloor {
+			eff.memFloor = row.memFloor
+		}
+		eff.memSlope = eff.memSlope * row.slopeScale
+	}
+	return ram(eff)
 }
 
 // apply sets the CPU, memory, scratch and queue of `cmd` from `row`. `res` carries the
@@ -298,5 +350,7 @@ export {
 	sizedByReport: sizedByReport,
 	reportRow: reportRow,
 	ramFromReport: ramFromReport,
+	plasmaRatio: plasmaRatio,
+	reportRam: reportRam,
 	apply: apply
 }

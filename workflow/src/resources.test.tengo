@@ -220,8 +220,42 @@ TestCloneRowsByClassAndFeature := func() {
 	test.isEqual(8.3, rs.cloneRow("assemble", "none", ["CDR3"]).memPerMClones)
 	test.isEqual(5.4, rs.cloneRow("assemble", "longRead", ["CDR3"]).memPerMClones)
 	test.isTrue(is_undefined(rs.cloneRow("assemble", "umi", ["CDR3"])))
-	test.isTrue(is_undefined(rs.cloneRow("assemble", "cell", ["VDJRegion"])))
+	test.isEqual(400, rs.cloneRow("assemble", "cell", ["VDJRegion"]).plasmaBelow)
+	test.isEqual(400, rs.cloneRow("refineTagsAndSort", "cell", ["VDJRegion"]).plasmaBelow)
+	test.isTrue(is_undefined(rs.cloneRow("refineTagsAndSort", "none", ["VDJRegion"])))
 	test.isTrue(is_undefined(rs.cloneRow("qc", "none", ["VDJRegion"])))
+}
+
+// Synthetic align reports: a plasma-rich sample (ratio 200) and a sample without plasma cells (ratio 1100).
+_marrow := { aligned: 66000000, estimatedInitialClones: 330000 }
+_spleen := { aligned: 33000000, estimatedInitialClones: 30000 }
+
+TestPlasmaRatio := func() {
+	test.isEqual(200, int(rs.plasmaRatio(_marrow)))
+	test.isEqual(1100, int(rs.plasmaRatio(_spleen)))
+	test.isTrue(is_undefined(rs.plasmaRatio({ aligned: 100 })))
+	test.isTrue(is_undefined(rs.plasmaRatio({ aligned: 100, estimatedInitialClones: 0 })))
+	test.isTrue(is_undefined(rs.plasmaRatio(undefined)))
+}
+
+TestPlasmaSamplesRaiseCellRefineAndAssemble := func() {
+	cell := ["VDJRegion"]
+	ramOf := func(step, report, sizeBytes) {
+		return _evalSize(rs.reportRam(step, "cell", cell, {}, report), sizeBytes)
+	}
+	// Plasma: slope x 3 and the plasma floor. refineTagsAndSort 6 + 42 x 2 = 90; assemble 30 x 2 = 60 -> 128.
+	test.isEqual(_gib(90), ramOf("refineTagsAndSort", _marrow, _gib(2)))
+	test.isEqual(_gib(64), ramOf("refineTagsAndSort", _marrow, _gib(1)))
+	test.isEqual(_gib(128), ramOf("assemble", _marrow, _gib(2)))
+	test.isEqual(_gib(300), ramOf("assemble", _marrow, _gib(10)))
+	// Any other sample keeps its input row.
+	test.isEqual(_ram("refineTagsAndSort", "cell", _gib(2)), ramOf("refineTagsAndSort", _spleen, _gib(2)))
+	test.isEqual(_ram("assemble", "cell", _gib(10)), ramOf("assemble", _spleen, _gib(10)))
+	// No clone estimate, or a memory override: the input sizing.
+	test.isTrue(is_undefined(rs.reportRam("assemble", "cell", cell, {}, { aligned: 100 })))
+	test.isTrue(is_undefined(rs.reportRam("assemble", "cell", cell, { perProcessMemGB: 100 }, _marrow)))
+	// A step floor replaces the plasma floor.
+	test.isEqual(_gib(200), _evalSize(rs.reportRam("assemble", "cell", cell, { stepResources: { assemble: { memFloor: 200 } } }, _marrow), _gib(2)))
 }
 
 TestRamFromReport := func() {
