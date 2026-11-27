@@ -39,6 +39,10 @@ export type BlockData = BlockArgs & {
    * "Per-step resources" settings to list the steps. Absent until then. A snapshot, not the
    * live fields: the plan runs once per click, not once per edit of the tag pattern. */
   listStepsParams?: ListStepsParams;
+  /** Set to false by the UI while `input` cannot be run on, e.g. a dataset the result pool no
+   * longer offers. args cannot see the pool, so the UI records it here to keep Run off.
+   * Absent means valid. */
+  isInputValid?: boolean;
 };
 
 type BlockDataV1 = BlockData & { defaultBlockLabel?: string };
@@ -186,6 +190,7 @@ export const platforma = BlockModelV3.create({ dataModel, kind })
 
   .args((data) => {
     if (!data.input) throw new Error("Input dataset is required");
+    if (data.isInputValid === false) throw new Error("Selected input dataset is not valid");
     if (!data.preset) throw new Error("Preset is required");
     if (!data.chains || data.chains.length === 0) throw new Error("Chains selection is required");
     if (data.scHeavyOnly && !(data.chains.length === 1 && data.chains[0] === "IG"))

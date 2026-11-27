@@ -3,6 +3,7 @@ import { AgGridVue } from "ag-grid-vue3";
 
 import type { PlId, Qc } from "@platforma-open/milaboratories.mixcr-clonotyping-2.model";
 import type { ImportFileHandle } from "@platforma-sdk/model";
+import { plRefsEqual } from "@platforma-sdk/model";
 import type { PlAgHeaderComponentParams } from "@platforma-sdk/ui-vue";
 import {
   AgGridTheme,
@@ -35,6 +36,24 @@ import SampleReportPanel from "./SampleReportPanel.vue";
 import SettingsPanel from "./SettingsPanel.vue";
 
 const app = useApp();
+
+// A dataset deleted upstream leaves `input` pointing at nothing: Run stays enabled and the run
+// fails in the workflow. The model cannot see the result pool, so the page marks the selection
+// not valid and args refuse to run; the selection itself is kept.
+// Decided only from a stable options list: while an upstream block runs, its context is not
+// locked yet, it may hold only some of its datasets, and the list is marked unstable.
+// Deep: the options array is updated in place, so its reference does not change.
+watch(
+  () => [app.snapshot.outputs.inputOptions, app.model.data.input] as const,
+  ([options, input]) => {
+    if (!options?.ok || !options.stable) return;
+    const offered =
+      input === undefined || options.value.some((o) => plRefsEqual(o.ref, input, true));
+    if (!offered) app.model.data.isInputValid = false;
+    else if (app.model.data.isInputValid === false) app.model.data.isInputValid = undefined;
+  },
+  { immediate: true, deep: true },
+);
 
 // @TODO
 const result = refDebounced(MiXCRResultsFull, 100, {

@@ -83,7 +83,9 @@ wf.body(func(args) {
 		isLibraryFileGzipped = args.isLibraryFileGzipped
 	}
 
-	input := wf.resolve(inputRef)
+	// A dataset deleted upstream must fail here, as not found, and not with an empty spec deep
+	// in :process ("key axesSpec not found").
+	input := wf.resolve(inputRef, { errIfMissing: true })
 
 	//ll.print("__THE_LOG__ " +input)
 
